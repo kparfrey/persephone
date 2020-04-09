@@ -14,10 +14,10 @@ class Process
 {
     public:
       
-    /* Local info */
+    /* Local data */
     int rank;
 
-    /* Global info */
+    /* Global data */
     int nproc;
 
 
