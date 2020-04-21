@@ -1,9 +1,17 @@
 #ifndef COMMON_HPP
 #define COMMON_HPP
 
+/*** Problem specifications, definitions, and conditional compilation ***
+ *** that is needed everywhere. Will be eventually split into several ***
+ *** files for convenience.                                           ***/
+
+
 #define FLOAT_POINT_PRECISION DOUBLE
 
+constexpr int Nvar = 1; // Total number of field variables
 
+
+/***************************************************/
 /**** Options above this line, do not change below */
 
 

@@ -15,11 +15,16 @@ class ElementBrick
     int Nf[3];  // No. flux points "   "      "     "   "       "
     int Ns_tot; // Total no. of soln points in each element
     int Nf_tot; // Total no. of flux points "   "     "
-    int Nv;     // No. of field variables being evolved
 
+    real_t *xs[3]; // Soln point locations in computational space, in each direction 
+    real_t *xf[3]; // Flux point locations in computational space, in each direction 
+    real_t *rs;    // Soln points in real space, stored as 1D array
+    real_t *rf;    // Flux points in real space, stored as 1D array
+
+    real_t *fields[Nvar]; // Field data on solution points
 
     /* Methods */
-    inline int sidx(int var, int i, int j, int k); // soln-point index map
+    inline int sidx(int i, int j, int k); // soln-point index map
     void allocate();
     void free();
 };
@@ -31,9 +36,10 @@ class ElementBrick
 
 
 /*** C-order, i slowest index, k fastest ***/
-inline int ElementBrick::sidx(int var, int i, int j, int k)
+inline int ElementBrick::sidx(int i, int j, int k)
 {
-    return Ns[0]*Ns[1]*Ns[2]*var + (i*Ns[1] + j)*Ns[2] + k;
+    //return Ns[0]*Ns[1]*Ns[2]*var + (i*Ns[1] + j)*Ns[2] + k;
+    return (i*Ns[1] + j)*Ns[2] + k;
 }
 
 
