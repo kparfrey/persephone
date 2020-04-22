@@ -10,7 +10,7 @@ static void startMPI(int argc, char *argv[], Process &proc)
         proc.writeError("Error starting MPI");
  
     MPI_Comm_rank(MPI_COMM_WORLD, &(proc.rank));   // Get rank of this process    
-    MPI_Comm_size(MPI_COMM_WORLD, &(proc.nproc));  // Number of running processes
+    MPI_Comm_size(MPI_COMM_WORLD, &(proc.Nproc));  // Number of running processes
     
     proc.writeMessage("MPI started");
  
@@ -21,6 +21,7 @@ static void startMPI(int argc, char *argv[], Process &proc)
 int main(int argc, char *argv[])
 {
     Process proc;
+    proc.params.setup_params();
 
     startMPI(argc, &(*argv), proc);
 

@@ -3,7 +3,7 @@ CC = mpic++
 INCLUDES =
 CPPFLAGS = -std=c++17 -Wall -Werror
 LDFLAGS  = -lmpi -lm
-HDRS     = process.hpp
+HDRS     = process.hpp element_brick.hpp params.hpp common.hpp
 OBJ      = main.o
 
 %.o: %.cpp $(HDRS)

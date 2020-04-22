@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include "common.hpp"
+#include "params.hpp"
 
 using std::cout;
 using std::endl;
@@ -13,6 +14,9 @@ using std::string;
 class Process
 {
     public:
+
+    Params params;
+
       
     /* Local data */
     int rank;
