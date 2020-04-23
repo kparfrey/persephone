@@ -10,6 +10,13 @@
  * ln -s specific_problem_version.hpp active_params.hpp
  */
 
-ParamsCartesian active_parameters;
+static int Nproc[3]  = {4,1,1};
+static int Nbrick[3] = {1,1,1};
+static int Nelem[3]  = {1,1,1};
+static int Ns[3]     = {8,8,8};
+
+static real_t edges[3][2] = {{0.0,1.0}, {0.0,1.0}, {0.0, 1.0}};
+
+ParamsCartesian active_parameters(Nproc, Nbrick, Nelem, Ns, edges);
 
 #endif

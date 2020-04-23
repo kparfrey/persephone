@@ -1,8 +1,6 @@
 #ifndef PROCESS_HPP
 #define PROCESS_HPP
 
-#include <iostream>
-#include <string>
 #include "common.hpp"
 #include "params.hpp"
 #include "active_params.hpp"
@@ -16,7 +14,8 @@ class Process
 {
     public:
 
-    Params params = active_parameters;
+    // NB: use a reference so the virtual functions work correctly...
+    Params &params = active_parameters;
 
       
     /* Local data */

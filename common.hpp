@@ -27,6 +27,9 @@ constexpr int Nvar = 1; // Total number of field variables
 #endif
 
 
+#include <iostream>
+#include <iomanip>
+#include <string>
 #include "element_brick.hpp"
 #include "process.hpp"
 

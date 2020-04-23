@@ -22,9 +22,10 @@ static void startMPI(int argc, char *argv[], Process &proc)
 int main(int argc, char *argv[])
 {
     Process proc;
-    proc.params.setup_params();
 
     startMPI(argc, &(*argv), proc);
+    
+    if (proc.rank == 0) proc.params.write_param_info();
 
     MPI_Finalize();
     exit(0);
