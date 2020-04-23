@@ -11,8 +11,9 @@ static void startMPI(int argc, char *argv[], Process &proc)
  
     MPI_Comm_rank(MPI_COMM_WORLD, &(proc.rank));   // Get rank of this process    
     MPI_Comm_size(MPI_COMM_WORLD, &(proc.Nproc));  // Number of running processes
-    
+
     proc.writeMessage("MPI started");
+    proc.writeVariable<int>("number of active processes", proc.Nproc);
  
     return;
 }
