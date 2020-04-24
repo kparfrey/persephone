@@ -1,9 +1,12 @@
 #ifndef PROCESS_HPP
 #define PROCESS_HPP
 
+#include <iostream>
+#include <string>
 #include "common.hpp"
-#include "params.hpp"
 #include "active_params.hpp"
+
+class Params;
 
 using std::cout;
 using std::endl;

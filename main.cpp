@@ -1,5 +1,6 @@
 #include <mpi.h>
 #include "common.hpp"
+#include "process.hpp"
 
 
 static void startMPI(int argc, char *argv[], Process &proc)

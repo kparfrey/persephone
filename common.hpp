@@ -5,6 +5,8 @@
  *** that is needed everywhere. Will be eventually split into several ***
  *** files for convenience.                                           ***/
 
+/*** Avoid includes here without a good reason....                    ***/
+
 
 #define FLOAT_POINT_PRECISION DOUBLE
 
@@ -25,12 +27,5 @@ constexpr int Nvar = 1; // Total number of field variables
   #define real_t    double
   #define realMPI_t MPI_DOUBLE
 #endif
-
-
-#include <iostream>
-#include <iomanip>
-#include <string>
-#include "element_block.hpp"
-#include "process.hpp"
 
 #endif

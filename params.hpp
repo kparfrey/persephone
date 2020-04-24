@@ -1,6 +1,7 @@
 #ifndef PARAMS_HPP
 #define PARAMS_HPP
 
+#include <iostream>
 #include "common.hpp"
 
 using std::cout;
@@ -63,10 +64,10 @@ class ParamsCartesian : public Params
 
 
     /* Constructor */
-    ParamsCartesian(int (& Nproc_)[3] , 
+    ParamsCartesian(int (& Nproc_)[3], 
                     int (& Nbloc_)[3],
-                    int (& Nelem_)[3] , 
-                    int (& Ns_)[3]    , 
+                    int (& Nelem_)[3], 
+                    int (& Ns_)[3], 
                     real_t (& domain_edge_)[3][2],
                     real_t cfl = 0.8,
                     real_t end_time = 1.0)
@@ -74,10 +75,10 @@ class ParamsCartesian : public Params
     {
         for (int i=0; i<3; i++)
         {
-            Nproc[i]  = Nproc_[i];
+            Nproc[i] = Nproc_[i];
             Nbloc[i] = Nbloc_[i];
-            Nelem[i]  = Nelem_[i];
-            Ns[i]     = Ns_[i];
+            Nelem[i] = Nelem_[i];
+            Ns[i]    = Ns_[i];
             domain_edge[i][0] = domain_edge_[i][0];
             domain_edge[i][1] = domain_edge_[i][1];
         }
@@ -89,12 +90,12 @@ class ParamsCartesian : public Params
 
 void ParamsCartesian::secondary_params()
 {
-    Nproc_tot         = Nproc[0] * Nproc[1]  * Nproc[2];
-    Nbloc_tot_domain = Nbloc[0]* Nbloc[1] * Nbloc[2] * Nproc_tot;
-    Nelem_tot         = Nelem[0] * Nelem[1]  * Nelem[2];
-    Nelem_tot_domain  = Nelem_tot * Nbloc_tot_domain;
-    Ns_tot            = Ns[0]*Ns[1]*Ns[2];
-    Ns_tot_domain     = Ns_tot * Nelem_tot_domain;
+    Nproc_tot        = Nproc[0] * Nproc[1] * Nproc[2];
+    Nbloc_tot_domain = Nbloc[0] * Nbloc[1] * Nbloc[2] * Nproc_tot;
+    Nelem_tot        = Nelem[0] * Nelem[1] * Nelem[2];
+    Nelem_tot_domain = Nelem_tot * Nbloc_tot_domain;
+    Ns_tot           = Ns[0] * Ns[1] * Ns[2];
+    Ns_tot_domain    = Ns_tot * Nelem_tot_domain;
 
     Nf[0]  = Ns[0]+1;
     Nf[1]  = Ns[1]+1;
