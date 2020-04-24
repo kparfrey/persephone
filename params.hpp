@@ -22,13 +22,15 @@ class Params
     int Nelem_tot_domain;
     int Ns_tot_domain;
 
-    real_t cfl      = 0.8;
-    real_t end_time = 1.0;
+    real_t cfl;
+    real_t end_time;
 
     /* Methods: all must be defined in derived classes */
     virtual void secondary_params(){};
     virtual void setup_process(Process &proc){};
     virtual void write_param_info(){std::cout << "Calling wrong method!" << std::endl;};
+
+    Params(real_t cfl, real_t end_time) : cfl(cfl), end_time(end_time) { }
 };
 
 
@@ -65,7 +67,10 @@ class ParamsCartesian : public Params
                     int (& Nbrick_)[3],
                     int (& Nelem_)[3] , 
                     int (& Ns_)[3]    , 
-                    real_t (& domain_edge_)[3][2])
+                    real_t (& domain_edge_)[3][2],
+                    real_t cfl = 0.8,
+                    real_t end_time = 1.0)
+    : Params(cfl, end_time)
     {
         for (int i=0; i<3; i++)
         {
