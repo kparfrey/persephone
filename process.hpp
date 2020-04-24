@@ -20,7 +20,6 @@ class Process
       
     /* Local data */
     int rank;
-    int Nbricks; // No. of element bricks in this process
 
     /* Global data */
     int Nproc;

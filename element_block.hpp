@@ -6,7 +6,7 @@
 
 
 
-class ElementBrick
+class ElementBlock
 {
     public:
 
@@ -30,13 +30,8 @@ class ElementBrick
 };
 
 
-//ElementBrick::ElementBrick(LocalParams &lp)
-//{
-//}
-
-
 /*** C-order, i slowest index, k fastest ***/
-inline int ElementBrick::sidx(int i, int j, int k)
+inline int ElementBlock::sidx(int i, int j, int k)
 {
     //return Ns[0]*Ns[1]*Ns[2]*var + (i*Ns[1] + j)*Ns[2] + k;
     return (i*Ns[1] + j)*Ns[2] + k;
@@ -44,13 +39,13 @@ inline int ElementBrick::sidx(int i, int j, int k)
 
 
 // Should this be "setup", or even run as the constructor?
-void ElementBrick::allocate()
+void ElementBlock::allocate()
 {
     return;
 }
 
 
-void ElementBrick::free()
+void ElementBlock::free()
 {
     return;
 }
