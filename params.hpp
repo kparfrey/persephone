@@ -4,9 +4,6 @@
 #include <iostream>
 #include "common.hpp"
 
-using std::cout;
-using std::endl;
-    
 class Process; // Process type will be used below
 
 

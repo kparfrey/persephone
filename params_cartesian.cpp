@@ -1,5 +1,8 @@
 #include "params_cartesian.hpp"
 
+using std::cout;
+using std::endl;
+    
 void ParamsCartesian::secondary_params()
 {
     Nproc_tot        = Nproc[0] * Nproc[1] * Nproc[2];

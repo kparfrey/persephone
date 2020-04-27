@@ -28,16 +28,17 @@ class Process
 
     /* Methods */
     Process(Params &params);
-    void writeError(string error, bool destroy = true);
-    void writeMessage(string message);
-    template<typename type> void writeVariable(string message, type variable);
+    void write_error(string error, bool destroy = true);
+    void write_message(string message);
+    void write_startup_info();
+    template<typename type> void write_variable(string message, type variable);
 };
 
 
 /*** Templated member functions ***/
 
 template<typename type>
-void Process::writeVariable(string message, type variable)
+void Process::write_variable(string message, type variable)
 {
     if (rank == 0)
         cout << "Data: " << message << ": " << variable << endl;

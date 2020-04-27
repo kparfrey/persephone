@@ -1,4 +1,5 @@
 #include "process.hpp"
+#include "params.hpp"
 
 Process::Process(Params &params)
 : params(params)
@@ -8,7 +9,7 @@ Process::Process(Params &params)
 }
 
 
-void Process::writeError(string error, bool destroy)
+void Process::write_error(string error, bool destroy)
 {
     cout << "Error --- rank: " << rank << ": " << error << endl;
 
@@ -19,10 +20,20 @@ void Process::writeError(string error, bool destroy)
 }
 
 
-void Process::writeMessage(string message)
+void Process::write_message(string message)
 {
     if (rank == 0)
         cout << "Progress: " << message << endl;
+
+    return;
+}
+
+
+void Process::write_startup_info()
+{
+    if (rank) return; // Only write from the root proc
+
+    params.write_param_info();
 
     return;
 }

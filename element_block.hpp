@@ -3,9 +3,6 @@
 
 #include "common.hpp"
 
-
-
-
 class ElementBlock
 {
     public:
@@ -37,16 +34,4 @@ inline int ElementBlock::sidx(int i, int j, int k)
     return (i*Ns[1] + j)*Ns[2] + k;
 }
 
-
-// Should this be "setup", or even run as the constructor?
-void ElementBlock::allocate()
-{
-    return;
-}
-
-
-void ElementBlock::free()
-{
-    return;
-}
 #endif
