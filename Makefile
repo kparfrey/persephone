@@ -10,14 +10,17 @@ LDFLAGS  = -lmpi -lm
 #	$(CC) -c $(CPPFLAGS) $< -o $@
 
 
-persephone: main.o kernels.o
+persephone: main.o kernels.o process.o
 	$(CC) $(CPPFLAGS) $(LDFLAGS) $^ -o $@
 
 
-main.o: main.cpp process.hpp common.hpp
+main.o: main.cpp active_params.hpp process.hpp params.hpp common.hpp
 	$(CC) -c $(CPPFLAGS) $< -o $@
 
-kernels.o: kernels.cpp common.hpp
+kernels.o: kernels.cpp kernels.hpp common.hpp
+	$(CC) -c $(CPPFLAGS) $< -o $@
+
+process.o: process.cpp process.hpp common.hpp
 	$(CC) -c $(CPPFLAGS) $< -o $@
 
 

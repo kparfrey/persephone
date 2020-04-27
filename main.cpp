@@ -1,6 +1,8 @@
 #include <mpi.h>
 #include "common.hpp"
 #include "process.hpp"
+#include "params.hpp"
+#include "active_params.hpp"
 
 
 static void startMPI(int argc, char *argv[], Process &proc)
@@ -22,7 +24,7 @@ static void startMPI(int argc, char *argv[], Process &proc)
 
 int main(int argc, char *argv[])
 {
-    Process proc;
+    Process proc(active_parameters);
 
     startMPI(argc, &(*argv), proc);
     

@@ -4,7 +4,6 @@
 #include <iostream>
 #include <string>
 #include "common.hpp"
-#include "active_params.hpp"
 
 class Params;
 
@@ -18,8 +17,7 @@ class Process
     public:
 
     // NB: use a reference so the virtual functions work correctly...
-    Params &params = active_parameters;
-
+    Params &params;
       
     /* Local data */
     int rank;
@@ -29,30 +27,14 @@ class Process
 
 
     /* Methods */
-    void writeError(string error, bool destroy);
+    Process(Params &params);
+    void writeError(string error, bool destroy = true);
     void writeMessage(string message);
     template<typename type> void writeVariable(string message, type variable);
 };
 
 
-void Process::writeError(string error, bool destroy = true)
-{
-    cout << "Error --- rank: " << rank << ": " << error << endl;
-
-    if (destroy == true)
-        exit(1);
-
-    return;
-}
-
-
-void Process::writeMessage(string message)
-{
-    if (rank == 0)
-        cout << "Progress: " << message << endl;
-
-    return;
-}
+/*** Templated member functions ***/
 
 template<typename type>
 void Process::writeVariable(string message, type variable)
@@ -62,6 +44,4 @@ void Process::writeVariable(string message, type variable)
 
     return;
 }
-
-
 #endif
