@@ -28,6 +28,8 @@ int main(int argc, char *argv[])
 
     startMPI(argc, &(*argv), proc);
     
+    // Should wrap this call in process, so don't need to 
+    // include params.hpp here.
     if (proc.rank == 0) proc.params.write_param_info();
 
     MPI_Finalize();

@@ -2,7 +2,7 @@
 #define ACTIVE_PARAMS_HPP
 
 #include "common.hpp"
-#include "params.hpp"
+#include "params_cartesian.hpp"
 
 /* Rather than choosing a problem-specific method, may want to pass in the 
  * various parameter changes directly here in the constructor. Then each 
