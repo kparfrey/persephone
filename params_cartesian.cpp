@@ -1,4 +1,5 @@
 #include "params_cartesian.hpp"
+#include "process.hpp"
 
 using std::cout;
 using std::endl;
@@ -24,25 +25,25 @@ void ParamsCartesian::write_param_info()
     cout << endl;
     cout << "***** Parameters ******************************" << endl;
     cout << "Processes: ";
-    for (int i: {0,1,2}) cout << Nproc[i] << "  ";
+    for (int i: dirs) cout << Nproc[i] << "  ";
     cout << "           ---  Total: " << Nproc_tot << endl;
 
     cout << "Blocks:    ";
-    for (int i: {0,1,2}) cout << Nbloc[i] << "  ";
+    for (int i: dirs) cout << Nbloc[i] << "  ";
     cout << " per proc  ---  Total: " << Nbloc_tot_domain << endl;
 
     cout << "Elements:  ";
-    for (int i: {0,1,2}) cout << Nelem[i] << "  ";
+    for (int i: dirs) cout << Nelem[i] << "  ";
     cout << " per block ---  Total: " << Nelem_tot_domain << endl;
 
     cout << "Soln pnts: ";
-    for (int i: {0,1,2}) cout << Ns[i] << "  ";
+    for (int i: dirs) cout << Ns[i] << "  ";
     cout << " per elem  ---  Total: " << Ns_tot_domain << endl;
 
     cout << endl;
 
     cout << "Domain:   ";
-    for (int i: {0,1,2}) cout << domain_edge[i][0] << " --> " << domain_edge[i][1] << "   ";
+    for (int i: dirs) cout << domain_edge[i][0] << " --> " << domain_edge[i][1] << "   ";
     cout << endl;
 
     cout << "***********************************************" << endl;
@@ -54,5 +55,13 @@ void ParamsCartesian::write_param_info()
 
 void ParamsCartesian::setup_process(Process &proc)
 {
+    real_t domain_length;
+
+    for (int i: dirs) 
+    {
+        domain_length = domain_edge[i][1] - domain_edge[i][0];
+        proc.extent[i] = domain_length / Nproc[i]; // Evenly tile
+    }
+
     return;
 }

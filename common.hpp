@@ -12,6 +12,8 @@
 
 constexpr int Nvar = 1; // Total number of field variables
 
+constexpr int dirs[3] = {0, 1, 2}; // The three spatial directions
+
 
 /***************************************************/
 /**** Options above this line, do not change below */

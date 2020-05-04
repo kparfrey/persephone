@@ -21,6 +21,9 @@ class Process
       
     /* Local data */
     int rank;
+    int proc_idx[3];    // Set this proc's indices in the global 3D proc array
+    real_t extent[3];   // Spatial extent of proc's region in each dir
+    real_t edges[3][2]; 
 
     /* Global data */
     int Nproc;
