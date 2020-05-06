@@ -1,0 +1,31 @@
+1.  Finish setup of inter-process communication via FaceCommunicator objects. This sets the grid connectivity or topology. 
+
+2.  Implement mesh and data output via the HighFive C++ header interface to the HDF5 library. Initially assume a simple Cartesian mesh structure.
+
+3.  Add Metric object, and start with a trivial metric that just transforms from each element's reference-cube coordinates (x^i in [-1,1]) to physical coordinates in a Cartesian domain.
+
+4.  Add required C++ kernel code to kernels.cpp to perform all of the necessary components of the spectral difference algorithm. The core operations (interpolation from solution to flux points, differentiation of fluxes and simultaneous interpolation back to solution points, spectral-space filtering) have already been implemented and tested in a python test code (during March 2020), so this shouldn't require too much time-consuming index fiddling.
+
+5.  Implement a scalar advection equation with RK3 time stepping.
+
+6.  First test problem: scalar advection in a simple Cartesian domain. Verify everything is working correctly.
+
+7.  Add kernels.cuda file, and reimplement the methods from kernels.cpp in CUDA. Start with simplest thread distribution: one CUDA thread per 1D transform; this is suitable for large elements, up to 32^3 on current NVIDIA GPUs given the exisiting maximum number of threads per block. 
+
+8.  Try to perform the Cartesian scalar advection test using CUDA kernels. At this stage all MPI calls still come from the host, with data transferred between GPU and host for each MPI stage. Going forward, implement all kernels first in C++, test, then implement in CUDA with as little delay as possible. 
+
+9.  Add curved elements, with each element's edges expressed using polynomials of the same order as the element (isoparametric representation). Mapping from computational space to physical space using transfinite interpolation between the edges. Use the mapping functions to generate the effective metric on the element. At this stage, assume the curved elements are quasi-2D: two identical faces (composed of four ~ arbitrary curves), connected by straight lines --- this makes everything much simpler.
+
+10. Test the above problem using a warped Cartesian domain. Could start with an annulus or part of one, and then test general boundary curves. 
+
+11. Implement a new problem type: a cylinder or torus with a curved boundary. This requires a simple kind of unstructured mesh, giving a process connectivity arrangement that's not Cartesian. The more general mesh arrangement will require a slightly more complex output file format. 
+
+12. Try the advection problem with a torus having a circular cross-section.
+
+13. Implement a mapped cross-section boundary using, say, a Fourier expansion. At this point one should be able to solve in general axisymmetric domains with a toroidal topology. 
+
+14. Add fully 3D transfinite mapping of elements. This will likely require some testing in a python script before implementation in the full code. Once this is done one should be able to do a problem in the full 3D geometry.
+
+15. Implement systems of equations. Might want to start with Mawell for tests, then move to the resistive MHD equations.
+
+16. At some point: the above assumes the mesh is fully conforming --- each element has six neighbours in 3D, and all elements have the same numbers of points in each direction. This significantly simplifies the MPI organization and the numerical fluxes between elements, which will help things move along faster at the start. I've attempted to place all of dependence on the inter-process fluxes in the FaceCommunicator object, so to introduce more general meshes one should only need to modify that (and the setup functions to set the connectivity).

@@ -1,0 +1,33 @@
+1.  Test small pieces of code with Kokkos framework - basic tests of most important features on x86 (laptop/workstation) and Traverse GPUs.
+
+2.  Simple 1D pseudospectral code (e.g. for advection eqn. or wave eqn.) using matrix-multiplication transforms via Kokkos arrays. Test on both x86 and GPU, and make sure I know how to structure the transforms to give good performance on both. This simple code may form the basis of a test code for performance optimization of critical operations.
+
+3.  If Kokkos appears promising: restructure my existing "plasmania" codebase to use Kokkos arrays and structures. This code has most of the needed dual-Chebyshev grid structures, but uses native ANSI C arrays (and FFTW for fast cosine/sine transforms). 
+
+3.5 If some serious issue arises with using Kokkos (e.g. poor matrix transform performance on GPUs): re-evaluate options. Will most likely result in a CUDA implementation. In this case, repeat 1 and 2 with CUDA. Look into developing with HIP, to use my workstation's AMD GPU to speed up development over relying on the cluster's GPUs.
+
+4.  Adapt the existing codebase to be natively 3D. (The code was initially written with 2D domains in mind, to speed up development.) Make sure I can run in 1D and 2D by setting grid sizes to unity in the relevant directions.
+
+5.  Simple 1D/2D/3D tests of the spectral architecture using e.g. the advection eqn. or the vacuum Maxwell's eqns. and RK3 time stepping. This will be in a straightforward Cartesian geometry, to make sure things like inter-element and MPI communication are working correctly without index errors.
+
+6.  Add a capability for general arbitrary coordinate mappings, and a metric tensor for relating physical to computational coordinates. Verify with wave tests in a distorted grid. 
+
+6.5 At roughly this point it would be useful to develop an option for fast interpolation to a simpler grid, e.g. uniform Cartesian for tests in that geometry. Visualization options are limited when you need to work directly with non-trivial grids. This could be a post-processing step, though it would be easier to make it efficient if done as part of the main code. Can use yt's unstructured grid features for direct visualization of native data.
+
+7.  Add non-trivial grid structures (effectively, static mesh refinement), by both subdividing elements and increasing the order of some elements. Will require some care with array organization. Verify with more linear wave tests.
+
+8.  Implement the resistive MHD equations, with multiple choices for inter-element fluxes. 
+
+9.  Current sheet test: verify that the code gives good behaviour when the domain includes a current sheet which is not aligned with the grid, and extends across regions with different grid structures and coordinate distortion.
+
+10.  Compare direct explicit RK3 time stepping with something like an implicit-explicit RK method. May be good to have both options.
+
+11. Add perfect-conductor no-slip boundary conditions, test with some kind of pipe flow.
+
+12. Axisymmetric toroidal geometry with above BCs. Test with wave propagation, standing waves etc. 
+
+13. Toroidal geometry with a more complex grid, focusing resolution around the magnetic axis. Tokamak-inspired tests?
+
+14. Non-axisymmetric boundary, grid, and initial conditions. Testing may be difficult - perhaps start by propagating axisymmetric waves through the core of the non-axisymmetric grid.
+
+15. Read in initial conditions (and boundary surface?) from data produced by, e.g. VMEC, SPEC. 

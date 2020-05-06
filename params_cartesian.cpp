@@ -55,13 +55,15 @@ void ParamsCartesian::write_param_info()
 
 void ParamsCartesian::setup_process(Process &proc)
 {
-    real_t domain_length;
+    //real_t domain_length;
 
+    /***
     for (int i: dirs) 
     {
         domain_length = domain_edge[i][1] - domain_edge[i][0];
         proc.extent[i] = domain_length / Nproc[i]; // Evenly tile
     }
+    ***/
 
     return;
 }

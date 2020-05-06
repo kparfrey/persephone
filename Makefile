@@ -1,30 +1,36 @@
-CC = mpic++
+CXX = mpic++
 
-INCLUDES =
-CPPFLAGS = -std=c++17 -Wall -Werror
-LDFLAGS  = -lmpi -lm
+TARGET_ARCH =
+CPPFLAGS = 
+CXXFLAGS = -std=c++17 -Wall -Werror
+LDFLAGS  = 
+LDLIBS   = -lmpi -lm
+
+SRC = main.cpp kernels.cpp process.cpp element_block.cpp params_cartesian.cpp 
+OBJ := $(SRC:%.cpp=%.o)
+DEP := $(SRC:%.cpp=%.d)
 
 
-persephone: main.o kernels.o process.o params_cartesian.o element_block.o
-	$(CC) $(CPPFLAGS) $(LDFLAGS) $^ -o $@
+### Linking
+persephone: $(OBJ)
+	$(CXX) $(LDFLAGS) $^ $(LDLIBS) -o $@
+
+-include $(DEP)
 
 
-main.o: main.cpp active_params.hpp params_cartesian.hpp params.hpp process.hpp common.hpp
-	$(CC) -c $(CPPFLAGS) $< -o $@
+### Compiling
+DEPFLAGS = -MT $@ -MMD -MP -MF $*.d
 
-kernels.o: kernels.cpp kernels.hpp common.hpp
-	$(CC) -c $(CPPFLAGS) $< -o $@
-
-process.o: process.cpp process.hpp params.hpp common.hpp face_communicator.hpp
-	$(CC) -c $(CPPFLAGS) $< -o $@
-
-params_cartesian.o: params_cartesian.cpp params_cartesian.hpp params.hpp common.hpp
-	$(CC) -c $(CPPFLAGS) $< -o $@
-
-element_block.o: element_block.cpp element_block.hpp common.hpp
-	$(CC) -c $(CPPFLAGS) $< -o $@
+%.o:%.cpp
+	$(CXX) $(DEPFLAGS) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 
 clean:
 	rm -f persephone
 	rm -f *.o
+	rm -f *.d
+
+
+### Dependency management based on ideas from:
+### http://scottmcpeak.com/autodepend/autodepend.html
+### http://make.mad-scientist.net/papers/advanced-auto-dependency-generation/

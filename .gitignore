@@ -1,3 +1,4 @@
 persephone
 *.o
 *.swp
+*.d

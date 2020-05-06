@@ -1,5 +1,5 @@
-#ifndef ELEMENT_BRICK_HPP
-#define ELEMENT_BRICK_HPP
+#ifndef ELEMENT_BLOCK_HPP
+#define ELEMENT_BLOCK_HPP
 
 #include "common.hpp"
 
