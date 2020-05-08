@@ -25,14 +25,37 @@ def square(theta, h):
     return r
 
 
-def corner_line(theta, h):
-    N = 70
+def corner_lines(t_outer, h):
+    Nr = 70
+    R0s = np.array([h, -h, -h,  h])
+    Z0s = np.array([h,  h, -h, -h])
+    theta_add = np.array([0, pi, pi, 0])
+    Rcl = np.ndarray((4,Nr)) # These are in physical space
+    Zcl = np.ndarray((4,Nr))
+    for i in range(4):
+        R0 = R0s[i]  # Cyl coords on unit disc for inner (square) corners
+        Z0 = Z0s[i]
+        R1 = np.cos(t_outer[i]) # Cyl coords on unit disc for outer corners
+        Z1 = np.sin(t_outer[i])
+        slope = (Z1-Z0)/(R1-R0)
+        R = np.linspace(R0, R1, Nr)
+        Z = Z0 + slope*(R - R0)
+        r = np.sqrt(R*R + Z*Z)
+        theta = np.arctan(Z/R) + theta_add[i]
+        Rcl[i,:], Zcl[i,:] = disc_to_physical(r, theta, Rm, Zm)
+    return Rcl, Zcl
+
 
 
 def circle(theta):
     N = theta.shape[0]
     r = np.ones((N,))
     return r
+
+
+
+##########################################################################
+
 
 
 M = 5
@@ -43,7 +66,7 @@ Rm[1] = 1.0
 Zm[1] = 2.0
 Rm[2] = 0.4
 Zm[2] = 0.2
-#Rm[3] = -0.1
+Rm[3] = -0.1
 Zm[3] = 0.0
 
 h = 0.4  # Inner square half-width on unit disc
@@ -51,25 +74,19 @@ h = 0.4  # Inner square half-width on unit disc
 Ntheta = 97  # (Multiple of 8) + 1 to place points exactly at pi/4, 3*pi/4 etc
 theta = np.linspace(0, 2*np.pi, Ntheta)
 
-Ro, Zo = disc_to_physical(circle(theta),      theta, Rm, Zm)
+Ro, Zo = disc_to_physical(circle(theta),    theta, Rm, Zm)
 Rs, Zs = disc_to_physical(square(theta, h), theta, Rm, Zm)
 
 ### Quad corners on the outer boundary
-### Simplest case --- all have the same pi/4-like angles as the square's corners
-theta_corners = np.array([pi/4, 3*pi/4, 5*pi/4, 7*pi/4])
-Rc, Zc = disc_to_physical(circle(theta_corners), theta_corners, Rm, Zm)
+#outer_corners  = np.array([pi/4, 3*pi/4, 5*pi/4, 7*pi/4]) ### Default: same as square
+outer_corners  = np.array([pi/4, 0.85*pi, 1.15*pi, 7*pi/4])
 
-### Corner lines
-### Simplest case --- will want to generalize to that all four corners on the disc
-### are arbitrary, and in general each is an independent function of toroidal angle
-Nr = 70
-r0 = np.sqrt(2*h*h)
-rcl = np.linspace(r0, 1.0, Nr)
-unity = np.ones((Nr,))
-Rcl = np.ndarray((4,Nr))
-Zcl = np.ndarray((4,Nr))
-for i in [0,1,2,3]:
-    Rcl[i,:], Zcl[i,:] = disc_to_physical(rcl, theta_corners[i]*unity, Rm, Zm) 
+### Outer quad corners in physical space
+Rc, Zc = disc_to_physical(circle(outer_corners), outer_corners, Rm, Zm)
+
+### Lines connecting inner square to outer quad corners, physical space
+Rcl, Zcl = corner_lines(outer_corners, h)
+
 
 
 plt.figure()
@@ -81,6 +98,6 @@ plt.plot(Rs, Zs)
 
 for i in [0,1,2,3]:
     plt.plot(Rcl[i,:], Zcl[i,:], 'k')
-#plt.plot(Rc, Zc, 'o', color='r')
+plt.plot(Rc, Zc, '.', color='r')
 
 plt.show()
