@@ -6,17 +6,16 @@ using std::endl;
     
 void ParamsCartesian::secondary_params()
 {
-    Nproc_tot        = Nproc[0] * Nproc[1] * Nproc[2];
-    Nbloc_tot_domain = Nbloc[0] * Nbloc[1] * Nbloc[2] * Nproc_tot;
-    Nelem_tot        = Nelem[0] * Nelem[1] * Nelem[2];
-    Nelem_tot_domain = Nelem_tot * Nbloc_tot_domain;
-    Ns_tot           = Ns[0] * Ns[1] * Ns[2];
-    Ns_tot_domain    = Ns_tot * Nelem_tot_domain;
+    Nproc_domain = Nproc[0] * Nproc[1] * Nproc[2];
+    Nelem_proc   = Nelem[0] * Nelem[1] * Nelem[2];
+    Nelem_domain = Nelem_proc * Nproc_domain;
+    Ns_elem      = Ns[0] * Ns[1] * Ns[2];
+    Ns_domain    = Ns_elem * Nelem_domain;
 
-    Nf[0]  = Ns[0]+1;
-    Nf[1]  = Ns[1]+1;
-    Nf[2]  = Ns[2]+1;
-    Nf_tot = Ns[0]*Ns[1]*Nf[2] + Ns[0]*Ns[2]*Nf[1] + Ns[1]*Ns[2]*Nf[0]; // 3 Nf Ns^2 if all equal
+    Nf[0]   = Ns[0]+1;
+    Nf[1]   = Ns[1]+1;
+    Nf[2]   = Ns[2]+1;
+    Nf_elem = Ns[0]*Ns[1]*Nf[2] + Ns[0]*Ns[2]*Nf[1] + Ns[1]*Ns[2]*Nf[0]; // 3 Nf Ns^2 if all equal
 }
 
 
@@ -26,19 +25,15 @@ void ParamsCartesian::write_param_info()
     cout << "***** Parameters ******************************" << endl;
     cout << "Processes: ";
     for (int i: dirs) cout << Nproc[i] << "  ";
-    cout << "           ---  Total: " << Nproc_tot << endl;
-
-    cout << "Blocks:    ";
-    for (int i: dirs) cout << Nbloc[i] << "  ";
-    cout << " per proc  ---  Total: " << Nbloc_tot_domain << endl;
+    cout << "          ---  Total: " << Nproc_domain << endl;
 
     cout << "Elements:  ";
     for (int i: dirs) cout << Nelem[i] << "  ";
-    cout << " per block ---  Total: " << Nelem_tot_domain << endl;
+    cout << " per proc ---  Total: " << Nelem_domain << endl;
 
     cout << "Soln pnts: ";
     for (int i: dirs) cout << Ns[i] << "  ";
-    cout << " per elem  ---  Total: " << Ns_tot_domain << endl;
+    cout << " per elem ---  Total: " << Ns_domain << endl;
 
     cout << endl;
 
@@ -55,15 +50,54 @@ void ParamsCartesian::write_param_info()
 
 void ParamsCartesian::setup_process(Process &proc)
 {
-    //real_t domain_length;
+    real_t domain_length;
+    real_t length_per_proc;
+    int proc_idx[3]; 
 
-    /***
+    /* This process's set of indices in the global 3D array of processes   *
+     * Assume row-major flattening order : eg ElementBlock::sidx() for CPU */
+    proc_idx[2] = proc.rank % Nproc[2];
+    proc_idx[1] = (proc.rank / Nproc[2]) % Nproc[1];
+    proc_idx[0] = proc.rank / (Nproc[1]*Nproc[2]);
+
+    for (int i: ifaces)
+        proc.faces[i].my_rank = proc.rank;
+
+    /* Inter-process connectivity */
+    // Make periodic for now
+    int proc_base;
+
+    if (proc_idx[2] == 0) proc_base = Nproc[2];
+    else proc_base = proc_idx[2];
+    proc.faces[0].neighbour_rank = proc_base - 1;
+    
+    if (proc_idx[2] == Nproc[2]-1) proc_base = -1;
+    else proc_base = proc_idx[2];
+    proc.faces[1].neighbour_rank = proc_base + 1;
+
+    if (proc_idx[0] == 0) proc_base = Nproc[0];
+    else proc_base = proc_idx[0];
+    proc.faces[2].neighbour_rank = proc_base - 1;
+
+    if (proc_idx[0] == Nproc[0]-1) proc_base = -1;
+    else proc_base = proc_idx[0];
+    proc.faces[3].neighbour_rank = proc_base + 1;
+
+    if (proc_idx[1] == 0) proc_base = Nproc[1];
+    else proc_base = proc_idx[1];
+    proc.faces[4].neighbour_rank = proc_base - 1;
+
+    if (proc_idx[1] == Nproc[1]-1) proc_base = -1;
+    else proc_base = proc_idx[1];
+    proc.faces[5].neighbour_rank = proc_base + 1;
+
+
+
     for (int i: dirs) 
     {
         domain_length = domain_edge[i][1] - domain_edge[i][0];
-        proc.extent[i] = domain_length / Nproc[i]; // Evenly tile
+        length_per_proc = domain_length / Nproc[i]; // Evenly tile
     }
-    ***/
 
     return;
 }

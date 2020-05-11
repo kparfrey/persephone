@@ -14,10 +14,9 @@ class Params
     public:
 
     /* Total quantities referring to whole domain */
-    int Nproc_tot;
-    int Nbloc_tot_domain;
-    int Nelem_tot_domain;
-    int Ns_tot_domain;
+    int Nproc_domain;
+    int Nelem_domain;
+    int Ns_domain;
 
     real_t cfl;
     real_t end_time;

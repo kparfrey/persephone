@@ -6,8 +6,7 @@ class ParamsCartesian : public Params
     public:
 
     int Nproc[3];  // No. of processes in each direction in the whole domain
-    int Nbloc[3];  // No. of element blocks in each direction, in each process
-    int Nelem[3];  // No. of elements in each direction, in each block
+    int Nelem[3];  // No. of elements in each direction, in each process
     int Ns[3];     // No. of solution points in each direction, in each element
 
     real_t domain_edge[3][2];
@@ -15,9 +14,9 @@ class ParamsCartesian : public Params
 
     /* Secondary or derived quantities */
     int Nf[3];
-    int Ns_tot; // Total numbers of soln/flux points per element
-    int Nf_tot;
-    int Nelem_tot;
+    int Ns_elem; // Total numbers of soln/flux points per element
+    int Nf_elem;
+    int Nelem_proc;
 
     /* General methods */
     virtual void secondary_params();
@@ -27,7 +26,6 @@ class ParamsCartesian : public Params
 
     /* Constructor */
     ParamsCartesian(int (& Nproc_)[3], 
-                    int (& Nbloc_)[3],
                     int (& Nelem_)[3], 
                     int (& Ns_)[3], 
                     real_t (& domain_edge_)[3][2],
@@ -38,7 +36,6 @@ class ParamsCartesian : public Params
         for (int i=0; i<3; i++)
         {
             Nproc[i] = Nproc_[i];
-            Nbloc[i] = Nbloc_[i];
             Nelem[i] = Nelem_[i];
             Ns[i]    = Ns_[i];
             domain_edge[i][0] = domain_edge_[i][0];

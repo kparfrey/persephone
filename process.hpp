@@ -24,7 +24,7 @@ class Process
     int rank;
     FaceCommunicator faces[6];
     real_t corners[8][3]; // 3 spatial coordinates for each of 8 corners
-    real_t edges[12];     // Lengths of edges in physical units 
+    //real_t edges[12];     // Lengths of edges in physical units 
     
     // Don't want to build connectivity assumptions into the Process class
     // --- all of this should be set at initialization and unnecessary after
