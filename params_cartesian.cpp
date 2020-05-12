@@ -52,7 +52,6 @@ void ParamsCartesian::setup_process(Process &proc)
 {
     real_t domain_length;
     real_t length_per_proc;
-    int proc_idx[3]; 
 
     /* This process's set of indices in the global 3D array of processes   *
      * Assume row-major flattening order : eg ElementBlock::sidx() for CPU */
@@ -61,7 +60,13 @@ void ParamsCartesian::setup_process(Process &proc)
     proc_idx[0] = proc.rank / (Nproc[1]*Nproc[2]);
 
     for (int i: ifaces)
+    {
         proc.faces[i].my_rank = proc.rank;
+        proc.faces[i].my_idx  = i;
+        proc.faces[i].external_face = false; // Fully periodic for now...
+        proc.faces[i].N[0] = Ns[face_coords[i][0]]; // # soln points on the face
+        proc.faces[i].N[1] = Ns[face_coords[i][1]];
+    }
 
     /* Inter-process connectivity */
     // Make periodic for now
@@ -91,6 +96,13 @@ void ParamsCartesian::setup_process(Process &proc)
     else proc_base = proc_idx[1];
     proc.faces[5].neighbour_rank = proc_base + 1;
 
+
+    proc.faces[0].neighbour_idx = 1; // Simple globally Cartesian connectivity 
+    proc.faces[1].neighbour_idx = 0; 
+    proc.faces[2].neighbour_idx = 3; 
+    proc.faces[3].neighbour_idx = 2; 
+    proc.faces[4].neighbour_idx = 5; 
+    proc.faces[5].neighbour_idx = 4; 
 
 
     for (int i: dirs) 

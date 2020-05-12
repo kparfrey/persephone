@@ -16,6 +16,12 @@ constexpr int dirs[3] = {0, 1, 2}; // The three spatial directions
 
 constexpr int ifaces[6] = {0,1,2,3,4,5}; // Indices for faces (proc, elem, etc.)
 
+/* Coordinate directions spanning each of the six faces 
+ * In each of the 3 pairs, the first/lower-index one is at lower values 
+ * of the missing/normal coordinate
+ */
+constexpr int face_coords[6][2] = {{0,1},{0,1},{0,2},{0,2},{1,2},{1,2}};
+
 
 /***************************************************/
 /**** Options above this line, do not change below */
