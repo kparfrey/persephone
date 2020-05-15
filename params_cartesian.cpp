@@ -120,13 +120,13 @@ void ParamsCartesian::setup_process(Process &proc)
             proc.corners[i][j] = proc_origin[j] + corner_coords[i][j]*length_per_proc[j];
 
 
-    setup_elementblock(proc.elements);
+    setup_elementblock(proc.elements, proc);
 
     return;
 }
 
 
-void ParamsCartesian::setup_elementblock(ElementBlock &elements)
+void ParamsCartesian::setup_elementblock(ElementBlock &elements, Process &proc)
 {
     for (int i: dirs)
     {
@@ -140,7 +140,18 @@ void ParamsCartesian::setup_elementblock(ElementBlock &elements)
     elements.Nelem_block = Nelem_proc; 
     elements.Nfield  = Nfield;
 
-    elements.allocate();
+    /* Set geometrical information: trivial for now since Process and
+     * ElementBlock boundaries are assumed to coincide */
+    for (int i: icorners)
+        for (int j: dirs)
+            elements.corners[i][j] = proc.corners[i][j];
+
+    for (int i: iedges)
+        elements.edges[i] = proc.edges[i];
+
+    /* At this point all external information is present, and the internal
+     * setup method can take over. */
+    elements.setup();
 
     return;
 }

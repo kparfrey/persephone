@@ -31,7 +31,7 @@ class Params
     /* Methods: all must be defined in derived classes */
     virtual void secondary_params(){};
     virtual void setup_process(Process &proc){};
-    virtual void setup_elementblock(ElementBlock &elements){};
+    virtual void setup_elementblock(ElementBlock &elements, Process &proc){};
     virtual void write_param_info(){std::cout << "Calling wrong method!" << std::endl;};
 };
 #endif

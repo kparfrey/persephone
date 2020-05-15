@@ -1,6 +1,16 @@
 #include "element_block.hpp"
 #include "kernels.hpp"
 
+void ElementBlock::setup()
+{
+    allocate();
+    set_computational_coords();
+    set_physical_coords();
+
+    return;
+}
+
+
 void ElementBlock::allocate()
 {
     for (int i: dirs)
@@ -38,5 +48,11 @@ void ElementBlock::set_computational_coords()
         for (int i = 0; i < Nf[d]; ++i)
             xf[d][i] = - cos(pi * i  / (Nf[d] - 1.0));
 
+    return;
+}
+
+
+void ElementBlock::set_physical_coords()
+{
     return;
 }

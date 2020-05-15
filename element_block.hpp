@@ -2,9 +2,17 @@
 #define ELEMENT_BLOCK_HPP
 
 #include "common.hpp"
+#include "edge.hpp"
 
 class ElementBlock
 {
+    private:
+    /* These only called by the setup() method */
+    void allocate();
+    void set_computational_coords();
+    void set_physical_coords();
+
+
     public:
 
     /* Data */
@@ -15,6 +23,11 @@ class ElementBlock
     int Nf_elem;  // Total no. of flux points "   "     "
     int Nelem_block;
     int Nfield;
+
+    /* Geometrical information */
+    /* For now these are degenerate with the corresponding Process data */
+    real_t corners[8][3]; // 3 physical-space coordinates for each of 8 corners
+    Edge edges[12]; 
 
     /* Computational space locations: one element's worth only */
     real_t *xs[3]; // Soln point locations in computational space, in each direction 
@@ -27,9 +40,8 @@ class ElementBlock
 
     /* Methods */
     inline int sidx(int i, int j, int k); // soln-point index map
-    void allocate();
+    void setup();
     void free();
-    void set_computational_coords();
 };
 
 

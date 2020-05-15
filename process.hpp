@@ -6,6 +6,7 @@
 #include "common.hpp"
 #include "face_communicator.hpp"
 #include "element_block.hpp"
+#include "edge.hpp"
 
 class Params;
 
@@ -25,7 +26,7 @@ class Process
     int rank;
     FaceCommunicator faces[6];
     real_t corners[8][3]; // 3 physical-space coordinates for each of 8 corners
-    //real_t edges[12]; // Should become some kind of general curve object 
+    Edge edges[12]; // Should become some kind of general curve object 
 
     ElementBlock elements; // Start with a single ElementBlock per process...
     
