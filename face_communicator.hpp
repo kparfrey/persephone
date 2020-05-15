@@ -7,7 +7,7 @@ class FaceCommunicator
 {
     public:
 
-    int N[2]; // No. of (solution) points in each dir on the face
+    int N[2]; // Total no. of (solution) points in each dir on the face
               // Lower directional index will always be in "0" slot
 
     int my_rank;        // This process's rank

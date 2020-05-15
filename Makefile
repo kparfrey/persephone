@@ -6,7 +6,7 @@ CXXFLAGS = -std=c++17 -Wall -Werror
 LDFLAGS  = 
 LDLIBS   = -lmpi -lm
 
-SRC = main.cpp kernels.cpp process.cpp element_block.cpp params_cartesian.cpp 
+SRC = main.cpp kernels.cpp process.cpp element_block.cpp params.cpp params_cartesian.cpp 
 OBJ := $(SRC:%.cpp=%.o)
 DEP := $(SRC:%.cpp=%.d)
 

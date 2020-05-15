@@ -5,6 +5,7 @@
 #include <string>
 #include "common.hpp"
 #include "face_communicator.hpp"
+#include "element_block.hpp"
 
 class Params;
 
@@ -23,13 +24,10 @@ class Process
     /* Local data */
     int rank;
     FaceCommunicator faces[6];
-    real_t corners[8][3]; // 3 spatial coordinates for each of 8 corners
-    //real_t edges[12];     // Lengths of edges in physical units 
-    
-    // Don't want to build connectivity assumptions into the Process class
-    // --- all of this should be set at initialization and unnecessary after
-    //int proc_idx[3];    // Set this proc's indices in the global 3D proc array
-    //real_t extent[3];   // Spatial extent of proc's region in each dir
+    real_t corners[8][3]; // 3 physical-space coordinates for each of 8 corners
+    //real_t edges[12]; // Should become some kind of general curve object 
+
+    ElementBlock elements; // Start with a single ElementBlock per process...
     
 
     /* Global data */

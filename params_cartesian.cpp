@@ -50,9 +50,6 @@ void ParamsCartesian::write_param_info()
 
 void ParamsCartesian::setup_process(Process &proc)
 {
-    real_t domain_length;
-    real_t length_per_proc;
-
     /* This process's set of indices in the global 3D array of processes   *
      * Assume row-major flattening order : eg ElementBlock::sidx() for CPU */
     proc_idx[2] = proc.rank % Nproc[2];
@@ -105,11 +102,45 @@ void ParamsCartesian::setup_process(Process &proc)
     proc.faces[5].neighbour_idx = 4; 
 
 
+    /* For now: assume basic Cartesian shape --- 90 degree angles etc. */
+    real_t domain_length;
+    real_t length_per_proc[3];
     for (int i: dirs) 
     {
         domain_length = domain_edge[i][1] - domain_edge[i][0];
-        length_per_proc = domain_length / Nproc[i]; // Evenly tile
+        length_per_proc[i] = domain_length / Nproc[i]; // Evenly tile
     }
+
+    real_t proc_origin[3]; // Coordinates of corner 0
+    for (int i: dirs) 
+        proc_origin[i] = proc_idx[i] * length_per_proc[i];
+
+    for (int i: icorners)
+        for (int j: dirs)
+            proc.corners[i][j] = proc_origin[j] + corner_coords[i][j]*length_per_proc[j];
+
+
+    setup_elementblock(proc.elements);
+
+    return;
+}
+
+
+void ParamsCartesian::setup_elementblock(ElementBlock &elements)
+{
+    for (int i: dirs)
+    {
+        elements.Nelem[i] = Nelem[i];
+        elements.Ns[i] = Ns[i];
+        elements.Nf[i] = Nf[i];
+    }
+
+    elements.Ns_elem = Ns_elem; // Should these be set here rather
+    elements.Nf_elem = Nf_elem; // than by params object?
+    elements.Nelem_block = Nelem_proc; 
+    elements.Nfield  = Nfield;
+
+    elements.allocate();
 
     return;
 }

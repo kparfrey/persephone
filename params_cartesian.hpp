@@ -24,17 +24,19 @@ class ParamsCartesian : public Params
     /* General methods */
     virtual void secondary_params();
     virtual void setup_process(Process &proc);
+    virtual void setup_elementblock(ElementBlock &elements);
     virtual void write_param_info();
 
 
     /* Constructor */
-    ParamsCartesian(int (& Nproc_)[3], 
+    ParamsCartesian(EqnSystem equations,
+                    int (& Nproc_)[3], 
                     int (& Nelem_)[3], 
                     int (& Ns_)[3], 
                     real_t (& domain_edge_)[3][2],
                     real_t cfl = 0.8,
                     real_t end_time = 1.0)
-    : Params(cfl, end_time)
+    : Params(equations, cfl, end_time)
     {
         for (int i=0; i<3; i++)
         {
