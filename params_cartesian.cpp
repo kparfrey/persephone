@@ -140,6 +140,7 @@ void ParamsCartesian::setup_elementblock(ElementBlock &elements, Process &proc)
     elements.Nelem_block = Nelem_proc; 
     elements.Nfield  = Nfield;
 
+
     /* Set geometrical information: trivial for now since Process and
      * ElementBlock boundaries are assumed to coincide */
     for (int i: icorners)
@@ -148,6 +149,7 @@ void ParamsCartesian::setup_elementblock(ElementBlock &elements, Process &proc)
 
     for (int i: iedges)
         elements.edges[i] = proc.edges[i];
+
 
     /* At this point all external information is present, and the internal
      * setup method can take over. */
