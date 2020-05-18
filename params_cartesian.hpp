@@ -18,8 +18,6 @@ class ParamsCartesian : public Params
     int Nf_elem;
     int Nelem_proc;
 
-    int proc_idx[3]; // This proc's 3D indices in the global Cartesian array of procs
-
 
     /* General methods */
     virtual void secondary_params();

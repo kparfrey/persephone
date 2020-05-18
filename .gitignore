@@ -2,3 +2,4 @@ persephone
 *.o
 *.swp
 *.d
+*.h5

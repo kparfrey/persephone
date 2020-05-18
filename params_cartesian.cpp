@@ -52,9 +52,20 @@ void ParamsCartesian::setup_process(Process &proc)
 {
     /* This process's set of indices in the global 3D array of processes   *
      * Assume row-major flattening order : eg ElementBlock::sidx() for CPU */
+    int proc_idx[3];
+
     proc_idx[2] = proc.rank % Nproc[2];
     proc_idx[1] = (proc.rank / Nproc[2]) % Nproc[1];
     proc_idx[0] = proc.rank / (Nproc[1]*Nproc[2]);
+
+    /* A Cartesian dataset needs only one Cartesian group */
+    proc.group = 0;
+    for (int i: dirs)
+    {
+        proc.group_idx[i] = proc_idx[i];
+        proc.Nproc_group[i] = Nproc[i];
+    }
+
 
     for (int i: ifaces)
     {

@@ -4,6 +4,9 @@
 
 void ElementBlock::setup()
 {
+    for (int i: dirs)
+        Ns_tot[i] = Ns[i] * Nelem[i];
+
     allocate();
     set_computational_coords();
     set_physical_coords();

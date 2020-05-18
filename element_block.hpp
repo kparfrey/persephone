@@ -19,6 +19,7 @@ class ElementBlock
     int Nelem[3]; // No. of elements in each direction
     int Ns[3];    // No. of soln points in each element, in each direction
     int Nf[3];    // No. of flux points "   "      "     "   "       "
+    int Ns_tot[3]; // Total number of soln points in each direction
     int Ns_elem;  // Total no. of soln points in each element
     int Nf_elem;  // Total no. of flux points "   "     "
     int Nelem_block;

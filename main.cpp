@@ -2,6 +2,7 @@
 #include "common.hpp"
 #include "process.hpp"
 #include "active_params.hpp"
+#include "write_mesh.hpp"
 
 
 static void startMPI(int argc, char *argv[], Process &proc)
@@ -31,6 +32,9 @@ int main(int argc, char *argv[])
 
     proc.write_startup_info();
     
+    proc.params.setup_process(proc); // Need to do something about this...
+    
+    write_mesh(proc);
 
     MPI_Finalize();
     exit(0);
