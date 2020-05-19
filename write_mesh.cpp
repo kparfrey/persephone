@@ -1,47 +1,45 @@
 #include "write_mesh.hpp"
 
-using std::vector;
-using HighFive::File;
 
 
-static real_t*** alloc_3D_array(vector<size_t> dims)
+/* Repack a 1D data array from native (elementwise etc.) ordering to simple
+ * order which is logically Cartesian across the elementblock for a single variable */
+/* This works but needs to be made more efficient for use in data output */
+static void repack(real_t* original, real_t* eb_logical, ElementBlock& eb)
 {
-    real_t ***array = new real_t** [dims[0]];
+    int il, jl, kl;          // elementblock-logical indices
+    int Nl1 = eb.Ns_tot[1];  // Logical dimensions are the same as Ns_tot[3]
+    int Nl2 = eb.Ns_tot[2];
 
-    for (size_t i = 0; i < dims[0]; ++i)
+    for (int ie = 0; ie < eb.Nelem[0]; ie++)
+    for (int je = 0; je < eb.Nelem[1]; je++)
+    for (int ke = 0; ke < eb.Nelem[2]; ke++)
+    for (int i  = 0; i  < eb.Ns[0];    i++)
+    for (int j  = 0; j  < eb.Ns[1];    j++)
+    for (int k  = 0; k  < eb.Ns[2];    k++)
     {
-        array[i] = new real_t* [dims[1]];
-        for (size_t j = 0; j < dims[1]; ++j)
-            array[i][j] = new real_t [dims[2]];
-    }
-
-    return array;
-}
-
-
-static void threeDify(vector<size_t> dims, real_t *oneD, real_t ***threeD)
-{
-    for (size_t i = 0; i < dims[0]; ++i)
-    for (size_t j = 0; j < dims[1]; ++j)
-    for (size_t k = 0; k < dims[2]; ++k)
-    {
-        /* i,j,k iterate straightforwardly <<across elements>> 
-         * in a single Process/ElementBlock */
-        threeD[i][j][k] = i + 2.0*j + 3.0*k;
+        // Assume going from solution points for now...
+        il = ie * eb.Ns[0] + i;
+        jl = je * eb.Ns[1] + j;
+        kl = ke * eb.Ns[2] + k;
+        eb_logical[(il*Nl1 + jl)*Nl2 + kl] = original[eb.ids_full(i,j,k,ie,je,ke)];
     }
 
     return;
 }
 
 
+
+/* Very basic mesh output for simplest Cartesian topology */
 void write_mesh(Process &proc)
 {
-    vector<size_t> local_dims(3);
-    vector<size_t> global_dims(3);
-    vector<size_t> offset(3);
+    ElementBlock& eb = proc.elements;
+    std::vector<size_t> local_dims(3);
+    std::vector<size_t> global_dims(3);
+    std::vector<size_t> offset(3);
 
-    proc.write_message("Creating mesh file.");
-    File meshfile("mesh.h5", File::ReadWrite | File::Create | File::Truncate,
+    proc.write_message("Creating mesh file...");
+    HighFive::File meshfile("mesh.h5", HighFive::File::Overwrite,
                                 HighFive::MPIOFileDriver(MPI_COMM_WORLD, MPI_INFO_NULL));
 
 
@@ -49,27 +47,32 @@ void write_mesh(Process &proc)
     /* Basic structured Cartesian grid: assume every process is identical etc. */
     for (int i: dirs)
     {
-        local_dims[i]  = std::size_t(proc.elements.Ns_tot[i]);
-        global_dims[i] = std::size_t(local_dims[i] * proc.Nproc_group[i]);
-        offset[i] = std::size_t(proc.group_idx[i] * local_dims[i]);
+        local_dims[i]  = size_t(eb.Ns_tot[i]);
+        global_dims[i] = size_t(local_dims[i] * proc.Nproc_group[i]);
+        offset[i]      = size_t(proc.group_idx[i] * local_dims[i]);
     }
 
-    for (int i: dirs)
-        proc.write_variable<size_t>("Global dims", global_dims[i]);
+    /* For now, just write all data as separate scalar variables */
+    constexpr int Nwrite  = 3;
+    std::string names[Nwrite] = {"r0", "r1", "r2"};
+    real_t* variables[Nwrite] = {eb.rs[0], eb.rs[1], eb.rs[2]};
+    real_t* data = new real_t [local_dims[0]*local_dims[1]*local_dims[2]];
 
-    proc.write_message("Creating dataset.");
-    HighFive::DataSet dataset = meshfile.createDataSet<real_t>("test_dataset", 
-                                       HighFive::DataSpace(global_dims));
+    for (int i = 0; i < Nwrite; i++)
+    {
+        HighFive::DataSet dataset = meshfile.createDataSet<real_t>(names[i], 
+                                           HighFive::DataSpace(global_dims));
 
-    proc.write_message("Creating 3D array.");
-    real_t ***array3D = alloc_3D_array(local_dims);
+        /* Need to repack data from native ordering to elementblock-wise logical */
+        repack(variables[i], data, eb);
 
-    proc.write_message("Converting from 1D to 3D array.");
-    threeDify(local_dims, proc.elements.rs[0], array3D);
+        /* Pass the repacked 1D array cast as a triple pointer */
+        proc.write_message("Writing " + names[i] + "...");
+        dataset.select(offset, local_dims).write((real_t***)data);
+    }
 
-    proc.write_message("Writing data to disk.");
-    dataset.select(offset, local_dims).write(array3D);
+    delete[] data;
 
-    proc.write_message("Finished writing to disk.");
+    proc.write_message("Finished writing mesh file to disk.");
     return;
 }

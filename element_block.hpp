@@ -44,6 +44,7 @@ class ElementBlock
     inline int ids(int i, int j, int k); // soln-point index map
     inline int idf(int i, int j, int k); // flux-point index map
     inline int id_elem(int i, int j, int k);
+    inline int ids_full(int i, int j, int k, int ie, int je, int ke); 
     void setup();
     void free();
 };
@@ -69,6 +70,19 @@ inline int ElementBlock::idf(int i, int j, int k)
 inline int ElementBlock::id_elem(int i, int j, int k)
 {
     return (i*Nelem[1] + j)*Nelem[2] + k;
+}
+
+
+/*
+inline int ElementBlock::mem_id_elem(int i, int j, int k)
+{
+    return ElementBlock::id_elem(i,j,k) * Ns_elem;
+}
+*/
+
+inline int ElementBlock::ids_full(int i, int j, int k, int ie, int je, int ke)
+{
+    return ElementBlock::ids(i,j,k) + Ns_elem * ElementBlock::id_elem(ie,je,ke);
 }
 
 #endif
