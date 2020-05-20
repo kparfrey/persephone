@@ -1,5 +1,7 @@
 #include "write_mesh.hpp"
 
+using std::string;
+
 
 
 /* Repack a 1D data array from native (elementwise etc.) ordering to simple
@@ -29,6 +31,30 @@ static void repack(real_t* original, real_t* eb_logical, ElementBlock& eb)
 }
 
 
+/* Create groups in the file, and fill in names & datalist from vecnames & veclist.
+ * Pass in ref to count, the index in names/datalist at which the vector components begin. */
+static void vector_organization(HighFive::File file,
+                                const int Nvec, int& count, string group,
+                                string vecnames[], real_t** veclist[],
+                                string names[], real_t* datalist[])
+{
+    string subgroup; // The name of the vector within its parent group
+
+    for (int i = 0; i < Nvec; i++)
+    {
+        subgroup = group + "/" + vecnames[i];
+        file.createGroup(subgroup);
+        for (int d: dirs)
+        {
+            names[count]    = subgroup + "/" + std::to_string(d);
+            datalist[count] = veclist[i][d];
+            count++;
+        }
+    }
+
+    return;
+}
+
 
 /* Very basic mesh output for simplest Cartesian topology */
 void write_mesh(Process &proc)
@@ -53,11 +79,23 @@ void write_mesh(Process &proc)
     }
 
     /* For now, just write all data as separate scalar variables */
-    constexpr int Nwrite  = 3;
-    std::string cp = "/coords/r/";
-    meshfile.createGroup(cp); // Can create groups recursively
-    std::string names[Nwrite] = {cp+"0", cp+"1", cp+"2"};
-    real_t* variables[Nwrite] = {eb.rs[0], eb.rs[1], eb.rs[2]};
+    constexpr int Nvec   = 1;
+    constexpr int Nscal  = 0;
+    constexpr int Nwrite = Nscal + 3*Nvec;
+    int count = 0; // For keeping track of the variable lists
+
+    /* Automating the organization of vector components --- will want
+     * to break this into a function for use with data output too. */
+    string names[Nwrite];
+    real_t* datalist[Nwrite];
+
+    string group           = "/coords";
+    string vecnames[Nvec]  = {"r"};
+    real_t** veclist[Nvec] = {eb.rs};
+
+    vector_organization(meshfile, Nvec, count, group, vecnames, veclist, names, datalist);
+
+    /* Allocate data buffer for repacking each component */
     real_t* data = new real_t [local_dims[0]*local_dims[1]*local_dims[2]];
 
     for (int i = 0; i < Nwrite; i++)
@@ -66,7 +104,7 @@ void write_mesh(Process &proc)
                                            HighFive::DataSpace(global_dims));
 
         /* Need to repack data from native ordering to elementblock-wise logical */
-        repack(variables[i], data, eb);
+        repack(datalist[i], data, eb);
 
         /* Pass the repacked 1D array cast as a triple pointer */
         proc.write_message("Writing " + names[i] + "...");
