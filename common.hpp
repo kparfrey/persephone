@@ -54,7 +54,10 @@ constexpr int corner_coords[8][3] = {{0, 0, 0},  // 0
   #define realMPI_t MPI_DOUBLE
 #endif
 
-
-#define pi M_PI
+/* Should all be double --- will need to redefine for float */
+#define pi   M_PI
+#define pi_2 M_PI_2
+#define pi_4 M_PI_4
+#define one_pi M_1_PI
 
 #endif

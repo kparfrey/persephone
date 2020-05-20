@@ -54,7 +54,9 @@ void write_mesh(Process &proc)
 
     /* For now, just write all data as separate scalar variables */
     constexpr int Nwrite  = 3;
-    std::string names[Nwrite] = {"r0", "r1", "r2"};
+    std::string cp = "/coords/r/";
+    meshfile.createGroup(cp); // Can create groups recursively
+    std::string names[Nwrite] = {cp+"0", cp+"1", cp+"2"};
     real_t* variables[Nwrite] = {eb.rs[0], eb.rs[1], eb.rs[2]};
     real_t* data = new real_t [local_dims[0]*local_dims[1]*local_dims[2]];
 
