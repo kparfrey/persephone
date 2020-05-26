@@ -11,11 +11,6 @@ void ParamsCartesian::secondary_params()
     Nelem_domain = Nelem_proc * Nproc_domain;
     Ns_elem      = Ns[0] * Ns[1] * Ns[2];
     Ns_domain    = Ns_elem * Nelem_domain;
-
-    Nf[0]   = Ns[0]+1;
-    Nf[1]   = Ns[1]+1;
-    Nf[2]   = Ns[2]+1;
-    Nf_elem = Ns[0]*Ns[1]*Nf[2] + Ns[0]*Ns[2]*Nf[1] + Ns[1]*Ns[2]*Nf[0]; // 3 Nf Ns^2 if all equal
 }
 
 
@@ -146,8 +141,6 @@ void ParamsCartesian::setup_elementblock(ElementBlock &elements, Process &proc)
         elements.Nf[i] = Nf[i];
     }
 
-    elements.Ns_elem = Ns_elem; // Should these be set here rather
-    elements.Nf_elem = Nf_elem; // than by params object?
     elements.Nelem_block = Nelem_proc; 
     elements.Nfield  = Nfield;
 
