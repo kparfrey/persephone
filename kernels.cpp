@@ -6,7 +6,16 @@
 namespace kernels
 {
 
+    /* Zero-initialized by default */
     real_t* alloc(int n)
+    {
+        real_t *ptr = new real_t [n]();
+        return ptr;
+    }
+
+
+    /* If for some reason a non-initialized array is preferred for speed */
+    real_t* alloc_raw(int n)
     {
         real_t *ptr = new real_t [n];
         return ptr;

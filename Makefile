@@ -7,7 +7,7 @@ LDFLAGS  =
 LDLIBS   = -lmpi -lm -lhdf5
 
 SRC = main.cpp kernels.cpp process.cpp element_block.cpp params.cpp params_cartesian.cpp \
-	  write_mesh.cpp
+	  write_mesh.cpp metric.cpp
 OBJ := $(SRC:%.cpp=%.o)
 DEP := $(SRC:%.cpp=%.d)
 

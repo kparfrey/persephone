@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "edge.hpp"
+#include "metric.hpp"
 
 class ElementBlock
 {
@@ -16,15 +17,16 @@ class ElementBlock
     public:
 
     /* Data */
-    int Nelem[3]; // No. of elements in each direction
-    int Ns[3];    // No. of soln points in each element, in each direction
-    int Nf[3];    // No. of flux points "   "      "     "   "       "
-    int Nsf[3];   // For indexing the flux-point arrays; see ElementBlock::idf()
-    int Ns_tot[3]; // Total number of soln points in each direction
-    int Ns_elem;   // Total no. of soln points in each element
-    int Nf_elem;   // Total no. of flux points in each element
-    int Nf_dir[3]; // No. of flux points in each direction, in each element
-    int Nelem_block;
+    int Nelem[3];   // No. of elements in each direction
+    int Ns[3];      // No. of soln points in each element, in each direction
+    int Nf[3];      // No. of flux points "   "      "     "   "       "
+    int Nsf[3];     // For indexing the flux-point arrays; see ElementBlock::idf()
+    int Ns_tot[3];  // Total number of soln points in each direction
+    int Ns_elem;    // Total no. of soln points in each element
+    int Nf_elem;    // Total no. of flux points in each element
+    int Nf_dir[3];  // No. of flux points in each direction, in each element
+    int Nelem_block;// No. of elements in the block
+    int Ns_block;   // No. of soln points in the block
     int Nfield;
 
     /* Geometrical information */
@@ -42,6 +44,9 @@ class ElementBlock
                       // i.e. rf[transform-dir][coord][3D-array]
 
     real_t *fields; // Field data on solution points
+
+    Metric metric;
+
 
     /* Methods */
     inline int ids(int i, int j, int k); // soln-point index map

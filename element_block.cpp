@@ -19,6 +19,9 @@ void ElementBlock::setup()
 
     /* No. of solution points per element */
     Ns_elem = Ns[0] * Ns[1] * Ns[2];
+
+    /* No. of solution points in the block */
+    Ns_block = Ns_elem * Nelem_block;
     
     /* No. of flux points in each direction, in an element */
     Nf_dir[0] = Ns[1] * Ns[2] * Nf[0];
@@ -31,6 +34,9 @@ void ElementBlock::setup()
     set_computational_coords();
     set_physical_coords();
 
+    /* Set up the metric */
+    metric.setup(Nelem, Ns_block, corners);
+
     return;
 }
 
@@ -41,14 +47,14 @@ void ElementBlock::allocate()
     {
         xs[i] = kernels::alloc(Ns[i]);
         xf[i] = kernels::alloc(Nf[i]);
-        rs[i] = kernels::alloc(Nelem_block * Ns_elem);
+        rs[i] = kernels::alloc(Ns_block);
     }
 
     for (int itrans: dirs)
         for (int d: dirs)
             rf[itrans][d] = kernels::alloc(Nelem_block * Nf_dir[itrans]);
 
-    fields = kernels::alloc(Nfield * Nelem_block * Ns_elem);
+    fields = kernels::alloc(Nfield * Ns_block);
 
     return;
 }
