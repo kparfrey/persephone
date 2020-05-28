@@ -4,6 +4,7 @@
 #include "active_params.hpp"
 #include "write_mesh.hpp"
 
+#include "matrix.hpp"
 
 static void startMPI(int argc, char *argv[], Process &proc)
 {
@@ -35,6 +36,17 @@ int main(int argc, char *argv[])
     proc.params.setup_process(proc); // Need to do something about this...
     
     write_mesh(proc);
+
+    if (proc.rank==0)
+    {
+        //real_t m[3][3] = {{1.0,4.5,3.1},{-0.1,9.1,-7.7},{5.0,-3.0,1.8}};
+        //real_t m[3][3] = {{8.0,-4.5,2.1},{-0.1,5.1,-1.7},{5.0,-3.0,3.8}};
+        //real_t m[3][3] = {{0.8,-1.5,2.1},{-0.8,1.1,-1.7},{0.9,-2.0,1.6}};
+        real_t m[3][3] = {{8000.,-15000.,21000.},{-8000.,11000,-17000},{9000,-20000,16000.}};
+        Matrix matrix(m);
+        matrix.test();
+    }
+
 
     MPI_Finalize();
     exit(0);

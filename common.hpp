@@ -2,6 +2,7 @@
 #define COMMON_HPP
 
 #include <math.h>
+#include <iostream>
 
 
 /*** Problem specifications, definitions, and conditional compilation ***
