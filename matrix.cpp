@@ -93,7 +93,7 @@ void Matrix::test()
         
     for (int a: dirs)
     for (int b: dirs)
-        std::cout<<a<<" "<<b<<"   "<<ident[a][b]<<std::endl;
+        std::cout << a << " " << b << "   " << ident[a][b] << std::endl;
 
     return;
 }

@@ -3,6 +3,11 @@
 
 #include "common.hpp"
 
+/* Class to do basic operations on individual 3x3 matrices,
+ * using the direct methods and notation of:
+ *     https://en.wikipedia.org/wiki/Invertible_matrix#Analytic_solution */
+
+
 class Matrix
 {
     private:
@@ -13,7 +18,7 @@ class Matrix
                               // ie C is the cofactor corresponding to c (0,2)
 
     public:
-    real_t  (&m)[3][3]; // Reference to 3x3 array of real_T
+    real_t  (&m)[3][3]; // Reference to 3x3 array of real_t
     real_t  minv[3][3]; // Inverse matrix
     real_t  det;
 
