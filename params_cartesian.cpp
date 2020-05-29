@@ -1,5 +1,7 @@
 #include "params_cartesian.hpp"
 #include "process.hpp"
+#include "element_block.hpp"
+#include "initial_state_cartesian.hpp"
 
 using std::cout;
 using std::endl;
@@ -158,6 +160,14 @@ void ParamsCartesian::setup_elementblock(ElementBlock &elements, Process &proc)
     /* At this point all external information is present, and the internal
      * setup method can take over. */
     elements.setup();
+
+    return;
+}
+
+
+void ParamsCartesian::set_initial_state(ElementBlock &elements)
+{
+    set_scalar(elements);
 
     return;
 }

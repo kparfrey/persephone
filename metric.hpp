@@ -4,22 +4,27 @@
 #include "common.hpp"
 #include "kernels.hpp"
 
-/* LOGICAL coords are the 3D Cartesian coordinates local to the
+/* REFERENCE coords are the 3D Cartesian coordinates local to the
  * reference element --- i.e. x[0-2] in [-1,1]
- * Synonymous with COMPUTATIONAL/REFERENCE/ELEMENTAL coordinates */
+ * Synonymous with COMPUTATIONAL/LOGICAL/ELEMENTAL coordinates */
 
 /* For now, all metric arrays are on solution points only 
  * --- assume that all metric operations can be performed before
- *     the transform to flux points */
-
+ *     the transform to flux points 
+ * If it turns out we need the metric at flux points we'll need arrays
+ * like real_t* g_flux[3][3][3], where the FIRST array index picks out
+ * the transform direction, like with ElementBlock.rf[3][3] */
 
 class Metric
 {
-    public:
+    private:
+    void allocate(int N);
 
+
+    public:
     /* Transforms between physical and reference coords */
-    real_t*    J[3][3]; // d(PHYSICAL)/d(LOGICAL)
-    real_t* Jinv[3][3]; // d(LOGICAL)/d(PHYSICAL)
+    real_t*    J[3][3]; // d(PHYSICAL)/d(REFERENCE)
+    real_t* Jinv[3][3]; // d(REFERENCE)/d(PHYSICAL)
 
     /* Reference coords */
     real_t*    g[3][3]; // Spatial 3-metric (dual/covariant)
@@ -31,7 +36,6 @@ class Metric
 
 
     /* Methods */
-    void allocate(int N);
     void setup(int Nelem[3], int Ns_block, real_t corners[8][3]);
     void transform_twoTensor(real_t* T_in[3][3], real_t* T_out[3][3], int N,
                              CoordTransDir ctd=phys2ref, Components c=covariant);

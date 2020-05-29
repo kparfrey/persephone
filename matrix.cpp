@@ -1,7 +1,27 @@
 #include "matrix.hpp"
 
-Matrix::Matrix(real_t (&m)[3][3])
-    : m(m)
+
+Matrix::Matrix()
+{
+}
+
+
+/* Need to create a new object like this and set storeArray=true
+ * if you want to use the m[3][3] array, eg in test(). */
+Matrix::Matrix(real_t (&m)[3][3], bool storeArray)
+{
+    fill(m);
+
+    if (storeArray)
+    {
+        for (int i: dirs)
+            for (int j: dirs)
+                arr[i][j] = m[i][j];
+    }
+}
+
+
+void Matrix::fill(real_t (&m)[3][3])
 {
     a = m[0][0];
     b = m[0][1];
@@ -61,22 +81,23 @@ void Matrix::find_inverse()
     if (!determinant_found)
         find_determinant();
 
-    minv[0][0] = A;
-    minv[0][1] = D;
-    minv[0][2] = G;
-    minv[1][0] = B;
-    minv[1][1] = E;
-    minv[1][2] = H;
-    minv[2][0] = C;
-    minv[2][1] = F;
-    minv[2][2] = I;
+    inv[0][0] = A;
+    inv[0][1] = D;
+    inv[0][2] = G;
+    inv[1][0] = B;
+    inv[1][1] = E;
+    inv[1][2] = H;
+    inv[2][0] = C;
+    inv[2][1] = F;
+    inv[2][2] = I;
 
     for (int i: dirs)
         for (int j: dirs)
-            minv[i][j] /= det;
+            inv[i][j] /= det;
 
     return;
 }
+
 
 void Matrix::test()
 {
@@ -89,7 +110,7 @@ void Matrix::test()
     for (int a: dirs)
     for (int b: dirs)
         for (int i: dirs)
-            ident[a][b] += minv[a][i] * m[i][b];
+            ident[a][b] += inv[a][i] * arr[i][b];
         
     for (int a: dirs)
     for (int b: dirs)

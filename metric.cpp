@@ -1,5 +1,6 @@
 #include "metric.hpp"
 #include "kernels.hpp"
+#include "matrix.hpp"
 
 void Metric::allocate(int N)
 {
@@ -47,17 +48,30 @@ void Metric::setup(int Nelem[3], int Ns_block, real_t corners[8][3])
             gphys[d][d][i] = 1.0;
         }
 
+
+    /* Find reference-space metric by performing a general coordinate
+     * transformation on the physical metric */
     transform_twoTensor(gphys, g, Ns_block, phys2ref, covariant);
 
-    /*
-    for (int a: dirs)
-    for (int b: dirs)
+
+    /* Find the inverse metric and sqrt(g) in reference space automatically */
+    Matrix gmat;       // Matrix object to be reused
+    real_t garr[3][3]; // Array to be reused
+    for (int n = 0; n < Ns_block; ++n) // For every point in the block...
+    {
         for (int i: dirs)
         for (int j: dirs)
-            for (int n = 0; n < Ns_block; ++n) 
-                g[a][b][n] = J[a][i][n] * J[b][j][n] * gphys[i][j][n];
-    */
-            
+            garr[i][j] = g[i][j][n]; // Put this point's metric into the array
+
+        gmat.fill(garr);
+        gmat.find_inverse();
+        
+        for (int i: dirs)
+        for (int j: dirs)
+            ginv[i][j][n] = gmat.inv[i][j];
+
+        rdetg[n] = sqrt( gmat.det );
+    }
 
     return;
 }

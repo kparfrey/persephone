@@ -36,6 +36,7 @@ int main(int argc, char *argv[])
     
     write_mesh(proc);
 
+
     MPI_Finalize();
     exit(0);
 }

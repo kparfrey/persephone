@@ -34,7 +34,6 @@ void ElementBlock::setup()
     set_computational_coords();
     set_physical_coords();
 
-    /* Set up the metric */
     metric.setup(Nelem, Ns_block, corners);
 
     return;

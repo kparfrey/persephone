@@ -18,12 +18,14 @@ class Matrix
                               // ie C is the cofactor corresponding to c (0,2)
 
     public:
-    real_t  (&m)[3][3]; // Reference to 3x3 array of real_t
-    real_t  minv[3][3]; // Inverse matrix
+    real_t  arr[3][3]; // Original matrix stored as an array
+    real_t  inv[3][3]; // Inverse matrix
     real_t  det;
 
 
-    Matrix(real_t (&m)[3][3]);
+    Matrix();
+    Matrix(real_t (&m)[3][3], bool storeArray=false);
+    void fill(real_t (&m)[3][3]);
     void find_cofactors();
     void find_determinant();
     void find_inverse();
