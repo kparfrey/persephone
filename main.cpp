@@ -3,6 +3,7 @@
 #include "process.hpp"
 #include "active_params.hpp"
 #include "write_mesh.hpp"
+#include "write_screen.hpp"
 
 
 static void startMPI(int argc, char *argv[], Process &proc)
@@ -10,13 +11,17 @@ static void startMPI(int argc, char *argv[], Process &proc)
     int error = MPI_Init(&argc, &argv);
     
     if (error != MPI_SUCCESS)
-        proc.write_error("Error starting MPI");
+    {
+        write::basic("Error starting MPI");
+        exit(1);
+    }
  
     MPI_Comm_rank(MPI_COMM_WORLD, &(proc.rank));   // Get rank of this process    
     MPI_Comm_size(MPI_COMM_WORLD, &(proc.Nproc));  // Number of running processes
 
-    proc.write_message("MPI started");
-    proc.write_variable<int>("number of active processes", proc.Nproc);
+    write::store_rank(proc.rank);
+    write::message("MPI_started");
+    write::variable<int>("number of active processes", proc.Nproc);
 
     MPI_Barrier(MPI_COMM_WORLD);
  

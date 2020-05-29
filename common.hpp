@@ -20,8 +20,11 @@
 /**** Options above this line, do not change below */
 
 enum EqnSystem {scalar_advection, scalar_wave};
+
 enum Components {covariant, contravariant};
 enum CoordTransDir {phys2ref, ref2phys};
+enum WhoWrites {root_only, all_ranks, one_rank};
+enum Prognosis {destroy, survive};
 
 constexpr int dirs[3] = {0, 1, 2}; // The three spatial directions
 
