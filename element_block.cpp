@@ -1,3 +1,4 @@
+#include <cmath>
 #include "element_block.hpp"
 #include "kernels.hpp"
 
@@ -74,12 +75,12 @@ void ElementBlock::set_computational_coords()
     /* Solution / Gauss points */
     for (int d: dirs)
         for (int i = 0; i < Ns[d]; ++i)
-            xs[d][i] = - cos(pi * (i + 0.5) / Ns[d]);
+            xs[d][i] = - std::cos(pi * (i + 0.5) / Ns[d]);
 
     /* Flux / Lobatto points */
     for (int d: dirs)
         for (int i = 0; i < Nf[d]; ++i)
-            xf[d][i] = - cos(pi * i  / (Nf[d] - 1.0));
+            xf[d][i] = - std::cos(pi * i  / (Nf[d] - 1.0));
 
     return;
 }

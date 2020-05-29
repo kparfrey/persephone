@@ -9,26 +9,6 @@ Process::Process(Params &params)
 }
 
 
-void Process::write_error(string error, bool destroy)
-{
-    cout << "Error --- rank: " << rank << ": " << error << endl;
-
-    if (destroy == true)
-        exit(1);
-
-    return;
-}
-
-
-void Process::write_message(string message)
-{
-    if (rank == 0)
-        cout << "Progress: " << message << endl;
-
-    return;
-}
-
-
 void Process::write_startup_info()
 {
     if (rank) return; // Only write from the root proc

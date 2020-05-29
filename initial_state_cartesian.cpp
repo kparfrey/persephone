@@ -1,5 +1,7 @@
+#include <cmath>
 #include "initial_state_cartesian.hpp"
 #include "element_block.hpp"
+
 
 static real_t scalar_function(real_t r[3])
 {
@@ -13,7 +15,7 @@ static real_t scalar_function(real_t r[3])
         rf   = (r[i] - r0[i]) / sigma[i];
         arg += 0.5 * rf * rf ;
     
-    f = exp(-arg);
+    f = std::exp(-arg);
 
     return f;
 }

@@ -1,4 +1,5 @@
 #include "write_mesh.hpp"
+#include "write_screen.hpp"
 
 using std::string;
 
@@ -64,7 +65,7 @@ void write_mesh(Process &proc)
     std::vector<size_t> global_dims(3);
     std::vector<size_t> offset(3);
 
-    proc.write_message("Creating mesh file...");
+    write::message("Creating mesh file...");
     HighFive::File meshfile("mesh.h5", HighFive::File::Overwrite,
                                 HighFive::MPIOFileDriver(MPI_COMM_WORLD, MPI_INFO_NULL));
 
@@ -107,12 +108,13 @@ void write_mesh(Process &proc)
         repack(datalist[i], data, eb);
 
         /* Pass the repacked 1D array cast as a triple pointer */
-        proc.write_message("Writing " + names[i] + "...");
+        write::message("Writing " + names[i] + "...");
         dataset.select(offset, local_dims).write((real_t***)data);
     }
 
     delete[] data;
 
-    proc.write_message("Finished writing mesh file to disk.");
+    write::message("Finished writing mesh file to disk.");
+
     return;
 }

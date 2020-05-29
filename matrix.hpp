@@ -24,7 +24,7 @@ class Matrix
 
 
     Matrix();
-    Matrix(real_t (&m)[3][3], bool storeArray=false);
+    Matrix(real_t (&m)[3][3], bool storeArray=true);
     void fill(real_t (&m)[3][3]);
     void find_cofactors();
     void find_determinant();

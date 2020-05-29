@@ -1,6 +1,8 @@
+#include <cmath>
 #include "metric.hpp"
 #include "kernels.hpp"
 #include "matrix.hpp"
+
 
 void Metric::allocate(int N)
 {
@@ -43,8 +45,8 @@ void Metric::setup(int Nelem[3], int Ns_block, real_t corners[8][3])
     for (int d: dirs)
         for (int i = 0; i < Ns_block; ++i) // All elems identical
         {
-            J[d][d][i]    = dr_elem[d]/2.0; // Since length of ref element is 2
-            Jinv[d][d][i] = 1.0 / J[d][d][i];
+            J[d][d][i]     = dr_elem[d]/2.0; // Since length of ref element is 2
+            Jinv[d][d][i]  = 1.0 / J[d][d][i];
             gphys[d][d][i] = 1.0;
         }
 
@@ -70,7 +72,7 @@ void Metric::setup(int Nelem[3], int Ns_block, real_t corners[8][3])
         for (int j: dirs)
             ginv[i][j][n] = gmat.inv[i][j];
 
-        rdetg[n] = sqrt( gmat.det );
+        rdetg[n] = std::sqrt( gmat.det );
     }
 
     return;

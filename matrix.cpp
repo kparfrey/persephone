@@ -1,4 +1,5 @@
 #include "matrix.hpp"
+#include "write_screen.hpp"
 
 
 Matrix::Matrix()
@@ -103,7 +104,7 @@ void Matrix::test()
 {
     find_inverse();
 
-    std::cout << "Determinant: " << det << std::endl;
+    write::variable<real_t>("Determinant", det);
 
     real_t ident[3][3] = {}; // Zero-initialize
 
@@ -114,7 +115,7 @@ void Matrix::test()
         
     for (int a: dirs)
     for (int b: dirs)
-        std::cout << a << " " << b << "   " << ident[a][b] << std::endl;
+        write::variable<real_t>(std::to_string(a)+" "+std::to_string(b), ident[a][b]);
 
     return;
 }

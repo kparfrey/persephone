@@ -1,18 +1,12 @@
 #ifndef PROCESS_HPP
 #define PROCESS_HPP
 
-#include <iostream>
-#include <string>
 #include "common.hpp"
 #include "face_communicator.hpp"
 #include "element_block.hpp"
 #include "edge.hpp"
 
 class Params;
-
-using std::cout;
-using std::endl;
-using std::string;
 
 
 class Process
@@ -45,21 +39,6 @@ class Process
 
     /* Methods */
     Process(Params &params);
-    void write_error(string error, bool destroy = true);
-    void write_message(string message);
     void write_startup_info();
-    template<typename type> void write_variable(string message, type variable);
 };
-
-
-/*** Templated member functions ***/
-
-template<typename type>
-void Process::write_variable(string message, type variable)
-{
-    if (rank == 0)
-        cout << "Data: " << message << ": " << variable << endl;
-
-    return;
-}
 #endif

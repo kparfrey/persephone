@@ -1,9 +1,6 @@
 #ifndef COMMON_HPP
 #define COMMON_HPP
 
-#include <math.h>
-#include <iostream>
-
 
 /*** Problem specifications, definitions, and conditional compilation ***
  *** that is needed everywhere. Will be eventually split into several ***
