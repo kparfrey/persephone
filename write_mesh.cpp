@@ -37,7 +37,7 @@ void write_mesh(Process &proc)
     MPI_Barrier(MPI_COMM_WORLD);
 
     write::message("Creating mesh file...");
-    HighFive::File meshfile(filename, HighFive::File::Overwrite,
+    HighFive::File meshfile(filename, HighFive::File::Create,
                                 HighFive::MPIOFileDriver(MPI_COMM_WORLD, MPI_INFO_NULL));
 
 

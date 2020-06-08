@@ -44,7 +44,7 @@ void write_data(Process &proc)
     MPI_Barrier(MPI_COMM_WORLD);
 
     write::message("Creating data file " + std::to_string(proc.data_output_counter));
-    HighFive::File datafile(filename, HighFive::File::Overwrite,
+    HighFive::File datafile(filename, HighFive::File::Create,
                                 HighFive::MPIOFileDriver(MPI_COMM_WORLD, MPI_INFO_NULL));
 
 
