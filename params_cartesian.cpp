@@ -1,7 +1,10 @@
 #include "params_cartesian.hpp"
+
+#include <cmath>
 #include "process.hpp"
 #include "element_block.hpp"
 #include "initial_state_cartesian.hpp"
+#include "write_screen.hpp"
 
 using std::cout;
 using std::endl;
@@ -132,6 +135,18 @@ void ParamsCartesian::setup_process(Process &proc)
     
     set_initial_state(proc.elements);
 
+    /* Start from t = 0 */
+    proc.time     = 0.0;
+    proc.end_time = end_time;
+    proc.cfl      = cfl;
+    proc.data_output_counter = 0;
+
+    proc.dt = cfl * set_dt_basic(proc.elements);
+    write::variable<real_t>("CFL", cfl);
+    write::variable<real_t>("End time", end_time);
+    write::variable<real_t>("dt", proc.dt);
+    write::variable<int>("No. of time steps", int(end_time/proc.dt));
+
     return;
 }
 
@@ -172,4 +187,29 @@ void ParamsCartesian::set_initial_state(ElementBlock &elements)
     set_scalar(elements);
 
     return;
+}
+
+
+/* Very basic method to set the time step. Assumes every ElementBlock
+ * is indentical, so only useful for trivial Cartesian grids, and assumes
+ * the wave speed is a constant */
+real_t ParamsCartesian::set_dt_basic(ElementBlock& eb)
+{
+    real_t dt_max;
+    real_t wave_speed = 1.0;
+    real_t dmin[3];
+    real_t speed_over_dx;
+
+    /* Timestep based on minimal flux-point spacing */
+    for (int d: dirs)
+        dmin[d] = std::fabs(eb.rf[d][d][1] - eb.rf[d][d][0]);
+
+    speed_over_dx = 0.0;
+    for (int d: dirs)
+        speed_over_dx += wave_speed / dmin[d];
+
+
+    dt_max = 1.0 / speed_over_dx;
+
+    return dt_max;
 }

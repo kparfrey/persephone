@@ -36,7 +36,7 @@ void write_mesh(Process &proc)
 
     MPI_Barrier(MPI_COMM_WORLD);
 
-    write::message("Creating mesh file...");
+    write::message("Creating mesh file");
     HighFive::File meshfile(filename, HighFive::File::Create,
                                 HighFive::MPIOFileDriver(MPI_COMM_WORLD, MPI_INFO_NULL));
 
@@ -79,7 +79,7 @@ void write_mesh(Process &proc)
         repack(datalist[i], data, eb);
 
         /* Pass the repacked 1D array cast as a triple pointer */
-        write::message("Writing " + names[i] + "...");
+        write::message("Writing " + names[i]);
         dataset.select(offset, local_dims).write((real_t***)data);
     }
 

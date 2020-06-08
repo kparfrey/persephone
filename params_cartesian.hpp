@@ -23,8 +23,9 @@ class ParamsCartesian : public Params
     virtual void write_param_info();
     virtual void secondary_params();
     virtual void setup_process(Process &proc);
-    virtual void setup_elementblock(ElementBlock &elements, Process &proc);
-    virtual void set_initial_state(ElementBlock &elements);
+    virtual void setup_elementblock(ElementBlock& elements, Process &proc);
+    virtual void set_initial_state(ElementBlock& elements);
+    real_t set_dt_basic(ElementBlock& elements);
 
 
     /* Constructor */

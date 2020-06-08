@@ -18,6 +18,10 @@ static int Ns[3]    = {16,8,1};
 
 static real_t edges[3][2] = {{0.0,2.0}, {0.0,1.0}, {0.0, 1.0}};
 
-ParamsCartesian active_parameters(equations, Nproc, Nelem, Ns, edges);
+static real_t cfl      = 0.8;
+static real_t end_time = 1.5;
+
+ParamsCartesian active_parameters(equations, Nproc, Nelem, Ns, edges,
+                                  cfl, end_time);
 
 #endif
