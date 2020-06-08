@@ -30,13 +30,14 @@ class ParamsCartesian : public Params
 
     /* Constructor */
     ParamsCartesian(EqnSystem equations,
+                    TimeIntegrator time_integrator,
                     int (& Nproc_)[3], 
                     int (& Nelem_)[3], 
                     int (& Ns_)[3], 
                     real_t (& domain_edge_)[3][2],
                     real_t cfl = 0.8,
                     real_t end_time = 1.0)
-    : Params(equations, cfl, end_time)
+    : Params(equations, time_integrator, cfl, end_time)
     {
         for (int i=0; i<3; i++)
         {

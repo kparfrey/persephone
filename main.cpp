@@ -5,6 +5,7 @@
 #include "write_mesh.hpp"
 #include "write_data.hpp"
 #include "write_screen.hpp"
+#include "time_advance.hpp"
 
 
 static void startMPI(int argc, char *argv[], Process &proc)
@@ -43,6 +44,10 @@ int main(int argc, char *argv[])
     write_mesh(proc);
     write_data(proc);
 
+    while(proc.time < proc.end_time)
+    {
+        time_advance(proc);
+    }
 
     MPI_Finalize();
     exit(0);

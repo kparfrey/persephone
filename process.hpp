@@ -40,6 +40,7 @@ class Process
     real_t end_time;
     real_t cfl;
     real_t dt;
+    TimeIntegrator time_integrator;
 
 
     /* Methods */

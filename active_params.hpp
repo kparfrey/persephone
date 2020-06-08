@@ -11,6 +11,7 @@
  */
 
 static EqnSystem equations = scalar_advection;
+static TimeIntegrator time_integrator = rk2_midpoint;
 
 static int Nproc[3] = {4,2,1};
 static int Nelem[3] = {2,2,1};
@@ -21,7 +22,8 @@ static real_t edges[3][2] = {{0.0,2.0}, {0.0,1.0}, {0.0, 1.0}};
 static real_t cfl      = 0.8;
 static real_t end_time = 1.5;
 
-ParamsCartesian active_parameters(equations, Nproc, Nelem, Ns, edges,
+ParamsCartesian active_parameters(equations, time_integrator, 
+                                  Nproc, Nelem, Ns, edges,
                                   cfl, end_time);
 
 #endif

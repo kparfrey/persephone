@@ -1,7 +1,6 @@
 #ifndef PARAMS_HPP
 #define PARAMS_HPP
 
-#include <iostream>
 #include "common.hpp"
 
 class Process; // Reference to Process type will be used below
@@ -15,6 +14,7 @@ class Params
     public:
 
     EqnSystem equations;
+    TimeIntegrator time_integrator;
 
     /* Total quantities referring to whole domain */
     int Nproc_domain;
@@ -26,10 +26,11 @@ class Params
     int Nfield;
 
     /* Constructor */
-    Params(EqnSystem equations, real_t cfl, real_t end_time);
+    Params(EqnSystem equations, TimeIntegrator time_integrator,
+                                   real_t cfl, real_t end_time);
 
     /* Methods: all must be defined in derived classes */
-    virtual void write_param_info(){std::cout << "Calling wrong method!" << std::endl;};
+    virtual void write_param_info(){};
     virtual void secondary_params(){};
     virtual void setup_process(Process &proc){};
     virtual void setup_elementblock(ElementBlock &elements, Process &proc){};

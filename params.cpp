@@ -1,8 +1,10 @@
-#include "common.hpp"
 #include "params.hpp"
+#include "write_screen.hpp"
 
-Params::Params(EqnSystem equations, real_t cfl, real_t end_time) 
-       : equations(equations), cfl(cfl), end_time(end_time)
+Params::Params(EqnSystem equations, TimeIntegrator time_integrator,
+                                        real_t cfl, real_t end_time) 
+       : equations(equations), time_integrator(time_integrator), 
+                                   cfl(cfl), end_time(end_time)
 { 
     switch (equations)
     {
@@ -13,7 +15,6 @@ Params::Params(EqnSystem equations, real_t cfl, real_t end_time)
             Nfield = 1;
             break;
         default:
-            std::cout << "Equation system not recognised." << std::endl;
-            exit(1);
+            write::error("Equation system not recognised.");
     }
 }
