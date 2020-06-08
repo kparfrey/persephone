@@ -1,4 +1,6 @@
-#include <iostream>
+#ifndef WRITE_MESH_HPP
+#define WRITE_MESH_HPP
+
 #include <vector>
 #include <mpi.h>
 
@@ -12,3 +14,5 @@
 
 
 void write_mesh(Process &proc);
+
+#endif
