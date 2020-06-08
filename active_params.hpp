@@ -12,11 +12,11 @@
 
 static EqnSystem equations = scalar_advection;
 
-static int Nproc[3] = {4,1,1};
-static int Nelem[3] = {1,1,1};
-static int Ns[3]    = {8,4,2};
+static int Nproc[3] = {4,2,1};
+static int Nelem[3] = {2,2,1};
+static int Ns[3]    = {16,8,1};
 
-static real_t edges[3][2] = {{0.0,1.0}, {0.0,1.0}, {0.0, 1.0}};
+static real_t edges[3][2] = {{0.0,2.0}, {0.0,1.0}, {0.0, 1.0}};
 
 ParamsCartesian active_parameters(equations, Nproc, Nelem, Ns, edges);
 

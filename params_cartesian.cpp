@@ -129,6 +129,8 @@ void ParamsCartesian::setup_process(Process &proc)
 
 
     setup_elementblock(proc.elements, proc);
+    
+    set_initial_state(proc.elements);
 
     return;
 }

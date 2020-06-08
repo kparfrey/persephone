@@ -3,6 +3,7 @@
 #include "process.hpp"
 #include "active_params.hpp"
 #include "write_mesh.hpp"
+#include "write_data.hpp"
 #include "write_screen.hpp"
 
 
@@ -40,6 +41,7 @@ int main(int argc, char *argv[])
     proc.params.setup_process(proc); // Need to do something about this...
     
     write_mesh(proc);
+    write_data(proc);
 
 
     MPI_Finalize();
