@@ -1,4 +1,4 @@
-#include "time_advance.hpp"
+#include "time_integrators.hpp"
 
 #include "process.hpp"
 #include "write_screen.hpp"
@@ -17,7 +17,7 @@ static void find_RHS(real_t* fields, real_t t, real_t* result, Process& proc)
 
 
 /* Assume one ElementBlock per process */
-static void step_rk2_midpoint(Process& proc)
+void step_rk2_midpoint(Process& proc)
 {
     ElementBlock& eb = proc.elements;
 
@@ -38,6 +38,7 @@ static void step_rk2_midpoint(Process& proc)
 
 
 
+/***
 void time_advance(Process& proc)
 {
     switch(proc.time_integrator)
@@ -53,3 +54,4 @@ void time_advance(Process& proc)
 
     return;
 }
+***/

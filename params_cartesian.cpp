@@ -135,18 +135,11 @@ void ParamsCartesian::setup_process(Process &proc)
     
     set_initial_state(proc.elements);
 
-    /* Start from t = 0 */
-    proc.time     = 0.0;
-    proc.end_time = end_time;
-    proc.cfl      = cfl;
-    proc.data_output_counter = 0;
+    /* Should be made general and moved to setup_process_generic() */
+    proc.dt = cfl * set_dt_basic(proc.elements); 
 
-    proc.dt = cfl * set_dt_basic(proc.elements);
-    write::variable<real_t>("CFL", cfl);
-    write::variable<real_t>("End time", end_time);
-    write::variable<real_t>("dt", proc.dt);
-    write::variable<int>("No. of time steps", int(end_time/proc.dt));
-
+    setup_process_generic(proc);
+    
     return;
 }
 

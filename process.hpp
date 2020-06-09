@@ -46,5 +46,7 @@ class Process
     /* Methods */
     Process(Params &params);
     void write_startup_info();
+    void time_advance();
+    //void (*basic_timestep_method)(Process&);
 };
 #endif
