@@ -4,6 +4,18 @@
 #include "write_screen.hpp"
 #include "kernels.hpp"
 
+
+/* Dummy function to compile */
+static void find_RHS(real_t* fields, real_t t, real_t* result, Process& proc)
+{
+    for (int i = 0; i < proc.elements.Ns_block; ++i)
+        result[i] = 1.0;
+
+    return;
+}
+
+
+
 /* Assume one ElementBlock per process */
 static void step_rk2_midpoint(Process& proc)
 {

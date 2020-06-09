@@ -27,4 +27,17 @@ namespace kernels
         return;
     }
 
+
+    /* for 0 <= i < N: result[i] = a1*v1[i] + a2*v2[i] */
+    /* Think I can get away with the __restrict__ keywords even when
+     * result aliases v1 or v2, because the function is so simple. */
+    void add_2_vectors(real_t* __restrict__ v1, real_t* __restrict__ v2, 
+                       real_t               a1, real_t               a2, 
+                       real_t* __restrict__ result, int N)
+    {
+        for (int i = 0; i < N; ++i)
+            result[i] = a1 * v1[i] + a2 * v2[i];
+
+        return;
+    }
 }
