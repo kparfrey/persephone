@@ -38,3 +38,14 @@ void Process::time_advance()
 
     return;
 }
+
+
+/* The fundamental function of the spectral difference method */
+/* Q : vector of primitive solution fields 
+ * F : vector of fluxes */
+void Process::find_RHS(real_t* Q, real_t t, real_t* result)
+{
+    for (int i = 0; i < elements.Ns_block; ++i)
+        result[i] = 1.0;
+    return;
+}

@@ -47,6 +47,7 @@ class Process
     Process(Params &params);
     void write_startup_info();
     void time_advance();
+    void find_RHS(real_t* fields, real_t t, real_t* result);
     //void (*basic_timestep_method)(Process&);
 };
 #endif
