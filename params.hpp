@@ -14,7 +14,7 @@ class Params
     public:
 
     EqnSystem equations;
-    TimeIntegrator time_integrator;
+    BasicTimeMethod time_method;
 
     /* Total quantities referring to whole domain */
     int Nproc_domain;
@@ -26,7 +26,7 @@ class Params
     int Nfield;
 
     /* Constructor */
-    Params(EqnSystem equations, TimeIntegrator time_integrator,
+    Params(EqnSystem equations, BasicTimeMethod time_method,
                                    real_t cfl, real_t end_time);
 
     /* Methods: all pure virtual ones must be defined in derived classes */

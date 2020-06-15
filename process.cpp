@@ -1,7 +1,7 @@
 #include "process.hpp"
 #include "params.hpp"
-#include "time_integrators.hpp"
 #include "write_screen.hpp"
+#include "basic_time_integrator.hpp"
 
 Process::Process(Params &params)
 : params(params)
@@ -23,16 +23,8 @@ void Process::write_startup_info()
 
 void Process::time_advance()
 {
-    //basic_timestep_method(*this);
-    
-    switch(time_integrator)
-    {
-        case rk2_midpoint:
-            step_rk2_midpoint(*this);
-            break;
-        default:
-            write::error("Time integrator not recognized.");
-    }
+    /* Call the fundamental time step method we're using */
+    (*time_integrator)(*this); //Since storing a pointer to a BasicTimeIntegrator
 
     time += dt;
 

@@ -7,6 +7,7 @@
 #include "edge.hpp"
 
 class Params;
+class BasicTimeIntegrator;
 
 
 class Process
@@ -40,7 +41,7 @@ class Process
     real_t end_time;
     real_t cfl;
     real_t dt;
-    TimeIntegrator time_integrator;
+    BasicTimeIntegrator* time_integrator;
 
 
     /* Methods */

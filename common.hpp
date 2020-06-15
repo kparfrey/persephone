@@ -17,7 +17,7 @@
 /**** Options above this line, do not change below */
 
 enum EqnSystem {scalar_advection, scalar_wave};
-enum TimeIntegrator {rk2_midpoint, rk3_classic};
+enum BasicTimeMethod {rk2_midpoint, rk3_classic};
 
 enum Components {covariant, contravariant};
 enum CoordTransDir {phys2ref, ref2phys};
