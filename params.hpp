@@ -29,12 +29,12 @@ class Params
     Params(EqnSystem equations, TimeIntegrator time_integrator,
                                    real_t cfl, real_t end_time);
 
-    /* Methods: all virtual ones must be defined in derived classes */
-    virtual void write_param_info(){};
-    virtual void secondary_params(){};
-    virtual void setup_process(Process &proc){};
-    virtual void setup_elementblock(ElementBlock &elements, Process &proc){};
-    virtual void set_initial_state(ElementBlock &elements){};
+    /* Methods: all pure virtual ones must be defined in derived classes */
+    virtual void write_param_info() = 0;
+    virtual void secondary_params() = 0;
+    virtual void setup_process(Process &proc) = 0;
+    virtual void setup_elementblock(ElementBlock &elements, Process &proc) = 0;
+    virtual void set_initial_state(ElementBlock &elements) = 0;
 
     void setup_process_generic(Process& proc);
 };
