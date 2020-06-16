@@ -45,7 +45,7 @@ void Metric::setup(int Nelem[3], int Ns_block, real_t corners[8][3])
     for (int d: dirs)
         for (int i = 0; i < Ns_block; ++i) // All elems identical
         {
-            J[d][d][i]     = dr_elem[d]/2.0; // Since length of ref element is 2
+            J[d][d][i]     = dr_elem[d]; // Since length of ref element is 1
             Jinv[d][d][i]  = 1.0 / J[d][d][i];
             gphys[d][d][i] = 1.0;
         }

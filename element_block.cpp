@@ -70,17 +70,17 @@ void ElementBlock::free()
  * --- presumably should just set on the host and copy to device? */
 void ElementBlock::set_computational_coords()
 {
-    /* Points are defined on [-1, 1], so that xf[0] = -1 */
+    /* Points are defined on [0, 1], so that xf[0] = 0 */
 
     /* Solution / Gauss points */
     for (int d: dirs)
         for (int i = 0; i < Ns[d]; ++i)
-            xs[d][i] = - std::cos(pi * (i + 0.5) / Ns[d]);
+            xs[d][i] = 0.5 * (1.0 - std::cos(pi * (i + 0.5) / Ns[d]));
 
     /* Flux / Lobatto points */
     for (int d: dirs)
         for (int i = 0; i < Nf[d]; ++i)
-            xf[d][i] = - std::cos(pi * i  / (Nf[d] - 1.0));
+            xf[d][i] = 0.5 * (1.0 - std::cos(pi * i  / (Nf[d] - 1.0)));
 
     return;
 }
@@ -120,9 +120,9 @@ void ElementBlock::set_physical_coords()
         for (int k = 0; k < Ns[2]; ++k)
         {
             mem_loc = ids(i,j,k) + mem_offset;
-            rs[0][mem_loc] = elem_origin[0] + 0.5 * (xs[0][i] + 1.0) * dr_elem[0];
-            rs[1][mem_loc] = elem_origin[1] + 0.5 * (xs[1][j] + 1.0) * dr_elem[1];
-            rs[2][mem_loc] = elem_origin[2] + 0.5 * (xs[2][k] + 1.0) * dr_elem[2];
+            rs[0][mem_loc] = elem_origin[0] + xs[0][i] * dr_elem[0];
+            rs[1][mem_loc] = elem_origin[1] + xs[1][j] * dr_elem[1];
+            rs[2][mem_loc] = elem_origin[2] + xs[2][k] * dr_elem[2];
         }
 
         /* Flux points in each direction */
@@ -133,9 +133,9 @@ void ElementBlock::set_physical_coords()
         for (int i = 0; i < Nf[0]; ++i)
         {
             mem_loc = idf(i,j,k,0) + mem_offset;
-            rf[0][0][mem_loc] = elem_origin[0] + 0.5 * (xf[0][i] + 1.0) * dr_elem[0];
-            rf[0][1][mem_loc] = elem_origin[1] + 0.5 * (xs[1][j] + 1.0) * dr_elem[1];
-            rf[0][2][mem_loc] = elem_origin[2] + 0.5 * (xs[2][k] + 1.0) * dr_elem[2];
+            rf[0][0][mem_loc] = elem_origin[0] + xf[0][i] * dr_elem[0];
+            rf[0][1][mem_loc] = elem_origin[1] + xs[1][j] * dr_elem[1];
+            rf[0][2][mem_loc] = elem_origin[2] + xs[2][k] * dr_elem[2];
         }
 
         mem_offset = elem_idx_1D * Nf_dir[1];
@@ -144,9 +144,9 @@ void ElementBlock::set_physical_coords()
         for (int j = 0; j < Nf[1]; ++j)
         {
             mem_loc = idf(j,k,i,1) + mem_offset;
-            rf[1][0][mem_loc] = elem_origin[0] + 0.5 * (xs[0][i] + 1.0) * dr_elem[0];
-            rf[1][1][mem_loc] = elem_origin[1] + 0.5 * (xf[1][j] + 1.0) * dr_elem[1];
-            rf[1][2][mem_loc] = elem_origin[2] + 0.5 * (xs[2][k] + 1.0) * dr_elem[2];
+            rf[1][0][mem_loc] = elem_origin[0] + xs[0][i] * dr_elem[0];
+            rf[1][1][mem_loc] = elem_origin[1] + xf[1][j] * dr_elem[1];
+            rf[1][2][mem_loc] = elem_origin[2] + xs[2][k] * dr_elem[2];
         }
 
         mem_offset = elem_idx_1D * Nf_dir[2];
@@ -155,9 +155,9 @@ void ElementBlock::set_physical_coords()
         for (int k = 0; k < Nf[2]; ++k)
         {
             mem_loc = idf(k,i,j,2) + mem_offset;
-            rf[2][0][mem_loc] = elem_origin[0] + 0.5 * (xs[0][i] + 1.0) * dr_elem[0];
-            rf[2][1][mem_loc] = elem_origin[1] + 0.5 * (xs[1][j] + 1.0) * dr_elem[1];
-            rf[2][2][mem_loc] = elem_origin[2] + 0.5 * (xf[2][k] + 1.0) * dr_elem[2];
+            rf[2][0][mem_loc] = elem_origin[0] + xs[0][i] * dr_elem[0];
+            rf[2][1][mem_loc] = elem_origin[1] + xs[1][j] * dr_elem[1];
+            rf[2][2][mem_loc] = elem_origin[2] + xf[2][k] * dr_elem[2];
         }
     }
 

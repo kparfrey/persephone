@@ -5,7 +5,7 @@
 #include "kernels.hpp"
 
 /* REFERENCE coords are the 3D Cartesian coordinates local to the
- * reference element --- i.e. x[0-2] in [-1,1]
+ * reference element --- i.e. x[0-2] in [0,1]
  * Synonymous with COMPUTATIONAL/LOGICAL/ELEMENTAL coordinates */
 
 /* For now, all metric arrays are on solution points only 
