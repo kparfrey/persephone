@@ -1,4 +1,6 @@
 #include "process.hpp"
+
+#include <string>
 #include "params.hpp"
 #include "write_screen.hpp"
 #include "basic_time_integrator.hpp"
@@ -23,10 +25,13 @@ void Process::write_startup_info()
 
 void Process::time_advance()
 {
+    write::message("Starting time step " + std::to_string(step) + " --- t = " + std::to_string(time));
+
     /* Call the fundamental time step method we're using */
     (*time_integrator)(*this); //Since storing a pointer to a BasicTimeIntegrator
 
     time += dt;
+    step += 1;
 
     return;
 }

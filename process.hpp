@@ -39,6 +39,7 @@ class Process
     int data_output_counter;
     real_t time;
     real_t end_time;
+    int step;
     real_t cfl;
     real_t dt;
     BasicTimeIntegrator* time_integrator;
@@ -49,6 +50,5 @@ class Process
     void write_startup_info();
     void time_advance();
     void find_RHS(real_t* fields, real_t t, real_t* result);
-    //void (*basic_timestep_method)(Process&);
 };
 #endif

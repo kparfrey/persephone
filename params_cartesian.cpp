@@ -9,6 +9,7 @@
 using std::cout;
 using std::endl;
     
+/* Called by the ParamsCartesian constructor */
 void ParamsCartesian::secondary_params()
 {
     Nproc_domain = Nproc[0] * Nproc[1] * Nproc[2];

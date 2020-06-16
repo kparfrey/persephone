@@ -20,6 +20,13 @@ static void startMPI(int argc, char *argv[], Process &proc)
     MPI_Comm_rank(MPI_COMM_WORLD, &(proc.rank));   // Get rank of this process    
     MPI_Comm_size(MPI_COMM_WORLD, &(proc.Nproc));  // Number of running processes
 
+    if (proc.rank == 0)
+        if (proc.Nproc != proc.params.Nproc_domain)
+        {
+            write::basic("Error: number of running processes different from number expected from params.");
+            exit(1);
+        }
+
     write::store_rank(proc.rank);
     write::message("MPI_started");
     write::variable<int>("number of active processes", proc.Nproc);

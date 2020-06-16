@@ -1,5 +1,17 @@
 #include "write_screen.hpp"
 
+/* This way of using static variables in functions is a bit ugly, since it
+ * requires these function arguments that are only used once, at setup.
+ * Should convert these functions into functors, with "set_rank()" etc.
+ * member functions. Would be cleaner. 
+ *
+ * On the other hand, this approach means the functions are immediately 
+ * available in any file which includes this one --- it doesn't need to have
+ * access to an instance of a functor class.... 
+ *
+ * Maybe this can survive as an example of using function-static variables
+ * and default arguments... */
+
 namespace write
 {
     using std::cout;

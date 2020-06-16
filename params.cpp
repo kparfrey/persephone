@@ -29,6 +29,7 @@ void Params::setup_process_generic(Process &proc)
 {
     proc.time     = 0.0;
     proc.end_time = end_time;
+    proc.step     = 0;
     proc.cfl      = cfl;
     proc.data_output_counter = 0;
 
