@@ -19,7 +19,7 @@
 class Metric
 {
     private:
-    void allocate(int N);
+    void allocate(const int N);
 
 
     public:
@@ -37,9 +37,11 @@ class Metric
 
 
     /* Methods */
-    void setup(int Nelem[3], int Ns_block, real_t corners[8][3]);
-    void transform_twoTensor(real_t* T_in[3][3], real_t* T_out[3][3], int N,
-                             CoordTransDir ctd=phys2ref, Components c=covariant);
+    void setup(const int Nelem[3], const int Ns_block, const real_t corners[8][3]);
+    void transform_twoTensor(const TensorField& T_in, TensorField& T_out, 
+                             const int N,
+                             const CoordTransDir ctd=phys2ref, 
+                             const Components c=covariant);
     
 };
 

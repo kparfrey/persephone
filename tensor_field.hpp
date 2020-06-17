@@ -21,6 +21,12 @@ struct TensorField
     {
         return d[i][j][n];
     };
+    
+    /* For indexing a const TensorField */
+    real_t  operator()(const int i, const int j, const int n) const
+    {
+        return d[i][j][n];
+    };
 };
 
 using MatrixField = TensorField; // Use when the dimensions are
@@ -37,5 +43,16 @@ struct VectorField
 struct ScalarField
 {
     real_t* d;
+    
+    /* Use () instead of [] for consistency with the 2D case */
+    real_t& operator()(const int n)
+    {
+        return d[n];
+    };
+
+    real_t  operator()(const int n) const
+    {
+        return d[n];
+    };
 };
 #endif
