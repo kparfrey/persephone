@@ -2,7 +2,8 @@
 #define METRIC_HPP
 
 #include "common.hpp"
-#include "kernels.hpp"
+#include "tensor_field.hpp"
+
 
 /* REFERENCE coords are the 3D Cartesian coordinates local to the
  * reference element --- i.e. x[0-2] in [0,1]
@@ -23,16 +24,16 @@ class Metric
 
     public:
     /* Transforms between physical and reference coords */
-    real_t*    J[3][3]; // d(PHYSICAL)/d(REFERENCE)
-    real_t* Jinv[3][3]; // d(REFERENCE)/d(PHYSICAL)
+    TensorField    J; // d(PHYSICAL)/d(REFERENCE)
+    TensorField Jinv; // d(REFERENCE)/d(PHYSICAL)
 
     /* Reference coords */
-    real_t*    g[3][3]; // Spatial 3-metric (dual/covariant)
-    real_t* ginv[3][3]; // Inverse 3-metric (vector/contravariant)
-    real_t* rdetg;      // Square root of 3-metric determinant
+    TensorField g;     // Spatial 3-metric (dual/covariant)
+    TensorField ginv;  // Inverse 3-metric (vector/contravariant)
+    ScalarField rdetg; // Square root of 3-metric determinant
 
     /* Physical coords */
-    real_t* gphys[3][3]; // Spatial 3-metric, in chosen physical coords
+    TensorField gphys; // Spatial 3-metric, in chosen physical coords
 
 
     /* Methods */

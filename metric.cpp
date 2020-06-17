@@ -12,14 +12,14 @@ void Metric::allocate(int N)
     for (int i: dirs)
         for (int j: dirs)
         {
-               J[i][j]  = kernels::alloc(N);
-            Jinv[i][j]  = kernels::alloc(N);
-               g[i][j]  = kernels::alloc(N);
-            ginv[i][j]  = kernels::alloc(N);
-            gphys[i][j] = kernels::alloc(N);
+               J.d[i][j]  = kernels::alloc(N);
+            Jinv.d[i][j]  = kernels::alloc(N);
+               g.d[i][j]  = kernels::alloc(N);
+            ginv.d[i][j]  = kernels::alloc(N);
+            gphys.d[i][j] = kernels::alloc(N);
         }
 
-    rdetg = kernels::alloc(N);
+    rdetg.d = kernels::alloc(N);
 
     return;
 }
@@ -45,15 +45,15 @@ void Metric::setup(int Nelem[3], int Ns_block, real_t corners[8][3])
     for (int d: dirs)
         for (int i = 0; i < Ns_block; ++i) // All elems identical
         {
-            J[d][d][i]     = dr_elem[d]; // Since length of ref element is 1
-            Jinv[d][d][i]  = 1.0 / J[d][d][i];
-            gphys[d][d][i] = 1.0;
+            J(d,d,i)     = dr_elem[d]; // Since length of ref element is 1
+            Jinv(d,d,i)  = 1.0 / J(d,d,i);
+            gphys(d,d,i) = 1.0;
         }
 
 
     /* Find reference-space metric by performing a general coordinate
      * transformation on the physical metric */
-    transform_twoTensor(gphys, g, Ns_block, phys2ref, covariant);
+    transform_twoTensor(gphys.d, g.d, Ns_block, phys2ref, covariant);
 
 
     /* Find the inverse metric and sqrt(g) in reference space automatically */
@@ -63,16 +63,16 @@ void Metric::setup(int Nelem[3], int Ns_block, real_t corners[8][3])
     {
         for (int i: dirs)
         for (int j: dirs)
-            garr[i][j] = g[i][j][n]; // Put this point's metric into the array
+            garr[i][j] = g(i,j,n); // Put this point's metric into the array
 
         gmat.fill(garr);
         gmat.find_inverse();
         
         for (int i: dirs)
         for (int j: dirs)
-            ginv[i][j][n] = gmat.inv[i][j];
+            ginv(i,j,n) = gmat.inv[i][j];
 
-        rdetg[n] = std::sqrt( gmat.det );
+        rdetg.d[n] = std::sqrt( gmat.det );
     }
 
     return;
@@ -91,15 +91,15 @@ void Metric::transform_twoTensor(real_t* T_in[3][3], real_t* T_out[3][3], int N,
     {
         case covariant:
             if (ctd == phys2ref)
-                V = &J;
+                V = &J.d;
             else
-                V = &Jinv;
+                V = &Jinv.d;
             break;
         case contravariant:
             if (ctd == phys2ref)
-                V = &Jinv;
+                V = &Jinv.d;
             else
-                V = &J;
+                V = &J.d;
             break;
     }
     
