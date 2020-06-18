@@ -31,7 +31,7 @@ void repack(real_t* original, real_t* eb_logical, ElementBlock& eb)
  * Pass in ref to count, the index in names/datalist at which the vector components begin. */
 void vector_organization(HighFive::File file,
                          const int Nvec, int& count, string group,
-                         string vecnames[], real_t** veclist[],
+                         string vecnames[], VectorField veclist[],
                          string names[], real_t* datalist[])
 {
     string subgroup; // The name of the vector within its parent group
@@ -43,7 +43,7 @@ void vector_organization(HighFive::File file,
         for (int d: dirs)
         {
             names[count]    = subgroup + "/" + std::to_string(d);
-            datalist[count] = veclist[i][d];
+            datalist[count] = veclist[i](d);
             count++;
         }
     }

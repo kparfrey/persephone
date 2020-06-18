@@ -34,16 +34,14 @@ class ElementBlock
     real_t corners[8][3]; // 3 physical-space coordinates for each of 8 corners
     Edge edges[12]; 
 
-    /* Replace the following with VectorField, MatrixField if we need 
-     * them on device */
     /* Computational space locations: one element's worth only */
-    real_t* xs[3]; // Soln point locations in computational space, in each direction 
-    real_t* xf[3]; // Flux point locations... 
+    VectorField xs; // Soln point locations in computational space, in each direction 
+    VectorField xf; // Flux point locations... 
 
     /* Physical/real space: need the whole 3D grid for each r^i, i in [0,1,2] */
-    real_t* rs[3]; // Soln points, stored as a 1D array for each vector component
-    real_t* rf[3][3]; // Flux points: 3 3D arrays, one for each transform direction
-                      // i.e. rf[transform-dir][coord][3D-array]
+    VectorField rs;    // Soln points, stored as a 1D block for each vector component
+    VectorField rf[3]; // Flux points: need separate VectorField for each transform dir
+                       // i.e. rf[transform-dir](coord component, 3D space in 1D block)
 
     /* Will need on device. Leave as is since it's just one pointer, or replace
      * with ScalarField (or its alias) to make clear it's headed for device? */

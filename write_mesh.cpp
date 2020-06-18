@@ -12,6 +12,7 @@
 #include "element_block.hpp"
 #include "write_screen.hpp"
 #include "write_file_utils.hpp"
+#include "tensor_field.hpp"
 
 
 using std::string;
@@ -61,9 +62,9 @@ void write_mesh(Process &proc)
     string names[Nwrite];
     real_t* datalist[Nwrite];
 
-    string group           = "/coords";
-    string vecnames[Nvec]  = {"r"};
-    real_t** veclist[Nvec] = {eb.rs};
+    string group              = "/coords";
+    string vecnames[Nvec]     = {"r"};
+    VectorField veclist[Nvec] = {eb.rs};
 
     vector_organization(meshfile, Nvec, count, group, vecnames, veclist, names, datalist);
 

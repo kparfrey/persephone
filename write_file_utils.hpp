@@ -11,6 +11,6 @@ void repack(real_t* original, real_t* eb_logical, ElementBlock& eb);
 
 void vector_organization(HighFive::File file,
                          const int Nvec, int& count, string group,
-                         string vecnames[], real_t** veclist[],
+                         string vecnames[], VectorField veclist[],
                          string names[], real_t* datalist[]);
 #endif

@@ -196,7 +196,7 @@ real_t ParamsCartesian::set_dt_basic(ElementBlock& eb)
 
     /* Timestep based on minimal flux-point spacing */
     for (int d: dirs)
-        dmin[d] = std::fabs(eb.rf[d][d][1] - eb.rf[d][d][0]);
+        dmin[d] = std::fabs(eb.rf[d](d,1) - eb.rf[d](d,0));
 
     speed_over_dx = 0.0;
     for (int d: dirs)

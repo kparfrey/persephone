@@ -41,7 +41,7 @@ void set_scalar(ElementBlock& eb)
         {
             loc = eb.ids(i,j,k) + mem_offset;
             for (int d: dirs)
-                r[d] = eb.rs[d][loc];
+                r[d] = eb.rs(d,loc);
 
             eb.fields[loc] = scalar_function(r);
         }

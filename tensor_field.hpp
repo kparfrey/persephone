@@ -53,6 +53,26 @@ using MatrixField = TensorField; // Use when the dimensions are
 struct VectorField
 {
     real_t* data[3];
+
+    CUDA_HOSTDEV
+    inline real_t& operator()(const int i, const int n)
+    {
+        return data[i][n];
+    };
+
+
+    CUDA_HOSTDEV
+    inline real_t operator()(const int i, const int n) const
+    {
+        return data[i][n];
+    };
+
+
+    CUDA_HOSTDEV
+    inline real_t*& operator()(const int i)
+    {
+        return data[i];
+    };
 };
 
 
