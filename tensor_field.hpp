@@ -21,13 +21,13 @@
  * just define a SpacetimeTensorField or whatever if that's useful. */
 struct TensorField
 {
-    real_t* d[3][3]; // Array of pointers to real data
+    real_t* data[3][3]; 
 
     /* Returns a reference: allows both getting and setting the value */
     CUDA_HOSTDEV
     inline real_t& operator()(const int i, const int j, const int n)
     {
-        return d[i][j][n];
+        return data[i][j][n];
     };
     
 
@@ -35,14 +35,14 @@ struct TensorField
     CUDA_HOSTDEV
     inline real_t  operator()(const int i, const int j, const int n) const
     {
-        return d[i][j][n];
+        return data[i][j][n];
     };
 
 
     CUDA_HOSTDEV
     inline real_t*& operator()(const int i, const int j)
     {
-        return d[i][j];
+        return data[i][j];
     };
 };
 
@@ -52,41 +52,41 @@ using MatrixField = TensorField; // Use when the dimensions are
 
 struct VectorField
 {
-    real_t* d[3];
+    real_t* data[3];
 };
 
 
 /* By analogy with the above. Not necessary, might remove. */
 struct ScalarField
 {
-    real_t* d;
+    real_t* data;
     
     /* Use () instead of [] for consistency with the 2D case */
     CUDA_HOSTDEV
     inline real_t& operator()(const int n)
     {
-        return d[n];
+        return data[n];
     };
 
 
     CUDA_HOSTDEV
     inline real_t  operator()(const int n) const
     {
-        return d[n];
+        return data[n];
     };
 
 
     CUDA_HOSTDEV
     inline real_t*& operator()()
     {
-        return d;
+        return data;
     };
 
     
     CUDA_HOSTDEV 
-    inline void operator=(real_t* data)
+    inline void operator=(real_t* external_data)
     {
-        d = data;
+        data = external_data;
         return;
     };
 };
