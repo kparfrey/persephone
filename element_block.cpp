@@ -1,6 +1,7 @@
 #include <cmath>
 #include "element_block.hpp"
 #include "kernels.hpp"
+#include "write_screen.hpp"
 
 
 void ElementBlock::setup()
@@ -62,6 +63,10 @@ void ElementBlock::allocate_on_host()
 
 void ElementBlock::move_to_device()
 {
+    write::message("Copying ElementBlock's data to device");
+
+    metric.move_to_device();
+
     return;
 }
 

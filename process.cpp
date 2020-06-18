@@ -15,9 +15,22 @@ Process::Process(Params &params)
 
 void Process::write_startup_info()
 {
-    if (rank) return; // Only write from the root proc
+    if (rank == 0)
+        params.write_param_info();
 
-    params.write_param_info();
+    return;
+}
+
+
+/* Move all of the process's device-side data there, to be called at
+ * the end of the setup phase. */
+void Process::move_to_device()
+{
+    write::message("End of host-side initialization phase --- copying all required data to device");
+    
+    elements.move_to_device();
+
+    write::message("Finished copying data to device and freeing memory on host");
 
     return;
 }

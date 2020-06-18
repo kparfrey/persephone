@@ -2,6 +2,7 @@
 #include "metric.hpp"
 #include "kernels.hpp"
 #include "matrix.hpp"
+#include "write_screen.hpp"
 
 
 void Metric::allocate_on_host(const int N)
@@ -27,6 +28,8 @@ void Metric::allocate_on_host(const int N)
 
 void Metric::move_to_device()
 {
+    write::message("Copying Metric's data to device");
+
     return;
 }
 

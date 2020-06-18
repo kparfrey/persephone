@@ -50,5 +50,6 @@ class Process
     void write_startup_info();
     void time_advance();
     void find_RHS(real_t* fields, real_t t, real_t* result);
+    void move_to_device();
 };
 #endif

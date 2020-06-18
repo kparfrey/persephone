@@ -47,8 +47,11 @@ int main(int argc, char *argv[])
     
     proc.params.setup_process(proc); // Need to do something about this...
     
-    write_mesh(proc);
-    write_data(proc);
+    write_mesh(proc); // Mesh data still on host
+
+    proc.move_to_device();
+
+    write_data(proc); // Data generally lives on device
 
     while(proc.time < proc.end_time)
     {
