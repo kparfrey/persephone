@@ -35,6 +35,7 @@ void ElementBlock::setup()
     allocate_on_host();
     set_computational_coords();
     set_physical_coords();
+    fill_spectral_difference_matrices();
 
     metric.setup(Nelem, Ns_block, corners);
 
@@ -56,6 +57,13 @@ void ElementBlock::allocate_on_host()
             rf[itrans](d) = new real_t [Nelem_block * Nf_dir[itrans]];
 
     fields = new real_t [Nfield * Ns_block];
+
+    for (int i: dirs)
+    {
+        int matrix_size = Ns[i] * Nf[i]; 
+        soln2flux[i]      = new real_t [matrix_size]; // Nf x Ns matrices
+        fluxDeriv2soln[i] = new real_t [matrix_size]; // Ns x Nf matrices
+    }
 
     return;
 }
@@ -172,6 +180,106 @@ void ElementBlock::set_physical_coords()
         }
     }
 
+
+    return;
+}
+
+
+double* ElementBlock::barycentric_weights(const real_t* const x, const int N)
+{
+    double* weights = new double [N];
+    
+    double p;
+    for (int j = 0; j < N; ++j)
+    {
+        p = 1.0;
+        for (int i = 0; i < N; ++i)
+        {
+            if (i != j)
+                p *= x[j] - x[i];
+        }
+
+        weights[j] = 1.0 / p;
+    }
+
+
+    return weights;
+}
+
+
+/* Single interpolation matrix: from x0 points --> x1 points */
+real_t* ElementBlock::barycentric_interpolation_matrix(const real_t* const x0, const int N0,
+                                                       const real_t* const x1, const int N1)
+{
+    /* Store like N1 x N0 matrix: the 0/original-point index moves fastest */
+    real_t* matrix = new real_t [N1*N0];
+
+    double* w = barycentric_weights(x0, N0);
+
+    double s;
+    for (int k = 0; k < N1; ++k)
+    {
+        s = 0.0;
+        for (int i = 0; i < N0; ++i)
+            s += w[i] / (x1[k] - x0[i]);
+
+        for (int j = 0; j < N0; ++j)
+            matrix[k*N0 + j] = w[j] / (s * (x1[k] - x0[j]));
+    }
+
+    delete[] w;
+
+    return matrix;
+}
+
+
+void ElementBlock::fill_spectral_difference_matrices()
+{
+    /*** solution -> flux interpolation ***/
+    write::message("Filling solution -> flux point matrices");
+    for (int i: dirs)
+        soln2flux[i] = barycentric_interpolation_matrix(xs(i), Ns[i], xf(i), Nf[i]);
+
+
+    /*** Derivative from flux-point values, interpolation back to solution points */
+    write::message("Filling flux-derivative -> solution matrices");
+    for (int d: dirs)
+    {
+        int nf = Nf[d];
+        int ns = Ns[d];
+
+        double* w = barycentric_weights(xf(d), nf);
+
+        /* Matrix for derivative using flux points, at flux points */
+        double* flux_deriv = new double [nf*nf]();
+        
+        /* i != j entries */
+        for (int j = 0; j < nf; ++j)
+            for (int i = 0; i < nf; ++i)
+                if (i != j)
+                    flux_deriv[i*nf + j] = (w[j]/w[i]) / (xf(d,i) - xf(d,j));
+
+        /* i == j entries */
+        double s;
+        for (int j = 0; j < nf; ++j)
+        {
+            s = 0.0;
+            for (int i = 0; i < nf; ++i)
+                if (i != j)
+                    s += flux_deriv[j*nf + i];
+        
+            flux_deriv[j*nf + j] = - s;
+        }
+
+        /* Matrix for interpolating from flux to solution points */
+        real_t* flux2soln = barycentric_interpolation_matrix(xf(d), nf, xs(d), ns);
+
+        /* Compose the operations to give a single matrix */
+        //fluxDeriv2soln[d] = matrix_matrix_product(....)
+
+        delete[] flux_deriv;
+        delete[] flux2soln;
+    }
 
     return;
 }

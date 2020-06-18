@@ -12,6 +12,10 @@ class ElementBlock
     void allocate_on_host();
     void set_computational_coords();
     void set_physical_coords();
+    void fill_spectral_difference_matrices();
+    double* barycentric_weights(const real_t* const x, const int N);
+    real_t* barycentric_interpolation_matrix(const real_t* const x0, const int N0,
+                                             const real_t* const x1, const int N1);
 
 
     public:
@@ -46,6 +50,12 @@ class ElementBlock
     /* Will need on device. Leave as is since it's just one pointer, or replace
      * with ScalarField (or its alias) to make clear it's headed for device? */
     real_t* fields; // Field data on solution points
+
+    /* Matrices interpolating between soln and flux points, and taking derivatives.
+     * Need one matrix for each transform direction, stored in flattened blocks */
+    real_t* soln2flux[3];      // Interpolate from soln points to flux points
+    real_t* fluxDeriv2soln[3]; // Take derivate of values flux points, interpolate
+                               // back to soln points
 
     Metric metric;
 
