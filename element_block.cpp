@@ -31,7 +31,7 @@ void ElementBlock::setup()
 
     Nf_elem = Nf_dir[0] + Nf_dir[1] + Nf_dir[2]; // 3 Nf Ns^2 if all directions equal
 
-    allocate();
+    allocate_on_host();
     set_computational_coords();
     set_physical_coords();
 
@@ -41,21 +41,27 @@ void ElementBlock::setup()
 }
 
 
-void ElementBlock::allocate()
+void ElementBlock::allocate_on_host()
 {
     for (int i: dirs)
     {
-        xs[i] = kernels::alloc(Ns[i]);
-        xf[i] = kernels::alloc(Nf[i]);
-        rs[i] = kernels::alloc(Ns_block);
+        xs[i] = new real_t [Ns[i]];
+        xf[i] = new real_t [Nf[i]];
+        rs[i] = new real_t [Ns_block];
     }
 
     for (int itrans: dirs)
         for (int d: dirs)
-            rf[itrans][d] = kernels::alloc(Nelem_block * Nf_dir[itrans]);
+            rf[itrans][d] = new real_t [Nelem_block * Nf_dir[itrans]];
 
-    fields = kernels::alloc(Nfield * Ns_block);
+    fields = new real_t [Nfield * Ns_block];
 
+    return;
+}
+
+
+void ElementBlock::move_to_device()
+{
     return;
 }
 

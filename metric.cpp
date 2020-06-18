@@ -4,7 +4,7 @@
 #include "matrix.hpp"
 
 
-void Metric::allocate(const int N)
+void Metric::allocate_on_host(const int N)
 {
     /* For now, assume that N is the no. of solution points per block,
      * and that no metric quantities on flux points are required. */
@@ -12,15 +12,21 @@ void Metric::allocate(const int N)
     for (int i: dirs)
         for (int j: dirs)
         {
-               J(i,j)  = kernels::alloc(N);
-            Jinv(i,j)  = kernels::alloc(N);
-               g(i,j)  = kernels::alloc(N);
-            ginv(i,j)  = kernels::alloc(N);
-            gphys(i,j) = kernels::alloc(N);
+               J(i,j)  = new real_t [N]();
+            Jinv(i,j)  = new real_t [N]();
+               g(i,j)  = new real_t [N]();
+            ginv(i,j)  = new real_t [N]();
+            gphys(i,j) = new real_t [N]();
         }
 
-    rdetg = kernels::alloc(N);
+    rdetg = new real_t [N]();
 
+    return;
+}
+
+
+void Metric::move_to_device()
+{
     return;
 }
 
@@ -28,7 +34,7 @@ void Metric::allocate(const int N)
 /* Simplified version that assumes basic Cartesian shape */
 void Metric::setup(const int Nelem[3], const int Ns_block, const real_t corners[8][3])
 {
-    allocate(Ns_block);
+    allocate_on_host(Ns_block);
 
 
     real_t dr_elemblock[3];

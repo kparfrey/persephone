@@ -19,7 +19,7 @@
 class Metric
 {
     private:
-    void allocate(const int N);
+    void allocate_on_host(const int N);
 
 
     public:
@@ -42,6 +42,7 @@ class Metric
                              const int N,
                              const CoordTransDir ctd=phys2ref, 
                              const Components c=covariant);
+    void move_to_device();
     
 };
 

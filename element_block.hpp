@@ -9,7 +9,7 @@ class ElementBlock
 {
     private:
     /* These only called by the setup() method */
-    void allocate();
+    void allocate_on_host();
     void set_computational_coords();
     void set_physical_coords();
 
@@ -60,6 +60,7 @@ class ElementBlock
     inline int cyclic_add(int i, int add);
     void setup();
     void free();
+    void move_to_device();
 };
 
 
