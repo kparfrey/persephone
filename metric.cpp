@@ -12,14 +12,14 @@ void Metric::allocate(const int N)
     for (int i: dirs)
         for (int j: dirs)
         {
-               J.d[i][j]  = kernels::alloc(N);
-            Jinv.d[i][j]  = kernels::alloc(N);
-               g.d[i][j]  = kernels::alloc(N);
-            ginv.d[i][j]  = kernels::alloc(N);
-            gphys.d[i][j] = kernels::alloc(N);
+               J(i,j)  = kernels::alloc(N);
+            Jinv(i,j)  = kernels::alloc(N);
+               g(i,j)  = kernels::alloc(N);
+            ginv(i,j)  = kernels::alloc(N);
+            gphys(i,j) = kernels::alloc(N);
         }
 
-    rdetg.d = kernels::alloc(N);
+    rdetg = kernels::alloc(N);
 
     return;
 }
