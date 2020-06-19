@@ -8,7 +8,7 @@ LDLIBS   = -lmpi -lm -lhdf5
 
 SRC = main.cpp kernels.cpp process.cpp element_block.cpp params.cpp params_cartesian.cpp \
 	  write_mesh.cpp metric.cpp matrix.cpp initial_state_cartesian.cpp write_screen.cpp \
-	  write_file_utils.cpp write_data.cpp 
+	  write_file_utils.cpp write_data.cpp lagrange_polynomials.cpp
 OBJ := $(SRC:%.cpp=%.o)
 DEP := $(SRC:%.cpp=%.d)
 

@@ -13,13 +13,8 @@ class ElementBlock
     void set_computational_coords();
     void set_physical_coords();
     void fill_spectral_difference_matrices();
-    double* barycentric_weights(const real_t* const x, const int N);
-    real_t* barycentric_interpolation_matrix(const real_t* const x0, const int N0,
-                                             const real_t* const x1, const int N1);
-
 
     public:
-
     /* Data */
     int Nelem[3];   // No. of elements in each direction
     int Ns[3];      // No. of soln points in each element, in each direction
