@@ -36,6 +36,7 @@ class Process
 
     /* Global data */
     int Nproc;
+    int Nfield;
     int data_output_counter;
     real_t time;
     real_t end_time;

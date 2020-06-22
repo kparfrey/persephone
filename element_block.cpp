@@ -33,6 +33,25 @@ void ElementBlock::setup()
 
     Nf_elem = Nf_dir[0] + Nf_dir[1] + Nf_dir[2]; // 3 Nf Ns^2 if all directions equal
 
+    /* No. of i-direction flux points in the block */
+    for (int i: dirs)
+        Nf_dir_block[i] = Nf_dir[i] * Nelem_block;
+
+
+    /* Setup LengthBucket... */
+    lengths.Nfield  = Nfield;
+    lengths.Ns_elem = Ns_elem;
+    for (int i: dirs)
+    {
+        lengths.Nelem[i]  = Nelem[i];
+        lengths.Ns[i]     = Ns[i];
+        lengths.Nf[i]     = Nf[i];
+        lengths.Nsf[i]    = Nsf[i];
+        lengths.Nf_dir[i] = Nf_dir[i];
+    }
+
+
+
     allocate_on_host();
     set_computational_coords();
     set_physical_coords();
@@ -62,8 +81,8 @@ void ElementBlock::allocate_on_host()
     for (int i: dirs)
     {
         int matrix_size = Ns[i] * Nf[i]; 
-        soln2flux[i]      = new real_t [matrix_size]; // Nf x Ns matrices
-        fluxDeriv2soln[i] = new real_t [matrix_size]; // Ns x Nf matrices
+        soln2flux(i)      = new real_t [matrix_size]; // Nf x Ns matrices
+        fluxDeriv2soln(i) = new real_t [matrix_size]; // Ns x Nf matrices
     }
 
     return;
@@ -191,7 +210,7 @@ void ElementBlock::fill_spectral_difference_matrices()
     /*** solution -> flux interpolation ***/
     write::message("Filling solution -> flux point matrices");
     for (int i: dirs)
-        soln2flux[i] = lagrange::barycentric_interpolation_matrix(xs(i), Ns[i], xf(i), Nf[i]);
+        soln2flux(i) = lagrange::barycentric_interpolation_matrix(xs(i), Ns[i], xf(i), Nf[i]);
 
 
     /*** Derivative from flux-point values, interpolation back to solution points */
@@ -208,7 +227,7 @@ void ElementBlock::fill_spectral_difference_matrices()
         real_t* flux2soln = lagrange::barycentric_interpolation_matrix(xf(d), nf, xs(d), ns);
 
         /* Compose the operations to give a single matrix */
-        fluxDeriv2soln[d] = lagrange::matrix_matrix_product(flux2soln, D, ns, nf, nf);
+        fluxDeriv2soln(d) = lagrange::matrix_matrix_product(flux2soln, D, ns, nf, nf);
 
         delete[] D;
         delete[] flux2soln;

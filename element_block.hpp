@@ -4,6 +4,7 @@
 #include "common.hpp"
 #include "edge.hpp"
 #include "metric.hpp"
+#include "tensor_field.hpp"
 
 class ElementBlock
 {
@@ -23,10 +24,14 @@ class ElementBlock
     int Ns_tot[3];  // Total number of soln points in each direction
     int Ns_elem;    // Total no. of soln points in each element
     int Nf_elem;    // Total no. of flux points in each element
-    int Nf_dir[3];  // No. of flux points in each direction, in each element
+    int Nf_dir[3];  // No. of i-direction flux points, in each element
     int Nelem_block;// No. of elements in the block
     int Ns_block;   // No. of soln points in the block
+    int Nf_dir_block[3];
     int Nfield;
+
+    LengthBucket lengths; // To encapsulate all lengths needed for data indexing
+    
 
     /* Geometrical information */
     /* For now these are degenerate with the corresponding Process data */
@@ -47,10 +52,11 @@ class ElementBlock
     real_t* fields; // Field data on solution points
 
     /* Matrices interpolating between soln and flux points, and taking derivatives.
-     * Need one matrix for each transform direction, stored in flattened blocks */
-    real_t* soln2flux[3];      // Interpolate from soln points to flux points
-    real_t* fluxDeriv2soln[3]; // Take derivate of values flux points, interpolate
-                               // back to soln points
+     * Need one matrix for each transform direction, stored in flattened blocks.
+     * i.e. index with matrix(transform-direction, flattened data). */
+    VectorField soln2flux;      // Interpolate from soln points to flux points
+    VectorField fluxDeriv2soln; // Take derivative of values on flux points, interpolate
+                                // back to soln points
 
     Metric metric;
 

@@ -55,7 +55,6 @@ int main(int argc, char *argv[])
 
     while(proc.time < proc.end_time)
     {
-        //time_advance(proc);
         proc.time_advance();
     }
 

@@ -110,4 +110,35 @@ struct ScalarField
         return;
     };
 };
+
+
+/* Include what is required to index flattened data arrays. For
+ * passing to kernels. */
+struct LengthBucket
+{
+    int Nfield;
+    int Ns_elem;
+
+    int Nelem[3];
+    int Ns[3];
+    int Nf[3];
+    int Nf_dir[3];
+    int Nsf[3];
+};
+
+
+/* A vector field in a different sense, in the space of solution
+ * or flux vectors. The Nfield vector components are flattened into
+ * a single 1D data block. */
+/*
+struct MultiField
+{
+    real_t* data;
+
+    int Nfield;
+    int Nelem[3];
+    int Ns[3];
+    int Nf[3];
+};
+*/
 #endif

@@ -51,11 +51,33 @@ void Process::time_advance()
 
 
 /* The fundamental function of the spectral difference method */
-/* Q : vector of primitive solution fields 
+/* Q : vector of conserved solution fields 
  * F : vector of fluxes */
 void Process::find_RHS(real_t* Q, real_t t, real_t* result)
 {
-    for (int i = 0; i < elements.Ns_block; ++i)
-        result[i] = 1.0;
+    ElementBlock& eb = elements;
+
+    /* These vectors are in "transform direction" space */
+    VectorField Qf; // Solution interpolated to flux points
+    VectorField  F; // Fluxes
+    VectorField dF; // Store d_j F(i)^j
+    
+    for (int i: dirs)
+    {
+        Qf(i) = kernels::alloc_raw(Nfield * eb.Nf_dir_block[i]);
+         F(i) = kernels::alloc_raw(Nfield * eb.Nf_dir_block[i]);
+        dF(i) = kernels::alloc_raw(Nfield * eb.Nf_dir_block[i]);
+    }
+    
+    /*  Simple: assume Nfield = 1 etc */
+    kernels::soln_to_flux(eb.soln2flux, Q, Qf, eb.lengths);
+
+    for (int i: dirs)
+    {
+        kernels::free(Qf(i));
+        kernels::free( F(i));
+        kernels::free(dF(i));
+    }
+
     return;
 }

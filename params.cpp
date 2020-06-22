@@ -27,6 +27,7 @@ Params::Params(EqnSystem equations, BasicTimeMethod time_method,
  * Spherical, toroidal etc. configurations. */
 void Params::setup_process_generic(Process &proc)
 {
+    proc.Nfield   = Nfield;
     proc.time     = 0.0;
     proc.end_time = end_time;
     proc.step     = 0;

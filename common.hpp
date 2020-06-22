@@ -23,6 +23,7 @@ enum Components {covariant, contravariant};
 enum CoordTransDir {phys2ref, ref2phys};
 enum WhoWrites {root_only, all_ranks, one_rank};
 enum Prognosis {destroy, survive};
+//enum Operation {soln_to_flux, fluxDeriv_to_soln};
 
 constexpr int dirs[3] = {0, 1, 2}; // The three spatial directions
 
@@ -46,7 +47,6 @@ constexpr int corner_coords[8][3] = {{0, 0, 0},  // 0
                                      {1, 0, 1},  // 5
                                      {1, 1, 1},  // 6
                                      {0, 1, 1}}; // 7
-
 #define SINGLE 1
 #define DOUBLE 2
 
