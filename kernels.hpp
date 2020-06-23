@@ -20,4 +20,8 @@ namespace kernels
                       const real_t* const __restrict__ Q, 
                             real_t* const __restrict__ Qf, 
                       const LengthBucket lb, const int dir);
+
+    void generate_fluxes(const real_t* const __restrict__ Qf,
+                               real_t* const __restrict__ F ,
+                         const LengthBucket lb, const int dir);
  }

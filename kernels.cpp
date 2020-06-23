@@ -112,6 +112,38 @@ namespace kernels
             }
         }
 
+        return;
+    }
+
+
+    void generate_fluxes(const real_t* const __restrict__ Qf,
+                               real_t* const __restrict__ F ,
+                         const LengthBucket lb, const int dir)
+    {
+        int id_elem;
+        int mem_offset;
+        int mem;
+        int dir1 = dir_plus_one[dir]; 
+        int dir2 = dir_plus_two[dir];
+
+        real_t wave_speed[3] = {0.25, 0.0, 0.0};
+
+        for (int ie = 0; ie < lb.Nelem[0]; ++ie)
+        for (int je = 0; je < lb.Nelem[1]; ++je)
+        for (int ke = 0; ke < lb.Nelem[2]; ++ke)
+        {
+            id_elem = (ie*lb.Nelem[1] + je)*lb.Nelem[2] + ke;
+            mem_offset = id_elem * lb.Nf_dir[dir];
+
+            for (int n1 = 0; n1 < lb.Ns[dir1]; ++n1)
+            for (int n2 = 0; n2 < lb.Ns[dir2]; ++n2)
+            for (int n0 = 0; n0 < lb.Nf[dir];  ++n0)
+            {
+                mem = mem_offset + (n2   * lb.Nsf[dir] + n1) * lb.Nf[dir] + n0;
+
+                F[mem] = wave_speed[dir] * Qf[mem];
+            }
+        }
 
         return;
     }

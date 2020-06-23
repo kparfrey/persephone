@@ -74,6 +74,9 @@ void Process::find_RHS(real_t* Q, real_t t, real_t* result)
         kernels::soln_to_flux(eb.soln2flux(i), Q, Qf(i), eb.lengths, i);
 
     for (int i: dirs)
+        kernels::generate_fluxes(Qf(i), F(i), eb.lengths, i);
+
+    for (int i: dirs)
     {
         kernels::free(Qf(i));
         kernels::free( F(i));
