@@ -20,7 +20,7 @@ class ElementBlock
     int Nelem[3];   // No. of elements in each direction
     int Ns[3];      // No. of soln points in each element, in each direction
     int Nf[3];      // No. of flux points "   "      "     "   "       "
-    int Nsf[3];     // For indexing the flux-point arrays; see ElementBlock::idf()
+    //int Nsf[3];     // For indexing the flux-point arrays; see ElementBlock::idf()
     int Ns_tot[3];  // Total number of soln points in each direction
     int Ns_elem;    // Total no. of soln points in each element
     int Nf_elem;    // Total no. of flux points in each element
@@ -88,7 +88,8 @@ inline int ElementBlock::ids(int i, int j, int k)
  * will need to use conditional compilation for reversed GPU version */
 inline int ElementBlock::idf(int idir, int j1, int j2, int dir)
 {
-    return (j2*Nsf[dir] + j1)*Nf[dir] + idir;
+    //return (j2*Nsf[dir] + j1)*Nf[dir] + idir;
+    return (j2*Ns[dir_plus_one[dir]] + j1)*Nf[dir] + idir;
 }
 
 

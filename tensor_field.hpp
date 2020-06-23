@@ -123,7 +123,7 @@ struct LengthBucket
     int Ns[3];
     int Nf[3];
     int Nf_dir[3];
-    int Nsf[3];
+    //int Nsf[3];
 };
 
 

@@ -53,12 +53,16 @@ namespace kernels
         int mem_s2f;
         real_t lsum;
 
-        int dir1, dir2;         // dir+1 and dir+2 with cyclic addition
         int n0_s, n0_f, n1, n2; // cyclic indices -- n0 is transform dir, n1 is n0+1 etc
         int *i, *j, *k;         // true or fixed indices; i always points in 0 direction etc
         
-        dir1 = dir_plus_one[dir]; // array stored in common.hpp for convenience
-        dir2 = dir_plus_two[dir]; // dir is the transform direction
+        int dir1 = dir_plus_one[dir]; // array stored in common.hpp for convenience
+        int dir2 = dir_plus_two[dir]; // dir is the transform direction
+
+        /* Transform-relative lengths for clarity */
+        int Nf0 = lb.Nf[dir];
+        int Ns0 = lb.Ns[dir]; 
+        int Ns1 = lb.Ns[dir1];
 
         /* The i,j,k indices are used to index solution points, which use a single fixed 
          * (direction-independent) layout. Need to set i -> 0-dir, j -> 1-dir, k-> 2-dir
@@ -103,11 +107,11 @@ namespace kernels
                 for (n0_s = 0; n0_s < lb.Ns[dir]; ++n0_s)
                 {
                     mem_s   = mem_offset_s + (*i * lb.Ns[1]  + *j) * lb.Ns[2] + *k;
-                    mem_s2f = n0_f * lb.Ns[dir] + n0_s; 
+                    mem_s2f = n0_f * Ns0 + n0_s; 
                     lsum   += soln2flux[mem_s2f] * Q[mem_s];
                 }
 
-                mem_f = mem_offset_f + (n2   * lb.Nsf[dir] + n1) * lb.Nf[dir] + n0_f;
+                mem_f = mem_offset_f + (n2 * Ns1 + n1) * Nf0 + n0_f;
                 Qf[mem_f] = lsum;
             }
         }
@@ -126,6 +130,9 @@ namespace kernels
         int dir1 = dir_plus_one[dir]; 
         int dir2 = dir_plus_two[dir];
 
+        int Nf0 = lb.Nf[dir];
+        int Ns1 = lb.Ns[dir1];
+
         real_t wave_speed[3] = {0.25, 0.0, 0.0};
 
         for (int ie = 0; ie < lb.Nelem[0]; ++ie)
@@ -139,7 +146,7 @@ namespace kernels
             for (int n2 = 0; n2 < lb.Ns[dir2]; ++n2)
             for (int n0 = 0; n0 < lb.Nf[dir];  ++n0)
             {
-                mem = mem_offset + (n2   * lb.Nsf[dir] + n1) * lb.Nf[dir] + n0;
+                mem = mem_offset + (n2 * Ns1 + n1) * Nf0 + n0;
 
                 F[mem] = wave_speed[dir] * Qf[mem];
             }

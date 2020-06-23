@@ -16,9 +16,10 @@ void ElementBlock::setup()
         Ns_tot[i] = Ns[i] * Nelem[i];
 
     /* Cyclic ordering for indexing flux-point arrays */
-    Nsf[0] = Ns[1];
-    Nsf[1] = Ns[2];
-    Nsf[2] = Ns[0];
+    /* Replace with Ns[dir_plus_one[dir]] */
+    //Nsf[0] = Ns[1];
+    //Nsf[1] = Ns[2];
+    //Nsf[2] = Ns[0];
 
     /* No. of solution points per element */
     Ns_elem = Ns[0] * Ns[1] * Ns[2];
@@ -46,7 +47,7 @@ void ElementBlock::setup()
         lengths.Nelem[i]  = Nelem[i];
         lengths.Ns[i]     = Ns[i];
         lengths.Nf[i]     = Nf[i];
-        lengths.Nsf[i]    = Nsf[i];
+        //lengths.Nsf[i]    = Nsf[i];
         lengths.Nf_dir[i] = Nf_dir[i];
     }
 
