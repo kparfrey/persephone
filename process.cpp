@@ -93,7 +93,7 @@ void Process::find_RHS(real_t* Q, real_t t, real_t* result)
     {
         Qf(i) = kernels::alloc_raw(Nfield * eb.Nf_dir_block[i]);
          F(i) = kernels::alloc_raw(Nfield * eb.Nf_dir_block[i]);
-        dF(i) = kernels::alloc_raw(Nfield * eb.Nf_dir_block[i]);
+        dF(i) = kernels::alloc_raw(Nfield * eb.Ns_block);
     }
     
     /*  Simple: assume Nfield = 1 etc */
@@ -109,6 +109,8 @@ void Process::find_RHS(real_t* Q, real_t t, real_t* result)
 
     for (int i: dirs)
         kernels::fluxDeriv_to_soln(eb.fluxDeriv2soln(i), F(i), dF(i), eb.lengths, i);
+
+    kernels::flux_divergence(dF, result, eb.lengths);
 
     for (int i: dirs)
     {

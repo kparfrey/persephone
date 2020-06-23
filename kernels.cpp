@@ -185,7 +185,7 @@ namespace kernels
                 }
 
                 mem_s = mem_offset_s + (*i * lb.Ns[1]  + *j) * lb.Ns[2] + *k;
-                dF[mem_s] = - lsum; // Put minus sign here: dQ/dt = - div(F)
+                dF[mem_s] = lsum; 
             }
         }
 
@@ -227,4 +227,33 @@ namespace kernels
 
         return;
     }
+
+
+    void flux_divergence(const VectorField                  dF,
+                               real_t* const __restrict__ divF,
+                         const LengthBucket lb)
+    {
+        int id_elem;
+        int mem_offset;
+        int mem;
+
+        for (int ie = 0; ie < lb.Nelem[0]; ++ie)
+        for (int je = 0; je < lb.Nelem[1]; ++je)
+        for (int ke = 0; ke < lb.Nelem[2]; ++ke)
+        {
+            id_elem = (ie*lb.Nelem[1] + je)*lb.Nelem[2] + ke;
+            mem_offset = id_elem * lb.Ns_elem;
+            for (int i = 0; i < lb.Ns[0]; ++i)
+            for (int j = 0; j < lb.Ns[1]; ++j)
+            for (int k = 0; k < lb.Ns[2]; ++k)
+            {
+                mem = mem_offset + (i * lb.Ns[1]  + j) * lb.Ns[2] + k;
+
+                divF[mem] = - (dF(0,mem) + dF(1,mem) + dF(2,mem));
+            }
+        }
+
+        return;
+    }
+
 }

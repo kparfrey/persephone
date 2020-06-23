@@ -29,4 +29,10 @@ namespace kernels
     void generate_fluxes(const real_t* const __restrict__ Qf,
                                real_t* const __restrict__ F ,
                          const LengthBucket lb, const int dir);
+
+    void flux_divergence(const VectorField                  dF,
+                               real_t* const __restrict__ divF,
+                         const LengthBucket lb);
+
+
  }
