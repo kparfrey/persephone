@@ -20,7 +20,6 @@ class ElementBlock
     int Nelem[3];   // No. of elements in each direction
     int Ns[3];      // No. of soln points in each element, in each direction
     int Nf[3];      // No. of flux points "   "      "     "   "       "
-    //int Nsf[3];     // For indexing the flux-point arrays; see ElementBlock::idf()
     int Ns_tot[3];  // Total number of soln points in each direction
     int Ns_elem;    // Total no. of soln points in each element
     int Nf_elem;    // Total no. of flux points in each element
@@ -63,7 +62,7 @@ class ElementBlock
 
     /* Methods */
     inline int ids(int i, int j, int k); // soln-point index map
-    inline int idf(int idir, int j1, int j2, int dir); // flux-point index map
+    inline int idf(int n0, int n1, int n2, int dir); // flux-point index map
     inline int id_elem(int i, int j, int k);
     inline int ids_full(int i, int j, int k, int ie, int je, int ke); 
     void setup();
@@ -82,14 +81,13 @@ inline int ElementBlock::ids(int i, int j, int k)
 
 
 /* 3D --> 1D indices for flux points within an element */
-/* For dir = 0: idir -> i/0, j1 -> j/1, j2 -> k/2 etc.
- * ie j2 is "two above"; for dir = 2, j2 -> j/1 */
+/* For dir = 0: n0 -> i/0, n1 -> j/1, n2 -> k/2 etc.
+ * ie n2 is "two above"; for dir = 2, n2 -> j/1 */
 /* This assumes CPU ordering (transform direction is fastest) ---
  * will need to use conditional compilation for reversed GPU version */
-inline int ElementBlock::idf(int idir, int j1, int j2, int dir)
+inline int ElementBlock::idf(int n0, int n1, int n2, int dir)
 {
-    //return (j2*Nsf[dir] + j1)*Nf[dir] + idir;
-    return (j2*Ns[dir_plus_one[dir]] + j1)*Nf[dir] + idir;
+    return (n2*Ns[dir_plus_one[dir]] + n1)*Nf[dir] + n0;
 }
 
 
