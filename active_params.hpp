@@ -13,14 +13,14 @@
 static EqnSystem equations = scalar_advection;
 static BasicTimeMethod time_method = rk2_midpoint;
 
-static int Nproc[3] = {4,1,1};
-static int Nelem[3] = {2,2,1};
-static int Ns[3]    = {16,8,1};
+static int Nproc[3] = {1,1,1};
+static int Nelem[3] = {1,1,1};
+static int Ns[3]    = {64,32,1};
 
-static real_t edges[3][2] = {{0.0,2.0}, {0.0,1.0}, {0.0, 1.0}};
+static real_t edges[3][2] = {{0.0,1.0}, {0.0,1.0}, {0.0, 1.0}};
 
 static real_t cfl      = 0.8;
-static real_t end_time = 0.03;
+static real_t end_time = 0.1;
 
 ParamsCartesian active_parameters(equations, time_method, 
                                   Nproc, Nelem, Ns, edges,
