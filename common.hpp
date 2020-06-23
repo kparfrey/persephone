@@ -27,6 +27,9 @@ enum Prognosis {destroy, survive};
 
 constexpr int dirs[3] = {0, 1, 2}; // The three spatial directions
 
+constexpr int dir_plus_one[3] = {1, 2, 0}; // Cyclic addition for direction-
+constexpr int dir_plus_two[3] = {2, 0, 1}; // dependent indexing
+
 constexpr int ifaces[6] = {0,1,2,3,4,5}; // Indices for faces (proc, elem, etc.)
 
 constexpr int icorners[8] = {0,1,2,3,4,5,6,7}; 

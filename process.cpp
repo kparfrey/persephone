@@ -70,7 +70,8 @@ void Process::find_RHS(real_t* Q, real_t t, real_t* result)
     }
     
     /*  Simple: assume Nfield = 1 etc */
-    kernels::soln_to_flux(eb.soln2flux, Q, Qf, eb.lengths);
+    for (int i: dirs)
+        kernels::soln_to_flux(eb.soln2flux(i), Q, Qf(i), eb.lengths, i);
 
     for (int i: dirs)
     {

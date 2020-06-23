@@ -42,16 +42,46 @@ namespace kernels
     }
 
 
-    void soln_to_flux(const VectorField soln2flux, 
+    void soln_to_flux(const real_t* const __restrict__ soln2flux, 
                       const real_t* const __restrict__ Q, 
-                            VectorField Qf, 
-                      const LengthBucket lb)
+                            real_t* const __restrict__ Qf, 
+                      const LengthBucket lb, const int dir)
     {
         int id_elem;
         int mem_f, mem_offset_f;
         int mem_s, mem_offset_s;
         int mem_s2f;
         real_t lsum;
+
+        int dir1, dir2;         // dir+1 and dir+2 with cyclic addition
+        int n0_s, n0_f, n1, n2; // cyclic indices -- n0 is transform dir, n1 is n0+1 etc
+        int *i, *j, *k;         // true or fixed indices; i always points in 0 direction etc
+        
+        dir1 = dir_plus_one[dir]; // array stored in common.hpp for convenience
+        dir2 = dir_plus_two[dir]; // dir is the transform direction
+
+        /* The i,j,k indices are used to index solution points, which use a single fixed 
+         * (direction-independent) layout. Need to set i -> 0-dir, j -> 1-dir, k-> 2-dir
+         * indices independent of the transform direction. There's probably a neater
+         * way to do this.... */
+        switch(dir)
+        {
+            case 0:
+                i = &n0_s;
+                j = &n1;
+                k = &n2;
+                break;
+            case 1:
+                i = &n2;
+                j = &n0_s;
+                k = &n1;
+                break;
+            case 2:
+                i = &n1;
+                j = &n2;
+                k = &n0_s;
+                break;
+        }
 
         for (int ie = 0; ie < lb.Nelem[0]; ++ie)
         for (int je = 0; je < lb.Nelem[1]; ++je)
@@ -60,23 +90,25 @@ namespace kernels
             id_elem = (ie*lb.Nelem[1] + je)*lb.Nelem[2] + ke;
             mem_offset_s = id_elem * lb.Ns_elem;
 
-            /* Direction 0 */
-            mem_offset_f = id_elem * lb.Nf_dir[0];
+            mem_offset_f = id_elem * lb.Nf_dir[dir];
 
-            for (int j   = 0; j   < lb.Ns[1]; ++j)
-            for (int k   = 0; k   < lb.Ns[2]; ++k)
-            for (int i_f = 0; i_f < lb.Nf[0]; ++i_f)
+            /* Do this main loop using transform-direction-relative indices, since
+             * the flux-point and transform-matrix arrays use these. Need something
+             * like the i,j,k pointers for the fixed solution-point indices */
+            for (n1   = 0; n1   < lb.Ns[dir1]; ++n1)
+            for (n2   = 0; n2   < lb.Ns[dir2]; ++n2)
+            for (n0_f = 0; n0_f < lb.Nf[dir];  ++n0_f)
             {
                 lsum = 0.0;
-                for (int i_s = 0; i_s < lb.Ns[0]; ++i_s)
+                for (n0_s = 0; n0_s < lb.Ns[dir]; ++n0_s)
                 {
-                    mem_s   = mem_offset_s + (i_s * lb.Ns[1]  + j) * lb.Ns[2] + k;
-                    mem_s2f = i_f * lb.Ns[0] + i_s;
-                    lsum   += soln2flux(0, mem_s2f) * Q[mem_s];
+                    mem_s   = mem_offset_s + (*i * lb.Ns[1]  + *j) * lb.Ns[2] + *k;
+                    mem_s2f = n0_f * lb.Ns[dir] + n0_s; 
+                    lsum   += soln2flux[mem_s2f] * Q[mem_s];
                 }
 
-                mem_f = mem_offset_f + (k   * lb.Nsf[0] + j) * lb.Nf[0] + i_f;
-                Qf(0, mem_f) = lsum;
+                mem_f = mem_offset_f + (n2   * lb.Nsf[dir] + n1) * lb.Nf[dir] + n0_f;
+                Qf[mem_f] = lsum;
             }
         }
 
