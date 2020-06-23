@@ -32,7 +32,7 @@ void write_data(Process &proc)
     /* Create filename */
     std::stringstream filenum;
     filenum << std::setw(4) << std::setfill('0') << proc.data_output_counter;
-    string filename = "data" + filenum.str() + ".h5";
+    string filename = "data/data" + filenum.str() + ".h5";
 
     if (proc.rank == 0)
     {
@@ -93,6 +93,8 @@ void write_data(Process &proc)
     delete[] data;
 
     proc.data_output_counter++;
+    proc.time_last_write = proc.time;
+    proc.step_last_write = proc.step;
 
     write::message("Finished writing data file to disk.");
     return;

@@ -36,8 +36,9 @@ class ParamsCartesian : public Params
                     int (& Ns_)[3], 
                     real_t (& domain_edge_)[3][2],
                     real_t cfl = 0.8,
-                    real_t end_time = 1.0)
-    : Params(equations, time_method, cfl, end_time)
+                    real_t end_time = 1.0,
+                    real_t dt_write = 0.5)
+    : Params(equations, time_method, cfl, end_time, dt_write)
     {
         for (int i=0; i<3; i++)
         {

@@ -5,9 +5,9 @@
 
 
 Params::Params(EqnSystem equations, BasicTimeMethod time_method,
-                                        real_t cfl, real_t end_time) 
+                            real_t cfl, real_t end_time, real_t dt_write) 
        : equations(equations), time_method(time_method), 
-                                   cfl(cfl), end_time(end_time)
+                            cfl(cfl), end_time(end_time), dt_write(dt_write)
 { 
     switch (equations)
     {
@@ -30,6 +30,7 @@ void Params::setup_process_generic(Process &proc)
     proc.Nfield   = Nfield;
     proc.time     = 0.0;
     proc.end_time = end_time;
+    proc.dt_write = dt_write;
     proc.step     = 0;
     proc.cfl      = cfl;
     proc.data_output_counter = 0;

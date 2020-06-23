@@ -37,12 +37,17 @@ class Process
     /* Global data */
     int Nproc;
     int Nfield;
-    int data_output_counter;
     real_t time;
     real_t end_time;
     int step;
     real_t cfl;
-    real_t dt;
+    real_t dt;       // time step
+    
+    real_t dt_write; // time between output writes to disk
+    real_t time_last_write;
+    real_t step_last_write;
+    int data_output_counter;
+    
     BasicTimeIntegrator* time_integrator;
 
 

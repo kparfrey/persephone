@@ -26,7 +26,7 @@ void write_mesh(Process &proc)
     std::vector<size_t> global_dims(3);
     std::vector<size_t> offset(3);
 
-    string filename = "mesh.h5";
+    string filename = "data/mesh.h5";
 
     if (proc.rank == 0)
     {

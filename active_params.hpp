@@ -21,9 +21,10 @@ static real_t edges[3][2] = {{0.0,1.0}, {0.0,1.0}, {0.0, 1.0}};
 
 static real_t cfl      = 0.8;
 static real_t end_time = 0.1;
+static real_t dt_write = 0.05;
 
 ParamsCartesian active_parameters(equations, time_method, 
                                   Nproc, Nelem, Ns, edges,
-                                  cfl, end_time);
+                                  cfl, end_time, dt_write);
 
 #endif

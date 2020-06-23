@@ -23,11 +23,12 @@ class Params
 
     real_t cfl;
     real_t end_time;
+    real_t dt_write; // elapsed time between writing to disk
     int Nfield;
 
     /* Constructor */
     Params(EqnSystem equations, BasicTimeMethod time_method,
-                                   real_t cfl, real_t end_time);
+                        real_t cfl, real_t end_time, real_t dt_write);
 
     /* Methods: all pure virtual ones must be defined in derived classes */
     virtual void write_param_info() = 0;
