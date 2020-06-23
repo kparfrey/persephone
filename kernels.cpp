@@ -106,7 +106,7 @@ namespace kernels
                 lsum = 0.0;
                 for (n0_s = 0; n0_s < lb.Ns[dir]; ++n0_s)
                 {
-                    mem_s      = mem_offset_s + (*i * lb.Ns[1]  + *j) * lb.Ns[2] + *k;
+                    mem_s      = mem_offset_s + (*k * lb.Ns[1]  + *j) * lb.Ns[0] + *i;
                     mem_matrix = n0_f * Ns0 + n0_s; 
                     lsum      += matrix[mem_matrix] * Q[mem_s];
                 }
@@ -184,7 +184,7 @@ namespace kernels
                     lsum      += matrix[mem_matrix] * F[mem_f];
                 }
 
-                mem_s = mem_offset_s + (*i * lb.Ns[1]  + *j) * lb.Ns[2] + *k;
+                mem_s = mem_offset_s + (*k * lb.Ns[1]  + *j) * lb.Ns[0] + *i;
                 dF[mem_s] = lsum; 
             }
         }
@@ -206,7 +206,7 @@ namespace kernels
         int Nf0 = lb.Nf[dir];
         int Ns1 = lb.Ns[dir1];
 
-        real_t wave_speed[3] = {0.25, 0.0, 0.0};
+        real_t wave_speed[3] = {0.5, 0.25, 0.0};
 
         for (int ie = 0; ie < lb.Nelem[0]; ++ie)
         for (int je = 0; je < lb.Nelem[1]; ++je)
@@ -243,11 +243,11 @@ namespace kernels
         {
             id_elem = (ie*lb.Nelem[1] + je)*lb.Nelem[2] + ke;
             mem_offset = id_elem * lb.Ns_elem;
-            for (int i = 0; i < lb.Ns[0]; ++i)
-            for (int j = 0; j < lb.Ns[1]; ++j)
             for (int k = 0; k < lb.Ns[2]; ++k)
+            for (int j = 0; j < lb.Ns[1]; ++j)
+            for (int i = 0; i < lb.Ns[0]; ++i)
             {
-                mem = mem_offset + (i * lb.Ns[1]  + j) * lb.Ns[2] + k;
+                mem = mem_offset + (k * lb.Ns[1]  + j) * lb.Ns[0] + i;
 
                 divF[mem] = - (dF(0,mem) + dF(1,mem) + dF(2,mem));
             }

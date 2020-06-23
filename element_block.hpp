@@ -76,7 +76,8 @@ class ElementBlock
 inline int ElementBlock::ids(int i, int j, int k)
 {
     //return Ns[0]*Ns[1]*Ns[2]*var + (i*Ns[1] + j)*Ns[2] + k;
-    return (i*Ns[1] + j)*Ns[2] + k;
+    //return (i*Ns[1] + j)*Ns[2] + k;
+    return (k*Ns[1] + j)*Ns[0] + i; // Changed order: June 23
 }
 
 

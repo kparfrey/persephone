@@ -148,9 +148,9 @@ void ElementBlock::set_physical_coords()
 
         /* Solution points */
         mem_offset = elem_idx_1D * Ns_elem;
-        for (int i = 0; i < Ns[0]; ++i)
-        for (int j = 0; j < Ns[1]; ++j)
         for (int k = 0; k < Ns[2]; ++k)
+        for (int j = 0; j < Ns[1]; ++j)
+        for (int i = 0; i < Ns[0]; ++i)
         {
             mem_loc = ids(i,j,k) + mem_offset;
             rs(0,mem_loc) = elem_origin[0] + xs(0,i) * dr_elem[0];
