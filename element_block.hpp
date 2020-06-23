@@ -66,7 +66,6 @@ class ElementBlock
     inline int idf(int idir, int j1, int j2, int dir); // flux-point index map
     inline int id_elem(int i, int j, int k);
     inline int ids_full(int i, int j, int k, int ie, int je, int ke); 
-    inline int cyclic_add(int i, int add);
     void setup();
     void free();
     void move_to_device();
@@ -112,14 +111,4 @@ inline int ElementBlock::ids_full(int i, int j, int k, int ie, int je, int ke)
     return ElementBlock::ids(i,j,k) + Ns_elem * ElementBlock::id_elem(ie,je,ke);
 }
 
-
-inline int ElementBlock::cyclic_add(int i, int add)
-{
-    int ia = i + add;
-
-    if (ia > 2) 
-        ia -= 3;
-
-    return ia;
-}
 #endif
