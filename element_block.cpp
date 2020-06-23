@@ -158,7 +158,10 @@ void ElementBlock::set_physical_coords()
             rs(2,mem_loc) = elem_origin[2] + xs(2,k) * dr_elem[2];
         }
 
-        /* Flux points in each direction */
+        /* Flux points in each direction 
+         * Use transform-direction-relative indices -- d is the transform
+         * direction, d1 and d2 are the indices cyclically one and two
+         * slots above. */
         for (int d: dirs)
         {
             int d1 = dir_plus_one[d];
@@ -175,43 +178,6 @@ void ElementBlock::set_physical_coords()
                 rf[d](d2,mem_loc) = elem_origin[d2] + xs(d2,k) * dr_elem[d2];
             }
         }
-
-        /***
-        mem_offset = elem_idx_1D * Nf_dir[0];
-        for (int k = 0; k < Ns[2]; ++k)
-        for (int j = 0; j < Ns[1]; ++j)
-        for (int i = 0; i < Nf[0]; ++i)
-        {
-            mem_loc = idf(i,j,k,0) + mem_offset;
-            rf[0](0,mem_loc) = elem_origin[0] + xf(0,i) * dr_elem[0];
-            rf[0](1,mem_loc) = elem_origin[1] + xs(1,j) * dr_elem[1];
-            rf[0](2,mem_loc) = elem_origin[2] + xs(2,k) * dr_elem[2];
-        }
-
-        mem_offset = elem_idx_1D * Nf_dir[1];
-        for (int i = 0; i < Ns[0]; ++i)
-        for (int k = 0; k < Ns[2]; ++k)
-        for (int j = 0; j < Nf[1]; ++j)
-        {
-            mem_loc = idf(j,k,i,1) + mem_offset;
-            rf[1](0,mem_loc) = elem_origin[0] + xs(0,i) * dr_elem[0];
-            rf[1](1,mem_loc) = elem_origin[1] + xf(1,j) * dr_elem[1];
-            rf[1](2,mem_loc) = elem_origin[2] + xs(2,k) * dr_elem[2];
-        }
-
-        mem_offset = elem_idx_1D * Nf_dir[2];
-        for (int j = 0; j < Ns[1]; ++j)
-        for (int i = 0; i < Ns[0]; ++i)
-        for (int k = 0; k < Nf[2]; ++k)
-        {
-            mem_loc = idf(k,i,j,2) + mem_offset;
-            rf[2](0,mem_loc) = elem_origin[0] + xs(0,i) * dr_elem[0];
-            rf[2](1,mem_loc) = elem_origin[1] + xs(1,j) * dr_elem[1];
-            rf[2](2,mem_loc) = elem_origin[2] + xf(2,k) * dr_elem[2];
-        }
-        ***/
-    }
-
 
     return;
 }
