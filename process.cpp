@@ -50,6 +50,33 @@ void Process::time_advance()
 }
 
 
+static void singleElement_periodicBC(real_t* F, LengthBucket lb, int dir)
+{
+    int dir1 = dir_plus_one[dir]; 
+    int dir2 = dir_plus_two[dir];
+
+    int Nf0 = lb.Nf[dir];
+    int Ns1 = lb.Ns[dir1];
+
+    int L, R;
+    real_t fnum;
+
+    for(int n2 = 0; n2 < lb.Ns[dir2]; ++n2)
+    for(int n1 = 0; n1 < lb.Ns[dir1]; ++n1)
+    {
+        L = (n2 * Ns1 + n1) * Nf0 + 0;
+        R = (n2 * Ns1 + n1) * Nf0 + Nf0-1;
+
+        /* Central flux */
+        fnum = 0.5 * (F[L] + F[R]);
+        F[L] = fnum;
+        F[R] = fnum;
+    }
+    
+    return;
+}
+
+
 /* The fundamental function of the spectral difference method */
 /* Q : vector of conserved solution fields 
  * F : vector of fluxes */
@@ -60,7 +87,7 @@ void Process::find_RHS(real_t* Q, real_t t, real_t* result)
     /* These vectors are in "transform direction" space */
     VectorField Qf; // Solution interpolated to flux points
     VectorField  F; // Fluxes
-    VectorField dF; // Store d_j F(i)^j
+    VectorField dF; // Store d_j ( root_det_g * F(i)^j )
     
     for (int i: dirs)
     {
@@ -75,6 +102,13 @@ void Process::find_RHS(real_t* Q, real_t t, real_t* result)
 
     for (int i: dirs)
         kernels::generate_fluxes(Qf(i), F(i), eb.lengths, i);
+        //kernels::generate_fluxes(Qf(i), F(i), eb.metric.rdetg, eb.lengths, i);
+
+    for (int i: dirs)
+        singleElement_periodicBC(F(i), eb.lengths, i);
+
+    for (int i: dirs)
+        kernels::fluxDeriv_to_soln(eb.fluxDeriv2soln(i), F(i), dF(i), eb.lengths, i);
 
     for (int i: dirs)
     {

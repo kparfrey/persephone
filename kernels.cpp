@@ -42,7 +42,7 @@ namespace kernels
     }
 
 
-    void soln_to_flux(const real_t* const __restrict__ soln2flux, 
+    void soln_to_flux(const real_t* const __restrict__ matrix, 
                       const real_t* const __restrict__ Q, 
                             real_t* const __restrict__ Qf, 
                       const LengthBucket lb, const int dir)
@@ -50,7 +50,7 @@ namespace kernels
         int id_elem;
         int mem_f, mem_offset_f;
         int mem_s, mem_offset_s;
-        int mem_s2f;
+        int mem_matrix;
         real_t lsum;
 
         int n0_s, n0_f, n1, n2; // cyclic indices -- n0 is transform dir, n1 is n0+1 etc
@@ -106,13 +106,86 @@ namespace kernels
                 lsum = 0.0;
                 for (n0_s = 0; n0_s < lb.Ns[dir]; ++n0_s)
                 {
-                    mem_s   = mem_offset_s + (*i * lb.Ns[1]  + *j) * lb.Ns[2] + *k;
-                    mem_s2f = n0_f * Ns0 + n0_s; 
-                    lsum   += soln2flux[mem_s2f] * Q[mem_s];
+                    mem_s      = mem_offset_s + (*i * lb.Ns[1]  + *j) * lb.Ns[2] + *k;
+                    mem_matrix = n0_f * Ns0 + n0_s; 
+                    lsum      += matrix[mem_matrix] * Q[mem_s];
                 }
 
                 mem_f = mem_offset_f + (n2 * Ns1 + n1) * Nf0 + n0_f;
                 Qf[mem_f] = lsum;
+            }
+        }
+
+        return;
+    }
+
+
+    void fluxDeriv_to_soln(const real_t* const __restrict__ matrix, 
+                           const real_t* const __restrict__ F, 
+                                 real_t* const __restrict__ dF, 
+                           const LengthBucket lb, const int dir)
+    {
+        int id_elem;
+        int mem_f, mem_offset_f;
+        int mem_s, mem_offset_s;
+        int mem_matrix;
+        real_t lsum;
+
+        int n0_s, n0_f, n1, n2; // cyclic indices -- n0 is transform dir, n1 is n0+1 etc
+        int *i, *j, *k;         // true or fixed indices; i always points in 0 direction etc
+        
+        int dir1 = dir_plus_one[dir]; // array stored in common.hpp for convenience
+        int dir2 = dir_plus_two[dir]; // dir is the transform direction
+
+        /* Transform-relative lengths for clarity */
+        int Nf0 = lb.Nf[dir];
+        //int Ns0 = lb.Ns[dir]; 
+        int Ns1 = lb.Ns[dir1];
+
+        switch(dir)
+        {
+            case 0:
+                i = &n0_s;
+                j = &n1;
+                k = &n2;
+                break;
+            case 1:
+                i = &n2;
+                j = &n0_s;
+                k = &n1;
+                break;
+            case 2:
+                i = &n1;
+                j = &n2;
+                k = &n0_s;
+                break;
+        }
+
+        for (int ie = 0; ie < lb.Nelem[0]; ++ie)
+        for (int je = 0; je < lb.Nelem[1]; ++je)
+        for (int ke = 0; ke < lb.Nelem[2]; ++ke)
+        {
+            id_elem = (ie*lb.Nelem[1] + je)*lb.Nelem[2] + ke;
+            mem_offset_s = id_elem * lb.Ns_elem;
+            mem_offset_f = id_elem * lb.Nf_dir[dir];
+
+            /* Do this main loop using transform-direction-relative indices, since
+             * the flux-point and transform-matrix arrays use these. Need something
+             * like the i,j,k pointers for the fixed solution-point indices */
+            for (n2   = 0; n2   < lb.Ns[dir2]; ++n2)
+            for (n1   = 0; n1   < lb.Ns[dir1]; ++n1)
+            for (n0_s = 0; n0_s < lb.Ns[dir];  ++n0_s)
+            {
+                lsum = 0.0;
+                for (n0_f = 0; n0_f < lb.Nf[dir]; ++n0_f)
+                {
+                    mem_f      = mem_offset_f + (n2 * Ns1 + n1) * Nf0 + n0_f;
+                    mem_matrix = n0_s * Nf0 + n0_f; 
+                    lsum      += matrix[mem_matrix] * F[mem_f];
+                }
+
+                mem_s = mem_offset_s + (*i * lb.Ns[1]  + *j) * lb.Ns[2] + *k;
+                dF[mem_s] = - lsum; // Put minus sign here: dQ/dt = - div(F)
             }
         }
 

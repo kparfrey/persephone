@@ -178,6 +178,7 @@ void ElementBlock::set_physical_coords()
                 rf[d](d2,mem_loc) = elem_origin[d2] + xs(d2,k) * dr_elem[d2];
             }
         }
+    }
 
     return;
 }
