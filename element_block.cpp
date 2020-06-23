@@ -159,7 +159,24 @@ void ElementBlock::set_physical_coords()
         }
 
         /* Flux points in each direction */
+        for (int d: dirs)
+        {
+            int d1 = dir_plus_one[d];
+            int d2 = dir_plus_two[d];
+            
+            mem_offset = elem_idx_1D * Nf_dir[d];
+            for (int k = 0; k < Ns[d2]; ++k)
+            for (int j = 0; j < Ns[d1]; ++j)
+            for (int i = 0; i < Nf[d];  ++i)
+            {
+                mem_loc = idf(i,j,k,d) + mem_offset;
+                rf[d](d, mem_loc) = elem_origin[d]  + xf(d, i) * dr_elem[d];
+                rf[d](d1,mem_loc) = elem_origin[d1] + xs(d1,j) * dr_elem[d1];
+                rf[d](d2,mem_loc) = elem_origin[d2] + xs(d2,k) * dr_elem[d2];
+            }
+        }
 
+        /***
         mem_offset = elem_idx_1D * Nf_dir[0];
         for (int k = 0; k < Ns[2]; ++k)
         for (int j = 0; j < Ns[1]; ++j)
@@ -192,6 +209,7 @@ void ElementBlock::set_physical_coords()
             rf[2](1,mem_loc) = elem_origin[1] + xs(1,j) * dr_elem[1];
             rf[2](2,mem_loc) = elem_origin[2] + xf(2,k) * dr_elem[2];
         }
+        ***/
     }
 
 

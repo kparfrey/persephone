@@ -99,8 +99,8 @@ namespace kernels
             /* Do this main loop using transform-direction-relative indices, since
              * the flux-point and transform-matrix arrays use these. Need something
              * like the i,j,k pointers for the fixed solution-point indices */
-            for (n1   = 0; n1   < lb.Ns[dir1]; ++n1)
             for (n2   = 0; n2   < lb.Ns[dir2]; ++n2)
+            for (n1   = 0; n1   < lb.Ns[dir1]; ++n1)
             for (n0_f = 0; n0_f < lb.Nf[dir];  ++n0_f)
             {
                 lsum = 0.0;
@@ -142,8 +142,8 @@ namespace kernels
             id_elem = (ie*lb.Nelem[1] + je)*lb.Nelem[2] + ke;
             mem_offset = id_elem * lb.Nf_dir[dir];
 
-            for (int n1 = 0; n1 < lb.Ns[dir1]; ++n1)
             for (int n2 = 0; n2 < lb.Ns[dir2]; ++n2)
+            for (int n1 = 0; n1 < lb.Ns[dir1]; ++n1)
             for (int n0 = 0; n0 < lb.Nf[dir];  ++n0)
             {
                 mem = mem_offset + (n2 * Ns1 + n1) * Nf0 + n0;
