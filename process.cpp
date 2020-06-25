@@ -68,7 +68,12 @@ static void singleElement_periodicBC(real_t* F, LengthBucket lb, int dir)
         R = (n2 * Ns1 + n1) * Nf0 + Nf0-1;
 
         /* Central flux */
-        fnum = 0.5 * (F[L] + F[R]);
+        //fnum = 0.5 * (F[L] + F[R]);
+
+        /* Upwind */
+        fnum = F[R]; // For wave velocity in +ve 0-direction
+                     // Does seem more stable/dissipative
+
         F[L] = fnum;
         F[R] = fnum;
     }
@@ -78,13 +83,15 @@ static void singleElement_periodicBC(real_t* F, LengthBucket lb, int dir)
 
 
 /* The fundamental function of the spectral difference method */
-/* Q : vector of conserved solution fields 
- * F : vector of fluxes */
+/* Q : vector of conserved solution fields (physical space) 
+ * F : vector of fluxes (reference-element space) */
 void Process::find_RHS(real_t* Q, real_t t, real_t* result)
 {
     ElementBlock& eb = elements;
 
-    /* These vectors are in "transform direction" space */
+    /* These vectors are in "transform direction" space
+     * dF is the only one that "needs" to be a VectorField, in
+     * that the whole object is passed to a kernel */
     VectorField Qf; // Solution interpolated to flux points
     VectorField  F; // Fluxes
     VectorField dF; // Store d_j ( root_det_g * F(i)^j )
@@ -101,8 +108,7 @@ void Process::find_RHS(real_t* Q, real_t t, real_t* result)
         kernels::soln_to_flux(eb.soln2flux(i), Q, Qf(i), eb.lengths, i);
 
     for (int i: dirs)
-        kernels::generate_fluxes(Qf(i), F(i), eb.lengths, i);
-        //kernels::generate_fluxes(Qf(i), F(i), eb.metric.rdetg, eb.lengths, i);
+        kernels::generate_fluxes(Qf(i), F(i), eb.metric.S[i], eb.lengths, i);
 
     for (int i: dirs)
         singleElement_periodicBC(F(i), eb.lengths, i);
@@ -110,7 +116,7 @@ void Process::find_RHS(real_t* Q, real_t t, real_t* result)
     for (int i: dirs)
         kernels::fluxDeriv_to_soln(eb.fluxDeriv2soln(i), F(i), dF(i), eb.lengths, i);
 
-    kernels::flux_divergence(dF, result, eb.lengths);
+    kernels::flux_divergence(dF, eb.metric.Jrdetg(), result, eb.lengths);
 
     for (int i: dirs)
     {

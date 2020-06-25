@@ -22,5 +22,9 @@ namespace write
     void basic(string message);
 
     void store_rank(int rank);
+
+    string str(int n);
+    string str(double n);
+    string str(float n);
 }
 #endif

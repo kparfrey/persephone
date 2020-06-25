@@ -195,6 +195,7 @@ namespace kernels
 
     void generate_fluxes(const real_t* const __restrict__ Qf,
                                real_t* const __restrict__ F ,
+                         const VectorField                S ,
                          const LengthBucket lb, const int dir)
     {
         int id_elem;
@@ -206,7 +207,9 @@ namespace kernels
         int Nf0 = lb.Nf[dir];
         int Ns1 = lb.Ns[dir1];
 
-        real_t wave_speed[3] = {0.5, 0.25, 0.0};
+        real_t wave_speed[3] = {0.7, 0.3, 0.0};
+        real_t Fphys[3];
+        real_t lsum;
 
         for (int ie = 0; ie < lb.Nelem[0]; ++ie)
         for (int je = 0; je < lb.Nelem[1]; ++je)
@@ -221,7 +224,18 @@ namespace kernels
             {
                 mem = mem_offset + (n2 * Ns1 + n1) * Nf0 + n0;
 
-                F[mem] = wave_speed[dir] * Qf[mem];
+                /* Qf is the physical solution at flux points
+                 * Calculate physical fluxes in all three dirs */
+                for (int j: dirs)
+                    Fphys[j] = wave_speed[j] * Qf[mem];
+                
+                /* Transform to reference space fluxes */
+                lsum = 0.0;
+                for (int j: dirs) 
+                    lsum += S(j,mem) * Fphys[j];
+
+                F[mem] = lsum; // Save reference fluxes, ready for diff'ing
+                //F[mem] = rdetg[mem] * wave_speed[dir] * Qf[mem];
             }
         }
 
@@ -229,7 +243,8 @@ namespace kernels
     }
 
 
-    void flux_divergence(const VectorField                  dF,
+    void flux_divergence(const VectorField                dF,
+                         const real_t* const __restrict__ Jrdetg,
                                real_t* const __restrict__ divF,
                          const LengthBucket lb)
     {
@@ -249,7 +264,7 @@ namespace kernels
             {
                 mem = mem_offset + (k * lb.Ns[1]  + j) * lb.Ns[0] + i;
 
-                divF[mem] = - (dF(0,mem) + dF(1,mem) + dF(2,mem));
+                divF[mem] = - (dF(0,mem) + dF(1,mem) + dF(2,mem)) / Jrdetg[mem];
             }
         }
 

@@ -51,7 +51,7 @@ void ElementBlock::setup()
     set_physical_coords();
     fill_spectral_difference_matrices();
 
-    metric.setup(Nelem, Ns_block, corners);
+    metric.setup(Nelem, Ns_block, Nf_dir_block, corners);
 
     return;
 }

@@ -17,11 +17,11 @@ static int Nproc[3] = {1,1,1};
 static int Nelem[3] = {1,1,1};
 static int Ns[3]    = {64,32,1};
 
-static real_t edges[3][2] = {{0.0,1.0}, {0.0,1.0}, {0.0, 1.0}};
+static real_t edges[3][2] = {{0.0,2.0}, {0.0,1.0}, {0.0, 1.0}};
 
 static real_t cfl      = 0.8;
-static real_t end_time = 0.5;
-static real_t dt_write = 0.1;
+static real_t end_time = 1.0;
+static real_t dt_write = 0.2;
 
 ParamsCartesian active_parameters(equations, time_method, 
                                   Nproc, Nelem, Ns, edges,

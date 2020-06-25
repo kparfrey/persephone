@@ -139,5 +139,20 @@ namespace write
         return;
     }
 
+
+    string str(int n)
+    {
+        return std::to_string(n);
+    }
+
+    string str(double n)
+    {
+        return std::to_string(n);
+    }
+
+    string str(float n)
+    {
+        return std::to_string(n);
+    }
 }
 

@@ -19,29 +19,51 @@
 class Metric
 {
     private:
-    void allocate_on_host(const int N);
+    void allocate_on_host(const int Ns, const int Nf[3]);
 
 
     public:
-    /* Transforms between physical and reference coords */
-    TensorField    J; // d(PHYSICAL)/d(REFERENCE)
-    TensorField Jinv; // d(REFERENCE)/d(PHYSICAL)
+    /* On solution points... */
+    ScalarField Jrdetg; // |J| sqrt{det(g)}
 
-    /* Reference coords */
-    TensorField g;     // Spatial 3-metric (dual/covariant)
-    TensorField ginv;  // Inverse 3-metric (vector/contravariant)
-    ScalarField rdetg; // Square root of 3-metric determinant
+
+    /* ...and on flux points */
+    VectorField S[3];  // Physical->Reference vector transform
+                       // S^i = Jrdetg d ref^i/d phys^j 
+    //TensorField g[3];  // Physical components
+    // Will need others eventually
+
+
+
+    /* Transforms between physical and reference coords */
+    //TensorField    J; // d(PHYSICAL)/d(REFERENCE)
+    //TensorField Jinv; // d(REFERENCE)/d(PHYSICAL)
+
+    /* Reference coords */ 
+    //TensorField g;     // Spatial 3-metric (dual/covariant)
+    //TensorField ginv;  // Inverse 3-metric (vector/contravariant)
+    //ScalarField rdetg; // Square root of 3-metric determinant
+    
+    /* ...and on flux points */
+    //TensorField     J_f[3];
+    //TensorField  Jinv_f[3];
+    //TensorField     g_f[3];
+    //TensorField  ginv_f[3];
+    //ScalarField rdetg_f[3]; 
+
 
     /* Physical coords */
-    TensorField gphys; // Spatial 3-metric, in chosen physical coords
+    //TensorField gphys; // Spatial 3-metric, in chosen physical coords
+    //TensorField gphys_f[3];
 
 
     /* Methods */
-    void setup(const int Nelem[3], const int Ns_block, const real_t corners[8][3]);
-    void transform_twoTensor(const TensorField& T_in, TensorField& T_out, 
-                             const int N,
-                             const CoordTransDir ctd=phys2ref, 
-                             const Components c=covariant);
+    void setup(const int Nelem[3], const int Ns_block, 
+               const int Nf_dir_block[3], const real_t corners[8][3]);
+    //void transform_twoTensor(const TensorField& T_in, TensorField& T_out, 
+    //                         const int N,
+    //                         const CoordTransDir ctd=phys2ref, 
+    //                         const Components c=covariant);
     void move_to_device();
     
 };
