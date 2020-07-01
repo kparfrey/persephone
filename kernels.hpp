@@ -17,8 +17,8 @@ namespace kernels
                        real_t* __restrict__ result, const int N);
 
     void soln_to_flux(const real_t* const __restrict__ matrix, 
-                      const real_t* const __restrict__ Q, 
-                            real_t* const __restrict__ Qf, 
+                      const real_t* const __restrict__ U, 
+                            real_t* const __restrict__ Uf, 
                       const LengthBucket lb, const int dir);
 
     void fluxDeriv_to_soln(const real_t* const __restrict__ matrix, 
@@ -26,7 +26,7 @@ namespace kernels
                                  real_t* const __restrict__ dF, 
                            const LengthBucket lb, const int dir);
     
-    void generate_fluxes(const real_t* const __restrict__ Qf,
+    void generate_fluxes(const real_t* const __restrict__ Uf,
                                real_t* const __restrict__ F ,
                          const VectorField                S ,
                          const LengthBucket lb, const int dir);

@@ -43,8 +43,8 @@ namespace kernels
 
 
     void soln_to_flux(const real_t* const __restrict__ matrix, 
-                      const real_t* const __restrict__ Q, 
-                            real_t* const __restrict__ Qf, 
+                      const real_t* const __restrict__ U, 
+                            real_t* const __restrict__ Uf, 
                       const LengthBucket lb, const int dir)
     {
         int id_elem;
@@ -108,11 +108,11 @@ namespace kernels
                 {
                     mem_s      = mem_offset_s + (*k * lb.Ns[1]  + *j) * lb.Ns[0] + *i;
                     mem_matrix = n0_f * Ns0 + n0_s; 
-                    lsum      += matrix[mem_matrix] * Q[mem_s];
+                    lsum      += matrix[mem_matrix] * U[mem_s];
                 }
 
                 mem_f = mem_offset_f + (n2 * Ns1 + n1) * Nf0 + n0_f;
-                Qf[mem_f] = lsum;
+                Uf[mem_f] = lsum;
             }
         }
 
@@ -193,7 +193,7 @@ namespace kernels
     }
 
 
-    void generate_fluxes(const real_t* const __restrict__ Qf,
+    void generate_fluxes(const real_t* const __restrict__ Uf,
                                real_t* const __restrict__ F ,
                          const VectorField                S ,
                          const LengthBucket lb, const int dir)
@@ -224,10 +224,10 @@ namespace kernels
             {
                 mem = mem_offset + (n2 * Ns1 + n1) * Nf0 + n0;
 
-                /* Qf is the physical solution at flux points
+                /* Uf is the physical solution at flux points
                  * Calculate physical fluxes in all three dirs */
                 for (int j: dirs)
-                    Fphys[j] = wave_speed[j] * Qf[mem];
+                    Fphys[j] = wave_speed[j] * Uf[mem];
                 
                 /* Transform to reference space fluxes */
                 lsum = 0.0;
@@ -235,7 +235,7 @@ namespace kernels
                     lsum += S(j,mem) * Fphys[j];
 
                 F[mem] = lsum; // Save reference fluxes, ready for diff'ing
-                //F[mem] = rdetg[mem] * wave_speed[dir] * Qf[mem];
+                //F[mem] = rdetg[mem] * wave_speed[dir] * Uf[mem];
             }
         }
 
