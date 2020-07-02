@@ -4,30 +4,10 @@
 #include "basic_time_integrator.hpp"
 
 
-Params::Params(EqnSystem equations, BasicTimeMethod time_method,
-                            real_t cfl, real_t end_time, real_t dt_write) 
-       : equations(equations), time_method(time_method), 
-                            cfl(cfl), end_time(end_time), dt_write(dt_write)
-{ 
-    switch (equations)
-    {
-        case scalar_advection:
-            Nfield = 1;
-            break;
-        case scalar_wave:
-            Nfield = 1;
-            break;
-        default:
-            write::error("Equation system not recognised.");
-    }
-}
-
-
 /* That part of Process setup which is the same for Cartesian,
  * Spherical, toroidal etc. configurations. */
 void Params::setup_process_generic(Process &proc)
 {
-    proc.Nfield   = Nfield;
     proc.time     = 0.0;
     proc.end_time = end_time;
     proc.dt_write = dt_write;
@@ -44,12 +24,22 @@ void Params::setup_process_generic(Process &proc)
             write::error("Time integration method not recognized.");
     }
 
-    // Should set dt here with a general-purpose method
+    switch (equations)
+    {
+        case scalar_advection:
+            proc.Nfield = 1;
+            break;
+        case scalar_wave:
+            proc.Nfield = 1;
+            break;
+        default:
+            write::error("Equation system not recognised.");
+    }
 
-    write::variable<real_t>("CFL", cfl);
-    write::variable<real_t>("End time", end_time);
-    write::variable<real_t>("dt", proc.dt);
-    write::variable<int>("No. of time steps", int(end_time/proc.dt));
+    //write::variable<real_t>("CFL", cfl);
+    //write::variable<real_t>("End time", end_time);
+    //write::variable<real_t>("dt", proc.dt);
+    //write::variable<int>("No. of time steps", int(end_time/proc.dt));
 
     return;
 }

@@ -51,6 +51,10 @@ void ParamsCartesian::write_param_info()
 
 void ParamsCartesian::setup_process(Process &proc)
 {
+    /* Setup common to all geometries. */
+    setup_process_generic(proc);
+
+
     /* This process's set of indices in the global 3D array of processes   *
      * Assume row-major flattening order : eg ElementBlock::sidx() for CPU */
     int proc_idx[3];
@@ -136,10 +140,13 @@ void ParamsCartesian::setup_process(Process &proc)
     
     set_initial_state(proc.elements);
 
-    /* Should be made general and moved to setup_process_generic() */
+    /* Should be made general and moved to a separate member function */
     proc.dt = cfl * set_dt_basic(proc.elements); 
 
-    setup_process_generic(proc);
+    write::variable<real_t>("CFL", proc.cfl);
+    write::variable<real_t>("End time", proc.end_time);
+    write::variable<real_t>("dt", proc.dt);
+    write::variable<int>("No. of time steps", int(end_time/proc.dt));
     
     return;
 }
@@ -155,7 +162,7 @@ void ParamsCartesian::setup_elementblock(ElementBlock &elements, Process &proc)
     }
 
     elements.Nelem_block = Nelem_proc; 
-    elements.Nfield  = Nfield;
+    elements.Nfield      = proc.Nfield;
 
 
     /* Set geometrical information: trivial for now since Process and
