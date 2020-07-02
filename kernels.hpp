@@ -1,6 +1,9 @@
 #include "common.hpp"
 #include "tensor_field.hpp"
 
+class ConservedToPrimitive;
+class FluxesFromPrimitive;
+
 namespace kernels
 {
     /* Memory allocation on device --- don't use for host-side only memory */
@@ -29,6 +32,8 @@ namespace kernels
     void generate_fluxes(const real_t* const __restrict__ Uf,
                                real_t* const __restrict__ F ,
                          const VectorField                S ,
+                         const ConservedToPrimitive*  U_to_P,
+                         const FluxesFromPrimitive* F_from_P,
                          const LengthBucket lb, const int dir);
 
     void flux_divergence(const VectorField                dF,

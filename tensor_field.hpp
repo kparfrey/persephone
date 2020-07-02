@@ -122,7 +122,8 @@ struct LengthBucket
     int Nelem[3];
     int Ns[3];
     int Nf[3];
-    int Nf_dir[3];
+    int Nf_dir[3];       //Total # flux points, in each dir, in each element
+    int Nf_dir_block[3]; //Total # flux points, in each dir, in the block
 };
 
 

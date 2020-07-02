@@ -109,7 +109,8 @@ void Process::find_RHS(real_t* U, real_t t, real_t* result)
         kernels::soln_to_flux(eb.soln2flux(i), U, Uf(i), eb.lengths, i);
 
     for (int i: dirs)
-        kernels::generate_fluxes(Uf(i), F(i), eb.metric.S[i], eb.lengths, i);
+        kernels::generate_fluxes(Uf(i), F(i), eb.metric.S[i], 
+                                 U_to_P, F_from_P, eb.lengths, i);
 
     for (int i: dirs)
         singleElement_periodicBC(F(i), eb.lengths, i);

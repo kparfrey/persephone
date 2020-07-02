@@ -10,20 +10,20 @@
 class ConservedToPrimitive
 {
     public:
-    inline virtual void operator()(const real_t* const U, real_t* const P) = 0;
+    inline virtual void operator()(const real_t* const U, real_t* const P) const = 0;
 };
 
 
 class WaveSpeedsFromPrimitive
 {
     public:
-    inline virtual void operator()(const real_t* const P, real_t* const c) = 0;
+    inline virtual void operator()(const real_t* const P, real_t* const c) const = 0;
 };
 
 
 class FluxesFromPrimitive
 {
     public:
-    inline virtual void operator()(const real_t* const P, real_t* const F) = 0;
+    inline virtual void operator()(const real_t* const P, real_t (*F)[3]) const = 0;
 };
 #endif

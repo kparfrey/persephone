@@ -42,6 +42,7 @@ void ElementBlock::setup()
         lengths.Ns[i]     = Ns[i];
         lengths.Nf[i]     = Nf[i];
         lengths.Nf_dir[i] = Nf_dir[i];
+        lengths.Nf_dir_block[i] = Nf_dir_block[i];
     }
 
 

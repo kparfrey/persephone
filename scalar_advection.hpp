@@ -14,7 +14,7 @@ class UtoP_scalar_advection : public ConservedToPrimitive
 {
     public:
     ACCEL_DECORATOR
-    inline virtual void operator()(const real_t* const U, real_t* const P)
+    inline virtual void operator()(const real_t* const U, real_t* const P) const
     {
         P[0] = U[0];
         return;
@@ -26,7 +26,7 @@ class WaveSpeeds_scalar_advection: public WaveSpeedsFromPrimitive
 {
     public:
     ACCEL_DECORATOR
-    inline virtual void operator()(const real_t* const P, real_t* const c)
+    inline virtual void operator()(const real_t* const P, real_t* const c) const
     {
         return;
     }
@@ -36,9 +36,14 @@ class WaveSpeeds_scalar_advection: public WaveSpeedsFromPrimitive
 class  Fluxes_scalar_advection: public FluxesFromPrimitive
 {
     public:
+    real_t wave_speed[3] = {0.7, 0.3, 0.0};
+
     ACCEL_DECORATOR
-    inline virtual void operator()(const real_t* const P, real_t* const F)
+    inline virtual void operator()(const real_t* const P, real_t (*F)[3]) const
     {
+        for (int i: dirs)
+            F[0][i] = wave_speed[i] * P[0];
+
         return;
     }
 };

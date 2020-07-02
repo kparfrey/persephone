@@ -197,6 +197,8 @@ namespace kernels
     void generate_fluxes(const real_t* const __restrict__ Uf,
                                real_t* const __restrict__ F ,
                          const VectorField                S ,
+                         const ConservedToPrimitive*  U_to_P,
+                         const FluxesFromPrimitive* F_from_P,
                          const LengthBucket lb, const int dir)
     {
         int id_elem;
@@ -207,10 +209,16 @@ namespace kernels
 
         int Nf0 = lb.Nf[dir];
         int Ns1 = lb.Ns[dir1];
+        int Nf_tot = lb.Nf_dir_block[dir]; //Total # of this-dir flux points in the block
 
-        real_t wave_speed[3] = {0.7, 0.3, 0.0};
-        real_t Fphys[3];
+        /* Conserved vars, primitive vars, and physical-direction fluxes
+         * at a single point */
+        real_t* Up      = new real_t [lb.Nfield];
+        real_t* Pp      = new real_t [lb.Nfield];
+        real_t (*Fp)[3] = new real_t [lb.Nfield][3]; // pointer to an array
+
         real_t lsum;
+
 
         for (int ie = 0; ie < lb.Nelem[0]; ++ie)
         for (int je = 0; je < lb.Nelem[1]; ++je)
@@ -223,20 +231,30 @@ namespace kernels
             for (int n1 = 0; n1 < lb.Ns[dir1]; ++n1)
             for (int n0 = 0; n0 < lb.Nf[dir];  ++n0)
             {
+                /* Memory location for the index-0 field */
                 mem = mem_offset + (n2 * Ns1 + n1) * Nf0 + n0;
+
+                /* Load all field variables at this location into
+                 * the Up array. */
+                for (int v = 0; v < lb.Nfield; ++v)
+                    Up[v] = Uf[mem + v * Nf_tot];
+
+                (*U_to_P)(Up, Pp); // conserved -> primitive variables
 
                 /* Uf is the physical solution at flux points
                  * Calculate physical fluxes in all three dirs */
-                for (int j: dirs)
-                    Fphys[j] = wave_speed[j] * Uf[mem];
-                
-                /* Transform to reference space fluxes */
-                lsum = 0.0;
-                for (int j: dirs) 
-                    lsum += S(j,mem) * Fphys[j];
+                (*F_from_P)(Pp, Fp);
 
-                F[mem] = lsum; // Save reference fluxes, ready for diff'ing
-                //F[mem] = rdetg[mem] * wave_speed[dir] * Uf[mem];
+                /* Transform from physical to reference-space fluxes
+                 * for all fields */
+                for (int v = 0; v < lb.Nfield; ++v)
+                {
+                    lsum = 0.0;
+                    for (int j: dirs) 
+                        lsum += S(j,mem) * Fp[v][j];
+
+                    F[mem + v * Nf_tot] = lsum; // Save reference fluxes, ready for diff'ing
+                }
             }
         }
 

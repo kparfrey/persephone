@@ -51,9 +51,9 @@ class Process
     int data_output_counter;
     
     BasicTimeIntegrator*     time_integrator;
-    ConservedToPrimitive*    UtoP;
-    WaveSpeedsFromPrimitive* SpeedsFromP;
-    FluxesFromPrimitive*     FluxesFromP;
+    ConservedToPrimitive*    U_to_P;
+    WaveSpeedsFromPrimitive* c_from_P;
+    FluxesFromPrimitive*     F_from_P;
 
 
     /* Methods */
