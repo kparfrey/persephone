@@ -1,6 +1,7 @@
 // Strictly speaking this file should import the absolute minimum
 // --- it probably shouldn't need anything except the definition of real_t ?
 #include "kernels.hpp"
+#include "physics_includes.hpp"
 
 namespace kernels
 {

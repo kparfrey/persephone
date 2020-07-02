@@ -2,9 +2,9 @@
 #define TENSOR_FIELD_HPP
 
 #ifdef __CUDACC__
-#define CUDA_HOSTDEV __host__ __device__
+#define ACCEL_DECORATOR __host__ __device__
 #else
-#define CUDA_HOSTDEV
+#define ACCEL_DECORATOR
 #endif
 
 
@@ -24,7 +24,7 @@ struct TensorField
     real_t* data[3][3]; 
 
     /* Returns a reference: allows both getting and setting the value */
-    CUDA_HOSTDEV
+    ACCEL_DECORATOR
     inline real_t& operator()(const int i, const int j, const int n)
     {
         return data[i][j][n];
@@ -32,14 +32,14 @@ struct TensorField
     
 
     /* For indexing a const TensorField */
-    CUDA_HOSTDEV
+    ACCEL_DECORATOR
     inline real_t  operator()(const int i, const int j, const int n) const
     {
         return data[i][j][n];
     };
 
 
-    CUDA_HOSTDEV
+    ACCEL_DECORATOR
     inline real_t*& operator()(const int i, const int j)
     {
         return data[i][j];
@@ -54,21 +54,21 @@ struct VectorField
 {
     real_t* data[3];
 
-    CUDA_HOSTDEV
+    ACCEL_DECORATOR
     inline real_t& operator()(const int i, const int n)
     {
         return data[i][n];
     };
 
 
-    CUDA_HOSTDEV
+    ACCEL_DECORATOR
     inline real_t operator()(const int i, const int n) const
     {
         return data[i][n];
     };
 
 
-    CUDA_HOSTDEV
+    ACCEL_DECORATOR
     inline real_t*& operator()(const int i)
     {
         return data[i];
@@ -82,28 +82,28 @@ struct ScalarField
     real_t* data;
     
     /* Use () instead of [] for consistency with the 2D case */
-    CUDA_HOSTDEV
+    ACCEL_DECORATOR
     inline real_t& operator()(const int n)
     {
         return data[n];
     };
 
 
-    CUDA_HOSTDEV
+    ACCEL_DECORATOR
     inline real_t  operator()(const int n) const
     {
         return data[n];
     };
 
 
-    CUDA_HOSTDEV
+    ACCEL_DECORATOR
     inline real_t*& operator()()
     {
         return data;
     };
 
     
-    CUDA_HOSTDEV 
+    ACCEL_DECORATOR 
     inline void operator=(real_t* external_data)
     {
         data = external_data;

@@ -23,7 +23,8 @@ static void startMPI(int argc, char *argv[], Process &proc)
     if (proc.rank == 0)
         if (proc.Nproc != proc.params.Nproc_domain)
         {
-            write::basic("Error: number of running processes different from number expected from params.");
+            write::basic("Error: number of running processes different \
+                          from number expected from params.");
             exit(1);
         }
 

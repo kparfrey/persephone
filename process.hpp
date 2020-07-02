@@ -8,7 +8,9 @@
 
 class Params;
 class BasicTimeIntegrator;
-
+class ConservedToPrimitive;
+class WaveSpeedsFromPrimitive;
+class FluxesFromPrimitive;
 
 class Process
 {
@@ -48,7 +50,10 @@ class Process
     real_t step_last_write;
     int data_output_counter;
     
-    BasicTimeIntegrator* time_integrator;
+    BasicTimeIntegrator*     time_integrator;
+    ConservedToPrimitive*    UtoP;
+    WaveSpeedsFromPrimitive* SpeedsFromP;
+    FluxesFromPrimitive*     FluxesFromP;
 
 
     /* Methods */
