@@ -72,51 +72,6 @@ void ParamsCartesian::setup_process(Process &proc)
     }
 
 
-    for (int i: ifaces)
-    {
-        proc.faces[i].my_rank = proc.rank;
-        proc.faces[i].my_idx  = i;
-        proc.faces[i].external_face = false; // Fully periodic for now...
-        proc.faces[i].N[0] = Ns[face_coords[i][0]]; // # soln points on the face
-        proc.faces[i].N[1] = Ns[face_coords[i][1]];
-    }
-
-    /* Inter-process connectivity */
-    // Make periodic for now
-    int proc_base;
-
-    if (proc_idx[2] == 0) proc_base = Nproc[2];
-    else proc_base = proc_idx[2];
-    proc.faces[0].neighbour_rank = proc_base - 1;
-    
-    if (proc_idx[2] == Nproc[2]-1) proc_base = -1;
-    else proc_base = proc_idx[2];
-    proc.faces[1].neighbour_rank = proc_base + 1;
-
-    if (proc_idx[0] == 0) proc_base = Nproc[0];
-    else proc_base = proc_idx[0];
-    proc.faces[2].neighbour_rank = proc_base - 1;
-
-    if (proc_idx[0] == Nproc[0]-1) proc_base = -1;
-    else proc_base = proc_idx[0];
-    proc.faces[3].neighbour_rank = proc_base + 1;
-
-    if (proc_idx[1] == 0) proc_base = Nproc[1];
-    else proc_base = proc_idx[1];
-    proc.faces[4].neighbour_rank = proc_base - 1;
-
-    if (proc_idx[1] == Nproc[1]-1) proc_base = -1;
-    else proc_base = proc_idx[1];
-    proc.faces[5].neighbour_rank = proc_base + 1;
-
-
-    proc.faces[0].neighbour_idx = 1; // Simple globally Cartesian connectivity 
-    proc.faces[1].neighbour_idx = 0; 
-    proc.faces[2].neighbour_idx = 3; 
-    proc.faces[3].neighbour_idx = 2; 
-    proc.faces[4].neighbour_idx = 5; 
-    proc.faces[5].neighbour_idx = 4; 
-
 
     /* For now: assume basic Cartesian shape --- 90 degree angles etc. */
     real_t domain_length;
@@ -147,7 +102,59 @@ void ParamsCartesian::setup_process(Process &proc)
     write::variable<real_t>("End time", proc.end_time);
     write::variable<real_t>("dt", proc.dt);
     write::variable<int>("No. of time steps", int(end_time/proc.dt));
+
+
+    /* Setup faces */
+    for (int i: ifaces)
+    {
+        FaceCommunicator& face = proc.faces[i];
+
+        face.setup(proc, i);
+
+        /* Inter-process connectivity */
+        /* Make periodic for now */
+        /* Think this is broken... */
+        int proc_base;
+        int normal = face.normal_dir;
+
+        if ((face.orientation > 0) && (proc_idx[normal] == Nproc[normal]-1))
+            proc_base = -1;
+        else if ((face.orientation < 0) && (proc_idx[normal] == 0))
+            proc_base = Nproc[normal];
+        else
+            proc_base = proc_idx[normal];
+
+        face.neighbour_rank = proc_base + face.orientation;
+    }
+
+
+    /***
+    if (proc_idx[2] == 0) proc_base = Nproc[2];
+    else proc_base = proc_idx[2];
+    proc.faces[0].neighbour_rank = proc_base - 1;
     
+    if (proc_idx[2] == Nproc[2]-1) proc_base = -1;
+    else proc_base = proc_idx[2];
+    proc.faces[1].neighbour_rank = proc_base + 1;
+
+    if (proc_idx[0] == 0) proc_base = Nproc[0];
+    else proc_base = proc_idx[0];
+    proc.faces[2].neighbour_rank = proc_base - 1;
+
+    if (proc_idx[0] == Nproc[0]-1) proc_base = -1;
+    else proc_base = proc_idx[0];
+    proc.faces[3].neighbour_rank = proc_base + 1;
+
+    if (proc_idx[1] == 0) proc_base = Nproc[1];
+    else proc_base = proc_idx[1];
+    proc.faces[4].neighbour_rank = proc_base - 1;
+
+    if (proc_idx[1] == Nproc[1]-1) proc_base = -1;
+    else proc_base = proc_idx[1];
+    proc.faces[5].neighbour_rank = proc_base + 1;
+    ***/
+
+
     return;
 }
 

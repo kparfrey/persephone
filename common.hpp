@@ -39,7 +39,7 @@ constexpr int iedges[12] = {0,1,2,3,4,5,6,7,8,9,10,11};
 /* Coordinate directions spanning each of the six faces 
  * In each of the 3 pairs, the first/lower-index one is at lower values 
  * of the missing/normal coordinate */
-constexpr int face_coords[6][2] = {{0,1},{0,1},{0,2},{0,2},{1,2},{1,2}};
+//constexpr int face_coords[6][2] = {{0,1},{0,1},{0,2},{0,2},{1,2},{1,2}};
 
 /* Relative locations of the 8 corners for a unit cube */
 constexpr int corner_coords[8][3] = {{0, 0, 0},  // 0
