@@ -62,5 +62,6 @@ class Process
     void time_advance();
     void find_RHS(real_t* U, real_t t, real_t* result);
     void move_to_device();
+    void exchange_boundary_data();
 };
 #endif

@@ -55,10 +55,10 @@ constexpr int corner_coords[8][3] = {{0, 0, 0},  // 0
 
 #if (FLOAT_POINT_PRECISION == SINGLE)
   #define real_t    float
-  #define realMPI_t MPI_FLOAT
+  #define MPI_real_t MPI_FLOAT
 #else
   #define real_t    double
-  #define realMPI_t MPI_DOUBLE
+  #define MPI_real_t MPI_DOUBLE
 #endif
 
 /* Should all be double --- will need to redefine for float */

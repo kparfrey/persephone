@@ -2,7 +2,7 @@ CXX = mpic++
 
 TARGET_ARCH =
 CPPFLAGS = -I../HighFive/include
-CXXFLAGS = -std=c++17 -Wall -Werror
+CXXFLAGS = -std=c++17 -Wall -Werror -g
 LDFLAGS  = 
 LDLIBS   = -lmpi -lm -lhdf5
 

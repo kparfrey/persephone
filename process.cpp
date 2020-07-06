@@ -1,6 +1,7 @@
 #include "process.hpp"
 
 #include <string>
+#include <mpi.h>
 #include "params.hpp"
 #include "write_screen.hpp"
 #include "basic_time_integrator.hpp"
@@ -51,6 +52,7 @@ void Process::time_advance()
 
 
 /*** TEMPORARY ***/
+#if 0
 static void singleElement_periodicBC(real_t* F, LengthBucket lb, int dir)
 {
     int dir1 = dir_plus_one[dir]; 
@@ -81,6 +83,44 @@ static void singleElement_periodicBC(real_t* F, LengthBucket lb, int dir)
     
     return;
 }
+#endif
+
+
+/*** TEMPORARY ***/
+#if 0
+static void multiElement_periodicBC(real_t* F, LengthBucket lb, int dir)
+{
+    int dir1 = dir_plus_one[dir]; 
+    int dir2 = dir_plus_two[dir];
+
+    int Nf0 = lb.Nf[dir];
+    int Ns1 = lb.Ns[dir1];
+
+    int L, R;
+    real_t fnum;
+
+    for(int ne2 = 0; ne2 < lb.Nelem[dir2]; ++ne2)
+    for(int ne1 = 0; ne1 < lb.Nelem[dir1]; ++ne1)
+    for(int n2 = 0; n2 < lb.Ns[dir2]; ++n2)
+    for(int n1 = 0; n1 < lb.Ns[dir1]; ++n1)
+    {
+        L = (n2 * Ns1 + n1) * Nf0 + 0;
+        R = (n2 * Ns1 + n1) * Nf0 + Nf0-1;
+
+        /* Central flux */
+        //fnum = 0.5 * (F[L] + F[R]);
+
+        /* Upwind */
+        fnum = F[R]; // For wave velocity in +ve 0-direction
+                     // Does seem more stable/dissipative
+
+        F[L] = fnum;
+        F[R] = fnum;
+    }
+    
+    return;
+}
+#endif
 
 
 /* The fundamental function of the spectral difference method */
@@ -109,12 +149,23 @@ void Process::find_RHS(real_t* U, real_t t, real_t* result)
         kernels::soln_to_flux(eb.soln2flux(i), U, Uf(i), eb.lengths, i);
 
     for (int i: dirs)
-        kernels::generate_fluxes(Uf(i), F(i), eb.metric.S[i], 
-                                 U_to_P, F_from_P, eb.lengths, i);
+        kernels::bulk_fluxes(Uf(i), F(i), eb.metric.S[i], 
+                             U_to_P, F_from_P, eb.lengths, i);
 
-    for (int i: dirs)
-        singleElement_periodicBC(F(i), eb.lengths, i);
+    //for (int i: dirs)
+        //multiElement_periodicBC(F(i), eb.lengths, i);
+        //singleElement_periodicBC(F(i), eb.lengths, i);
+    
+    for (int i: ifaces)
+    {
+        int dir = faces[i].normal_dir;
+        kernels::fill_face_data(Uf(dir), faces[i].my_data, eb.lengths,
+                                            faces[i].orientation, dir);
+    }
 
+    exchange_boundary_data();
+
+        
     for (int i: dirs)
         kernels::fluxDeriv_to_soln(eb.fluxDeriv2soln(i), F(i), dF(i), eb.lengths, i);
 
@@ -126,6 +177,22 @@ void Process::find_RHS(real_t* U, real_t t, real_t* result)
         kernels::free( F(i));
         kernels::free(dF(i));
     }
+
+    return;
+}
+
+
+void Process::exchange_boundary_data()
+{
+    MPI_Request requests[12];
+
+    for (int i: ifaces)
+        requests[i]   = faces[i].send_data();
+
+    for (int i: ifaces)
+        requests[6+i] = faces[i].receive_data();
+
+    MPI_Waitall(12, requests, MPI_STATUSES_IGNORE);
 
     return;
 }

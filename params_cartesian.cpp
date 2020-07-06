@@ -55,8 +55,7 @@ void ParamsCartesian::setup_process(Process &proc)
     setup_process_generic(proc);
 
 
-    /* This process's set of indices in the global 3D array of processes   *
-     * Assume row-major flattening order : eg ElementBlock::sidx() for CPU */
+    /* This process's set of indices in the global 3D array of processes   */
     int proc_idx[3];
 
     proc_idx[2] = proc.rank % Nproc[2];
@@ -114,17 +113,24 @@ void ParamsCartesian::setup_process(Process &proc)
         /* Inter-process connectivity */
         /* Make periodic for now */
         /* Think this is broken... */
-        int proc_base;
         int normal = face.normal_dir;
+        int neighbour_idx[3];
+        for (int d: dirs)
+            neighbour_idx[d] = proc.group_idx[d];
+        
+        neighbour_idx[normal] += face.orientation;
 
-        if ((face.orientation > 0) && (proc_idx[normal] == Nproc[normal]-1))
-            proc_base = -1;
-        else if ((face.orientation < 0) && (proc_idx[normal] == 0))
-            proc_base = Nproc[normal];
-        else
-            proc_base = proc_idx[normal];
+        /* Make periodic */
+        if (neighbour_idx[normal] < 0)
+            neighbour_idx[normal] = proc.Nproc_group[normal] - 1;
+        
+        if (neighbour_idx[normal] > proc.Nproc_group[normal] - 1)
+            neighbour_idx[normal] = 0;
 
-        face.neighbour_rank = proc_base + face.orientation;
+
+        face.neighbour_rank = (neighbour_idx[0]  * proc.Nproc_group[1]
+                             + neighbour_idx[1]) * proc.Nproc_group[2]
+                             + neighbour_idx[2];
     }
 
 

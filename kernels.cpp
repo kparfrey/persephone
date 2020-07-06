@@ -194,12 +194,12 @@ namespace kernels
     }
 
 
-    void generate_fluxes(const real_t* const __restrict__ Uf,
-                               real_t* const __restrict__ F ,
-                         const VectorField                S ,
-                         const ConservedToPrimitive*  U_to_P,
-                         const FluxesFromPrimitive* F_from_P,
-                         const LengthBucket lb, const int dir)
+    void bulk_fluxes(const real_t* const __restrict__ Uf,
+                           real_t* const __restrict__ F ,
+                     const VectorField                S ,
+                     const ConservedToPrimitive*  U_to_P,
+                     const FluxesFromPrimitive* F_from_P,
+                     const LengthBucket lb, const int dir)
     {
         int id_elem;
         int mem_offset;
@@ -287,6 +287,83 @@ namespace kernels
             }
         }
 
+        return;
+    }
+
+
+    void fill_face_data(const real_t* const __restrict__ Uf,
+                              real_t* const __restrict__ face_data,
+                        const LengthBucket lb,
+                        const int orientation,
+                        const int dir)
+    {
+        int dir1 = dir_plus_one[dir]; 
+        int dir2 = dir_plus_two[dir];
+        int n0;  // elementwise flux-point index in direction normal to the face
+        int ne0; // Index of elements we need in the face-normal direction 
+        int ne1, ne2; // Element indices in face-transverse directions
+        int *ie, *je, *ke; 
+        int id_elem, id_elem_face;
+        int mem_offset, mem_offset_face;
+        int mem, mem_face;
+
+        const int Nf0 = lb.Nf[dir];
+        const int Ns1 = lb.Ns[dir1];
+
+        if (orientation == -1)
+        {
+            n0  = 0; 
+            ne0 = 0;
+        }
+        else
+        {
+            n0  = lb.Nf[dir] - 1;
+            ne0 = lb.Nelem[dir] -1;
+        }
+
+
+        /* Need to do this since at the moment flux-point data is stored element-by-element
+         * using fixed physical ordering --- can/should change this? */
+        switch(dir)
+        {
+            case 0:
+                ie = &ne0;
+                je = &ne1;
+                ke = &ne2;
+                break;
+            case 1:
+                ie = &ne2;
+                je = &ne0;
+                ke = &ne1;
+                break;
+            case 2:
+                ie = &ne1;
+                je = &ne2;
+                ke = &ne0;
+                break;
+        }
+
+        
+        for (ne2 = 0; ne2 < lb.Nelem[dir2]; ++ne2)
+        for (ne1 = 0; ne1 < lb.Nelem[dir1]; ++ne1)
+        {
+            id_elem    = ((*ie)*lb.Nelem[1] + *je)*lb.Nelem[2] + *ke;
+            mem_offset = id_elem * lb.Nf_dir[dir];
+
+            id_elem_face    = (ne2 * lb.Nelem[dir1]) + ne1;
+            mem_offset_face = id_elem_face * lb.Ns[dir2] * lb.Ns[dir1];
+
+            /* Iterate over flux points on the relevant face
+             * of each element. */
+            for (int n2 = 0; n2 < lb.Ns[dir2]; ++n2)
+            for (int n1 = 0; n1 < lb.Ns[dir1]; ++n1)
+            {
+                mem      = mem_offset      + (n2 * Ns1 + n1) * Nf0 + n0;
+                mem_face = mem_offset_face +  n2 * Ns1 + n1;
+                face_data[mem_face] = Uf[mem];
+            }
+        }
+        
         return;
     }
 
