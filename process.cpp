@@ -52,7 +52,7 @@ void Process::time_advance()
 
 
 /*** TEMPORARY ***/
-#if 0
+#if 1
 static void singleElement_periodicBC(real_t* F, LengthBucket lb, int dir)
 {
     int dir1 = dir_plus_one[dir]; 
@@ -152,9 +152,9 @@ void Process::find_RHS(real_t* U, real_t t, real_t* result)
         kernels::bulk_fluxes(Uf(i), F(i), eb.metric.S[i], 
                              U_to_P, F_from_P, eb.lengths, i);
 
-    //for (int i: dirs)
+    for (int i: dirs)
         //multiElement_periodicBC(F(i), eb.lengths, i);
-        //singleElement_periodicBC(F(i), eb.lengths, i);
+        singleElement_periodicBC(F(i), eb.lengths, i);
     
     for (int i: ifaces)
     {
@@ -165,6 +165,8 @@ void Process::find_RHS(real_t* U, real_t t, real_t* result)
 
     exchange_boundary_data();
 
+    //for (int i: ifaces)
+        // numerical flux on each external face
         
     for (int i: dirs)
         kernels::fluxDeriv_to_soln(eb.fluxDeriv2soln(i), F(i), dF(i), eb.lengths, i);
@@ -192,6 +194,9 @@ void Process::exchange_boundary_data()
     for (int i: ifaces)
         requests[6+i] = faces[i].receive_data();
 
+    /* I guess I only really need to wait until the receive requests
+     * are fulfilled --- could make sure all the sends are completed
+     * much later? */
     MPI_Waitall(12, requests, MPI_STATUSES_IGNORE);
 
     return;
