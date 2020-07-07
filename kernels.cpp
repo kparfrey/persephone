@@ -2,7 +2,6 @@
 // --- it probably shouldn't need anything except the definition of real_t ?
 #include "kernels.hpp"
 #include "physics_includes.hpp"
-#include "write_screen.hpp"
 
 namespace kernels
 {
@@ -389,10 +388,13 @@ namespace kernels
                 F0 = wave_speed[dir] * U0;
                 F1 = wave_speed[dir] * U1;
 
+                /* Upwind */
                 if (face.orientation * wave_speed[dir] >= 0)
                     Fnum[dir] = F0;
                 else
                     Fnum[dir] = F1;
+
+                /* Central */
                 //Fnum[dir] = 0.5 * (F0 + F1);
                 
                 /* Transform from physical to reference-space fluxes */
