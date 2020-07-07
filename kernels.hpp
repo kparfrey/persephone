@@ -1,5 +1,6 @@
 #include "common.hpp"
 #include "tensor_field.hpp"
+#include "face_communicator.hpp"
 
 class ConservedToPrimitive;
 class FluxesFromPrimitive;
@@ -42,8 +43,12 @@ namespace kernels
                          const LengthBucket lb);
 
     void fill_face_data(const real_t* const __restrict__ Uf,
-                              real_t* const __restrict__ face_data,
-                        const LengthBucket lb,
-                        const int orientation,
-                        const int dir);
- }
+                              FaceCommunicator           face,
+                        const LengthBucket               lb);
+
+    void external_face_numerical_flux(const FaceCommunicator           face,
+                                            real_t* const __restrict__ F,
+                                      const VectorField                S,
+                                      const LengthBucket               lb);
+
+}

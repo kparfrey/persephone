@@ -6,6 +6,8 @@
 #include "write_screen.hpp"
 #include "basic_time_integrator.hpp"
 
+//#include <stdlib.h>
+
 Process::Process(Params &params)
 : params(params)
 {
@@ -52,7 +54,7 @@ void Process::time_advance()
 
 
 /*** TEMPORARY ***/
-#if 1
+#if 0
 static void singleElement_periodicBC(real_t* F, LengthBucket lb, int dir)
 {
     int dir1 = dir_plus_one[dir]; 
@@ -71,14 +73,15 @@ static void singleElement_periodicBC(real_t* F, LengthBucket lb, int dir)
         R = (n2 * Ns1 + n1) * Nf0 + Nf0-1;
 
         /* Central flux */
-        //fnum = 0.5 * (F[L] + F[R]);
+        fnum = 0.5 * (F[L] + F[R]);
 
         /* Upwind */
-        fnum = F[R]; // For wave velocity in +ve 0-direction
-                     // Does seem more stable/dissipative
+        //fnum = F[R]; // For wave velocity in +ve 0-direction
+        //             // Does seem more stable/dissipative
 
         F[L] = fnum;
         F[R] = fnum;
+        //F[R] = fnum + (rand() / (RAND_MAX + 1.))*1e-2;
     }
     
     return;
@@ -86,41 +89,6 @@ static void singleElement_periodicBC(real_t* F, LengthBucket lb, int dir)
 #endif
 
 
-/*** TEMPORARY ***/
-#if 0
-static void multiElement_periodicBC(real_t* F, LengthBucket lb, int dir)
-{
-    int dir1 = dir_plus_one[dir]; 
-    int dir2 = dir_plus_two[dir];
-
-    int Nf0 = lb.Nf[dir];
-    int Ns1 = lb.Ns[dir1];
-
-    int L, R;
-    real_t fnum;
-
-    for(int ne2 = 0; ne2 < lb.Nelem[dir2]; ++ne2)
-    for(int ne1 = 0; ne1 < lb.Nelem[dir1]; ++ne1)
-    for(int n2 = 0; n2 < lb.Ns[dir2]; ++n2)
-    for(int n1 = 0; n1 < lb.Ns[dir1]; ++n1)
-    {
-        L = (n2 * Ns1 + n1) * Nf0 + 0;
-        R = (n2 * Ns1 + n1) * Nf0 + Nf0-1;
-
-        /* Central flux */
-        //fnum = 0.5 * (F[L] + F[R]);
-
-        /* Upwind */
-        fnum = F[R]; // For wave velocity in +ve 0-direction
-                     // Does seem more stable/dissipative
-
-        F[L] = fnum;
-        F[R] = fnum;
-    }
-    
-    return;
-}
-#endif
 
 
 /* The fundamental function of the spectral difference method */
@@ -152,22 +120,23 @@ void Process::find_RHS(real_t* U, real_t t, real_t* result)
         kernels::bulk_fluxes(Uf(i), F(i), eb.metric.S[i], 
                              U_to_P, F_from_P, eb.lengths, i);
 
-    for (int i: dirs)
-        //multiElement_periodicBC(F(i), eb.lengths, i);
-        singleElement_periodicBC(F(i), eb.lengths, i);
-    
     for (int i: ifaces)
-    {
-        int dir = faces[i].normal_dir;
-        kernels::fill_face_data(Uf(dir), faces[i].my_data, eb.lengths,
-                                            faces[i].orientation, dir);
-    }
+        kernels::fill_face_data(Uf(faces[i].normal_dir), faces[i], eb.lengths);
 
     exchange_boundary_data();
 
-    //for (int i: ifaces)
-        // numerical flux on each external face
+#if 1
+    for (int i: ifaces)
+    {
+        int dir = faces[i].normal_dir;
+        kernels::external_face_numerical_flux(faces[i], F(dir), 
+                                              eb.metric.S[dir], eb.lengths);
+    }
+#endif
         
+    //for (int i: dirs)
+    //    singleElement_periodicBC(F(i), eb.lengths, i);
+    
     for (int i: dirs)
         kernels::fluxDeriv_to_soln(eb.fluxDeriv2soln(i), F(i), dF(i), eb.lengths, i);
 
@@ -186,6 +155,7 @@ void Process::find_RHS(real_t* U, real_t t, real_t* result)
 
 void Process::exchange_boundary_data()
 {
+#if 1
     MPI_Request requests[12];
 
     for (int i: ifaces)
@@ -198,6 +168,19 @@ void Process::exchange_boundary_data()
      * are fulfilled --- could make sure all the sends are completed
      * much later? */
     MPI_Waitall(12, requests, MPI_STATUSES_IGNORE);
+#endif
+
+    /**
+    for (int i: ifaces)
+    {
+        FaceCommunicator& face = faces[i];
+        MPI_Sendrecv(face.my_data, face.N_tot, MPI_real_t, face.neighbour_rank, 
+                     i,
+                     face.neighbour_data, face.N_tot, MPI_real_t, face.neighbour_rank,
+                     i, MPI_COMM_WORLD, MPI_STATUSES_IGNORE);
+    }
+    **/
+
 
     return;
 }

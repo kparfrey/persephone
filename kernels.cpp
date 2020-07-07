@@ -2,6 +2,7 @@
 // --- it probably shouldn't need anything except the definition of real_t ?
 #include "kernels.hpp"
 #include "physics_includes.hpp"
+#include "write_screen.hpp"
 
 namespace kernels
 {
@@ -306,16 +307,12 @@ namespace kernels
 
 
     void fill_face_data(const real_t* const __restrict__ Uf,
-                              real_t* const __restrict__ face_data,
-                        const LengthBucket lb,
-                        const int orientation,
-                        const int dir)
+                              FaceCommunicator           face,
+                        const LengthBucket               lb)
     {
-        int dir1 = dir_plus_one[dir]; 
-        int dir2 = dir_plus_two[dir];
-        int n0;  // elementwise flux-point index in direction normal to the face
-        int ne0; // Index of elements we need in the face-normal direction 
-        int ne1, ne2; // Element indices in face-transverse directions
+        const int dir  = face.normal_dir;
+        const int dir1 = dir_plus_one[dir]; 
+        const int dir2 = dir_plus_two[dir];
         int id_elem, id_elem_face;
         int mem_offset, mem_offset_face;
         int mem, mem_face;
@@ -323,22 +320,11 @@ namespace kernels
         const int Nf0 = lb.Nf[dir];
         const int Ns1 = lb.Ns[dir1];
 
-        if (orientation == -1)
-        {
-            n0  = 0; 
-            ne0 = 0;
-        }
-        else
-        {
-            n0  = lb.Nf[dir] - 1;
-            ne0 = lb.Nelem[dir] -1;
-        }
-
         
-        for (ne2 = 0; ne2 < lb.Nelem[dir2]; ++ne2)
-        for (ne1 = 0; ne1 < lb.Nelem[dir1]; ++ne1)
+        for (int ne2 = 0; ne2 < face.Nelem[1]; ++ne2)
+        for (int ne1 = 0; ne1 < face.Nelem[0]; ++ne1)
         {
-            id_elem    = (ne2*lb.Nelem[dir1] + ne1)*lb.Nelem[dir] + ne0;
+            id_elem    = (ne2*lb.Nelem[dir1] + ne1)*lb.Nelem[dir] + face.ne0;
             mem_offset = id_elem * lb.Nf_dir[dir];
 
             id_elem_face    = (ne2 * lb.Nelem[dir1]) + ne1;
@@ -346,16 +332,81 @@ namespace kernels
 
             /* Iterate over flux points on the relevant face
              * of each element. */
-            for (int n2 = 0; n2 < lb.Ns[dir2]; ++n2)
-            for (int n1 = 0; n1 < lb.Ns[dir1]; ++n1)
+            for (int n2 = 0; n2 < face.N[1]; ++n2)
+            for (int n1 = 0; n1 < face.N[0]; ++n1)
             {
-                mem      = mem_offset      + (n2 * Ns1 + n1) * Nf0 + n0;
+                mem      = mem_offset      + (n2 * Ns1 + n1) * Nf0 + face.n0;
                 mem_face = mem_offset_face +  n2 * Ns1 + n1;
-                face_data[mem_face] = Uf[mem];
+                face.my_data[mem_face] = Uf[mem];
             }
         }
         
         return;
     }
 
+
+    void external_face_numerical_flux(const FaceCommunicator           face,
+                                            real_t* const __restrict__ F,
+                                      const VectorField                S,
+                                      const LengthBucket               lb)
+    {
+        const int dir  = face.normal_dir;
+        const int dir1 = dir_plus_one[dir]; 
+        const int dir2 = dir_plus_two[dir];
+        int id_elem, id_elem_face;
+        int mem_offset, mem_offset_face;
+        int mem, mem_face;
+
+        const int Nf0 = lb.Nf[dir];
+        const int Ns1 = lb.Ns[dir1];
+
+        /* Start with simple scalar equation... hard-code
+         * in for now */
+        real_t wave_speed[3] = {0.7, 0.3, 0.0};
+        real_t U0; // my U
+        real_t U1; // neighbour's U
+        real_t F0, F1, lsum;
+        real_t Fnum[3] = {};
+        
+        for (int ne2 = 0; ne2 < face.Nelem[1]; ++ne2)
+        for (int ne1 = 0; ne1 < face.Nelem[0]; ++ne1)
+        {
+            id_elem_face    = (ne2 * lb.Nelem[dir1]) + ne1;
+            mem_offset_face = id_elem_face * lb.Ns[dir2] * lb.Ns[dir1];
+
+            id_elem    = (ne2*lb.Nelem[dir1] + ne1)*lb.Nelem[dir] + face.ne0;
+            mem_offset = id_elem * lb.Nf_dir[dir];
+
+            for (int n2 = 0; n2 < face.N[1]; ++n2)
+            for (int n1 = 0; n1 < face.N[0]; ++n1)
+            {
+                mem_face = mem_offset_face +  n2 * Ns1 + n1;
+                U0 = face.my_data[mem_face];
+                U1 = face.neighbour_data[mem_face];
+
+                /* Only need to worry about flux in the normal direction,
+                 * until the elements become curved */
+                F0 = wave_speed[dir] * U0;
+                F1 = wave_speed[dir] * U1;
+
+                if (face.orientation * wave_speed[dir] >= 0)
+                    Fnum[dir] = F0;
+                else
+                    Fnum[dir] = F1;
+                //Fnum[dir] = 0.5 * (F0 + F1);
+                
+                /* Transform from physical to reference-space fluxes */
+                mem = mem_offset + (n2 * Ns1 + n1) * Nf0 + face.n0;
+
+                /* Scalar equation */
+                lsum = 0.0;
+                for (int j: dirs) 
+                    lsum += S(j,mem) * Fnum[j];
+
+                F[mem] = lsum; // Save reference fluxes
+            }
+        }
+
+        return;
+    }
 }

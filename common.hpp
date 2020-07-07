@@ -50,6 +50,15 @@ constexpr int corner_coords[8][3] = {{0, 0, 0},  // 0
                                      {1, 0, 1},  // 5
                                      {1, 1, 1},  // 6
                                      {0, 1, 1}}; // 7
+
+
+#ifdef __CUDACC__
+#define ACCEL_DECORATOR __host__ __device__
+#else
+#define ACCEL_DECORATOR
+#endif
+
+
 #define SINGLE 1
 #define DOUBLE 2
 

@@ -24,10 +24,14 @@ class FaceCommunicator
     bool external_face; // True if this face needs a boundary condition rather
                         // than communication from another process
 
-    int N[2]; // Total no. of (solution) points in each dir on the face
+    int n0;  // Normal-direction flux-point index of this face
+    int ne0; // Normal-direction element index of this face
+
+    int Nelem[2]; // No. of elems in each direction on the face
+    int N[2]; // No. of (solution) points in each dir on the face, in each elem
               // Indices assigned cyclically: N[0] -> normal_dir + 1 cyclic
               //                              N[1] -> normal_dir + 2 cyclic
-    int N_tot; // Shorthand for Nfield * N[0] * N[1]
+    int N_tot; // Shorthand for Nfield * N[0] * N[1] * Nelem[0] * Nelem[1]
 
     real_t *my_data;
     real_t *neighbour_data;

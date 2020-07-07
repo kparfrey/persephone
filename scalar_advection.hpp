@@ -3,12 +3,6 @@
 
 #include "physics_functors.hpp"
 
-#ifdef __CUDACC__
-#define ACCEL_DECORATOR __host__ __device__
-#else
-#define ACCEL_DECORATOR
-#endif
-
 
 class UtoP_scalar_advection : public ConservedToPrimitive
 {

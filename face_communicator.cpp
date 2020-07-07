@@ -44,13 +44,28 @@ void FaceCommunicator::setup(Process& proc, int face_id)
             break;
     }
 
+    /* Normal-direction indices of this face: flux-point and element */
+    if (orientation == -1)
+    {
+        n0  = 0; 
+        ne0 = 0;
+    }
+    else
+    {
+        n0  = proc.elements.Nf[normal_dir] - 1;
+        ne0 = proc.elements.Nelem[normal_dir] -1;
+    }
+    
+
     int normal_p1 = dir_plus_one[normal_dir];
     int normal_p2 = dir_plus_two[normal_dir];
 
+    Nelem[0] = proc.elements.Nelem[normal_p1];
+    Nelem[1] = proc.elements.Nelem[normal_p2];
     N[0] = proc.elements.Ns[normal_p1];
     N[1] = proc.elements.Ns[normal_p2];
 
-    N_tot = proc.Nfield * N[0] * N[1];
+    N_tot = proc.Nfield * N[0] * N[1] * Nelem[0] * Nelem[1];
 
     external_face = false; // By default
    

@@ -112,7 +112,6 @@ void ParamsCartesian::setup_process(Process &proc)
 
         /* Inter-process connectivity */
         /* Make periodic for now */
-        /* Think this is broken... */
         int normal = face.normal_dir;
         int neighbour_idx[3];
         for (int d: dirs)
