@@ -77,6 +77,8 @@ constexpr int corner_coords[8][3] = {{0, 0, 0},  // 0
 #define pi_4 M_PI_4
 #define one_pi M_1_PI
 
+
+#define TINY 1e-15
 #define MAX(A,B) ((A) > (B) ? (A) : (B))
 #define MIN(A,B) ((A) < (B) ? (A) : (B))
 #define SIGN(A)  ((A) >  0  ?  1  : -1 )

@@ -4,6 +4,8 @@
 #include "common.hpp"
 #include "physics_includes.hpp"
 
+#include "write_screen.hpp"
+
 /* In general, create the physical-coordinate numerical flux in all
  * three directions. The dir argument is only used when using straight
  * elements, in which cases only the flux in that direction is nonzero. */
@@ -52,27 +54,27 @@ class HLL_straight : public NumericalFlux
         (*F_from_P)(PL, FL);
         (*F_from_P)(PR, FR);
 
-        //int cmax =   MAX(0.0, MAX(cL[0], cR[0])); // +ve moving waves
-        //int cmin = - MIN(0.0, MIN(cL[1], cR[1])); // -ve moving waves
+        /* Signed max wavespeeds in each direction.
+         * cpos is max speed parallel to the coord axis (L to R); ie Toro's S_R.
+         * cneg is max speed anti-parallel to the coord axis (R to L),
+         * keeping the negative sign; ie Toro's S_L.
+         * The outer MAX(0,..), MIN(0,..) is to allow the use of the general
+         * expression in supersonic cases. Otherwise would need an explicit
+         * test for eg if (cneg >= 0.0) Fnum = FL etc. */
+        real_t cpos = MAX(0.0, MAX(cL[0], cR[0])); // fastest +ve moving wave
+        real_t cneg = MIN(0.0, MIN(cL[1], cR[1])); // fastest -ve moving wave
 
         for (int i = 0; i < Nfield; ++i)
         {
-            /*
-            Fnum[i][dir] = (cmin*FR[i][dir] + cmax*FL[i][dir]
-                             - cmax*cmin*(UR[i] - UL[i])) / (cmax + cmin);
-            Fnum[i][dir_plus_one[dir]] = 0.0;
-            Fnum[i][dir_plus_two[dir]] = 0.0;
-            */
+            Fnum[i][dir] = (cpos*FL[i][dir] - cneg*FR[i][dir]
+                          + cpos*cneg*(UR[i] - UL[i])) / (cpos - cneg + TINY);
             
-            //for (int j: dirs)
-            //    Fnum[i][j] = FL[i][j];
-                //Fnum[i][j] = 0.5 * (FL[i][j] + FR[i][j]);
-            
-            Fnum[i][dir] = FL[i][dir];
+            /* Fully straight elements (ie all angles pi/2) --- ref-space
+             * fluxes are just a rescaling of the physical fluxes in the same
+             * direction, and the other directions are unnecessary. */
             Fnum[i][dir_plus_one[dir]] = 0.0;
             Fnum[i][dir_plus_two[dir]] = 0.0;
         }
-
 
         return;
     }
