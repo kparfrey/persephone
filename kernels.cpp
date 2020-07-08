@@ -6,6 +6,61 @@
 
 namespace kernels
 {
+    /* Solution points always use a fixed order (i along dir-0 etc) while 
+     * flux-point data is stored relative to the transform direction. Use this
+     * to create fixed-axis pointers to the correct transform-relative indices */
+    inline static void relative_to_fixed_indices(int&  n0, int&  n1, int&  n2,
+                                                 int*& i0, int*& i1, int*& i2,
+                                                 const int dir)
+    {
+        switch(dir)
+        {
+            case 0:
+                i0  = &n0;
+                i1  = &n1;
+                i2  = &n2;
+                break;
+            case 1:
+                i0  = &n2;
+                i1  = &n0;
+                i2  = &n1;
+                break;
+            case 2:
+                i0  = &n1;
+                i1  = &n2;
+                i2  = &n0;
+                break;
+        }
+
+        return;
+    }
+
+   
+    inline static void fluxes_phys_to_ref(const real_t      (*Fphys)[3],
+                                                real_t* __restrict__ F,
+                                          const VectorField          S,
+                                          const int memory_loc,
+                                          const int Nfield,
+                                          const int Nf_tot)
+    {
+        real_t lsum;
+
+        for (int field_id = 0; field_id < Nfield; ++field_id)
+        {
+            lsum = 0.0;
+            for (int d: dirs) 
+                lsum += S(d,memory_loc) * Fphys[field_id][d];
+
+            F[memory_loc + field_id * Nf_tot] = lsum; // Save reference fluxes
+        }
+
+        return;
+    }
+
+
+    /*** End of static functions ***/
+
+
 
     /* Zero-initialized by default */
     real_t* alloc(int n)
@@ -43,35 +98,6 @@ namespace kernels
         return;
     }
 
-
-    /* Solution points always use a fixed order (i along dir-0 etc) while 
-     * flux-point data is stored relative to the transform direction. Use this
-     * to create fixed-axis pointers to the correct transform-relative indices */
-    inline static void relative_to_fixed_indices(int&  n0, int&  n1, int&  n2,
-                                                 int*& i0, int*& i1, int*& i2,
-                                                 const int dir)
-    {
-        switch(dir)
-        {
-            case 0:
-                i0  = &n0;
-                i1  = &n1;
-                i2  = &n2;
-                break;
-            case 1:
-                i0  = &n2;
-                i1  = &n0;
-                i2  = &n1;
-                break;
-            case 2:
-                i0  = &n1;
-                i1  = &n2;
-                i2  = &n0;
-                break;
-        }
-
-        return;
-    }
 
 
     void soln_to_flux(const real_t* const __restrict__ matrix, 
@@ -232,8 +258,6 @@ namespace kernels
         real_t* Pp      = new real_t [lb.Nfield];
         real_t (*Fp)[3] = new real_t [lb.Nfield][3]; // pointer to an array
 
-        real_t lsum;
-
 
         for (int ne2 = 0; ne2 < lb.Nelem[dir2]; ++ne2)
         for (int ne1 = 0; ne1 < lb.Nelem[dir1]; ++ne1)
@@ -262,14 +286,7 @@ namespace kernels
 
                 /* Transform from physical to reference-space fluxes
                  * for all fields */
-                for (int v = 0; v < lb.Nfield; ++v)
-                {
-                    lsum = 0.0;
-                    for (int j: dirs) 
-                        lsum += S(j,mem) * Fp[v][j];
-
-                    F[mem + v * Nf_tot] = lsum; // Save reference fluxes, ready for diff'ing
-                }
+                fluxes_phys_to_ref(Fp, F, S, mem, lb.Nfield, Nf_tot);
             }
         }
 
@@ -357,19 +374,10 @@ namespace kernels
         int id_elem, id_elem_face;
         int mem_offset, mem_offset_face;
         int mem, mem_face;
-        real_t lsum;
 
         const int Nf0 = lb.Nf[dir];
         const int Ns1 = lb.Ns[dir1];
         const int Nf_tot = lb.Nf_dir_block[dir]; //Total # of this-dir flux points in the block
-
-        /* Start with simple scalar equation... hard-code
-         * in for now */
-        //real_t wave_speed[3] = {0.7, 0.3, 0.0};
-        //real_t U0; // my U
-        //real_t U1; // neighbour's U
-        //real_t F0, F1, lsum;
-        //real_t Fnum[3] = {};
 
         const real_t* __restrict__ UL_data;
         const real_t* __restrict__ UR_data;
@@ -385,11 +393,11 @@ namespace kernels
             UR_data = face.my_data;
         }
 
-
         /* Conserved variables and physical fluxes at one point */
-        real_t* UL      = new real_t [lb.Nfield];
-        real_t* UR      = new real_t [lb.Nfield];
+        real_t* UL = new real_t [lb.Nfield];
+        real_t* UR = new real_t [lb.Nfield];
         real_t (*F_num_phys)[3] = new real_t [lb.Nfield][3]; // pointer to an array
+
         
         for (int ne2 = 0; ne2 < face.Nelem[1]; ++ne2)
         for (int ne1 = 0; ne1 < face.Nelem[0]; ++ne1)
@@ -404,22 +412,6 @@ namespace kernels
             for (int n1 = 0; n1 < face.N[0]; ++n1)
             {
                 mem_face = mem_offset_face +  n2 * Ns1 + n1;
-                //U0 = face.my_data[mem_face];
-                //U1 = face.neighbour_data[mem_face];
-
-                /* Only need to worry about flux in the normal direction,
-                 * until the elements become curved */
-                //F0 = wave_speed[dir] * U0;
-                //F1 = wave_speed[dir] * U1;
-
-                /* Upwind */
-                //if (face.orientation * wave_speed[dir] >= 0)
-                //    Fnum[dir] = F0;
-                //else
-                //    Fnum[dir] = F1;
-
-                /* Central */
-                //Fnum[dir] = 0.5 * (F0 + F1);
                 
                 for (int v = 0; v < lb.Nfield; ++v)
                 {
@@ -429,20 +421,16 @@ namespace kernels
 
                 (*F_numerical)(UL, UR, F_num_phys, dir);
 
-                /* Transform from physical to reference-space fluxes */
+                /* Transform from physical to reference-space fluxes.
+                 * Required memory location in the full 3D flux array */
                 mem = mem_offset + (n2 * Ns1 + n1) * Nf0 + face.n0;
 
-                for (int v = 0; v < lb.Nfield; ++v)
-                {
-                    lsum = 0.0;
-                    for (int d: dirs) 
-                        lsum += S(d,mem) * F_num_phys[v][d];
-
-                    F[mem + v * Nf_tot] = lsum; // Save reference fluxes
-                }
+                fluxes_phys_to_ref(F_num_phys, F, S, mem, lb.Nfield, Nf_tot);
             }
         }
 
         return;
     }
+
 }
+

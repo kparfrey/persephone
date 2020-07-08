@@ -22,6 +22,9 @@ class WaveSpeedsFromPrimitive
 };
 
 
+/* To speed up the simple straight-element case with no directional mixing, 
+ * could overload operator() with a version taking an extra int dir argument 
+ * for use in XYZ_straight numerical fluxes */
 class FluxesFromPrimitive
 {
     public:
