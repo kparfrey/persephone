@@ -64,9 +64,13 @@ class HLL_straight : public NumericalFlux
             Fnum[i][dir_plus_two[dir]] = 0.0;
             */
             
-            for (int j: dirs)
-                Fnum[i][j] = FL[i][j];
+            //for (int j: dirs)
+            //    Fnum[i][j] = FL[i][j];
                 //Fnum[i][j] = 0.5 * (FL[i][j] + FR[i][j]);
+            
+            Fnum[i][dir] = FL[i][dir];
+            Fnum[i][dir_plus_one[dir]] = 0.0;
+            Fnum[i][dir_plus_two[dir]] = 0.0;
         }
 
 
