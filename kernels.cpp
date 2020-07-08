@@ -2,6 +2,7 @@
 // --- it probably shouldn't need anything except the definition of real_t ?
 #include "kernels.hpp"
 #include "physics_includes.hpp"
+#include "numerical_flux.hpp"
 
 namespace kernels
 {
@@ -346,6 +347,7 @@ namespace kernels
 
     void external_face_numerical_flux(const FaceCommunicator           face,
                                             real_t* const __restrict__ F,
+                                      const NumericalFlux*             F_numerical,
                                       const VectorField                S,
                                       const LengthBucket               lb)
     {
@@ -355,17 +357,39 @@ namespace kernels
         int id_elem, id_elem_face;
         int mem_offset, mem_offset_face;
         int mem, mem_face;
+        real_t lsum;
 
         const int Nf0 = lb.Nf[dir];
         const int Ns1 = lb.Ns[dir1];
+        const int Nf_tot = lb.Nf_dir_block[dir]; //Total # of this-dir flux points in the block
 
         /* Start with simple scalar equation... hard-code
          * in for now */
-        real_t wave_speed[3] = {0.7, 0.3, 0.0};
-        real_t U0; // my U
-        real_t U1; // neighbour's U
-        real_t F0, F1, lsum;
-        real_t Fnum[3] = {};
+        //real_t wave_speed[3] = {0.7, 0.3, 0.0};
+        //real_t U0; // my U
+        //real_t U1; // neighbour's U
+        //real_t F0, F1, lsum;
+        //real_t Fnum[3] = {};
+
+        const real_t* __restrict__ UL_data;
+        const real_t* __restrict__ UR_data;
+
+        if (face.orientation > 0)
+        {
+            UL_data = face.my_data;
+            UR_data = face.neighbour_data;
+        }
+        else
+        {
+            UL_data = face.neighbour_data;
+            UR_data = face.my_data;
+        }
+
+
+        /* Conserved variables and physical fluxes at one point */
+        real_t* UL      = new real_t [lb.Nfield];
+        real_t* UR      = new real_t [lb.Nfield];
+        real_t (*F_num_phys)[3] = new real_t [lb.Nfield][3]; // pointer to an array
         
         for (int ne2 = 0; ne2 < face.Nelem[1]; ++ne2)
         for (int ne1 = 0; ne1 < face.Nelem[0]; ++ne1)
@@ -380,32 +404,42 @@ namespace kernels
             for (int n1 = 0; n1 < face.N[0]; ++n1)
             {
                 mem_face = mem_offset_face +  n2 * Ns1 + n1;
-                U0 = face.my_data[mem_face];
-                U1 = face.neighbour_data[mem_face];
+                //U0 = face.my_data[mem_face];
+                //U1 = face.neighbour_data[mem_face];
 
                 /* Only need to worry about flux in the normal direction,
                  * until the elements become curved */
-                F0 = wave_speed[dir] * U0;
-                F1 = wave_speed[dir] * U1;
+                //F0 = wave_speed[dir] * U0;
+                //F1 = wave_speed[dir] * U1;
 
                 /* Upwind */
-                if (face.orientation * wave_speed[dir] >= 0)
-                    Fnum[dir] = F0;
-                else
-                    Fnum[dir] = F1;
+                //if (face.orientation * wave_speed[dir] >= 0)
+                //    Fnum[dir] = F0;
+                //else
+                //    Fnum[dir] = F1;
 
                 /* Central */
                 //Fnum[dir] = 0.5 * (F0 + F1);
                 
+                for (int v = 0; v < lb.Nfield; ++v)
+                {
+                    UL[v] = UL_data[mem_face + v * face.N_tot];
+                    UR[v] = UR_data[mem_face + v * face.N_tot];
+                }
+
+                (*F_numerical)(UL, UR, F_num_phys, dir);
+
                 /* Transform from physical to reference-space fluxes */
                 mem = mem_offset + (n2 * Ns1 + n1) * Nf0 + face.n0;
 
-                /* Scalar equation */
-                lsum = 0.0;
-                for (int j: dirs) 
-                    lsum += S(j,mem) * Fnum[j];
+                for (int v = 0; v < lb.Nfield; ++v)
+                {
+                    lsum = 0.0;
+                    for (int d: dirs) 
+                        lsum += S(d,mem) * F_num_phys[v][d];
 
-                F[mem] = lsum; // Save reference fluxes
+                    F[mem + v * Nf_tot] = lsum; // Save reference fluxes
+                }
             }
         }
 

@@ -3,6 +3,7 @@
 #include "write_screen.hpp"
 #include "basic_time_integrator.hpp"
 #include "physics_includes.hpp"
+#include "numerical_flux.hpp"
 
 
 /* That part of Process setup which is the same for Cartesian,
@@ -29,7 +30,7 @@ void Params::setup_process_generic(Process &proc)
     {
         case scalar_advection:
             proc.Nfield = 1;
-            proc.U_to_P        = new UtoP_scalar_advection;
+            proc.U_to_P   = new UtoP_scalar_advection;
             proc.c_from_P = new WaveSpeeds_scalar_advection;
             proc.F_from_P = new Fluxes_scalar_advection;
             break;
@@ -39,6 +40,14 @@ void Params::setup_process_generic(Process &proc)
         default:
             write::error("Equation system not recognised.");
     }
+
+    /* Move inside a switch once more flux choices are defined */
+    proc.F_numerical = new HLL_straight;
+
+    proc.F_numerical->Nfield   = proc.Nfield;
+    proc.F_numerical->U_to_P   = proc.U_to_P;   // Convenience pointers
+    proc.F_numerical->c_from_P = proc.c_from_P;
+    proc.F_numerical->F_from_P = proc.F_from_P;
 
     return;
 }

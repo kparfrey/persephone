@@ -65,7 +65,8 @@ void FaceCommunicator::setup(Process& proc, int face_id)
     N[0] = proc.elements.Ns[normal_p1];
     N[1] = proc.elements.Ns[normal_p2];
 
-    N_tot = proc.Nfield * N[0] * N[1] * Nelem[0] * Nelem[1];
+    N_tot     = N[0] * N[1] * Nelem[0] * Nelem[1];
+    N_tot_all = proc.Nfield * N_tot;
 
     external_face = false; // By default
    
@@ -77,12 +78,12 @@ void FaceCommunicator::setup(Process& proc, int face_id)
 
 void FaceCommunicator::allocate()
 {
-    my_data        = kernels::alloc(N_tot);
-    neighbour_data = kernels::alloc(N_tot);
+    my_data        = kernels::alloc(N_tot_all);
+    neighbour_data = kernels::alloc(N_tot_all);
 
 #if USING_ACCEL
-    my_data_host        = new real_t [N_tot];
-    neighbour_data_host = new real_t [N_tot];
+    my_data_host        = new real_t [N_tot_all];
+    neighbour_data_host = new real_t [N_tot_all];
 #else
     /* If not using a GPU etc just point directly
      * to the device data arrays */

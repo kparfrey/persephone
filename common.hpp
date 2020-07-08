@@ -19,10 +19,11 @@
 enum EqnSystem {scalar_advection, scalar_wave};
 enum BasicTimeMethod {rk2_midpoint, rk3_classic};
 
+
 enum Components {covariant, contravariant};
-enum CoordTransDir {phys2ref, ref2phys};
 enum WhoWrites {root_only, all_ranks, one_rank};
 enum Prognosis {destroy, survive};
+//enum CoordTransDir {phys2ref, ref2phys};
 //enum Operation {soln_to_flux, fluxDeriv_to_soln};
 
 constexpr int dirs[3] = {0, 1, 2}; // The three spatial directions
@@ -75,5 +76,9 @@ constexpr int corner_coords[8][3] = {{0, 0, 0},  // 0
 #define pi_2 M_PI_2
 #define pi_4 M_PI_4
 #define one_pi M_1_PI
+
+#define MAX(A,B) ((A) > (B) ? (A) : (B))
+#define MIN(A,B) ((A) < (B) ? (A) : (B))
+#define SIGN(A)  ((A) >  0  ?  1  : -1 )
 
 #endif

@@ -17,7 +17,8 @@ class ConservedToPrimitive
 class WaveSpeedsFromPrimitive
 {
     public:
-    inline virtual void operator()(const real_t* const P, real_t* const c) const = 0;
+    inline virtual void operator()(const real_t* const P, real_t* const c,
+                                   const int dir) const = 0;
 };
 
 

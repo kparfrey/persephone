@@ -4,6 +4,7 @@
 
 class ConservedToPrimitive;
 class FluxesFromPrimitive;
+class NumericalFlux;
 
 namespace kernels
 {
@@ -48,6 +49,7 @@ namespace kernels
 
     void external_face_numerical_flux(const FaceCommunicator           face,
                                             real_t* const __restrict__ F,
+                                      const NumericalFlux*             F_numerical,
                                       const VectorField                S,
                                       const LengthBucket               lb);
 

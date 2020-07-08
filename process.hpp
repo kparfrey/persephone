@@ -11,6 +11,7 @@ class BasicTimeIntegrator;
 class ConservedToPrimitive;
 class WaveSpeedsFromPrimitive;
 class FluxesFromPrimitive;
+class NumericalFlux;
 
 class Process
 {
@@ -54,6 +55,7 @@ class Process
     ConservedToPrimitive*    U_to_P;
     WaveSpeedsFromPrimitive* c_from_P;
     FluxesFromPrimitive*     F_from_P;
+    NumericalFlux*           F_numerical;
 
 
     /* Methods */
