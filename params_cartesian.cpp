@@ -83,7 +83,7 @@ void ParamsCartesian::setup_process(Process &proc)
 
     real_t proc_origin[3]; // Coordinates of corner 0
     for (int i: dirs) 
-        proc_origin[i] = proc_idx[i] * length_per_proc[i];
+        proc_origin[i] = domain_edge[i][0] + proc_idx[i] * length_per_proc[i];
 
     for (int i: icorners)
         for (int j: dirs)

@@ -6,7 +6,7 @@
 static real_t scalar_function(real_t r[3])
 {
     real_t sigma[3] = {0.2, 0.2, 0.2};
-    real_t r0[3]    = {0.5, 0.5, 0.5};
+    real_t r0[3]    = {0.0, 0.0, 0.0};
 
     real_t rf;
     real_t f;
