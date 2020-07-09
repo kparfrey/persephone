@@ -362,11 +362,11 @@ namespace kernels
     }
 
 
-    void external_face_numerical_flux(const FaceCommunicator           face,
-                                            real_t* const __restrict__ F,
-                                      const NumericalFlux*             F_numerical,
-                                      const VectorField                S,
-                                      const LengthBucket               lb)
+    void external_numerical_flux(const FaceCommunicator           face,
+                                       real_t* const __restrict__ F,
+                                 const NumericalFlux*             F_numerical,
+                                 const VectorField                S,
+                                 const LengthBucket               lb)
     {
         const int dir  = face.normal_dir;
         const int dir1 = dir_plus_one[dir]; 
@@ -432,5 +432,72 @@ namespace kernels
         return;
     }
 
-}
 
+    void internal_numerical_flux(const real_t* const __restrict__ Uf,
+                                       real_t* const __restrict__ F,
+                                 const NumericalFlux*             F_numerical,
+                                 const VectorField                S,
+                                 const LengthBucket               lb,
+                                 const int                        dir)
+    {
+        const int Nif = lb.Nelem[dir] - 1; // No. of surfaces of internal faces
+                                           // normal to direction dir
+        const int dir1 = dir_plus_one[dir];
+        const int dir2 = dir_plus_two[dir];
+
+        const int Nf0 = lb.Nf[dir];
+        const int Ns1 = lb.Ns[dir1];
+
+        /* Total # of this-direction flux points in the block */
+        const int Nf_tot = lb.Nf_dir_block[dir]; 
+
+        //int ne0L, ne0R; //Element indices in the normal dir on either side of face
+        int id_elem_L, id_elem_R;
+        int mem_offset_L, mem_offset_R;
+        int mem_L, mem_R;
+
+        /* Conserved variables and physical fluxes at one point */
+        real_t* UL = new real_t [lb.Nfield];
+        real_t* UR = new real_t [lb.Nfield];
+        real_t (*F_num_phys)[3] = new real_t [lb.Nfield][3]; // pointer to an array
+
+
+        for (int ne2 = 0; ne2 < lb.Nelem[dir2]; ++ne2)
+        for (int ne1 = 0; ne1 < lb.Nelem[dir1]; ++ne1)
+        for (int ne0 = 0; ne0 < Nif; ++ne0)
+        {
+            /* For each element, do the face between this one and the one to its
+             * right, ie at greater dir-coord and element index in this direction */
+            id_elem_L = (ne2*lb.Nelem[dir1] + ne1)*lb.Nelem[dir] + ne0;
+            id_elem_R = id_elem_L + 1;
+
+            mem_offset_L = id_elem_L * lb.Nf_dir[dir];
+            mem_offset_R = id_elem_R * lb.Nf_dir[dir];
+        
+            for (int n2 = 0; n2 < lb.Ns[dir2]; ++n2)
+            for (int n1 = 0; n1 < lb.Ns[dir1]; ++n1)
+            {
+                /* Memory locations for the 0th field variable */
+                mem_L = mem_offset_L + (n2 * Ns1 + n1) * Nf0 + Nf0 - 1;
+                mem_R = mem_offset_R + (n2 * Ns1 + n1) * Nf0 + 0;
+
+                for (int v = 0; v < lb.Nfield; ++v)
+                {
+                    UL[v] = Uf[mem_L + v * Nf_tot];
+                    UR[v] = Uf[mem_R + v * Nf_tot];
+                }
+
+                (*F_numerical)(UL, UR, F_num_phys, dir);
+
+                /* Calculate reference-space flux and save into the left element */
+                fluxes_phys_to_ref(F_num_phys, F, S, mem_L, lb.Nfield, Nf_tot);
+
+                /* Copy into the right element */
+                for (int v = 0; v < lb.Nfield; ++v)
+                    F[mem_R + v * Nf_tot] = F[mem_L + v * Nf_tot];
+            }
+        }
+
+        return;
+    }
+}

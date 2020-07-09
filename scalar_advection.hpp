@@ -4,7 +4,7 @@
 #include "physics_functors.hpp"
 
 
-static real_t wave_speed_scalar_advection[3] = {0.7, 0.3, 0.0};
+static real_t wave_speed_scalar_advection[3] = {-0.7, -0.3, 0.0};
 
 
 class UtoP_scalar_advection : public ConservedToPrimitive

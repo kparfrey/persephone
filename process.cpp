@@ -92,10 +92,14 @@ void Process::find_RHS(real_t* U, real_t t, real_t* result)
     for (int i: ifaces)
     {
         int dir = faces[i].normal_dir;
-        kernels::external_face_numerical_flux(faces[i], F(dir), F_numerical,
-                                              eb.metric.S[dir], eb.lengths);
+        kernels::external_numerical_flux(faces[i], F(dir), F_numerical,
+                                         eb.metric.S[dir], eb.lengths);
     }
     
+    for (int i: dirs)
+        kernels::internal_numerical_flux(Uf(i), F(i), F_numerical,
+                                         eb.metric.S[i], eb.lengths, i);
+
     for (int i: dirs)
         kernels::fluxDeriv_to_soln(eb.fluxDeriv2soln(i), F(i), dF(i), eb.lengths, i);
 

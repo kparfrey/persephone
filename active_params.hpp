@@ -14,8 +14,8 @@ static EqnSystem equations = scalar_advection;
 static BasicTimeMethod time_method = rk2_midpoint;
 
 static int Nproc[3] = {2,2,1};
-static int Nelem[3] = {1,1,1};
-static int Ns[3]    = {32,16,1};
+static int Nelem[3] = {4,5,3};
+static int Ns[3]    = {12,10,8};
 
 static real_t edges[3][2] = {{0.0,2.0}, {0.0,1.0}, {0.0, 1.0}};
 

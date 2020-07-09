@@ -47,10 +47,16 @@ namespace kernels
                               FaceCommunicator           face,
                         const LengthBucket               lb);
 
-    void external_face_numerical_flux(const FaceCommunicator           face,
-                                            real_t* const __restrict__ F,
-                                      const NumericalFlux*             F_numerical,
-                                      const VectorField                S,
-                                      const LengthBucket               lb);
+    void external_numerical_flux(const FaceCommunicator           face,
+                                       real_t* const __restrict__ F,
+                                 const NumericalFlux*             F_numerical,
+                                 const VectorField                S,
+                                 const LengthBucket               lb);
 
+    void internal_numerical_flux(const real_t* const __restrict__ Uf,
+                                       real_t* const __restrict__ F,
+                                 const NumericalFlux*             F_numerical,
+                                 const VectorField                S,
+                                 const LengthBucket               lb,
+                                 const int                        dir);    
 }
