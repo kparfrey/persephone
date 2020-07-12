@@ -26,7 +26,7 @@ class ElementBlock
     int Nf_dir[3];  // No. of i-direction flux points, in each element
     int Nelem_block;// No. of elements in the block
     int Ns_block;   // No. of soln points in the block
-    int Nf_dir_block[3];
+    int Nf_dir_block[3]; // No. of flux points, of each direction, in the block
     int Nfield;
 
     LengthBucket lengths; // To encapsulate all lengths needed for data indexing

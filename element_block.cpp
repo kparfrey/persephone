@@ -36,6 +36,7 @@ void ElementBlock::setup()
     /* Setup LengthBucket... */
     lengths.Nfield  = Nfield;
     lengths.Ns_elem = Ns_elem;
+    lengths.Ns_block = Ns_block;
     for (int i: dirs)
     {
         lengths.Nelem[i]  = Nelem[i];

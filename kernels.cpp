@@ -45,13 +45,13 @@ namespace kernels
     {
         real_t lsum;
 
-        for (int field_id = 0; field_id < Nfield; ++field_id)
+        for (int field = 0; field < Nfield; ++field)
         {
             lsum = 0.0;
             for (int d: dirs) 
-                lsum += S(d,memory_loc) * Fphys[field_id][d];
+                lsum += S(d,memory_loc) * Fphys[field][d];
 
-            F[memory_loc + field_id * Nf_tot] = lsum; // Save reference fluxes
+            F[memory_loc + field * Nf_tot] = lsum; // Save reference fluxes
         }
 
         return;
@@ -108,6 +108,7 @@ namespace kernels
         int id_elem_s, id_elem_f;
         int mem_f, mem_offset_f;
         int mem_s, mem_offset_s;
+        int field_offset_f, field_offset_s;
         int mem_matrix;
         real_t lsum;
 
@@ -136,33 +137,39 @@ namespace kernels
         relative_to_fixed_indices(n0_s, n1, n2,  i,  j,  k,  dir);
         relative_to_fixed_indices(ne0, ne1, ne2, ie, je, ke, dir);
 
-        for(ne2 = 0; ne2 < lb.Nelem[dir2]; ++ne2)
-        for(ne1 = 0; ne1 < lb.Nelem[dir1]; ++ne1)
-        for(ne0 = 0; ne0 < lb.Nelem[dir];  ++ne0)
+        for(int field = 0; field < lb.Nfield; ++field)
         {
-            id_elem_s    = ((*ie)*lb.Nelem[1] + *je)*lb.Nelem[2] + *ke;
-            mem_offset_s = id_elem_s * lb.Ns_elem;
+            field_offset_s = field * lb.Ns_block;
+            field_offset_f = field * lb.Nf_dir_block[dir];
 
-            id_elem_f    = (ne2*lb.Nelem[dir1] + ne1)*lb.Nelem[dir] + ne0;
-            mem_offset_f = id_elem_f * lb.Nf_dir[dir];
-
-            /* Do this main loop using transform-direction-relative indices, since
-             * the flux-point and transform-matrix arrays use these. Need something
-             * like the i,j,k pointers for the fixed solution-point indices */
-            for (n2   = 0; n2   < lb.Ns[dir2]; ++n2)
-            for (n1   = 0; n1   < lb.Ns[dir1]; ++n1)
-            for (n0_f = 0; n0_f < lb.Nf[dir];  ++n0_f)
+            for(ne2 = 0; ne2 < lb.Nelem[dir2]; ++ne2)
+            for(ne1 = 0; ne1 < lb.Nelem[dir1]; ++ne1)
+            for(ne0 = 0; ne0 < lb.Nelem[dir];  ++ne0)
             {
-                lsum = 0.0;
-                for (n0_s = 0; n0_s < lb.Ns[dir]; ++n0_s)
-                {
-                    mem_s      = mem_offset_s + (*k * lb.Ns[1]  + *j) * lb.Ns[0] + *i;
-                    mem_matrix = n0_f * Ns0 + n0_s; 
-                    lsum      += matrix[mem_matrix] * U[mem_s];
-                }
+                id_elem_s    = ((*ie)*lb.Nelem[1] + *je)*lb.Nelem[2] + *ke;
+                mem_offset_s = field_offset_s + id_elem_s * lb.Ns_elem;
 
-                mem_f = mem_offset_f + (n2 * Ns1 + n1) * Nf0 + n0_f;
-                Uf[mem_f] = lsum;
+                id_elem_f    = (ne2*lb.Nelem[dir1] + ne1)*lb.Nelem[dir] + ne0;
+                mem_offset_f = field_offset_f + id_elem_f * lb.Nf_dir[dir];
+
+                /* Do this main loop using transform-direction-relative indices, since
+                 * the flux-point and transform-matrix arrays use these. Need something
+                 * like the i,j,k pointers for the fixed solution-point indices */
+                for (n2   = 0; n2   < lb.Ns[dir2]; ++n2)
+                for (n1   = 0; n1   < lb.Ns[dir1]; ++n1)
+                for (n0_f = 0; n0_f < lb.Nf[dir];  ++n0_f)
+                {
+                    lsum = 0.0;
+                    for (n0_s = 0; n0_s < lb.Ns[dir]; ++n0_s)
+                    {
+                        mem_s      = mem_offset_s + (*k * lb.Ns[1]  + *j) * lb.Ns[0] + *i;
+                        mem_matrix = n0_f * Ns0 + n0_s; 
+                        lsum      += matrix[mem_matrix] * U[mem_s];
+                    }
+
+                    mem_f = mem_offset_f + (n2 * Ns1 + n1) * Nf0 + n0_f;
+                    Uf[mem_f] = lsum;
+                }
             }
         }
 
@@ -178,6 +185,7 @@ namespace kernels
         int id_elem_s, id_elem_f;
         int mem_f, mem_offset_f;
         int mem_s, mem_offset_s;
+        int field_offset_f, field_offset_s;
         int mem_matrix;
         real_t lsum;
 
@@ -201,33 +209,39 @@ namespace kernels
         relative_to_fixed_indices(n0_s, n1, n2,  i,  j,  k,  dir);
         relative_to_fixed_indices(ne0, ne1, ne2, ie, je, ke, dir);
 
-        for(ne2 = 0; ne2 < lb.Nelem[dir2]; ++ne2)
-        for(ne1 = 0; ne1 < lb.Nelem[dir1]; ++ne1)
-        for(ne0 = 0; ne0 < lb.Nelem[dir];  ++ne0)
+        for(int field = 0; field < lb.Nfield; ++field)
         {
-            id_elem_s    = ((*ie)*lb.Nelem[1] + *je)*lb.Nelem[2] + *ke;
-            mem_offset_s = id_elem_s * lb.Ns_elem;
+            field_offset_s = field * lb.Ns_block;
+            field_offset_f = field * lb.Nf_dir_block[dir];
 
-            id_elem_f    = (ne2*lb.Nelem[dir1] + ne1)*lb.Nelem[dir] + ne0;
-            mem_offset_f = id_elem_f * lb.Nf_dir[dir];
-
-            /* Do this main loop using transform-direction-relative indices, since
-             * the flux-point and transform-matrix arrays use these. Need something
-             * like the i,j,k pointers for the fixed solution-point indices */
-            for (n2   = 0; n2   < lb.Ns[dir2]; ++n2)
-            for (n1   = 0; n1   < lb.Ns[dir1]; ++n1)
-            for (n0_s = 0; n0_s < lb.Ns[dir];  ++n0_s)
+            for(ne2 = 0; ne2 < lb.Nelem[dir2]; ++ne2)
+            for(ne1 = 0; ne1 < lb.Nelem[dir1]; ++ne1)
+            for(ne0 = 0; ne0 < lb.Nelem[dir];  ++ne0)
             {
-                lsum = 0.0;
-                for (n0_f = 0; n0_f < lb.Nf[dir]; ++n0_f)
-                {
-                    mem_f      = mem_offset_f + (n2 * Ns1 + n1) * Nf0 + n0_f;
-                    mem_matrix = n0_s * Nf0 + n0_f; 
-                    lsum      += matrix[mem_matrix] * F[mem_f];
-                }
+                id_elem_s    = ((*ie)*lb.Nelem[1] + *je)*lb.Nelem[2] + *ke;
+                mem_offset_s = field_offset_s + id_elem_s * lb.Ns_elem;
 
-                mem_s = mem_offset_s + (*k * lb.Ns[1]  + *j) * lb.Ns[0] + *i;
-                dF[mem_s] = lsum; 
+                id_elem_f    = (ne2*lb.Nelem[dir1] + ne1)*lb.Nelem[dir] + ne0;
+                mem_offset_f = field_offset_f + id_elem_f * lb.Nf_dir[dir];
+
+                /* Do this main loop using transform-direction-relative indices, since
+                 * the flux-point and transform-matrix arrays use these. Need something
+                 * like the i,j,k pointers for the fixed solution-point indices */
+                for (n2   = 0; n2   < lb.Ns[dir2]; ++n2)
+                for (n1   = 0; n1   < lb.Ns[dir1]; ++n1)
+                for (n0_s = 0; n0_s < lb.Ns[dir];  ++n0_s)
+                {
+                    lsum = 0.0;
+                    for (n0_f = 0; n0_f < lb.Nf[dir]; ++n0_f)
+                    {
+                        mem_f      = mem_offset_f + (n2 * Ns1 + n1) * Nf0 + n0_f;
+                        mem_matrix = n0_s * Nf0 + n0_f; 
+                        lsum      += matrix[mem_matrix] * F[mem_f];
+                    }
+
+                    mem_s = mem_offset_s + (*k * lb.Ns[1]  + *j) * lb.Ns[0] + *i;
+                    dF[mem_s] = lsum; 
+                }
             }
         }
 
@@ -275,8 +289,8 @@ namespace kernels
 
                 /* Load all field variables at this location into
                  * the Up array. */
-                for (int v = 0; v < lb.Nfield; ++v)
-                    Up[v] = Uf[mem + v * Nf_tot];
+                for (int field = 0; field < lb.Nfield; ++field)
+                    Up[field] = Uf[mem + field * Nf_tot];
 
                 (*U_to_P)(Up, Pp); // conserved -> primitive variables
 
@@ -301,21 +315,28 @@ namespace kernels
     {
         int id_elem;
         int mem_offset;
+        int field_offset;
         int mem;
 
-        for (int ie = 0; ie < lb.Nelem[0]; ++ie)
-        for (int je = 0; je < lb.Nelem[1]; ++je)
-        for (int ke = 0; ke < lb.Nelem[2]; ++ke)
+        for(int field = 0; field < lb.Nfield; ++field)
         {
-            id_elem = (ie*lb.Nelem[1] + je)*lb.Nelem[2] + ke;
-            mem_offset = id_elem * lb.Ns_elem;
-            for (int k = 0; k < lb.Ns[2]; ++k)
-            for (int j = 0; j < lb.Ns[1]; ++j)
-            for (int i = 0; i < lb.Ns[0]; ++i)
-            {
-                mem = mem_offset + (k * lb.Ns[1]  + j) * lb.Ns[0] + i;
+            field_offset = field * lb.Ns_block;
 
-                divF[mem] = - (dF(0,mem) + dF(1,mem) + dF(2,mem)) / Jrdetg[mem];
+            for (int ie = 0; ie < lb.Nelem[0]; ++ie)
+            for (int je = 0; je < lb.Nelem[1]; ++je)
+            for (int ke = 0; ke < lb.Nelem[2]; ++ke)
+            {
+                id_elem = (ie*lb.Nelem[1] + je)*lb.Nelem[2] + ke;
+                mem_offset = field_offset + id_elem * lb.Ns_elem;
+
+                for (int k = 0; k < lb.Ns[2]; ++k)
+                for (int j = 0; j < lb.Ns[1]; ++j)
+                for (int i = 0; i < lb.Ns[0]; ++i)
+                {
+                    mem = mem_offset + (k * lb.Ns[1]  + j) * lb.Ns[0] + i;
+
+                    divF[mem] = - (dF(0,mem) + dF(1,mem) + dF(2,mem)) / Jrdetg[mem];
+                }
             }
         }
 
@@ -332,29 +353,37 @@ namespace kernels
         const int dir2 = dir_plus_two[dir];
         int id_elem, id_elem_face;
         int mem_offset, mem_offset_face;
+        int field_offset, field_offset_face;
         int mem, mem_face;
 
         const int Nf0 = lb.Nf[dir];
         const int Ns1 = lb.Ns[dir1];
 
         
-        for (int ne2 = 0; ne2 < face.Nelem[1]; ++ne2)
-        for (int ne1 = 0; ne1 < face.Nelem[0]; ++ne1)
+        for(int field = 0; field < lb.Nfield; ++field)
         {
-            id_elem    = (ne2*lb.Nelem[dir1] + ne1)*lb.Nelem[dir] + face.ne0;
-            mem_offset = id_elem * lb.Nf_dir[dir];
+            field_offset      = field * lb.Nf_dir_block[dir];
+            field_offset_face = field * face.N_tot;
 
-            id_elem_face    = (ne2 * lb.Nelem[dir1]) + ne1;
-            mem_offset_face = id_elem_face * lb.Ns[dir2] * lb.Ns[dir1];
-
-            /* Iterate over flux points on the relevant face
-             * of each element. */
-            for (int n2 = 0; n2 < face.N[1]; ++n2)
-            for (int n1 = 0; n1 < face.N[0]; ++n1)
+            for (int ne2 = 0; ne2 < face.Nelem[1]; ++ne2)
+            for (int ne1 = 0; ne1 < face.Nelem[0]; ++ne1)
             {
-                mem      = mem_offset      + (n2 * Ns1 + n1) * Nf0 + face.n0;
-                mem_face = mem_offset_face +  n2 * Ns1 + n1;
-                face.my_data[mem_face] = Uf[mem];
+                id_elem    = (ne2*lb.Nelem[dir1] + ne1)*lb.Nelem[dir] + face.ne0;
+                mem_offset = field_offset + id_elem * lb.Nf_dir[dir];
+
+                id_elem_face    = (ne2 * lb.Nelem[dir1]) + ne1;
+                mem_offset_face = field_offset_face 
+                                      + id_elem_face * lb.Ns[dir2] * lb.Ns[dir1];
+
+                /* Iterate over flux points on the relevant face
+                 * of each element. */
+                for (int n2 = 0; n2 < face.N[1]; ++n2)
+                for (int n1 = 0; n1 < face.N[0]; ++n1)
+                {
+                    mem      = mem_offset      + (n2 * Ns1 + n1) * Nf0 + face.n0;
+                    mem_face = mem_offset_face +  n2 * Ns1 + n1;
+                    face.my_data[mem_face] = Uf[mem];
+                }
             }
         }
         
@@ -411,12 +440,13 @@ namespace kernels
             for (int n2 = 0; n2 < face.N[1]; ++n2)
             for (int n1 = 0; n1 < face.N[0]; ++n1)
             {
+                /* Memory location for the zeroth field */
                 mem_face = mem_offset_face +  n2 * Ns1 + n1;
                 
-                for (int v = 0; v < lb.Nfield; ++v)
+                for (int field = 0; field < lb.Nfield; ++field)
                 {
-                    UL[v] = UL_data[mem_face + v * face.N_tot];
-                    UR[v] = UR_data[mem_face + v * face.N_tot];
+                    UL[field] = UL_data[mem_face + field * face.N_tot];
+                    UR[field] = UR_data[mem_face + field * face.N_tot];
                 }
 
                 (*F_numerical)(UL, UR, F_num_phys, dir);
@@ -481,10 +511,10 @@ namespace kernels
                 mem_L = mem_offset_L + (n2 * Ns1 + n1) * Nf0 + Nf0 - 1;
                 mem_R = mem_offset_R + (n2 * Ns1 + n1) * Nf0 + 0;
 
-                for (int v = 0; v < lb.Nfield; ++v)
+                for (int field = 0; field < lb.Nfield; ++field)
                 {
-                    UL[v] = Uf[mem_L + v * Nf_tot];
-                    UR[v] = Uf[mem_R + v * Nf_tot];
+                    UL[field] = Uf[mem_L + field * Nf_tot];
+                    UR[field] = Uf[mem_R + field * Nf_tot];
                 }
 
                 (*F_numerical)(UL, UR, F_num_phys, dir);
@@ -493,8 +523,8 @@ namespace kernels
                 fluxes_phys_to_ref(F_num_phys, F, S, mem_L, lb.Nfield, Nf_tot);
 
                 /* Copy into the right element */
-                for (int v = 0; v < lb.Nfield; ++v)
-                    F[mem_R + v * Nf_tot] = F[mem_L + v * Nf_tot];
+                for (int field = 0; field < lb.Nfield; ++field)
+                    F[mem_R + field * Nf_tot] = F[mem_L + field * Nf_tot];
             }
         }
 

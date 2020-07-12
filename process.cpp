@@ -76,7 +76,6 @@ void Process::find_RHS(real_t* U, real_t t, real_t* result)
         dF(i) = kernels::alloc_raw(Nfield * eb.Ns_block);
     }
     
-    /*  Simple: assume Nfield = 1 etc */
     for (int i: dirs)
         kernels::soln_to_flux(eb.soln2flux(i), U, Uf(i), eb.lengths, i);
 
