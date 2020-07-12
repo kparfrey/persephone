@@ -3,5 +3,6 @@
 
 #include "physics_functors.hpp"
 #include "scalar_advection.hpp"
+#include "euler.hpp"
 
 #endif

@@ -34,8 +34,11 @@ void Params::setup_process_generic(Process &proc)
             proc.c_from_P = new WaveSpeeds_scalar_advection;
             proc.F_from_P = new Fluxes_scalar_advection;
             break;
-        case scalar_wave:
-            proc.Nfield = 1;
+        case euler:
+            proc.Nfield = 5;
+            proc.U_to_P   = new UtoP_euler;
+            proc.c_from_P = new WaveSpeeds_euler;
+            proc.F_from_P = new Fluxes_euler;
             break;
         default:
             write::error("Equation system not recognised.");

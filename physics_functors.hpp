@@ -10,14 +10,20 @@
 class ConservedToPrimitive
 {
     public:
-    inline virtual void operator()(const real_t* const U, real_t* const P) const = 0;
+    ACCEL_DECORATOR
+    inline virtual void operator()(const real_t* const __restrict__ U, 
+                                         real_t* const __restrict__ P) const = 0;
 };
 
 
+/* Returns the signed fastest wave speeds in this direction, moving 
+ * in the positive direction (c[0]) and negative direction (c[1]) */
 class WaveSpeedsFromPrimitive
 {
     public:
-    inline virtual void operator()(const real_t* const P, real_t* const c,
+    ACCEL_DECORATOR
+    inline virtual void operator()(const real_t* const __restrict__ P, 
+                                         real_t* const __restrict__ c,
                                    const int dir) const = 0;
 };
 
@@ -28,6 +34,8 @@ class WaveSpeedsFromPrimitive
 class FluxesFromPrimitive
 {
     public:
-    inline virtual void operator()(const real_t* const P, real_t (*F)[3]) const = 0;
+    ACCEL_DECORATOR
+    inline virtual void operator()(const real_t* const __restrict__ P, 
+                                         real_t (*__restrict__ F)[3]) const = 0;
 };
 #endif
