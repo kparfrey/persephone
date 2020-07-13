@@ -75,9 +75,7 @@ class ElementBlock
 /* The i,j,k index solution points within an element */
 inline int ElementBlock::ids(int i, int j, int k)
 {
-    //return Ns[0]*Ns[1]*Ns[2]*var + (i*Ns[1] + j)*Ns[2] + k;
-    //return (i*Ns[1] + j)*Ns[2] + k;
-    return (k*Ns[1] + j)*Ns[0] + i; // Changed order: June 23
+    return (k*Ns[1] + j)*Ns[0] + i; 
 }
 
 
@@ -92,19 +90,14 @@ inline int ElementBlock::idf(int n0, int n1, int n2, int dir)
 }
 
 
-/* Turn 3D indices of elements in the block into a 1D index */
+/* Turn 3D indices of elements in the block into a 1D index.
+ * Only used for data at solution points --- flux-point data
+ * is ordered using transform-direction-relative indices. */
 inline int ElementBlock::id_elem(int i, int j, int k)
 {
     return (k*Nelem[1] + j)*Nelem[0] + i;
 }
 
-
-/*
-inline int ElementBlock::mem_id_elem(int i, int j, int k)
-{
-    return ElementBlock::id_elem(i,j,k) * Ns_elem;
-}
-*/
 
 inline int ElementBlock::ids_full(int i, int j, int k, int ie, int je, int ke)
 {

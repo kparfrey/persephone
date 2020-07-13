@@ -17,7 +17,7 @@ static int Nproc[3] = {2,2,1};
 static int Nelem[3] = {4,4,1};
 static int Ns[3]    = {16,16,1};
 
-static real_t edges[3][2] = {{-5.,5.}, {-5.,5.}, {-0.1, 0.1}};
+static real_t edges[3][2] = {{-5.,5.}, {-3.,3.}, {-0.1, 0.1}};
 
 static real_t cfl      = 0.8;
 static real_t end_time = 2.0;

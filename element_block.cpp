@@ -139,17 +139,19 @@ void ElementBlock::set_physical_coords()
     for (int i: dirs)
         dr_elem[i] = dr_elemblock[i] / Nelem[i];
 
-    for (int ie = 0; ie < Nelem[0]; ++ie)
-    for (int je = 0; je < Nelem[1]; ++je)
+
+    /* Solution points */
     for (int ke = 0; ke < Nelem[2]; ++ke)
+    for (int je = 0; je < Nelem[1]; ++je)
+    for (int ie = 0; ie < Nelem[0]; ++ie)
     {
         elem_origin[0] = corners[0][0] + ie*dr_elem[0]; 
         elem_origin[1] = corners[0][1] + je*dr_elem[1]; 
         elem_origin[2] = corners[0][2] + ke*dr_elem[2]; 
-        elem_idx_1D = id_elem(ie, je, ke);
 
-        /* Solution points */
+        elem_idx_1D = id_elem(ie, je, ke);
         mem_offset = elem_idx_1D * Ns_elem;
+
         for (int k = 0; k < Ns[2]; ++k)
         for (int j = 0; j < Ns[1]; ++j)
         for (int i = 0; i < Ns[0]; ++i)
@@ -159,17 +161,29 @@ void ElementBlock::set_physical_coords()
             rs(1,mem_loc) = elem_origin[1] + xs(1,j) * dr_elem[1];
             rs(2,mem_loc) = elem_origin[2] + xs(2,k) * dr_elem[2];
         }
+    }
 
-        /* Flux points in each direction 
-         * Use transform-direction-relative indices -- d is the transform
-         * direction, d1 and d2 are the indices cyclically one and two
-         * slots above. */
-        for (int d: dirs)
+    
+    /* Flux points in each direction 
+     * Use transform-direction-relative indices -- d is the transform
+     * direction, d1 and d2 are the indices cyclically one and two
+     * slots above. 
+     * These arrays aren't actually used (yet?) --- Lagrange polynomials
+     * etc. are calculated using the reference-space x arrays. Possibly
+     * should remove / comment-out these if won't have explicit spatial
+     * dependence in the flux calculation. */
+    for (int d: dirs)
+    {
+        int d1 = dir_plus_one[d];
+        int d2 = dir_plus_two[d];
+        
+        for (int ne2 = 0; ne2 < Nelem[d2]; ++ne2)
+        for (int ne1 = 0; ne1 < Nelem[d1]; ++ne1)
+        for (int ne0 = 0; ne0 < Nelem[d];  ++ne0)
         {
-            int d1 = dir_plus_one[d];
-            int d2 = dir_plus_two[d];
-            
-            mem_offset = elem_idx_1D * Nf_dir[d];
+            elem_idx_1D = (ne2*Nelem[d1] + ne1)*Nelem[d] + ne0;
+            mem_offset  = elem_idx_1D * Nf_dir[d];
+
             for (int k = 0; k < Ns[d2]; ++k)
             for (int j = 0; j < Ns[d1]; ++j)
             for (int i = 0; i < Nf[d];  ++i)
@@ -181,6 +195,7 @@ void ElementBlock::set_physical_coords()
             }
         }
     }
+    
 
     return;
 }
