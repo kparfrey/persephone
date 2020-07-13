@@ -62,7 +62,7 @@ class Process
     Process(Params &params);
     void write_startup_info();
     void time_advance();
-    void find_RHS(real_t* U, real_t t, real_t* result);
+    void find_divF(const real_t* const U, const real_t t, real_t* const divF);
     void move_to_device();
     void exchange_boundary_data();
 };

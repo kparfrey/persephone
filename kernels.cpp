@@ -336,7 +336,7 @@ namespace kernels
                     mem  = mem_offset + (k * lb.Ns[1]  + j) * lb.Ns[0] + i;
                     mem0 = mem - field_offset; // Jrdetg has only one field's worth
 
-                    divF[mem] = - (dF(0,mem) + dF(1,mem) + dF(2,mem)) / Jrdetg[mem0];
+                    divF[mem] = (dF(0,mem) + dF(1,mem) + dF(2,mem)) / Jrdetg[mem0];
                 }
             }
         }

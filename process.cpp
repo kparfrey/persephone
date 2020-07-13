@@ -58,7 +58,7 @@ void Process::time_advance()
 /* The fundamental function of the spectral difference method */
 /* U : vector of conserved solution fields (physical space) 
  * F : vector of fluxes (reference-element space) */
-void Process::find_RHS(real_t* U, real_t t, real_t* result)
+void Process::find_divF(const real_t* const U, const real_t t, real_t* const divF)
 {
     ElementBlock& eb = elements;
 
@@ -102,7 +102,7 @@ void Process::find_RHS(real_t* U, real_t t, real_t* result)
     for (int i: dirs)
         kernels::fluxDeriv_to_soln(eb.fluxDeriv2soln(i), F(i), dF(i), eb.lengths, i);
 
-    kernels::flux_divergence(dF, eb.metric.Jrdetg(), result, eb.lengths);
+    kernels::flux_divergence(dF, eb.metric.Jrdetg(), divF, eb.lengths);
 
     for (int i: dirs)
     {
