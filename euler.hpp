@@ -22,6 +22,10 @@
 constexpr real_t gamma_euler = 5.0/3.0;
 constexpr real_t gm1_euler = gamma_euler - 1.0;
 
+/* Need a better system for these --- will 
+ * pollute too many files since this will be included
+ * in several places */
+/*
 constexpr static int density    = 0;
 constexpr static int tot_energy = 1;
 constexpr static int pressure   = 1;
@@ -31,11 +35,16 @@ constexpr static int v2   = 4;
 constexpr static int mom0 = 2;
 constexpr static int mom1 = 3;
 constexpr static int mom2 = 4;
+*/
+
 
 
 class UtoP_euler : public ConservedToPrimitive
 {
     public:
+    enum conserved {Density, mom0, mom1, mom2, tot_energy};
+    enum primitive {density, v0  , v1  , v2,   pressure  };
+
     ACCEL_DECORATOR
     inline virtual void operator()(const real_t* const __restrict__ U, 
                                          real_t* const __restrict__ P) const
@@ -59,6 +68,8 @@ class UtoP_euler : public ConservedToPrimitive
 class WaveSpeeds_euler : public WaveSpeedsFromPrimitive
 {
     public:
+    enum primitive {density, v0, v1, v2, pressure};
+
     ACCEL_DECORATOR
     inline virtual void operator()(const real_t* const __restrict__ P, 
                                          real_t* const __restrict__ c,
@@ -66,8 +77,8 @@ class WaveSpeeds_euler : public WaveSpeedsFromPrimitive
     {
         const real_t sound_speed = std::sqrt(gamma_euler * P[pressure] / P[density]);
 
-        c[0] = MAX(0.0, P[dir+v0] + sound_speed);
-        c[1] = MIN(0.0, P[dir+v0] - sound_speed);
+        c[0] = MAX(0.0, P[v0+dir] + sound_speed);
+        c[1] = MIN(0.0, P[v0+dir] - sound_speed);
 
         return;
     }
@@ -77,6 +88,9 @@ class WaveSpeeds_euler : public WaveSpeedsFromPrimitive
 class Fluxes_euler : public FluxesFromPrimitive
 {
     public:
+    enum conserved {Density, mom0, mom1, mom2, tot_energy};
+    enum primitive {density, v0  , v1  , v2,   pressure  };
+
     ACCEL_DECORATOR
     inline virtual void operator()(const real_t* const __restrict__ P, 
                                          real_t (*__restrict__ F)[3]) const

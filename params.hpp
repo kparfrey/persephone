@@ -37,7 +37,7 @@ class Params
     virtual void secondary_params() = 0;
     virtual void setup_process(Process &proc) = 0;
     virtual void setup_elementblock(ElementBlock &elements, Process &proc) = 0;
-    virtual void set_initial_state(ElementBlock &elements) = 0;
+    virtual void set_initial_state(ElementBlock &elements, EqnSystem equations) = 0;
 
     void setup_process_generic(Process& proc);
 };

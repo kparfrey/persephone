@@ -2,6 +2,7 @@
 
 #include "process.hpp"
 #include "kernels.hpp"
+#include "write_screen.hpp"
 
 void FaceCommunicator::setup(Process& proc, int face_id)
 {
@@ -102,7 +103,7 @@ MPI_Request FaceCommunicator::send_data()
     MPI_Request request;
     int send_tag = my_id;
 
-    MPI_Isend(my_data_host, N_tot, MPI_real_t, neighbour_rank, send_tag, 
+    MPI_Isend(my_data_host, N_tot_all, MPI_real_t, neighbour_rank, send_tag, 
                                                MPI_COMM_WORLD, &request);
 
     return request;
@@ -117,7 +118,7 @@ MPI_Request FaceCommunicator::receive_data()
     MPI_Request request;
     int recv_tag = neighbour_id;
     
-    MPI_Irecv(neighbour_data_host, N_tot, MPI_real_t, neighbour_rank,
+    MPI_Irecv(neighbour_data_host, N_tot_all, MPI_real_t, neighbour_rank,
                                   recv_tag, MPI_COMM_WORLD, &request);
 
     return request;

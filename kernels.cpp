@@ -316,7 +316,7 @@ namespace kernels
         int id_elem;
         int mem_offset;
         int field_offset;
-        int mem;
+        int mem, mem0;
 
         for(int field = 0; field < lb.Nfield; ++field)
         {
@@ -333,9 +333,10 @@ namespace kernels
                 for (int j = 0; j < lb.Ns[1]; ++j)
                 for (int i = 0; i < lb.Ns[0]; ++i)
                 {
-                    mem = mem_offset + (k * lb.Ns[1]  + j) * lb.Ns[0] + i;
+                    mem  = mem_offset + (k * lb.Ns[1]  + j) * lb.Ns[0] + i;
+                    mem0 = mem - field_offset; // Jrdetg has only one field's worth
 
-                    divF[mem] = - (dF(0,mem) + dF(1,mem) + dF(2,mem)) / Jrdetg[mem];
+                    divF[mem] = - (dF(0,mem) + dF(1,mem) + dF(2,mem)) / Jrdetg[mem0];
                 }
             }
         }

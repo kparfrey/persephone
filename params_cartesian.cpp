@@ -92,7 +92,7 @@ void ParamsCartesian::setup_process(Process &proc)
 
     setup_elementblock(proc.elements, proc);
     
-    set_initial_state(proc.elements);
+    set_initial_state(proc.elements, equations);
 
     /* Should be made general and moved to a separate member function */
     proc.dt = cfl * set_dt_basic(proc.elements); 
@@ -195,9 +195,18 @@ void ParamsCartesian::setup_elementblock(ElementBlock &elements, Process &proc)
 }
 
 
-void ParamsCartesian::set_initial_state(ElementBlock &elements)
+/* Should this be moved to initial_state_cartesian? */
+void ParamsCartesian::set_initial_state(ElementBlock &elements, EqnSystem equations)
 {
-    set_scalar(elements);
+    switch (equations)
+    {
+        case scalar_advection:
+            set_scalar(elements);
+            break;
+        case euler:
+            set_euler(elements);
+            break;
+    }
 
     return;
 }
