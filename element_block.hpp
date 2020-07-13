@@ -95,7 +95,7 @@ inline int ElementBlock::idf(int n0, int n1, int n2, int dir)
 /* Turn 3D indices of elements in the block into a 1D index */
 inline int ElementBlock::id_elem(int i, int j, int k)
 {
-    return (i*Nelem[1] + j)*Nelem[2] + k;
+    return (k*Nelem[1] + j)*Nelem[0] + i;
 }
 
 

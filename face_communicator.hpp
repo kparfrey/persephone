@@ -31,8 +31,8 @@ class FaceCommunicator
     int N[2]; // No. of (solution) points in each dir on the face, in each elem
               // Indices assigned cyclically: N[0] -> normal_dir + 1 cyclic
               //                              N[1] -> normal_dir + 2 cyclic
-    int N_tot; // Total no. of points on face: N[0] * N[1] * Nelem[0] * Nelem[1]
-    int N_tot_all; // Total no. of data values: Nfield * N_tot
+    int Ntot; // Total no. of points on face: N[0] * N[1] * Nelem[0] * Nelem[1]
+    int Ntot_all; // Total no. of data values: Nfield * N_tot
 
     real_t *my_data;
     real_t *neighbour_data;

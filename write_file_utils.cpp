@@ -9,17 +9,20 @@ void repack(real_t* original, real_t* eb_logical, ElementBlock& eb)
     int Nl1 = eb.Ns_tot[1];  // Logical dimensions are the same as Ns_tot[3]
     int Nl2 = eb.Ns_tot[2];
 
-    for (int ie = 0; ie < eb.Nelem[0]; ie++)
-    for (int je = 0; je < eb.Nelem[1]; je++)
     for (int ke = 0; ke < eb.Nelem[2]; ke++)
-    for (int i  = 0; i  < eb.Ns[0];    i++)
-    for (int j  = 0; j  < eb.Ns[1];    j++)
+    for (int je = 0; je < eb.Nelem[1]; je++)
+    for (int ie = 0; ie < eb.Nelem[0]; ie++)
     for (int k  = 0; k  < eb.Ns[2];    k++)
+    for (int j  = 0; j  < eb.Ns[1];    j++)
+    for (int i  = 0; i  < eb.Ns[0];    i++)
     {
         // Assume going from solution points for now...
         il = ie * eb.Ns[0] + i;
         jl = je * eb.Ns[1] + j;
         kl = ke * eb.Ns[2] + k;
+
+        /* When converted to 3D array, will be indexable as array[dir0][dir1][dir2]
+         * Swap the i and k below (+ Nl2->Nl0) if prefer array[dir2][dir1][dir0] */
         eb_logical[(il*Nl1 + jl)*Nl2 + kl] = original[eb.ids_full(i,j,k,ie,je,ke)];
     }
 

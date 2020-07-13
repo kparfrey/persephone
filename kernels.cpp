@@ -113,7 +113,7 @@ namespace kernels
         real_t lsum;
 
         int n0_s, n0_f, n1, n2; // cyclic indices -- n0 is transform dir, n1 is n0+1 etc
-        int* i = nullptr;       // true or fixed indices; i always points in 0 direction etc
+        int* i = nullptr;       // fixed indices; i always points in 0 direction etc
         int* j = nullptr;
         int* k = nullptr;
 
@@ -146,7 +146,7 @@ namespace kernels
             for(ne1 = 0; ne1 < lb.Nelem[dir1]; ++ne1)
             for(ne0 = 0; ne0 < lb.Nelem[dir];  ++ne0)
             {
-                id_elem_s    = ((*ie)*lb.Nelem[1] + *je)*lb.Nelem[2] + *ke;
+                id_elem_s    = ((*ke)*lb.Nelem[1] + *je)*lb.Nelem[0] + *ie;
                 mem_offset_s = field_offset_s + id_elem_s * lb.Ns_elem;
 
                 id_elem_f    = (ne2*lb.Nelem[dir1] + ne1)*lb.Nelem[dir] + ne0;
@@ -190,7 +190,7 @@ namespace kernels
         real_t lsum;
 
         int n0_s, n0_f, n1, n2; // cyclic indices -- n0 is transform dir, n1 is n0+1 etc
-        int* i = nullptr;       // true or fixed indices; i always points in 0 direction etc
+        int* i = nullptr;       // fixed indices; i always points in 0 direction etc
         int* j = nullptr;
         int* k = nullptr;
 
@@ -218,7 +218,7 @@ namespace kernels
             for(ne1 = 0; ne1 < lb.Nelem[dir1]; ++ne1)
             for(ne0 = 0; ne0 < lb.Nelem[dir];  ++ne0)
             {
-                id_elem_s    = ((*ie)*lb.Nelem[1] + *je)*lb.Nelem[2] + *ke;
+                id_elem_s    = ((*ke)*lb.Nelem[1] + *je)*lb.Nelem[0] + *ie;
                 mem_offset_s = field_offset_s + id_elem_s * lb.Ns_elem;
 
                 id_elem_f    = (ne2*lb.Nelem[dir1] + ne1)*lb.Nelem[dir] + ne0;
@@ -322,11 +322,11 @@ namespace kernels
         {
             field_offset = field * lb.Ns_block;
 
-            for (int ie = 0; ie < lb.Nelem[0]; ++ie)
-            for (int je = 0; je < lb.Nelem[1]; ++je)
             for (int ke = 0; ke < lb.Nelem[2]; ++ke)
+            for (int je = 0; je < lb.Nelem[1]; ++je)
+            for (int ie = 0; ie < lb.Nelem[0]; ++ie)
             {
-                id_elem = (ie*lb.Nelem[1] + je)*lb.Nelem[2] + ke;
+                id_elem = (ke*lb.Nelem[1] + je)*lb.Nelem[0] + ie;
                 mem_offset = field_offset + id_elem * lb.Ns_elem;
 
                 for (int k = 0; k < lb.Ns[2]; ++k)
@@ -364,7 +364,7 @@ namespace kernels
         for(int field = 0; field < lb.Nfield; ++field)
         {
             field_offset      = field * lb.Nf_dir_block[dir];
-            field_offset_face = field * face.N_tot;
+            field_offset_face = field * face.Ntot;
 
             for (int ne2 = 0; ne2 < face.Nelem[1]; ++ne2)
             for (int ne1 = 0; ne1 < face.Nelem[0]; ++ne1)
@@ -446,8 +446,8 @@ namespace kernels
                 
                 for (int field = 0; field < lb.Nfield; ++field)
                 {
-                    UL[field] = UL_data[mem_face + field * face.N_tot];
-                    UR[field] = UR_data[mem_face + field * face.N_tot];
+                    UL[field] = UL_data[mem_face + field * face.Ntot];
+                    UR[field] = UR_data[mem_face + field * face.Ntot];
                 }
 
                 (*F_numerical)(UL, UR, F_num_phys, dir);

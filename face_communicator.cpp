@@ -66,8 +66,8 @@ void FaceCommunicator::setup(Process& proc, int face_id)
     N[0] = proc.elements.Ns[normal_p1];
     N[1] = proc.elements.Ns[normal_p2];
 
-    N_tot     = N[0] * N[1] * Nelem[0] * Nelem[1];
-    N_tot_all = proc.Nfield * N_tot;
+    Ntot     = N[0] * N[1] * Nelem[0] * Nelem[1];
+    Ntot_all = proc.Nfield * Ntot;
 
     external_face = false; // By default
    
@@ -79,12 +79,12 @@ void FaceCommunicator::setup(Process& proc, int face_id)
 
 void FaceCommunicator::allocate()
 {
-    my_data        = kernels::alloc(N_tot_all);
-    neighbour_data = kernels::alloc(N_tot_all);
+    my_data        = kernels::alloc(Ntot_all);
+    neighbour_data = kernels::alloc(Ntot_all);
 
 #if USING_ACCEL
-    my_data_host        = new real_t [N_tot_all];
-    neighbour_data_host = new real_t [N_tot_all];
+    my_data_host        = new real_t [Ntot_all];
+    neighbour_data_host = new real_t [Ntot_all];
 #else
     /* If not using a GPU etc just point directly
      * to the device data arrays */
@@ -103,7 +103,7 @@ MPI_Request FaceCommunicator::send_data()
     MPI_Request request;
     int send_tag = my_id;
 
-    MPI_Isend(my_data_host, N_tot_all, MPI_real_t, neighbour_rank, send_tag, 
+    MPI_Isend(my_data_host, Ntot_all, MPI_real_t, neighbour_rank, send_tag, 
                                                MPI_COMM_WORLD, &request);
 
     return request;
@@ -118,7 +118,7 @@ MPI_Request FaceCommunicator::receive_data()
     MPI_Request request;
     int recv_tag = neighbour_id;
     
-    MPI_Irecv(neighbour_data_host, N_tot_all, MPI_real_t, neighbour_rank,
+    MPI_Irecv(neighbour_data_host, Ntot_all, MPI_real_t, neighbour_rank,
                                   recv_tag, MPI_COMM_WORLD, &request);
 
     return request;

@@ -31,9 +31,9 @@ void set_scalar(ElementBlock& eb)
     int loc;
     real_t r[3];
 
-    for (int ie = 0; ie < eb.Nelem[0]; ++ie)
-    for (int je = 0; je < eb.Nelem[1]; ++je)
     for (int ke = 0; ke < eb.Nelem[2]; ++ke)
+    for (int je = 0; je < eb.Nelem[1]; ++je)
+    for (int ie = 0; ie < eb.Nelem[0]; ++ie)
     {
         mem_offset = eb.id_elem(ie, je, ke) * eb.Ns_elem;
 
@@ -97,9 +97,9 @@ void set_euler(ElementBlock& eb)
     int loc0; // Memory location for the 0th field
     real_t r[3];
 
-    for (int ie = 0; ie < eb.Nelem[0]; ++ie)
-    for (int je = 0; je < eb.Nelem[1]; ++je)
     for (int ke = 0; ke < eb.Nelem[2]; ++ke)
+    for (int je = 0; je < eb.Nelem[1]; ++je)
+    for (int ie = 0; ie < eb.Nelem[0]; ++ie)
     {
         mem_offset = eb.id_elem(ie, je, ke) * eb.Ns_elem;
 
