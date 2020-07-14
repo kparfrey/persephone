@@ -1,4 +1,6 @@
 #include "params.hpp"
+
+#include <string>
 #include "process.hpp"
 #include "write_screen.hpp"
 #include "basic_time_integrator.hpp"
@@ -29,13 +31,13 @@ void Params::setup_process_generic(Process &proc)
     switch (equations)
     {
         case scalar_advection:
-            proc.Nfield = 1;
+            proc.system_data = new SystemData_scalar_advection;
             proc.U_to_P   = new UtoP_scalar_advection;
             proc.c_from_P = new WaveSpeeds_scalar_advection;
             proc.F_from_P = new Fluxes_scalar_advection;
             break;
         case euler:
-            proc.Nfield = 5;
+            proc.system_data = new SystemData_euler;
             proc.U_to_P   = new UtoP_euler;
             proc.c_from_P = new WaveSpeeds_euler;
             proc.F_from_P = new Fluxes_euler;
@@ -43,6 +45,8 @@ void Params::setup_process_generic(Process &proc)
         default:
             write::error("Equation system not recognised.");
     }
+
+    proc.Nfield   = proc.system_data->Nfield;
 
     /* Move inside a switch once more flux choices are defined */
     proc.F_numerical = new HLL_straight;

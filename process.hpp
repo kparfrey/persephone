@@ -8,6 +8,7 @@
 
 class Params;
 class BasicTimeIntegrator;
+class SystemData;
 class ConservedToPrimitive;
 class WaveSpeedsFromPrimitive;
 class FluxesFromPrimitive;
@@ -52,6 +53,8 @@ class Process
     int data_output_counter;
     
     BasicTimeIntegrator*     time_integrator;
+
+    SystemData*              system_data;
     ConservedToPrimitive*    U_to_P;
     WaveSpeedsFromPrimitive* c_from_P;
     FluxesFromPrimitive*     F_from_P;

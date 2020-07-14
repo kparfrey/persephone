@@ -38,6 +38,21 @@ constexpr static int mom2 = 4;
 */
 
 
+class SystemData_euler : public SystemData
+{
+    public:
+    SystemData_euler()
+    {
+        Nfield = 5;
+        variables = new string [5];
+        variables[0] = "rho";
+        variables[1] = "v0";
+        variables[2] = "v1";
+        variables[3] = "v2";
+        variables[4] = "p";
+    }
+};
+
 
 class UtoP_euler : public ConservedToPrimitive
 {

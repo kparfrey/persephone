@@ -2,6 +2,16 @@
 #define PHYSICS_FUNCTORS_HPP
 
 #include "common.hpp"
+#include <string>
+using std::string;
+
+
+class SystemData
+{
+    public:
+    int Nfield;
+    string* variables;
+};
 
 
 /* Abstract base classes for functors for finding fluxes, primitive variables,

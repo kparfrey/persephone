@@ -3,8 +3,23 @@
 
 #include "physics_functors.hpp"
 
+//#include <string>
+
 
 static real_t wave_speed_scalar_advection[3] = {0.7, -0.3, 0.2};
+
+
+
+class SystemData_scalar_advection : public SystemData
+{
+    public:
+    SystemData_scalar_advection()
+    {
+        Nfield = 1;
+        variables = new string [1];
+        variables[0] = "phi";
+    }
+};
 
 
 class UtoP_scalar_advection : public ConservedToPrimitive

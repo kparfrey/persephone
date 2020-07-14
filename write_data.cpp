@@ -13,6 +13,7 @@
 
 #include "process.hpp"
 #include "element_block.hpp"
+#include "physics_includes.hpp"
 #include "write_file_utils.hpp"
 #include "write_screen.hpp"
 
@@ -57,39 +58,42 @@ void write_data(Process &proc)
         offset[i]      = size_t(proc.group_idx[i] * local_dims[i]);
     }
 
-    /* For now, just write all data as separate scalar variables */
-    constexpr int Nvec   = 0;
-    constexpr int Nscal  = 1;
-    constexpr int Nwrite = Nscal + 3*Nvec;
-    //int count = 0; // For keeping track of the variable lists
+    /* Transform from conserved to primitive variables */
+    real_t* primitives = new real_t [proc.Nfield * eb.Ns_block];
+    
+    real_t* Up = new real_t [proc.Nfield];
+    real_t* Pp = new real_t [proc.Nfield];
+    for (int n = 0; n < eb.Ns_block; ++n)
+    {
+        for (int field = 0; field < proc.Nfield; ++field)
+            Up[field] = eb.fields[n + field * eb.Ns_block];
 
-    string names[Nwrite];
-    real_t* datalist[Nwrite];
+        (*proc.U_to_P)(Up, Pp); 
 
-    //string group           = "/coords";
-    //string vecnames[Nvec]  = {"r"};
-    //real_t** veclist[Nvec] = {eb.rs};
-    //vector_organization(meshfile, Nvec, count, group, vecnames, veclist, names, datalist);
-
-    names[0] = "phi";
-    datalist[0] = eb.fields;
+        for (int field = 0; field < proc.Nfield; ++field)
+            primitives[n + field * eb.Ns_block] = Pp[field];
+    }
+    delete[] Up;
+    delete[] Pp;
 
     /* Allocate data buffer for repacking each component */
     real_t* data = new real_t [local_dims[0]*local_dims[1]*local_dims[2]];
 
-    for (int i = 0; i < Nwrite; i++)
+    for (int i = 0; i < proc.Nfield; ++i)
     {
-        HighFive::DataSet dataset = datafile.createDataSet<real_t>(names[i], 
+        string name = proc.system_data->variables[i];
+        HighFive::DataSet dataset = datafile.createDataSet<real_t>(name, 
                                              HighFive::DataSpace(global_dims));
 
         /* Need to repack data from native ordering to elementblock-wise logical */
-        repack(datalist[i], data, eb);
+        repack(&primitives[i*eb.Ns_block], data, eb);
 
         /* Pass the repacked 1D array cast as a triple pointer */
-        write::message("Writing " + names[i]);
+        write::message("Writing " + name);
         dataset.select(offset, local_dims).write((real_t***)data);
     }
 
+    delete[] primitives;
     delete[] data;
 
     proc.data_output_counter++;
