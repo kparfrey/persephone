@@ -24,8 +24,6 @@ class Process
     /* Local data */
     int rank;
     FaceCommunicator faces[6];
-    //real_t corners[8][3]; // 3 physical-space coordinates for each of 8 corners
-    //Edge edges[12];
 
     ElementBlock elements; // Start with a single ElementBlock per process...
 
