@@ -16,6 +16,9 @@ class Params
     EqnSystem equations;
     BasicTimeMethod time_method;
 
+    GeometryClass geometry; // "simple" (straight edges + 90 degree angles)
+                            // or "full" (generally curved domain)
+
     /* Total quantities referring to whole domain */
     int Nproc_domain;
     int Nelem_domain;
@@ -27,8 +30,10 @@ class Params
 
     /* Constructor */
     Params(EqnSystem equations, BasicTimeMethod time_method,
+           GeometryClass geometry,
            real_t cfl, real_t end_time, real_t dt_write)
           : equations(equations), time_method(time_method), 
+            geometry(geometry),
             cfl(cfl), end_time(end_time), dt_write(dt_write){}
  
 

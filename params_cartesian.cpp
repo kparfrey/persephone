@@ -39,7 +39,7 @@ void ParamsCartesian::write_param_info()
     cout << endl;
 
     cout << "Domain:   ";
-    for (int i: dirs) cout << domain_edge[i][0] << " --> " << domain_edge[i][1] << "   ";
+    for (int i: dirs) cout << domain_limits[i][0] << " --> " << domain_limits[i][1] << "   ";
     cout << endl;
 
     cout << "***********************************************" << endl;
@@ -69,26 +69,6 @@ void ParamsCartesian::setup_process(Process &proc)
         proc.group_idx[i] = proc_idx[i];
         proc.Nproc_group[i] = Nproc[i];
     }
-
-
-
-    /* For now: assume basic Cartesian shape --- 90 degree angles etc. */
-    real_t domain_length;
-    real_t length_per_proc[3];
-    for (int i: dirs) 
-    {
-        domain_length = domain_edge[i][1] - domain_edge[i][0];
-        length_per_proc[i] = domain_length / Nproc[i]; // Evenly tile
-    }
-
-    real_t proc_origin[3]; // Coordinates of corner 0
-    for (int i: dirs) 
-        proc_origin[i] = domain_edge[i][0] + proc_idx[i] * length_per_proc[i];
-
-    for (int i: icorners)
-        for (int j: dirs)
-            proc.corners[i][j] = proc_origin[j] + corner_coords[i][j]*length_per_proc[j];
-
 
     setup_elementblock(proc.elements, proc);
     
@@ -149,14 +129,32 @@ void ParamsCartesian::setup_elementblock(ElementBlock &elements, Process &proc)
     elements.Nfield      = proc.Nfield;
 
 
-    /* Set geometrical information: trivial for now since Process and
-     * ElementBlock boundaries are assumed to coincide */
+    /* For now: assume basic Cartesian shape --- 90 degree angles etc. */
+    real_t domain_length;
+    real_t length_per_proc[3];
+    for (int i: dirs) 
+    {
+        domain_length = domain_limits[i][1] - domain_limits[i][0];
+        length_per_proc[i] = domain_length / Nproc[i]; // Evenly tile
+    }
+
+    real_t proc_origin[3]; // Coordinates of corner 0
+    for (int i: dirs) 
+        proc_origin[i] = domain_limits[i][0] + proc.group_idx[i] * length_per_proc[i];
+
     for (int i: icorners)
         for (int j: dirs)
-            elements.corners[i][j] = proc.corners[i][j];
+            elements.corners[i][j] = proc_origin[j] + corner_coords[i][j]*length_per_proc[j];
 
-    for (int i: iedges)
-        elements.edges[i] = proc.edges[i];
+
+    /* Set geometrical information: trivial for now since Process and
+     * ElementBlock boundaries are assumed to coincide */
+    //for (int i: icorners)
+    //    for (int j: dirs)
+    //        elements.corners[i][j] = proc.corners[i][j];
+
+    //for (int i: iedges)
+    //    elements.edges[i] = proc.edges[i];
 
 
     /* At this point all external information is present, and the internal

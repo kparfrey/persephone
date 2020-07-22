@@ -2,7 +2,7 @@
 #define ELEMENT_BLOCK_HPP
 
 #include "common.hpp"
-#include "edge.hpp"
+//#include "edge.hpp"
 #include "metric.hpp"
 #include "tensor_field.hpp"
 
@@ -35,7 +35,7 @@ class ElementBlock
     /* Geometrical information */
     /* For now these are degenerate with the corresponding Process data */
     real_t corners[8][3]; // 3 physical-space coordinates for each of 8 corners
-    Edge edges[12]; 
+    //Edge edges[12]; 
 
     /* Computational space locations: one element's worth only */
     VectorField xs; // Soln point locations in computational space, in each direction 

@@ -20,9 +20,11 @@ enum EqnSystem {scalar_advection, euler};
 enum BasicTimeMethod {rk2_midpoint, rk3_classic};
 
 
-enum Components {covariant, contravariant};
 enum WhoWrites {root_only, all_ranks, one_rank};
 enum Prognosis {destroy, survive};
+enum GeometryClass {simple_geometry, full_geometry};
+
+//enum Components {covariant, contravariant};
 //enum CoordTransDir {phys2ref, ref2phys};
 //enum Operation {soln_to_flux, fluxDeriv_to_soln};
 
