@@ -2,7 +2,7 @@
 
 namespace lagrange
 {
-    static double* barycentric_weights(const real_t* const x, const int N)
+    double* barycentric_weights(const real_t* const x, const int N)
     {
         double* weights = new double [N];
         
@@ -20,6 +20,76 @@ namespace lagrange
         }
 
         return weights;
+    }
+
+
+    /* Interpolate f to location s using grid x and weights w */
+    real_t interpolate(const real_t* const __restrict__ x,
+                       const real_t* const __restrict__ w,
+                       const real_t* const __restrict__ f,
+                       const real_t s, const int N)
+    {
+        real_t factor;
+        real_t above = 0.0;
+        real_t below = 0.0;
+
+        for (int i = 0; i < N; ++i)
+        {
+            factor = w[i] / (s - x[i]);
+            above += f[i] * factor;
+            below +=        factor;
+        }
+        
+        return above / below;
+    }
+
+
+    /* Interpolate V to location s using grid x and weights w, store in Vs */
+    void interpolate_vector(const real_t* const __restrict__ x,
+                            const real_t* const __restrict__ w,
+                            const VectorField V,
+                            const real_t s, const int N,
+                                  real_t* const __restrict__ Vs)
+    {
+        real_t factor;
+        real_t above[3] = {0.0};
+        real_t below    =  0.0;
+
+        for (int i = 0; i < N; ++i)
+        {
+            factor = w[i] / (s - x[i]);
+            for (int d: dirs)
+                above[d] += V(d,i) * factor;
+            below += factor;
+        }
+        
+        for (int d: dirs)
+            Vs[d] = above[d] / below;
+        
+        return ;
+    }
+
+
+    /* Find df/dx at x = s. General s version from Kopriva */
+    real_t differentiate(const real_t* const __restrict__ x,
+                         const real_t* const __restrict__ w,
+                         const real_t* const __restrict__ f,
+                         const real_t s, const int N)
+    {
+        real_t factor;
+        real_t above = 0.0;
+        real_t below = 0.0;
+
+        real_t fs = interpolate(x, w, f, s, N); // Interpolate f(s)
+
+        for (int i = 0; i < N; ++i)
+        {
+            factor = w[i] / (s - x[i]);
+            above += factor * (fs - f[i])/(s - x[i]);
+            below += factor;
+        }
+        
+        return above / below;
     }
 
 

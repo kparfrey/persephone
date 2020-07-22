@@ -6,36 +6,21 @@
 
 /* U --- conserved
  * 0 rho
- * 1 E  ---  total energy density
- * 2 rho v_0
- * 3 rho v_1
- * 4 rho v_2
+ * 1 rho v_0
+ * 2 rho v_1
+ * 3 rho v_2
+ * 4 E  ---  total energy density
  *
  * P --- primitive
  * 0 rho
- * 1 p  ---  pressure
- * 2 v_0
- * 3 v_1
- * 4 v_2
+ * 1 v_0
+ * 2 v_1
+ * 3 v_2
+ * 4 p  ---  pressure
  */
 
 constexpr real_t gamma_euler = 5.0/3.0;
 constexpr real_t gm1_euler = gamma_euler - 1.0;
-
-/* Need a better system for these --- will 
- * pollute too many files since this will be included
- * in several places */
-/*
-constexpr static int density    = 0;
-constexpr static int tot_energy = 1;
-constexpr static int pressure   = 1;
-constexpr static int v0   = 2;
-constexpr static int v1   = 3;
-constexpr static int v2   = 4;
-constexpr static int mom0 = 2;
-constexpr static int mom1 = 3;
-constexpr static int mom2 = 4;
-*/
 
 
 class SystemData_euler : public SystemData

@@ -132,34 +132,6 @@ void ParamsCartesian::setup_process(Process &proc)
                              + neighbour_idx[2];
     }
 
-
-    /***
-    if (proc_idx[2] == 0) proc_base = Nproc[2];
-    else proc_base = proc_idx[2];
-    proc.faces[0].neighbour_rank = proc_base - 1;
-    
-    if (proc_idx[2] == Nproc[2]-1) proc_base = -1;
-    else proc_base = proc_idx[2];
-    proc.faces[1].neighbour_rank = proc_base + 1;
-
-    if (proc_idx[0] == 0) proc_base = Nproc[0];
-    else proc_base = proc_idx[0];
-    proc.faces[2].neighbour_rank = proc_base - 1;
-
-    if (proc_idx[0] == Nproc[0]-1) proc_base = -1;
-    else proc_base = proc_idx[0];
-    proc.faces[3].neighbour_rank = proc_base + 1;
-
-    if (proc_idx[1] == 0) proc_base = Nproc[1];
-    else proc_base = proc_idx[1];
-    proc.faces[4].neighbour_rank = proc_base - 1;
-
-    if (proc_idx[1] == Nproc[1]-1) proc_base = -1;
-    else proc_base = proc_idx[1];
-    proc.faces[5].neighbour_rank = proc_base + 1;
-    ***/
-
-
     return;
 }
 
