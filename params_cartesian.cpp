@@ -5,6 +5,7 @@
 #include "element_block.hpp"
 #include "initial_state_cartesian.hpp"
 #include "write_screen.hpp"
+#include "domain_map.hpp"
 
 using std::cout;
 using std::endl;
@@ -66,8 +67,11 @@ void ParamsCartesian::setup_process(Process &proc)
     proc.group = 0;
     for (int i: dirs)
     {
-        proc.group_idx[i] = proc_idx[i];
+        proc.group_idx[i]   = proc_idx[i];
         proc.Nproc_group[i] = Nproc[i];
+
+        proc.elements.group_idx[i]   = proc_idx[i];
+        proc.elements.Nproc_group[i] = Nproc[i];
     }
 
     setup_elementblock(proc.elements, proc);
@@ -128,11 +132,13 @@ void ParamsCartesian::setup_elementblock(ElementBlock &elements, Process &proc)
     elements.Nelem_block = Nelem_proc; 
     elements.Nfield      = proc.Nfield;
 
-
+    elements.geometry = geometry;
 
     if (geometry == simple_geometry)
     {
-        /* Basic Cartesian shape --- 90 degree angles etc. */
+        /* Basic Cartesian shape --- 90 degree angles etc. 
+         * Move more of this to ElementBlock.set_physical_coords_simple().
+         * Corners not really needed in this simple case. */
         real_t domain_length;
         real_t length_per_proc[3];
         for (int i: dirs) 
@@ -148,6 +154,22 @@ void ParamsCartesian::setup_elementblock(ElementBlock &elements, Process &proc)
         for (int i: icorners)
             for (int j: dirs)
                 elements.corners[i][j] = proc_origin[j] + corner_coords[i][j]*length_per_proc[j];
+    }
+    else // full_geometry
+    {
+        elements.map = new QuarterAnnulusMap; // specify manually for now...
+
+        /* These are the corners of the whole group... */
+        /***
+        (*elements.map)(0, 0.0, elements.corners[0]); // Corner 0 is at x=0 for edge 0 etc.
+        (*elements.map)(1, 0.0, elements.corners[1]); 
+        (*elements.map)(2, 1.0, elements.corners[2]); 
+        (*elements.map)(3, 1.0, elements.corners[3]); 
+        (*elements.map)(4, 0.0, elements.corners[4]); 
+        (*elements.map)(5, 0.0, elements.corners[5]); 
+        (*elements.map)(6, 1.0, elements.corners[6]); 
+        (*elements.map)(7, 1.0, elements.corners[7]); 
+        ***/
     }
 
 

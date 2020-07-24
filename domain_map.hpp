@@ -3,6 +3,9 @@
 
 #include "common.hpp"
 
+#include <cmath>
+
+
 /* Abstract base class for domain mapping functor. 
  * 0 <= n < 12 : index of edge to return map for
  * 0 <= x <= 1 : groupwise reference coordinate along edge

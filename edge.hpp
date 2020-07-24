@@ -11,6 +11,7 @@
 class Edge
 {
     public:
+    int dir; // The reference-space direction this edge is aligned with
     int N;                  // Number of interpolation nodes
     real_t* __restrict__ x; // length parameter along the curve, x in [0,1]
     double* __restrict__ w; // Weights for Lagrange interpolation

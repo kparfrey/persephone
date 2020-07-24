@@ -50,6 +50,8 @@ int main(int argc, char *argv[])
     
     write_mesh(proc); // Mesh data still on host
 
+    exit(99);
+
     proc.move_to_device();
 
     write_data(proc); // Data generally lives on device

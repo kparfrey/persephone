@@ -4,6 +4,9 @@
 #include "write_screen.hpp"
 #include "lagrange_polynomials.hpp"
 
+#include "domain_map.hpp"
+#include "edge.hpp"
+
 
 void ElementBlock::setup()
 {
@@ -50,7 +53,12 @@ void ElementBlock::setup()
 
     allocate_on_host();
     set_computational_coords();
-    set_physical_coords();
+
+    if (geometry == simple_geometry)
+        set_physical_coords_simple();
+    else // full_geometry
+        set_physical_coords_full();
+
     fill_spectral_difference_matrices();
 
     metric.setup(Nelem, Ns_block, Nf_dir_block, corners);
@@ -121,10 +129,9 @@ void ElementBlock::set_computational_coords()
 }
 
 
-void ElementBlock::set_physical_coords()
+/* Assume that everything is trivially Cartesian. */
+void ElementBlock::set_physical_coords_simple()
 {
-    /* For now assume that everything is trivially Cartesian.
-     * This will all need to be replaced for more general mappings */
     real_t dr_elemblock[3];
     real_t dr_elem[3];
     real_t elem_origin[3]; // i.e. corner-0 coordinates for a given element
@@ -196,6 +203,187 @@ void ElementBlock::set_physical_coords()
         }
     }
     
+
+    return;
+}
+
+/* x is in groupwise reference space, x = [0,1] */
+static void analytic_transfinite_map_2D(const real_t x[2], DomainMap* const map,
+                                              real_t r[3])
+{
+    real_t Gx[4][3]; 
+    real_t G00[3]; // Gamma_0(0)
+    real_t G01[3]; // Gamma_0(1)
+    real_t G20[3];
+    real_t G21[3];
+    
+    /* Gamma(xi) or Gamma(eta) */
+    (*map)(0, x[0], Gx[0]);
+    (*map)(1, x[1], Gx[1]);
+    (*map)(2, x[0], Gx[2]);
+    (*map)(3, x[1], Gx[3]);
+
+    /* Eventually replace with group corners, passed to this function */
+    (*map)(0, 0.0, G00);
+    (*map)(0, 1.0, G01);
+    (*map)(2, 0.0, G20);
+    (*map)(2, 1.0, G21);
+
+    for (int i = 0; i < 2; ++i) // Iterate over coord-vector components
+    {
+        r[i] =   (1-x[0])*Gx[3][i] + x[0]*Gx[1][i] 
+               + (1-x[1])*Gx[0][i] + x[1]*Gx[2][i]
+               - (1-x[0])*((1-x[1])*G00[i] + x[1]*G20[i])
+               -    x[0] *((1-x[1])*G01[i] + x[1]*G21[i]);
+    }
+
+    r[2] = 0.0;
+
+    return;
+}
+
+
+/* x is in elementwise reference space, x = [0,1] */
+static void polynomial_transfinite_map_2D(const real_t x[2], const int point_idx[2],
+                                          Edge edges[4],
+                                          const real_t corners[4][3], real_t r[3])
+{
+    real_t Gx[4][3]; 
+    
+    for (int i = 0; i < 4; ++i)
+        for (int j = 0; j < 2; ++j)
+            Gx[i][j] = edges[i].r(j, point_idx[edges[i].dir]);
+        //edges[i].eval(x[edges[i].dir], Gx[i]);
+
+#if 0
+    write::variable<int>("Edge 0 dir:  ", edges[0].dir);
+    write::variable<int>("Edge 1 dir:  ", edges[1].dir);
+    write::variable<int>("Edge 2 dir:  ", edges[2].dir);
+    write::variable<int>("Edge 3 dir:  ", edges[3].dir);
+    write::variable<real_t>("Edge-0 length coord:  ", x[edges[0].dir]);
+    write::variable<real_t>("Edge-1 length coord:  ", x[edges[1].dir]);
+    write::variable<real_t>("Gamma-0 x coord:  ", Gx[0][0]);
+    write::variable<real_t>("Gamma-1 x coord:  ", Gx[1][0]);
+#endif
+
+
+    for (int i = 0; i < 2; ++i) // Iterate over coord-vector components
+    {
+        r[i] =   (1-x[0])*Gx[3][i] + x[0]*Gx[1][i] 
+               + (1-x[1])*Gx[0][i] + x[1]*Gx[2][i]
+               - (1-x[0])*((1-x[1])*corners[0][i] + x[1]*corners[3][i])
+               -    x[0] *((1-x[1])*corners[1][i] + x[1]*corners[2][i]);
+    }
+
+    r[2] = 0.0;
+
+    return;
+}
+
+
+/* Not currently using physical coordinates of flux points, rf.
+ * Add code to fill this array if end up needing it. */
+void ElementBlock::set_physical_coords_full()
+{
+    int mem_offset;
+    int mem_loc;
+    int elem_idx_1D;
+
+    real_t group_width[2]; // Total width in units where each element is a unit cube
+    real_t elem_corners[4][3]; // For 2D TF map: r0, r1 coords of 4 corners
+    Edge edges[4];             // Need 4 element edges for a 2D map
+
+    /* Set up those parts of edges that don't change between elements */
+    edges[0].dir = 0;
+    edges[1].dir = 1;
+    edges[2].dir = 0;
+    edges[3].dir = 1;
+
+    for (int i = 0; i < 4; ++i)
+        edges[i].setup(Ns[edges[i].dir], xs(edges[i].dir));
+
+    real_t xg[2]; /* Groupwise reference-space coord */
+    real_t xe[2]; /* Elementwise reference-space coord */
+    int point_idx[2]; // Elementwise i,j indices of this point
+    real_t rp[3];
+
+    group_width[0] = (real_t) Nproc_group[0]*Nelem[0];
+    group_width[1] = (real_t) Nproc_group[1]*Nelem[1];
+
+    /* Solution points */
+    for (int ke = 0; ke < Nelem[2]; ++ke)
+    for (int je = 0; je < Nelem[1]; ++je)
+    for (int ie = 0; ie < Nelem[0]; ++ie)
+    {
+        elem_idx_1D = id_elem(ie, je, ke);
+        mem_offset = elem_idx_1D * Ns_elem;
+
+
+        /* Use "analytic" transfinite interpolation to interpolate from
+         * the group mapping to this element's edge. */
+        {
+            /* Edge 0 */
+            for (int i = 0; i < edges[0].N; ++i)
+            {
+                xg[0] = (group_idx[0]*Nelem[0] + ie + edges[0].x[i]) / group_width[0];
+                xg[1] = (group_idx[1]*Nelem[1] + je) / group_width[1];
+                analytic_transfinite_map_2D(xg, map, rp);
+                for (int j: dirs) edges[0].r(j, i) = rp[j]; 
+            }
+
+            /* Edge 1 */
+            for (int i = 0; i < edges[1].N; ++i)
+            {
+                xg[0] = (group_idx[0]*Nelem[0] + ie + 1.0) / group_width[0];
+                xg[1] = (group_idx[1]*Nelem[1] + je + edges[1].x[i]) / group_width[1];
+                analytic_transfinite_map_2D(xg, map, rp);
+                for (int j: dirs) edges[1].r(j, i) = rp[j]; 
+            }
+
+            /* Edge 2 */
+            for (int i = 0; i < edges[2].N; ++i)
+            {
+                xg[0] = (group_idx[0]*Nelem[0] + ie + edges[2].x[i]) / group_width[0];
+                xg[1] = (group_idx[1]*Nelem[1] + je + 1.0) / group_width[1];
+                analytic_transfinite_map_2D(xg, map, rp);
+                for (int j: dirs) edges[2].r(j, i) = rp[j]; 
+            }
+
+            /* Edge 3 */
+            for (int i = 0; i < edges[3].N; ++i)
+            {
+                xg[0] = (group_idx[0]*Nelem[0] + ie) / group_width[0];
+                xg[1] = (group_idx[1]*Nelem[1] + je + edges[3].x[i]) / group_width[1];
+                analytic_transfinite_map_2D(xg, map, rp);
+                for (int j: dirs) edges[3].r(j, i) = rp[j]; 
+            }
+        }
+
+        edges[0].eval(0.0, elem_corners[0]);
+        edges[1].eval(0.0, elem_corners[1]);
+        edges[2].eval(1.0, elem_corners[2]);
+        edges[3].eval(1.0, elem_corners[3]);
+        
+        for (int k = 0; k < Ns[2]; ++k)
+        for (int j = 0; j < Ns[1]; ++j)
+        for (int i = 0; i < Ns[0]; ++i)
+        {
+            mem_loc = ids(i,j,k) + mem_offset;
+
+            /* Do 2D transfinite map using polynomial interpolation */
+            xe[0] = xs(0,i);
+            xe[1] = xs(1,j);
+            point_idx[0] = i;
+            point_idx[1] = j;
+            polynomial_transfinite_map_2D(xe, point_idx, edges, elem_corners, rp);
+
+            rs(0,mem_loc) = rp[0];
+            rs(1,mem_loc) = rp[1];
+
+            /* For now just set r[2] = 0 --- 2D domain*/
+            rs(2,mem_loc) = 0.0;
+        }
+    }
 
     return;
 }

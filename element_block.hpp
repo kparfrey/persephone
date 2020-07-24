@@ -2,9 +2,13 @@
 #define ELEMENT_BLOCK_HPP
 
 #include "common.hpp"
-//#include "edge.hpp"
 #include "metric.hpp"
 #include "tensor_field.hpp"
+
+//#include "edge.hpp"
+//#include "domain_map.hpp"
+
+class DomainMap;
 
 class ElementBlock
 {
@@ -12,7 +16,8 @@ class ElementBlock
     /* These only called by the setup() method */
     void allocate_on_host();
     void set_computational_coords();
-    void set_physical_coords();
+    void set_physical_coords_simple();
+    void set_physical_coords_full();
     void fill_spectral_difference_matrices();
 
     public:
@@ -31,10 +36,14 @@ class ElementBlock
 
     LengthBucket lengths; // To encapsulate all lengths needed for data indexing
     
+    int group_idx[3];     // These two are copied down from Process
+    int Nproc_group[3];   // Used to convert to groupwise reference coords
+
 
     /* Geometrical information */
-    /* For now these are degenerate with the corresponding Process data */
+    GeometryClass geometry;
     real_t corners[8][3]; // 3 physical-space coordinates for each of 8 corners
+    DomainMap* map;
     //Edge edges[12]; 
 
     /* Computational space locations: one element's worth only */

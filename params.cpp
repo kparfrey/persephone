@@ -49,7 +49,8 @@ void Params::setup_process_generic(Process &proc)
     proc.Nfield   = proc.system_data->Nfield;
 
     /* Move inside a switch once more flux choices are defined */
-    if (geometry == simple_geometry)
+    //if (geometry == simple_geometry)
+    if (1)
         proc.F_numerical = new HLL_straight;
     else
         write::error("Numerical flux for full geometry not implemented yet");
