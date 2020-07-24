@@ -11,13 +11,16 @@
 class Edge
 {
     public:
-    int dir; // The reference-space direction this edge is aligned with
+    int id;   // This edge's index, 0 <= id < 12
+    int dir;  // The reference-space direction this edge is aligned with
+    real_t offset[3]; // Offset of this edge in each dir (unit cube coords)
+
     int N;                  // Number of interpolation nodes
     real_t* __restrict__ x; // length parameter along the curve, x in [0,1]
     double* __restrict__ w; // Weights for Lagrange interpolation
     VectorField r;          // 3D physical coords at the nodes
 
-    void setup(const int Ns, const real_t* const __restrict__ xs);
+    void setup(const int id, const int Ns[3], const VectorField xs);
     void eval(const real_t s, real_t* const __restrict__ rs);
     void diff(const real_t s, real_t* const __restrict__ drdx);
 };

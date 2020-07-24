@@ -161,14 +161,6 @@ void ParamsCartesian::setup_elementblock(ElementBlock &elements, Process &proc)
 
         /* These are the corners of the whole group... */
         /***
-        (*elements.map)(0, 0.0, elements.corners[0]); // Corner 0 is at x=0 for edge 0 etc.
-        (*elements.map)(1, 0.0, elements.corners[1]); 
-        (*elements.map)(2, 1.0, elements.corners[2]); 
-        (*elements.map)(3, 1.0, elements.corners[3]); 
-        (*elements.map)(4, 0.0, elements.corners[4]); 
-        (*elements.map)(5, 0.0, elements.corners[5]); 
-        (*elements.map)(6, 1.0, elements.corners[6]); 
-        (*elements.map)(7, 1.0, elements.corners[7]); 
         ***/
     }
 

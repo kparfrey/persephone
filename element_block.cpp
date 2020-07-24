@@ -289,26 +289,36 @@ void ElementBlock::set_physical_coords_full()
     int mem_loc;
     int elem_idx_1D;
 
-    real_t group_width[2]; // Total width in units where each element is a unit cube
+    /* Groupwise constructs */
+    real_t group_width[3]; // Total width in units where each element is a unit cube
+    for (int d: dirs)
+        group_width[d] = (real_t) Nproc_group[d]*Nelem[d];
+
+    real_t group_corners[8][3];       // Group corner coords in physical space
+    (*map)(0, 0.0, group_corners[0]); // Corner 0 is at x=0.0 for edge 0 etc.
+    (*map)(1, 0.0, group_corners[1]); 
+    (*map)(2, 1.0, group_corners[2]); 
+    (*map)(3, 1.0, group_corners[3]); 
+    (*map)(4, 0.0, group_corners[4]); 
+    (*map)(5, 0.0, group_corners[5]); 
+    (*map)(6, 1.0, group_corners[6]); 
+    (*map)(7, 1.0, group_corners[7]); 
+
+    /* Elementwise constructs */
     real_t elem_corners[4][3]; // For 2D TF map: r0, r1 coords of 4 corners
     Edge edges[4];             // Need 4 element edges for a 2D map
 
     /* Set up those parts of edges that don't change between elements */
-    edges[0].dir = 0;
-    edges[1].dir = 1;
-    edges[2].dir = 0;
-    edges[3].dir = 1;
-
     for (int i = 0; i < 4; ++i)
-        edges[i].setup(Ns[edges[i].dir], xs(edges[i].dir));
+        edges[i].setup(i, Ns, xs);
 
-    real_t xg[2]; /* Groupwise reference-space coord */
-    real_t xe[2]; /* Elementwise reference-space coord */
+    /* Point constructs */
+    real_t xg[2];     // Groupwise reference-space coord
+    real_t xe[2];     // Elementwise reference-space coord
     int point_idx[2]; // Elementwise i,j indices of this point
-    real_t rp[3];
+    real_t rp[3];     // Physical coordinates of this point
 
-    group_width[0] = (real_t) Nproc_group[0]*Nelem[0];
-    group_width[1] = (real_t) Nproc_group[1]*Nelem[1];
+
 
     /* Solution points */
     for (int ke = 0; ke < Nelem[2]; ++ke)
@@ -318,44 +328,25 @@ void ElementBlock::set_physical_coords_full()
         elem_idx_1D = id_elem(ie, je, ke);
         mem_offset = elem_idx_1D * Ns_elem;
 
-
         /* Use "analytic" transfinite interpolation to interpolate from
          * the group mapping to this element's edge. */
+        for (int iedge = 0; iedge < 4; ++iedge)
         {
-            /* Edge 0 */
-            for (int i = 0; i < edges[0].N; ++i)
-            {
-                xg[0] = (group_idx[0]*Nelem[0] + ie + edges[0].x[i]) / group_width[0];
-                xg[1] = (group_idx[1]*Nelem[1] + je) / group_width[1];
-                analytic_transfinite_map_2D(xg, map, rp);
-                for (int j: dirs) edges[0].r(j, i) = rp[j]; 
-            }
+            Edge& edge = edges[iedge];
+            real_t* offset = edge.offset;
 
-            /* Edge 1 */
-            for (int i = 0; i < edges[1].N; ++i)
-            {
-                xg[0] = (group_idx[0]*Nelem[0] + ie + 1.0) / group_width[0];
-                xg[1] = (group_idx[1]*Nelem[1] + je + edges[1].x[i]) / group_width[1];
-                analytic_transfinite_map_2D(xg, map, rp);
-                for (int j: dirs) edges[1].r(j, i) = rp[j]; 
-            }
+            real_t along[3];
+            for (int d: dirs)
+                along[d] = (edge.dir == d) ? 1.0 : 0.0;
 
-            /* Edge 2 */
-            for (int i = 0; i < edges[2].N; ++i)
+            for (int i = 0; i < edge.N; ++i)
             {
-                xg[0] = (group_idx[0]*Nelem[0] + ie + edges[2].x[i]) / group_width[0];
-                xg[1] = (group_idx[1]*Nelem[1] + je + 1.0) / group_width[1];
+                xg[0] = (group_idx[0]*Nelem[0] + ie + along[0]*edge.x[i] + offset[0]) 
+                                                                       / group_width[0];
+                xg[1] = (group_idx[1]*Nelem[1] + je + along[1]*edge.x[i] + offset[1]) 
+                                                                       / group_width[1];
                 analytic_transfinite_map_2D(xg, map, rp);
-                for (int j: dirs) edges[2].r(j, i) = rp[j]; 
-            }
-
-            /* Edge 3 */
-            for (int i = 0; i < edges[3].N; ++i)
-            {
-                xg[0] = (group_idx[0]*Nelem[0] + ie) / group_width[0];
-                xg[1] = (group_idx[1]*Nelem[1] + je + edges[3].x[i]) / group_width[1];
-                analytic_transfinite_map_2D(xg, map, rp);
-                for (int j: dirs) edges[3].r(j, i) = rp[j]; 
+                for (int j: dirs) edge.r(j, i) = rp[j]; 
             }
         }
 
