@@ -3,7 +3,7 @@
 #include "kernels.hpp"
 #include "write_screen.hpp"
 #include "lagrange_polynomials.hpp"
-
+#include "transfinite_map.hpp"
 #include "domain_map.hpp"
 #include "edge.hpp"
 
@@ -207,78 +207,7 @@ void ElementBlock::set_physical_coords_simple()
     return;
 }
 
-/* x is in groupwise reference space, x = [0,1] */
-static void analytic_transfinite_map_2D(const real_t x[2], DomainMap* const map,
-                                              real_t r[3])
-{
-    real_t Gx[4][3]; 
-    real_t G00[3]; // Gamma_0(0)
-    real_t G01[3]; // Gamma_0(1)
-    real_t G20[3];
-    real_t G21[3];
-    
-    /* Gamma(xi) or Gamma(eta) */
-    (*map)(0, x[0], Gx[0]);
-    (*map)(1, x[1], Gx[1]);
-    (*map)(2, x[0], Gx[2]);
-    (*map)(3, x[1], Gx[3]);
 
-    /* Eventually replace with group corners, passed to this function */
-    (*map)(0, 0.0, G00);
-    (*map)(0, 1.0, G01);
-    (*map)(2, 0.0, G20);
-    (*map)(2, 1.0, G21);
-
-    for (int i = 0; i < 2; ++i) // Iterate over coord-vector components
-    {
-        r[i] =   (1-x[0])*Gx[3][i] + x[0]*Gx[1][i] 
-               + (1-x[1])*Gx[0][i] + x[1]*Gx[2][i]
-               - (1-x[0])*((1-x[1])*G00[i] + x[1]*G20[i])
-               -    x[0] *((1-x[1])*G01[i] + x[1]*G21[i]);
-    }
-
-    r[2] = 0.0;
-
-    return;
-}
-
-
-/* x is in elementwise reference space, x = [0,1] */
-static void polynomial_transfinite_map_2D(const real_t x[2], const int point_idx[2],
-                                          Edge edges[4],
-                                          const real_t corners[4][3], real_t r[3])
-{
-    real_t Gx[4][3]; 
-    
-    for (int i = 0; i < 4; ++i)
-        for (int j = 0; j < 2; ++j)
-            Gx[i][j] = edges[i].r(j, point_idx[edges[i].dir]);
-        //edges[i].eval(x[edges[i].dir], Gx[i]);
-
-#if 0
-    write::variable<int>("Edge 0 dir:  ", edges[0].dir);
-    write::variable<int>("Edge 1 dir:  ", edges[1].dir);
-    write::variable<int>("Edge 2 dir:  ", edges[2].dir);
-    write::variable<int>("Edge 3 dir:  ", edges[3].dir);
-    write::variable<real_t>("Edge-0 length coord:  ", x[edges[0].dir]);
-    write::variable<real_t>("Edge-1 length coord:  ", x[edges[1].dir]);
-    write::variable<real_t>("Gamma-0 x coord:  ", Gx[0][0]);
-    write::variable<real_t>("Gamma-1 x coord:  ", Gx[1][0]);
-#endif
-
-
-    for (int i = 0; i < 2; ++i) // Iterate over coord-vector components
-    {
-        r[i] =   (1-x[0])*Gx[3][i] + x[0]*Gx[1][i] 
-               + (1-x[1])*Gx[0][i] + x[1]*Gx[2][i]
-               - (1-x[0])*((1-x[1])*corners[0][i] + x[1]*corners[3][i])
-               -    x[0] *((1-x[1])*corners[1][i] + x[1]*corners[2][i]);
-    }
-
-    r[2] = 0.0;
-
-    return;
-}
 
 
 /* Not currently using physical coordinates of flux points, rf.
@@ -295,7 +224,7 @@ void ElementBlock::set_physical_coords_full()
         group_width[d] = (real_t) Nproc_group[d]*Nelem[d];
 
     real_t group_corners[8][3];       // Group corner coords in physical space
-    (*map)(0, 0.0, group_corners[0]); // Corner 0 is at x=0.0 for edge 0 etc.
+    (*map)(0, 0.0, group_corners[0]); // Corner 0 is at groupwise-x=0.0 for edge 0 etc.
     (*map)(1, 0.0, group_corners[1]); 
     (*map)(2, 1.0, group_corners[2]); 
     (*map)(3, 1.0, group_corners[3]); 
@@ -345,11 +274,13 @@ void ElementBlock::set_physical_coords_full()
                                                                        / group_width[0];
                 xg[1] = (group_idx[1]*Nelem[1] + je + along[1]*edge.x[i] + offset[1]) 
                                                                        / group_width[1];
-                analytic_transfinite_map_2D(xg, map, rp);
+                analytic_transfinite_map_2D(xg, map, group_corners, rp);
                 for (int j: dirs) edge.r(j, i) = rp[j]; 
             }
         }
 
+        /* Could alternatively calculate the groupwise coords for the element's
+         * corners and use the analytical map functor directly */
         edges[0].eval(0.0, elem_corners[0]);
         edges[1].eval(0.0, elem_corners[1]);
         edges[2].eval(1.0, elem_corners[2]);
@@ -375,6 +306,9 @@ void ElementBlock::set_physical_coords_full()
             rs(2,mem_loc) = 0.0;
         }
     }
+
+    for (int i = 0; i < 4; ++i)
+        edges[i].free();
 
     return;
 }

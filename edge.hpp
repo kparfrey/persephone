@@ -21,6 +21,7 @@ class Edge
     VectorField r;          // 3D physical coords at the nodes
 
     void setup(const int id, const int Ns[3], const VectorField xs);
+    void free();
     void eval(const real_t s, real_t* const __restrict__ rs);
     void diff(const real_t s, real_t* const __restrict__ drdx);
 };

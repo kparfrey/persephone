@@ -78,6 +78,18 @@ void Edge::setup(const int edge_id, const int Ns[3], const VectorField xs)
 }
 
 
+void Edge::free()
+{
+    delete[] x;
+    delete[] w;
+
+    for (int d: dirs)
+        delete[] r(d);
+
+    return;
+}
+
+
 /* Evaluate the coordinate vector r at location s, store in rs */
 void Edge::eval(const real_t s, real_t* const __restrict__ rs)
 {
