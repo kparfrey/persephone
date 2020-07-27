@@ -50,18 +50,28 @@ void ElementBlock::setup()
     }
 
 
-
     allocate_on_host();
+
     set_computational_coords();
 
     if (geometry == simple_geometry)
         set_physical_coords_simple();
-    else // full_geometry
+    else /* full_geometry */
+    {
+        /* Set those parts of the edges which don't change
+         * element to element */
+        for (int i = 0; i < Nelem_block; ++i)
+            for (int j = 0; j < 4; ++j)
+                edges[i][j].setup(j, Ns, xs);
+
         set_physical_coords_full();
+    }
 
     fill_spectral_difference_matrices();
 
     metric.setup(Nelem, Ns_block, Nf_dir_block, corners);
+
+    free_setup_memory();
 
     return;
 }
@@ -87,6 +97,32 @@ void ElementBlock::allocate_on_host()
         int matrix_size = Ns[i] * Nf[i]; 
         soln2flux(i)      = new real_t [matrix_size]; // Nf x Ns matrices
         fluxDeriv2soln(i) = new real_t [matrix_size]; // Ns x Nf matrices
+    }
+
+    if (geometry == full_geometry)
+    {
+        edges = new Edge* [Nelem_block];
+        for (int i = 0; i < Nelem_block; ++i)
+            edges[i] = new Edge [4]; // 4 edges in 2D
+    }
+
+    return;
+}
+
+
+void ElementBlock::free_setup_memory()
+{
+    if (geometry == full_geometry)
+    {
+        for (int i = 0; i < Nelem_block; ++i)
+        {
+            for (int j = 0; j < 4; ++j)
+                edges[i][j].free();
+
+            delete[] edges[i];
+        }
+
+        delete[] edges;
     }
 
     return;
@@ -235,11 +271,6 @@ void ElementBlock::set_physical_coords_full()
 
     /* Elementwise constructs */
     real_t elem_corners[4][3]; // For 2D TF map: r0, r1 coords of 4 corners
-    Edge edges[4];             // Need 4 element edges for a 2D map
-
-    /* Set up those parts of edges that don't change between elements */
-    for (int i = 0; i < 4; ++i)
-        edges[i].setup(i, Ns, xs);
 
     /* Point constructs */
     real_t xg[2];     // Groupwise reference-space coord
@@ -257,11 +288,13 @@ void ElementBlock::set_physical_coords_full()
         elem_idx_1D = id_elem(ie, je, ke);
         mem_offset = elem_idx_1D * Ns_elem;
 
+        Edge* elem_edges = edges[elem_idx_1D];
+
         /* Use "analytic" transfinite interpolation to interpolate from
          * the group mapping to this element's edge. */
         for (int iedge = 0; iedge < 4; ++iedge)
         {
-            Edge& edge = edges[iedge];
+            Edge& edge = elem_edges[iedge];
             real_t* offset = edge.offset;
 
             real_t along[3];
@@ -281,10 +314,10 @@ void ElementBlock::set_physical_coords_full()
 
         /* Could alternatively calculate the groupwise coords for the element's
          * corners and use the analytical map functor directly */
-        edges[0].eval(0.0, elem_corners[0]);
-        edges[1].eval(0.0, elem_corners[1]);
-        edges[2].eval(1.0, elem_corners[2]);
-        edges[3].eval(1.0, elem_corners[3]);
+        elem_edges[0].eval(0.0, elem_corners[0]);
+        elem_edges[1].eval(0.0, elem_corners[1]);
+        elem_edges[2].eval(1.0, elem_corners[2]);
+        elem_edges[3].eval(1.0, elem_corners[3]);
         
         for (int k = 0; k < Ns[2]; ++k)
         for (int j = 0; j < Ns[1]; ++j)
@@ -297,7 +330,7 @@ void ElementBlock::set_physical_coords_full()
             xe[1] = xs(1,j);
             point_idx[0] = i;
             point_idx[1] = j;
-            polynomial_transfinite_map_2D(xe, point_idx, edges, elem_corners, rp);
+            polynomial_transfinite_map_2D(xe, point_idx, elem_edges, elem_corners, rp);
 
             rs(0,mem_loc) = rp[0];
             rs(1,mem_loc) = rp[1];
@@ -306,9 +339,6 @@ void ElementBlock::set_physical_coords_full()
             rs(2,mem_loc) = 0.0;
         }
     }
-
-    for (int i = 0; i < 4; ++i)
-        edges[i].free();
 
     return;
 }

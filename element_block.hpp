@@ -9,12 +9,14 @@
 //#include "domain_map.hpp"
 
 class DomainMap;
+class Edge;
 
 class ElementBlock
 {
     private:
     /* These only called by the setup() method */
     void allocate_on_host();
+    void free_setup_memory();
     void set_computational_coords();
     void set_physical_coords_simple();
     void set_physical_coords_full();
@@ -44,7 +46,7 @@ class ElementBlock
     GeometryClass geometry;
     real_t corners[8][3]; // 3 physical-space coordinates for each of 8 corners
     DomainMap* map;
-    //Edge edges[12]; 
+    Edge** edges; // Store 4 or 12 edges for every element
 
     /* Computational space locations: one element's worth only */
     VectorField xs; // Soln point locations in computational space, in each direction 
