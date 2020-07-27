@@ -65,7 +65,7 @@ void ElementBlock::setup()
          * element to element */
         for (int i = 0; i < Nelem_block; ++i)
             for (int j = 0; j < 4; ++j)
-                edges[i][j].setup(j, Ns, xs);
+                edges[i][j].setup(j, Nf, xf); // Use Lobatto points
 
         set_physical_coords_full();
     }
@@ -313,8 +313,15 @@ void ElementBlock::set_physical_coords_full()
             }
 
             /* Storing at Gauss points, so evaluate interpolant to find endpoints */
-            edge.eval(0.0, edge.endpoints[0]); // r(s=0) --> endpoints[0]
-            edge.eval(1.0, edge.endpoints[1]); // r(s=1) --> endpoints[1]
+            //edge.eval(0.0, edge.endpoints[0]); // r(s=0) --> endpoints[0]
+            //edge.eval(1.0, edge.endpoints[1]); // r(s=1) --> endpoints[1]
+
+            /* Storing at Lobatto points, directly read off endpoints */
+            for (int i = 0; i < 3; ++i)
+            {
+                edge.endpoints[0][i] = edge.r(i, 0);
+                edge.endpoints[1][i] = edge.r(i, edge.N-1);
+            }
         }
 
         for (int d: dirs)

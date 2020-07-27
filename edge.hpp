@@ -4,10 +4,6 @@
 #include "common.hpp"
 #include "tensor_field.hpp"
 
-/* Just a placeholder class for now for generally curved edge object */
-/* Think you should only need real Edge objects around processes/element blocks
- * --- within a block you can find all the physical locations and derivatives
- *     by linear blending inwards from the outer edges. */
 class Edge
 {
     public:
@@ -22,7 +18,7 @@ class Edge
     real_t endpoints[2][3]; // Physical 3-space coords of the two endpoints
                             // 0: x = 0, 1: x = 1
 
-    void setup(const int id, const int Ns[3], const VectorField xs);
+    void setup(const int id, const int Nf[3], const VectorField xf);
     void free();
     void eval(const real_t s, real_t* const __restrict__ rs) const;
     void diff(const real_t s, real_t* const __restrict__ drdx) const;

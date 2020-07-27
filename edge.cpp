@@ -2,7 +2,7 @@
 #include "lagrange_polynomials.hpp"
 
 
-void Edge::setup(const int edge_id, const int Ns[3], const VectorField xs)
+void Edge::setup(const int edge_id, const int Nf[3], const VectorField xf)
 {
     id = edge_id;
 
@@ -62,7 +62,7 @@ void Edge::setup(const int edge_id, const int Ns[3], const VectorField xs)
             break;
     }
 
-    N = Ns[dir];
+    N = Nf[dir];
 
     x = new real_t [N];
 
@@ -70,7 +70,7 @@ void Edge::setup(const int edge_id, const int Ns[3], const VectorField xs)
         r(i) = new real_t [N];
 
     for (int i = 0; i < N; ++i)
-        x[i] = xs(dir, i);
+        x[i] = xf(dir, i);
 
     w = lagrange::barycentric_weights(x, N);
 

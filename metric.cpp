@@ -160,10 +160,10 @@ void Metric::setup_full(ElementBlock& eb)
     /* Pointwise constructs */
     real_t xe[2];
     int point_idx[2];
-    real_t drp[3]; 
+    real_t drdx[3]; 
     Matrix J; // dPHYS/dREF -- J.arr[phys][ref]
-    //real_t detJ;
-    //real_t rdetg = 1.0; //Assume physical coords are flat-spacetime Cartesian
+    real_t detJ;
+    real_t rdetg = 1.0; //Assume physical coords are flat-spacetime Cartesian
     int mem_loc;
 
     /* Solution points */
@@ -188,16 +188,27 @@ void Metric::setup_full(ElementBlock& eb)
         for (int j = 0; j < eb.Ns[1]; ++j)
         for (int i = 0; i < eb.Ns[0]; ++i)
         {
+            real_t Jarr[3][3] = {}; 
             mem_loc = eb.ids(i,j,k) + mem_offset;
 
-            /* Do 2D transfinite map using polynomial interpolation */
             xe[0] = eb.xs(0,i);
             xe[1] = eb.xs(1,j);
             point_idx[0] = i;
             point_idx[1] = j;
-            polynomial_transfinite_map_2D(xe, point_idx, elem_edges, elem_corners, drp);
-        }
 
+            for (int dref: dirs)
+            {
+                drdx_transfinite_map_2D(dref, xe, point_idx, elem_edges, elem_corners, drdx);
+                for (int dphys: dirs)
+                    Jarr[dphys][dref] = drdx[dphys];
+            }
+            
+            J.fill(Jarr);
+            J.find_determinant();
+            detJ = std::abs(J.det);
+
+            Jrdetg(mem_loc) = detJ * rdetg;
+        }
     }
 
 
