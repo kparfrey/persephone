@@ -3,6 +3,9 @@
 #include "kernels.hpp"
 #include "matrix.hpp"
 #include "write_screen.hpp"
+#include "element_block.hpp"
+#include "edge.hpp"
+#include "transfinite_map.hpp"
 
 
 void Metric::allocate_on_host(const int Ns, const int Nf[3])
@@ -58,12 +61,12 @@ void Metric::move_to_device()
 }
 
 
+
 /* Simplified version that assumes basic Cartesian shape */
-void Metric::setup(const int Nelem[3], const int Ns_block,
-                   const int Nf_dir_block[3], const real_t corners[8][3])
+void Metric::setup_simple(const int Nelem[3], const int Ns_block,
+                          const int Nf_dir_block[3], const real_t corners[8][3])
 {
     allocate_on_host(Ns_block, Nf_dir_block);
-
 
     real_t dr_elemblock[3];
     real_t dr_elem[3];
@@ -75,7 +78,6 @@ void Metric::setup(const int Nelem[3], const int Ns_block,
     for (int i: dirs)
         dr_elem[i] = dr_elemblock[i] / Nelem[i];
 
-    //real_t identity[3][3] = {{1.0,0.0,0.0},{0.0,1.0,0.0},{0.0,0.0,1.0}};
     Matrix J; // dPHYS/dREF -- J.arr[phys][ref]
     real_t detJ;
     real_t rdetg = 1.0; //Assume for now -- flat spacetime Cartesian
@@ -143,6 +145,65 @@ void Metric::setup(const int Nelem[3], const int Ns_block,
 
     return;
 }
+
+
+void Metric::setup_full(ElementBlock& eb)
+{
+    allocate_on_host(eb.Ns_block, eb.Nf_dir_block);
+
+    /* Elementwise constructs */
+    Edge* elem_edges;
+    real_t elem_corners[4][3]; // For 2D TF map
+    int elem_idx_1D;
+    int mem_offset;
+
+    /* Pointwise constructs */
+    real_t xe[2];
+    int point_idx[2];
+    real_t drp[3]; 
+    Matrix J; // dPHYS/dREF -- J.arr[phys][ref]
+    //real_t detJ;
+    //real_t rdetg = 1.0; //Assume physical coords are flat-spacetime Cartesian
+    int mem_loc;
+
+    /* Solution points */
+    for (int ke = 0; ke < eb.Nelem[2]; ++ke)
+    for (int je = 0; je < eb.Nelem[1]; ++je)
+    for (int ie = 0; ie < eb.Nelem[0]; ++ie)
+    {
+        elem_idx_1D = eb.id_elem(ie, je, ke);
+        mem_offset = elem_idx_1D * eb.Ns_elem;
+
+        elem_edges = eb.edges[elem_idx_1D];
+
+        for (int d: dirs)
+        {
+            elem_corners[0][d] = elem_edges[0].endpoints[0][d];
+            elem_corners[1][d] = elem_edges[1].endpoints[0][d];
+            elem_corners[2][d] = elem_edges[2].endpoints[1][d];
+            elem_corners[3][d] = elem_edges[3].endpoints[1][d];
+        }
+
+        for (int k = 0; k < eb.Ns[2]; ++k)
+        for (int j = 0; j < eb.Ns[1]; ++j)
+        for (int i = 0; i < eb.Ns[0]; ++i)
+        {
+            mem_loc = eb.ids(i,j,k) + mem_offset;
+
+            /* Do 2D transfinite map using polynomial interpolation */
+            xe[0] = eb.xs(0,i);
+            xe[1] = eb.xs(1,j);
+            point_idx[0] = i;
+            point_idx[1] = j;
+            polynomial_transfinite_map_2D(xe, point_idx, elem_edges, elem_corners, drp);
+        }
+
+    }
+
+
+    return;
+}
+
 
 
 /* Do a general coordinate transformation for a two-tensor between reference

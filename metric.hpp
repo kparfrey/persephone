@@ -4,6 +4,8 @@
 #include "common.hpp"
 #include "tensor_field.hpp"
 
+class Edge;
+class ElementBlock;
 
 /* REFERENCE coords are the 3D Cartesian coordinates local to the
  * reference element --- i.e. x[0-2] in [0,1]
@@ -58,12 +60,9 @@ class Metric
 
 
     /* Methods */
-    void setup(const int Nelem[3], const int Ns_block, 
-               const int Nf_dir_block[3], const real_t corners[8][3]);
-    //void transform_twoTensor(const TensorField& T_in, TensorField& T_out, 
-    //                         const int N,
-    //                         const CoordTransDir ctd=phys2ref, 
-    //                         const Components c=covariant);
+    void setup_simple(const int Nelem[3], const int Ns_block, 
+                      const int Nf_dir_block[3], const real_t corners[8][3]);
+    void setup_full(ElementBlock& eb);
     void move_to_device();
     
 };

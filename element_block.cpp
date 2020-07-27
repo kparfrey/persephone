@@ -55,7 +55,10 @@ void ElementBlock::setup()
     set_computational_coords();
 
     if (geometry == simple_geometry)
+    {
         set_physical_coords_simple();
+        metric.setup_simple(Nelem, Ns_block, Nf_dir_block, corners);
+    }
     else /* full_geometry */
     {
         /* Set those parts of the edges which don't change
@@ -68,8 +71,6 @@ void ElementBlock::setup()
     }
 
     fill_spectral_difference_matrices();
-
-    metric.setup(Nelem, Ns_block, Nf_dir_block, corners);
 
     free_setup_memory();
 
@@ -310,14 +311,19 @@ void ElementBlock::set_physical_coords_full()
                 analytic_transfinite_map_2D(xg, map, group_corners, rp);
                 for (int j: dirs) edge.r(j, i) = rp[j]; 
             }
+
+            /* Storing at Gauss points, so evaluate interpolant to find endpoints */
+            edge.eval(0.0, edge.endpoints[0]); // r(s=0) --> endpoints[0]
+            edge.eval(1.0, edge.endpoints[1]); // r(s=1) --> endpoints[1]
         }
 
-        /* Could alternatively calculate the groupwise coords for the element's
-         * corners and use the analytical map functor directly */
-        elem_edges[0].eval(0.0, elem_corners[0]);
-        elem_edges[1].eval(0.0, elem_corners[1]);
-        elem_edges[2].eval(1.0, elem_corners[2]);
-        elem_edges[3].eval(1.0, elem_corners[3]);
+        for (int d: dirs)
+        {
+            elem_corners[0][d] = elem_edges[0].endpoints[0][d];
+            elem_corners[1][d] = elem_edges[1].endpoints[0][d];
+            elem_corners[2][d] = elem_edges[2].endpoints[1][d];
+            elem_corners[3][d] = elem_edges[3].endpoints[1][d];
+        }
         
         for (int k = 0; k < Ns[2]; ++k)
         for (int j = 0; j < Ns[1]; ++j)

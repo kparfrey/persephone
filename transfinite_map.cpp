@@ -40,7 +40,8 @@ void analytic_transfinite_map_2D(const real_t x[2], DomainMap* const map,
 
 /* x is in elementwise reference space, x = [0,1] */
 void polynomial_transfinite_map_2D(const real_t x[2], const int point_idx[2],
-                                   Edge edges[4], const real_t corners[4][3], real_t r[3])
+                                   const Edge edges[4], const real_t corners[4][3], 
+                                   real_t r[3])
 {
     real_t Gx[4][3]; 
     
@@ -51,6 +52,55 @@ void polynomial_transfinite_map_2D(const real_t x[2], const int point_idx[2],
             Gx[i][j] = edges[i].r(j, point_idx[edges[i].dir]);
 
     transfinite_map_2D(Gx, corners, x, r);
+
+    return;
+}
+
+
+/* dir is the reference-space direction along which to take the derivative */
+void drdx_transfinite_map_2D(const int dir, const real_t x[2], const int point_idx[2],
+                             const Edge edges[4], const real_t corners[4][3], 
+                                   real_t dr[3])
+{
+    real_t Gx[4][3]; // Keep all four rows for clarity, even though will only use 
+    real_t dG[4][3]; // two rows in each of these for a given direction
+    
+    switch (dir)
+    {
+        case 0: // xi
+            edges[0].diff(x[0], dG[0]);
+            edges[2].diff(x[0], dG[2]);
+
+            for (int i = 0; i < 2; ++i) // For each component r^i...
+            {
+                Gx[1][i] = edges[1].r(i, point_idx[1]);
+                Gx[3][i] = edges[3].r(i, point_idx[1]);
+                
+                dr[i] = (1-x[1]) * (dG[0][i] + corners[0][i] - corners[1][i])
+                         + x[1]  * (dG[2][i] + corners[3][i] - corners[2][i])
+                                 +  Gx[1][i] - Gx[3][i];
+            }
+
+            break;
+
+        case 1: // eta
+            edges[1].diff(x[1], dG[1]);
+            edges[3].diff(x[1], dG[3]);
+
+            for (int i = 0; i < 2; ++i)
+            {
+                Gx[0][i] = edges[0].r(i, point_idx[0]);
+                Gx[2][i] = edges[2].r(i, point_idx[0]);
+                
+                dr[i] = (1-x[0]) * (dG[3][i] + corners[0][i] - corners[3][i])
+                         + x[0]  * (dG[1][i] + corners[1][i] - corners[2][i])
+                                 +  Gx[2][i] - Gx[0][i];
+            }
+
+            break;
+    }
+
+    dr[2] = 0.0;
 
     return;
 }

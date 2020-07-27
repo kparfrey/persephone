@@ -91,7 +91,7 @@ void Edge::free()
 
 
 /* Evaluate the coordinate vector r at location s, store in rs */
-void Edge::eval(const real_t s, real_t* const __restrict__ rs)
+void Edge::eval(const real_t s, real_t* const __restrict__ rs) const
 {
     /* Maybe slightly faster? */
     //lagrange::interpolate_vector(x, w, r, s, N, rs);
@@ -103,7 +103,7 @@ void Edge::eval(const real_t s, real_t* const __restrict__ rs)
 }
 
 
-void Edge::diff(const real_t s, real_t* const __restrict__ drdx)
+void Edge::diff(const real_t s, real_t* const __restrict__ drdx) const
 {
     for (int d: dirs)
         drdx[d] = lagrange::differentiate(x, w, r(d), s, N);

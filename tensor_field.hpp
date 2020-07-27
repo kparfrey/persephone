@@ -73,6 +73,12 @@ struct VectorField
     {
         return data[i];
     };
+
+    ACCEL_DECORATOR
+    inline real_t* operator()(const int i) const
+    {
+        return data[i];
+    };
 };
 
 
