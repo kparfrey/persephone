@@ -61,6 +61,7 @@ namespace kernels
                                        real_t* const __restrict__ F,
                                  const NumericalFlux*             F_numerical,
                                  const VectorField                S,
+                                 const VectorField                normal,
                                  const LengthBucket               lb,
                                  const int                        dir);    
 }

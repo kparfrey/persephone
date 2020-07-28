@@ -21,6 +21,7 @@ class NumericalFlux
     ACCEL_DECORATOR
     inline virtual void operator()(const real_t* const __restrict__ UL, 
                                    const real_t* const __restrict__ UR,
+                                   const real_t* const __restrict__ n,
                                          real_t (*Fnum)[3],
                                    const int dir) const = 0;
 };
@@ -36,6 +37,7 @@ class HLL_straight : public NumericalFlux
     ACCEL_DECORATOR
     inline virtual void operator()(const real_t* const __restrict__ UL, 
                                    const real_t* const __restrict__ UR,
+                                   const real_t* const __restrict__ n, // not used
                                          real_t (*Fnum)[3],
                                    const int dir) const
     {

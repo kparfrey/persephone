@@ -302,15 +302,16 @@ void Metric::setup_full(ElementBlock& eb)
             /* This needs to be tidied and rationalised... */
             /* Face normals in this transform direction for this element  */
             int points_per_face = eb.Ns[d1]*eb.Ns[d2];
-            int mem_loc_face;
+            int mem_loc_normals;
             real_t s[3];
             real_t smag;
+            int id_elem_normals = (ne2*eb.Nelem[d1] + ne1)*(eb.Nelem[d]+1) + ne0;
             for (int n2 = 0; n2 < eb.Ns[d2]; ++n2)
             for (int n1 = 0; n1 < eb.Ns[d1]; ++n1)
             {
                 /* Have n0 = 0 face for all but the last element */
-                mem_loc      = mem_offset_f + eb.idf(0,n1,n2,d);
-                mem_loc_face = id_elem_f * points_per_face + n2*eb.Ns[d1] + n1;
+                mem_loc         = mem_offset_f + eb.idf(0,n1,n2,d);
+                mem_loc_normals = id_elem_normals * points_per_face + n2*eb.Ns[d1] + n1;
                 
                 for (int dphys: dirs)
                     s[dphys] = S[d](dphys,mem_loc);
@@ -319,13 +320,13 @@ void Metric::setup_full(ElementBlock& eb)
                 smag = std::sqrt(s[0]*s[0] + s[1]*s[1] + s[2]*s[2]);
 
                 for (int dphys: dirs)
-                    normal[d](dphys,mem_loc_face) = s[dphys]/smag;
+                    normal[d](dphys,mem_loc_normals) = s[dphys]/smag;
 
                 /* Last element in this line, also store the rightmost face */
                 if (ne0 == eb.Nelem[d]-1)
                 {
-                    mem_loc      = mem_offset_f + eb.idf(eb.Nf[d]-1,n1,n2,d);
-                    mem_loc_face = (id_elem_f+1) * points_per_face + n2*eb.Ns[d1] + n1;
+                    mem_loc         = mem_offset_f + eb.idf(eb.Nf[d]-1,n1,n2,d);
+                    mem_loc_normals = (id_elem_normals+1) * points_per_face + n2*eb.Ns[d1] + n1;
                     
                     for (int dphys: dirs)
                         s[dphys] = S[d](dphys,mem_loc);
@@ -333,7 +334,7 @@ void Metric::setup_full(ElementBlock& eb)
                     smag = std::sqrt(s[0]*s[0] + s[1]*s[1] + s[2]*s[2]);
 
                     for (int dphys: dirs)
-                        normal[d](dphys,mem_loc_face) = s[dphys]/smag;
+                        normal[d](dphys,mem_loc_normals) = s[dphys]/smag;
                 }
             }
         }

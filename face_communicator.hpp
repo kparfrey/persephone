@@ -3,6 +3,7 @@
 
 #include <mpi.h>
 #include "common.hpp"
+#include "tensor_field.hpp"
 
 class Process;
 
@@ -34,11 +35,13 @@ class FaceCommunicator
     int Ntot; // Total no. of points on face: N[0] * N[1] * Nelem[0] * Nelem[1]
     int Ntot_all; // Total no. of data values: Nfield * N_tot
 
-    real_t *my_data;
-    real_t *neighbour_data;
+    VectorField normal;
 
-    real_t *my_data_host;
-    real_t *neighbour_data_host;
+    real_t* my_data;
+    real_t* neighbour_data;
+
+    real_t* my_data_host;
+    real_t* neighbour_data_host;
 
 
     /* Member functions */

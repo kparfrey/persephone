@@ -97,7 +97,7 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
     
     for (int i: dirs)
         kernels::internal_numerical_flux(Uf(i), F(i), F_numerical,
-                                         eb.metric.S[i], eb.lengths, i);
+                                         eb.metric.S[i], eb.metric.normal[i], eb.lengths, i);
 
     for (int i: dirs)
         kernels::fluxDeriv_to_soln(eb.fluxDeriv2soln(i), F(i), dF(i), eb.lengths, i);

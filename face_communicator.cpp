@@ -73,6 +73,36 @@ void FaceCommunicator::setup(Process& proc, int face_id)
    
     allocate();
 
+    /* Fill normal array from ElementBlock */
+    int id_elem_face, id_elem_normals;
+    int mem_offset_face, mem_offset_normals;
+    int mem_face, mem_normals;
+
+    for (int ne2 = 0; ne2 < Nelem[1]; ++ne2)
+    for (int ne1 = 0; ne1 < Nelem[0]; ++ne1)
+    {
+        /* Offsets for this face */
+        id_elem_face    = (ne2 * Nelem[0]) + ne1;
+        mem_offset_face = id_elem_face * N[0] * N[1];
+
+        /* Offsets for the normals array */
+        if (orientation == -1)
+            id_elem_normals = (ne2*Nelem[0] + ne1)*(proc.elements.Nelem[normal_dir]+1) + 0;
+        else /* Want rightmost face: ne0 + 1 */
+            id_elem_normals = (ne2*Nelem[0] + ne1)*(proc.elements.Nelem[normal_dir]+1) + ne0+1;
+        mem_offset_normals = id_elem_normals * N[0] * N[1];
+
+        for (int n2 = 0; n2 < N[1]; ++n2)
+        for (int n1 = 0; n1 < N[0]; ++n1)
+        {
+            mem_face    = mem_offset_face    + n2 * N[0] + n1;
+            mem_normals = mem_offset_normals + n2 * N[0] + n1;  
+
+            for (int i: dirs)
+                normal(i,mem_face) = proc.elements.metric.normal[normal_dir](i,mem_normals);
+        }
+    }
+
     return;
 }
 
@@ -91,6 +121,9 @@ void FaceCommunicator::allocate()
     my_data_host        = my_data;
     neighbour_data_host = neighbour_data;
 #endif
+
+    for (int i: dirs)
+        normal(i) = new real_t [Ntot];
 
     return;
 }

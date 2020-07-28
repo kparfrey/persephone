@@ -428,6 +428,7 @@ namespace kernels
         real_t* UR = new real_t [lb.Nfield];
         real_t (*F_num_phys)[3] = new real_t [lb.Nfield][3]; // pointer to an array
 
+        real_t np[3] = {}; // The face's normal vector at a single point
         
         for (int ne2 = 0; ne2 < face.Nelem[1]; ++ne2)
         for (int ne1 = 0; ne1 < face.Nelem[0]; ++ne1)
@@ -450,7 +451,10 @@ namespace kernels
                     UR[field] = UR_data[mem_face + field * face.Ntot];
                 }
 
-                (*F_numerical)(UL, UR, F_num_phys, dir);
+                for (int i: dirs)
+                    np[i] = face.normal(i,mem_face);
+
+                (*F_numerical)(UL, UR, np, F_num_phys, dir);
 
                 /* Transform from physical to reference-space fluxes.
                  * Required memory location in the full 3D flux array */
@@ -468,6 +472,7 @@ namespace kernels
                                        real_t* const __restrict__ F,
                                  const NumericalFlux*             F_numerical,
                                  const VectorField                S,
+                                 const VectorField                normal,
                                  const LengthBucket               lb,
                                  const int                        dir)
     {
@@ -483,15 +488,16 @@ namespace kernels
         const int Nf_tot = lb.Nf_dir_block[dir]; 
 
         //int ne0L, ne0R; //Element indices in the normal dir on either side of face
-        int id_elem_L, id_elem_R;
-        int mem_offset_L, mem_offset_R;
-        int mem_L, mem_R;
+        int id_elem_L, id_elem_R, id_elem_face;
+        int mem_offset_L, mem_offset_R, mem_offset_face;
+        int mem_L, mem_R, mem_face;
 
         /* Conserved variables and physical fluxes at one point */
         real_t* UL = new real_t [lb.Nfield];
         real_t* UR = new real_t [lb.Nfield];
         real_t (*F_num_phys)[3] = new real_t [lb.Nfield][3]; // pointer to an array
 
+        real_t np[3]; // The face's normal vector at a single point
 
         for (int ne2 = 0; ne2 < lb.Nelem[dir2]; ++ne2)
         for (int ne1 = 0; ne1 < lb.Nelem[dir1]; ++ne1)
@@ -501,9 +507,11 @@ namespace kernels
              * right, ie at greater dir-coord and element index in this direction */
             id_elem_L = (ne2*lb.Nelem[dir1] + ne1)*lb.Nelem[dir] + ne0;
             id_elem_R = id_elem_L + 1;
+            id_elem_face = (ne2*lb.Nelem[dir1] + ne1)*(lb.Nelem[dir]+1) + ne0; // For normals
 
             mem_offset_L = id_elem_L * lb.Nf_dir[dir];
             mem_offset_R = id_elem_R * lb.Nf_dir[dir];
+            mem_offset_face = id_elem_face * lb.Ns[dir2] * lb.Ns[dir1];
         
             for (int n2 = 0; n2 < lb.Ns[dir2]; ++n2)
             for (int n1 = 0; n1 < lb.Ns[dir1]; ++n1)
@@ -511,6 +519,7 @@ namespace kernels
                 /* Memory locations for the 0th field variable */
                 mem_L = mem_offset_L + (n2 * Ns1 + n1) * Nf0 + Nf0 - 1;
                 mem_R = mem_offset_R + (n2 * Ns1 + n1) * Nf0 + 0;
+                mem_face = mem_offset_face + n2 * Ns1 + n1;
 
                 for (int field = 0; field < lb.Nfield; ++field)
                 {
@@ -518,7 +527,10 @@ namespace kernels
                     UR[field] = Uf[mem_R + field * Nf_tot];
                 }
 
-                (*F_numerical)(UL, UR, F_num_phys, dir);
+                for (int i: dirs)
+                    np[i] = normal(i,mem_face);
+
+                (*F_numerical)(UL, UR, np, F_num_phys, dir);
 
                 /* Calculate reference-space flux and save into the left element */
                 fluxes_phys_to_ref(F_num_phys, F, S, mem_L, lb.Nfield, Nf_tot);
