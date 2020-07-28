@@ -79,7 +79,7 @@ void ParamsCartesian::setup_process(Process &proc)
     set_initial_state(proc.elements, equations);
 
     /* Should be made general and moved to a separate member function */
-    proc.dt = cfl * set_dt_basic(proc.elements); 
+    proc.dt = 1e-3; //cfl * set_dt_basic(proc.elements); 
 
     write::variable<real_t>("CFL", proc.cfl);
     write::variable<real_t>("End time", proc.end_time);
@@ -156,13 +156,7 @@ void ParamsCartesian::setup_elementblock(ElementBlock &elements, Process &proc)
                 elements.corners[i][j] = proc_origin[j] + corner_coords[i][j]*length_per_proc[j];
     }
     else // full_geometry
-    {
         elements.map = new QuarterAnnulusMap; // specify manually for now...
-
-        /* These are the corners of the whole group... */
-        /***
-        ***/
-    }
 
 
     /* At this point all external information is present, and the internal

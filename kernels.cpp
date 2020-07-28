@@ -488,9 +488,9 @@ namespace kernels
         const int Nf_tot = lb.Nf_dir_block[dir]; 
 
         //int ne0L, ne0R; //Element indices in the normal dir on either side of face
-        int id_elem_L, id_elem_R, id_elem_face;
-        int mem_offset_L, mem_offset_R, mem_offset_face;
-        int mem_L, mem_R, mem_face;
+        int id_elem_L, id_elem_R, id_elem_n;
+        int mem_offset_L, mem_offset_R, mem_offset_n;
+        int mem_L, mem_R, mem_n;
 
         /* Conserved variables and physical fluxes at one point */
         real_t* UL = new real_t [lb.Nfield];
@@ -507,11 +507,11 @@ namespace kernels
              * right, ie at greater dir-coord and element index in this direction */
             id_elem_L = (ne2*lb.Nelem[dir1] + ne1)*lb.Nelem[dir] + ne0;
             id_elem_R = id_elem_L + 1;
-            id_elem_face = (ne2*lb.Nelem[dir1] + ne1)*(lb.Nelem[dir]+1) + ne0; // For normals
+            id_elem_n = (ne2*lb.Nelem[dir1] + ne1)*(lb.Nelem[dir]+1) + ne0; // For normals
 
             mem_offset_L = id_elem_L * lb.Nf_dir[dir];
             mem_offset_R = id_elem_R * lb.Nf_dir[dir];
-            mem_offset_face = id_elem_face * lb.Ns[dir2] * lb.Ns[dir1];
+            mem_offset_n = id_elem_n * lb.Ns[dir2] * lb.Ns[dir1];
         
             for (int n2 = 0; n2 < lb.Ns[dir2]; ++n2)
             for (int n1 = 0; n1 < lb.Ns[dir1]; ++n1)
@@ -519,7 +519,7 @@ namespace kernels
                 /* Memory locations for the 0th field variable */
                 mem_L = mem_offset_L + (n2 * Ns1 + n1) * Nf0 + Nf0 - 1;
                 mem_R = mem_offset_R + (n2 * Ns1 + n1) * Nf0 + 0;
-                mem_face = mem_offset_face + n2 * Ns1 + n1;
+                mem_n = mem_offset_n +  n2 * Ns1 + n1;
 
                 for (int field = 0; field < lb.Nfield; ++field)
                 {
@@ -528,7 +528,7 @@ namespace kernels
                 }
 
                 for (int i: dirs)
-                    np[i] = normal(i,mem_face);
+                    np[i] = normal(i,mem_n);
 
                 (*F_numerical)(UL, UR, np, F_num_phys, dir);
 
