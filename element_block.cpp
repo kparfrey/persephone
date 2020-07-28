@@ -56,10 +56,11 @@ void ElementBlock::setup()
 
     if (geometry == simple_geometry)
     {
+        write::message("Setting up coords & metric in simple geometry");
         set_physical_coords_simple();
         metric.setup_simple(Nelem, Ns_block, Nf_dir_block, corners);
     }
-    else if (geomtry == full_geometry)
+    else if (geometry == full_geometry)
     {
         /* Set those parts of the edges which don't change
          * element to element */
@@ -67,6 +68,7 @@ void ElementBlock::setup()
             for (int j = 0; j < 4; ++j)
                 edges[i][j].setup(j, Nf, xf); // Use Lobatto points
 
+        write::message("Setting up coords & metric in full geometry");
         set_physical_coords_full();
         metric.setup_full(*this);
     }

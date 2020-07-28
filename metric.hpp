@@ -32,6 +32,10 @@ class Metric
     /* ...and on flux points */
     VectorField S[3];  // Physical->Reference vector transform
                        // S[i] = Jrdetg d ref^i/d phys^j 
+
+    /* At element faces */
+    VectorField normal[3]; // One VectorField for each transform dir
+
     //TensorField g[3];  // Physical components
     // Will need others eventually
 
