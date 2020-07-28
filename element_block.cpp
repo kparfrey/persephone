@@ -59,7 +59,7 @@ void ElementBlock::setup()
         set_physical_coords_simple();
         metric.setup_simple(Nelem, Ns_block, Nf_dir_block, corners);
     }
-    else /* full_geometry */
+    else if (geomtry == full_geometry)
     {
         /* Set those parts of the edges which don't change
          * element to element */
@@ -68,7 +68,10 @@ void ElementBlock::setup()
                 edges[i][j].setup(j, Nf, xf); // Use Lobatto points
 
         set_physical_coords_full();
+        metric.setup_full(*this);
     }
+    else
+        write::error("Chosen GeometryClass not recognized.");
 
     fill_spectral_difference_matrices();
 
@@ -275,8 +278,8 @@ void ElementBlock::set_physical_coords_full()
 
     /* Point constructs */
     real_t xg[2];     // Groupwise reference-space coord
-    real_t xe[2];     // Elementwise reference-space coord
-    int point_idx[2]; // Elementwise i,j indices of this point
+    real_t xe[3];     // Elementwise reference-space coord
+    //int point_idx[2]; // Elementwise i,j indices of this point
     real_t rp[3];     // Physical coordinates of this point
 
 
@@ -341,9 +344,10 @@ void ElementBlock::set_physical_coords_full()
             /* Do 2D transfinite map using polynomial interpolation */
             xe[0] = xs(0,i);
             xe[1] = xs(1,j);
-            point_idx[0] = i;
-            point_idx[1] = j;
-            polynomial_transfinite_map_2D(xe, point_idx, elem_edges, elem_corners, rp);
+            //point_idx[0] = i;
+            //point_idx[1] = j;
+
+            polynomial_transfinite_map_2D(xe, elem_edges, elem_corners, rp);
 
             rs(0,mem_loc) = rp[0];
             rs(1,mem_loc) = rp[1];

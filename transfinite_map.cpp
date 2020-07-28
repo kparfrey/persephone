@@ -5,7 +5,7 @@
 
 
 static void transfinite_map_2D(const real_t Gx[4][3], const real_t corners[4][3], 
-                               const real_t x[2], real_t r[3])
+                               const real_t x[3], real_t r[3])
 {
     for (int i = 0; i < 2; ++i) // Iterate over coord-vector components
     {
@@ -22,7 +22,7 @@ static void transfinite_map_2D(const real_t Gx[4][3], const real_t corners[4][3]
 
 
 /* x is in groupwise reference space, x = [0,1] */
-void analytic_transfinite_map_2D(const real_t x[2], DomainMap* const map,
+void analytic_transfinite_map_2D(const real_t x[3], DomainMap* const map,
                                  const real_t corners[4][3], real_t r[3])
 {
     real_t Gx[4][3]; /* Gamma(xi) or Gamma(eta) */
@@ -39,7 +39,7 @@ void analytic_transfinite_map_2D(const real_t x[2], DomainMap* const map,
 
 
 /* x is in elementwise reference space, x = [0,1] */
-void polynomial_transfinite_map_2D(const real_t x[2], const int point_idx[2],
+void polynomial_transfinite_map_2D(const real_t x[3],
                                    const Edge edges[4], const real_t corners[4][3], 
                                    real_t r[3])
 {
@@ -62,7 +62,7 @@ void polynomial_transfinite_map_2D(const real_t x[2], const int point_idx[2],
 
 
 /* dir is the reference-space direction along which to take the derivative */
-void drdx_transfinite_map_2D(const int dir, const real_t x[2], const int point_idx[2],
+void drdx_transfinite_map_2D(const int dir, const real_t x[3], 
                              const Edge edges[4], const real_t corners[4][3], 
                                    real_t dr[3])
 {
@@ -87,6 +87,8 @@ void drdx_transfinite_map_2D(const int dir, const real_t x[2], const int point_i
                                  +  Gx[1][i] - Gx[3][i];
             }
 
+            dr[2] = 0.0;
+
             break;
 
         case 1: // eta
@@ -105,15 +107,16 @@ void drdx_transfinite_map_2D(const int dir, const real_t x[2], const int point_i
                                  +  Gx[2][i] - Gx[0][i];
             }
 
+            dr[2] = 0.0;
+
             break;
 
         case 2:
             dr[0] = 0.0;
             dr[1] = 0.0;
+            dr[2] = 1.0;
             break;
     }
-
-    dr[2] = 0.0;
 
     return;
 }

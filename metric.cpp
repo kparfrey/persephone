@@ -6,6 +6,7 @@
 #include "element_block.hpp"
 #include "edge.hpp"
 #include "transfinite_map.hpp"
+#include "kernels.hpp"
 
 
 void Metric::allocate_on_host(const int Ns, const int Nf[3])
@@ -158,13 +159,14 @@ void Metric::setup_full(ElementBlock& eb)
     int mem_offset;
 
     /* Pointwise constructs */
-    real_t xe[2];
-    int point_idx[2];
+    real_t xe[3];
+    //int point_idx[2];
     real_t drdx[3]; 
     Matrix J; // dPHYS/dREF -- J.arr[phys][ref]
     real_t detJ;
     real_t rdetg = 1.0; //Assume physical coords are flat-spacetime Cartesian
     int mem_loc;
+
 
     /* Solution points */
     for (int ke = 0; ke < eb.Nelem[2]; ++ke)
@@ -193,12 +195,12 @@ void Metric::setup_full(ElementBlock& eb)
 
             xe[0] = eb.xs(0,i);
             xe[1] = eb.xs(1,j);
-            point_idx[0] = i;
-            point_idx[1] = j;
+            //point_idx[0] = i;
+            //point_idx[1] = j;
 
             for (int dref: dirs)
             {
-                drdx_transfinite_map_2D(dref, xe, point_idx, elem_edges, elem_corners, drdx);
+                drdx_transfinite_map_2D(dref, xe, elem_edges, elem_corners, drdx);
                 for (int dphys: dirs)
                     Jarr[dphys][dref] = drdx[dphys];
             }
@@ -210,6 +212,80 @@ void Metric::setup_full(ElementBlock& eb)
             Jrdetg(mem_loc) = detJ * rdetg;
         }
     }
+
+
+    /* Flux points */
+    int id_elem_f, id_elem_s;
+    int mem_offset_f; 
+
+    for (int d: dirs)
+    {
+        int n0, n1, n2; 
+        int* i = nullptr;
+        int* j = nullptr;
+        int* k = nullptr;
+
+        int ne0, ne1, ne2; 
+        int* ie = nullptr;
+        int* je = nullptr;
+        int* ke = nullptr;
+
+        int d1 = dir_plus_one[d];
+        int d2 = dir_plus_two[d];
+        
+        /* Should probably move this function out of kernels... */
+        kernels::relative_to_fixed_indices(n0,  n1,  n2,  i,  j,  k,  d);
+        kernels::relative_to_fixed_indices(ne0, ne1, ne2, ie, je, ke, d);
+
+        for (ne2 = 0; ne2 < eb.Nelem[d2]; ++ne2)
+        for (ne1 = 0; ne1 < eb.Nelem[d1]; ++ne1)
+        for (ne0 = 0; ne0 < eb.Nelem[d];  ++ne0)
+        {
+            id_elem_f    = (ne2*eb.Nelem[d1] + ne1)*eb.Nelem[d] + ne0;
+            mem_offset_f = elem_idx_1D * eb.Nf_dir[d];
+
+            id_elem_s    = ((*ke)*eb.Nelem[1] + *je)*eb.Nelem[0] + *ie;
+
+            elem_edges = eb.edges[id_elem_s];
+
+            for (int m: dirs)
+            {
+                elem_corners[0][m] = elem_edges[0].endpoints[0][m];
+                elem_corners[1][m] = elem_edges[1].endpoints[0][m];
+                elem_corners[2][m] = elem_edges[2].endpoints[1][m];
+                elem_corners[3][m] = elem_edges[3].endpoints[1][m];
+            }
+
+            for (n2 = 0; n2 < eb.Ns[d2]; ++n2)
+            for (n1 = 0; n1 < eb.Ns[d1]; ++n1)
+            for (n0 = 0; n0 < eb.Nf[d];  ++n0)
+            {
+                real_t Jarr[3][3] = {}; 
+                mem_loc = eb.idf(n0,n1,n2,d) + mem_offset_f;
+
+                xe[d]  = eb.xf(d, n0);
+                xe[d1] = eb.xs(d1,n1);
+                xe[d2] = eb.xs(d2,n2);
+
+                for (int dref: dirs)
+                {
+                    drdx_transfinite_map_2D(dref, xe, elem_edges, elem_corners, drdx);
+                    for (int dphys: dirs)
+                        Jarr[dphys][dref] = drdx[dphys];
+                }
+                
+                J.fill(Jarr);
+                J.find_determinant();
+                J.find_inverse();
+                detJ = std::abs(J.det);
+
+                /* Assume J.inv[ref][phys]... */
+                for (int dphys: dirs)
+                    S[d](dphys,mem_loc) = detJ * rdetg * J.inv[d][dphys];
+            }
+        }
+    }
+
 
 
     return;

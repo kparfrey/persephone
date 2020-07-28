@@ -8,6 +8,10 @@ class NumericalFlux;
 
 namespace kernels
 {
+    void relative_to_fixed_indices(int&  n0, int&  n1, int&  n2,
+                                                 int*& i0, int*& i1, int*& i2,
+                                                 const int dir);
+
     /* Memory allocation on device --- don't use for host-side only memory */
     real_t* alloc(int n);     // Zero-initialize
 

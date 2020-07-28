@@ -9,7 +9,7 @@ namespace kernels
     /* Solution points always use a fixed order (i along dir-0 etc) while 
      * flux-point data is stored relative to the transform direction. Use this
      * to create fixed-axis pointers to the correct transform-relative indices */
-    inline static void relative_to_fixed_indices(int&  n0, int&  n1, int&  n2,
+    void relative_to_fixed_indices(int&  n0, int&  n1, int&  n2,
                                                  int*& i0, int*& i1, int*& i2,
                                                  const int dir)
     {
