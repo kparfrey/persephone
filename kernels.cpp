@@ -496,6 +496,8 @@ namespace kernels
         real_t* UL = new real_t [lb.Nfield];
         real_t* UR = new real_t [lb.Nfield];
         real_t (*F_num_phys)[3] = new real_t [lb.Nfield][3]; // pointer to an array
+        //real_t (*FL_final)[3] = new real_t [lb.Nfield][3];
+        //real_t (*FR_final)[3] = new real_t [lb.Nfield][3];
 
         real_t np[3]; // The face's normal vector at a single point
 
@@ -540,6 +542,9 @@ namespace kernels
                     F[mem_R + field * Nf_tot] = F[mem_L + field * Nf_tot];
             }
         }
+
+        delete[] UL;
+        delete[] UR;
 
         return;
     }

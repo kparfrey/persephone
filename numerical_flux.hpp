@@ -44,14 +44,17 @@ class HLL : public NumericalFlux
         real_t cL[3][2], cR[3][2];
         real_t cpos[3], cneg[3];
         real_t cp, cn;
+        
+        real_t Fstar;
+        real_t F0; // Here (FL + FR)/2
 
         (*U_to_P)(UL, PL);
         (*U_to_P)(UR, PR);
 
-        for (int d: dirs)
+        for (int i: dirs)
         {
-            (*c_from_P)(PL, cL[d], d);
-            (*c_from_P)(PR, cR[d], d);
+            (*c_from_P)(PL, cL[i], i);
+            (*c_from_P)(PR, cR[i], i);
         }
 
         (*F_from_P)(PL, FL);
@@ -72,12 +75,14 @@ class HLL : public NumericalFlux
 
 
         for (int field = 0; field < Nfield; ++field)
-            for (int d: dirs)
+            for (int i: dirs)
             {
-                cp = cpos[d];
-                cn = cneg[d];
-                Fnum[field][d] = n[d] * (cp*FL[field][d] - cn*FR[field][d]
+                cp = cpos[i];
+                cn = cneg[i];
+                Fstar = (cp*FL[field][i] - cn*FR[field][i]
                                  + cp*cn*(UR[field] - UL[field])) / (cp - cn + TINY);
+                F0 = 0.5 * (FL[field][i] + FR[field][i]);
+                Fnum[field][i] = F0 * (1.0 - n[i]) + Fstar * n[i];
             }
 
         return;

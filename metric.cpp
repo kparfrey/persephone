@@ -333,8 +333,11 @@ void Metric::setup_full(ElementBlock& eb)
                 smag = std::sqrt(s[0]*s[0] + s[1]*s[1] + s[2]*s[2]);
 
                 for (int dphys: dirs)
+                {
                     normal[d](dphys,mem_loc_normals) = s[dphys]/smag;
-                //write::variable<real_t>("normal[d][1,..] : ", normal[d](1, mem_loc));
+                    printf("Normal: d:%d  dphys:%d    %d  %d  %d    %d  %d    %lf\n",
+                            d, dphys, ne2, ne1, ne0, n2, n1, normal[d](dphys,mem_loc_normals));
+                }
 
                 /* Last element in this line, also store the rightmost face */
                 if (ne0 == eb.Nelem[d]-1)
