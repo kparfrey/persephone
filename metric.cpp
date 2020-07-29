@@ -6,9 +6,6 @@
 #include "element_block.hpp"
 #include "edge.hpp"
 #include "transfinite_map.hpp"
-#include "kernels.hpp"
-
-#include <stdio.h>
 
 
 void Metric::allocate_on_host(const int Ns, const int Nf[3])
@@ -164,7 +161,6 @@ void Metric::setup_full(ElementBlock& eb)
 
     /* Pointwise constructs */
     real_t xe[3];
-    //int point_idx[2];
     real_t drdx[3]; 
     Matrix J; // dPHYS/dREF -- J.arr[phys][ref]
     real_t detJ;
@@ -200,8 +196,6 @@ void Metric::setup_full(ElementBlock& eb)
             elem_corners[1][d] = elem_edges[1].endpoints[0][d];
             elem_corners[2][d] = elem_edges[2].endpoints[1][d];
             elem_corners[3][d] = elem_edges[3].endpoints[1][d];
-            //for (int mm = 0; mm < 4; ++mm)
-            //        printf("%d %d  %lf\n", d, mm, elem_corners[mm][d]);
         }
 
         for (int k = 0; k < eb.Ns[2]; ++k)
@@ -213,14 +207,10 @@ void Metric::setup_full(ElementBlock& eb)
 
             xe[0] = eb.xs(0,i);
             xe[1] = eb.xs(1,j);
-            //point_idx[0] = i;
-            //point_idx[1] = j;
 
             for (int dref: dirs)
             {
                 drdx_transfinite_map_2D(dref, xe, elem_edges, elem_corners, drdx);
-                //printf("%d %d %d   %d %d %d    %lf %lf %lf\n",ke,je,ie, k,j,i,
-                //                                        drdx[0], drdx[1], drdx[2]);
                 for (int dphys: dirs)
                     Jarr[dphys][dref] = drdx[dphys];
             }
@@ -228,7 +218,6 @@ void Metric::setup_full(ElementBlock& eb)
             J.fill(Jarr);
             J.find_determinant();
             detJ = std::abs(J.det);
-            //write::message(str(ie)+" "+str(je)+" "+str(ke)+" "+str(k)+" "+str(j)+" "+str(i)+" "+str(detJ),"On root: ");
 
             Jrdetg(mem_loc) = detJ * rdetg;
         }
@@ -241,13 +230,6 @@ void Metric::setup_full(ElementBlock& eb)
 
     for (int d: dirs)
     {
-        /*
-        int n0, n1, n2; 
-        int* i = nullptr;
-        int* j = nullptr;
-        int* k = nullptr;
-        */
-
         int ne0, ne1, ne2; 
         int* ie = nullptr;
         int* je = nullptr;
@@ -256,9 +238,28 @@ void Metric::setup_full(ElementBlock& eb)
         int d1 = dir_plus_one[d];
         int d2 = dir_plus_two[d];
         
-        /* Should probably move this function out of kernels... */
-        //kernels::relative_to_fixed_indices(n0,  n1,  n2,  i,  j,  k,  d);
-        kernels::relative_to_fixed_indices(ne0, ne1, ne2, ie, je, ke, d);
+        
+        /* Identical to kernels::relative_to_fixed_indices(). Reproduced here so don't
+         * need to include kernels. Split off to a function if I end up needing it 
+         * somewhere else. */
+        switch(d)
+        {
+            case 0:
+                ie  = &ne0;
+                je  = &ne1;
+                ke  = &ne2;
+                break;
+            case 1:
+                ie  = &ne2;
+                je  = &ne0;
+                ke  = &ne1;
+                break;
+            case 2:
+                ie  = &ne1;
+                je  = &ne2;
+                ke  = &ne0;
+                break;
+        }
 
         for (ne2 = 0; ne2 < eb.Nelem[d2]; ++ne2)
         for (ne1 = 0; ne1 < eb.Nelem[d1]; ++ne1)
@@ -277,8 +278,6 @@ void Metric::setup_full(ElementBlock& eb)
                 elem_corners[1][m] = elem_edges[1].endpoints[0][m];
                 elem_corners[2][m] = elem_edges[2].endpoints[1][m];
                 elem_corners[3][m] = elem_edges[3].endpoints[1][m];
-                //for (int mm = 0; mm < 4; ++mm)
-                //    printf("%d %d  %lf\n", m, mm, elem_corners[mm][m]);
             }
 
             /* S matrix for this element */
@@ -296,8 +295,6 @@ void Metric::setup_full(ElementBlock& eb)
                 for (int dref: dirs)
                 {
                     drdx_transfinite_map_2D(dref, xe, elem_edges, elem_corners, drdx);
-                    //printf("%d  %d %d %d   %d %d %d    %lf %lf %lf\n",d,ne2,ne1,ne0,n2,n1,n0,
-                    //                                       drdx[0], drdx[1], drdx[2]);
                     for (int dphys: dirs)
                         Jarr[dphys][dref] = drdx[dphys];
                 }
@@ -333,11 +330,7 @@ void Metric::setup_full(ElementBlock& eb)
                 smag = std::sqrt(s[0]*s[0] + s[1]*s[1] + s[2]*s[2]);
 
                 for (int dphys: dirs)
-                {
                     normal[d](dphys,mem_loc_normals) = s[dphys]/smag;
-                    printf("Normal: d:%d  dphys:%d    %d  %d  %d    %d  %d    %lf\n",
-                            d, dphys, ne2, ne1, ne0, n2, n1, normal[d](dphys,mem_loc_normals));
-                }
 
                 /* Last element in this line, also store the rightmost face */
                 if (ne0 == eb.Nelem[d]-1)

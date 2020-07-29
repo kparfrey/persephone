@@ -27,6 +27,10 @@ class NumericalFlux
 };
 
 
+/* This currently averages the tangential fluxes, to give a unique 
+ * flux in all three physical components for both sides. May want to
+ * reorganise so that each side uses its own tangential flux, since
+ * only the normal flux needs to be the same at the interface. */
 class HLL : public NumericalFlux
 {
     public:
@@ -46,7 +50,7 @@ class HLL : public NumericalFlux
         real_t cp, cn;
         
         real_t Fstar;
-        real_t F0; // Here (FL + FR)/2
+        real_t F0; // Here (FL + FR)/2 for now
 
         (*U_to_P)(UL, PL);
         (*U_to_P)(UR, PR);
@@ -81,7 +85,9 @@ class HLL : public NumericalFlux
                 cn = cneg[i];
                 Fstar = (cp*FL[field][i] - cn*FR[field][i]
                                  + cp*cn*(UR[field] - UL[field])) / (cp - cn + TINY);
+
                 F0 = 0.5 * (FL[field][i] + FR[field][i]);
+
                 Fnum[field][i] = F0 * (1.0 - n[i]) + Fstar * n[i];
             }
 

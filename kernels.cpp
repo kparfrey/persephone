@@ -9,7 +9,7 @@ namespace kernels
     /* Solution points always use a fixed order (i along dir-0 etc) while 
      * flux-point data is stored relative to the transform direction. Use this
      * to create fixed-axis pointers to the correct transform-relative indices */
-    void relative_to_fixed_indices(int&  n0, int&  n1, int&  n2,
+    inline static void relative_to_fixed_indices(int&  n0, int&  n1, int&  n2,
                                                  int*& i0, int*& i1, int*& i2,
                                                  const int dir)
     {
@@ -304,6 +304,10 @@ namespace kernels
             }
         }
 
+        delete[] Up;
+        delete[] Pp;
+        delete[] Fp;
+
         return;
     }
 
@@ -428,7 +432,7 @@ namespace kernels
         real_t* UR = new real_t [lb.Nfield];
         real_t (*F_num_phys)[3] = new real_t [lb.Nfield][3]; // pointer to an array
 
-        real_t np[3] = {}; // The face's normal vector at a single point
+        real_t np[3]; // The face's normal vector at a single point
         
         for (int ne2 = 0; ne2 < face.Nelem[1]; ++ne2)
         for (int ne1 = 0; ne1 < face.Nelem[0]; ++ne1)
@@ -463,6 +467,10 @@ namespace kernels
                 fluxes_phys_to_ref(F_num_phys, F, S, mem, lb.Nfield, Nf_tot);
             }
         }
+        
+        delete[] UL;
+        delete[] UR;
+        delete[] F_num_phys;
 
         return;
     }
@@ -496,8 +504,6 @@ namespace kernels
         real_t* UL = new real_t [lb.Nfield];
         real_t* UR = new real_t [lb.Nfield];
         real_t (*F_num_phys)[3] = new real_t [lb.Nfield][3]; // pointer to an array
-        //real_t (*FL_final)[3] = new real_t [lb.Nfield][3];
-        //real_t (*FR_final)[3] = new real_t [lb.Nfield][3];
 
         real_t np[3]; // The face's normal vector at a single point
 
@@ -545,6 +551,7 @@ namespace kernels
 
         delete[] UL;
         delete[] UR;
+        delete[] F_num_phys;
 
         return;
     }

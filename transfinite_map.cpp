@@ -3,8 +3,6 @@
 #include "domain_map.hpp"
 #include "edge.hpp"
 
-#include <stdio.h>
-
 
 static void transfinite_map_2D(const real_t Gx[4][3], const real_t corners[4][3], 
                                const real_t x[3], real_t r[3])
@@ -47,12 +45,6 @@ void polynomial_transfinite_map_2D(const real_t x[3],
 {
     real_t Gx[4][3]; 
     
-    /* Don't need to interpolate, since only need Gamma(x) at the 
-     * existing locations along the edge (if have stored the Gauss points) */
-    //for (int i = 0; i < 4; ++i) // for each edge...
-    //    for (int j = 0; j < 2; ++j) // for each coord component...
-    //        Gx[i][j] = edges[i].r(j, point_idx[edges[i].dir]);
-
     /* Storing at Lobatto points -- need to interpolate to solution points */
     for (int i = 0; i < 4; ++i) // for each edge...
         edges[i].eval(x[edges[i].dir], Gx[i]);
@@ -79,19 +71,10 @@ void drdx_transfinite_map_2D(const int dir, const real_t x[3],
             edges[1].eval(x[1], Gx[1]);
             edges[3].eval(x[1], Gx[3]);
 
-            //for (int d: dirs)
-            //    printf("%d  dG0: %lf  dG2: %lf    Gx1: %lf  Gx3: %lf\n",d,dG[0][d],dG[2][d],
-            //            Gx[1][d],Gx[3][d]);
-
             for (int i = 0; i < 2; ++i) // For each component r^i...
-            {
-                //Gx[1][i] = edges[1].r(i, point_idx[1]);
-                //Gx[3][i] = edges[3].r(i, point_idx[1]);
-                
                 dr[i] = (1-x[1]) * (dG[0][i] + corners[0][i] - corners[1][i])
                          + x[1]  * (dG[2][i] + corners[3][i] - corners[2][i])
                                  +  Gx[1][i] - Gx[3][i];
-            }
 
             dr[2] = 0.0;
 
@@ -104,14 +87,9 @@ void drdx_transfinite_map_2D(const int dir, const real_t x[3],
             edges[2].eval(x[0], Gx[2]);
 
             for (int i = 0; i < 2; ++i)
-            {
-                //Gx[0][i] = edges[0].r(i, point_idx[0]);
-                //Gx[2][i] = edges[2].r(i, point_idx[0]);
-                
                 dr[i] = (1-x[0]) * (dG[3][i] + corners[0][i] - corners[3][i])
                          + x[0]  * (dG[1][i] + corners[1][i] - corners[2][i])
                                  +  Gx[2][i] - Gx[0][i];
-            }
 
             dr[2] = 0.0;
 
