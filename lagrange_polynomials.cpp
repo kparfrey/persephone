@@ -70,7 +70,7 @@ namespace lagrange
     }
 
 
-    /* Find df/dx at x = s. General s version from Kopriva */
+    /* Find df/dx at x = s, for s not at a node; from Kopriva */
     real_t differentiate(const real_t* const __restrict__ x,
                          const real_t* const __restrict__ w,
                          const real_t* const __restrict__ f,
@@ -92,6 +92,22 @@ namespace lagrange
         return above / below;
     }
 
+
+    /* Find df/dx at x = x[i], when x[i] is an interpolation node */
+    real_t diff_at_node(const real_t* const __restrict__ x,
+                        const real_t* const __restrict__ w,
+                        const real_t* const __restrict__ f,
+                        const int i, const int N)
+    {
+        real_t lsum = 0.0;
+
+        for (int j = 0; j < N; ++j)
+            if (i != j)
+                lsum += w[j] * (f[i] - f[j])/(x[i] - x[j]);
+        
+        return -lsum/w[i];
+    }
+    
 
     /* Single interpolation matrix: from x0 points --> x1 points */
     real_t* barycentric_interpolation_matrix(const real_t* const x0, const int N0,

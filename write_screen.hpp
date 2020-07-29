@@ -1,9 +1,12 @@
 #ifndef WRITE_SCREEN_HPP
 #define WRITE_SCREEN_HPP
 
-#include <iostream>
 #include <string>
 #include "common.hpp"
+
+/* Move iostream to the cpp file. Currently it is needed to supply cout etc.
+ * to a few other files, but this is sloppy. */
+#include <iostream> 
 
 namespace write
 {

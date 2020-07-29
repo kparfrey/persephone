@@ -3,6 +3,8 @@
 #include "domain_map.hpp"
 #include "edge.hpp"
 
+#include <stdio.h>
+
 
 static void transfinite_map_2D(const real_t Gx[4][3], const real_t corners[4][3], 
                                const real_t x[3], real_t r[3])
@@ -76,6 +78,10 @@ void drdx_transfinite_map_2D(const int dir, const real_t x[3],
             edges[2].diff(x[0], dG[2]);
             edges[1].eval(x[1], Gx[1]);
             edges[3].eval(x[1], Gx[3]);
+
+            //for (int d: dirs)
+            //    printf("%d  dG0: %lf  dG2: %lf    Gx1: %lf  Gx3: %lf\n",d,dG[0][d],dG[2][d],
+            //            Gx[1][d],Gx[3][d]);
 
             for (int i = 0; i < 2; ++i) // For each component r^i...
             {

@@ -24,6 +24,11 @@ namespace lagrange
                          const real_t* const __restrict__ f,
                          const real_t s, const int N);
 
+    real_t diff_at_node(const real_t* const __restrict__ x,
+                        const real_t* const __restrict__ w,
+                        const real_t* const __restrict__ f,
+                        const int i, const int N);
+
     real_t* barycentric_interpolation_matrix(const real_t* const x0, const int N0,
                                              const real_t* const x1, const int N1);
 

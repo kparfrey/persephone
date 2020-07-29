@@ -1,6 +1,8 @@
 #include "edge.hpp"
 #include "lagrange_polynomials.hpp"
+#include <cmath>
 
+static real_t TOL = 1e-12; // Tolerance for saying two points are identical
 
 void Edge::setup(const int edge_id, const int Nf[3], const VectorField xf)
 {
@@ -96,6 +98,16 @@ void Edge::eval(const real_t s, real_t* const __restrict__ rs) const
     /* Maybe slightly faster? */
     //lagrange::interpolate_vector(x, w, r, s, N, rs);
 
+    /* Check to see if at an edge point. If so, don't need to interpolate,
+     * and the interpolation function will give a NaN. */
+    for (int i = 0; i < N; ++i)
+        if (std::abs(s - x[i]) < TOL)
+        {
+            for (int d: dirs)
+                rs[d] = r(d,i);
+            return;
+        }
+
     for (int d: dirs)
         rs[d] = lagrange::interpolate(x, w, r(d), s, N);
 
@@ -105,6 +117,17 @@ void Edge::eval(const real_t s, real_t* const __restrict__ rs) const
 
 void Edge::diff(const real_t s, real_t* const __restrict__ drdx) const
 {
+    /* If at an interpolation node, use the at-node version of the
+     * differentiation algorithm */
+    for (int i = 0; i < N; ++i)
+        if (std::abs(s - x[i]) < TOL)
+        {
+            for (int d: dirs)
+                drdx[d] = lagrange::diff_at_node(x, w, r(d), i, N);
+            return;
+        }
+
+    /* If didn't hit a node, use the in-between-nodes version */
     for (int d: dirs)
         drdx[d] = lagrange::differentiate(x, w, r(d), s, N);
 
