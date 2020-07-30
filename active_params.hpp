@@ -21,7 +21,7 @@ static int Ns[3]    = {8,8,1};
 static real_t limits[3][2] = {{-5.,5.}, {-3.,3.}, {-0.1, 0.1}};
 
 static real_t cfl      = 0.8;
-static real_t end_time = 10.0;
+static real_t end_time = 50.0;
 static real_t dt_write = 0.5;
 
 ParamsCartesian active_parameters(equations, time_method, 

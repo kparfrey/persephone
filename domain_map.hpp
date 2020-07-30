@@ -89,7 +89,8 @@ class ObliqueRect2D : public DomainMap
     const real_t d2 = 0.5; // r2 = [-d2, d2]
     real_t c[4][2]; // x,y coords of the rectangle's 4 corners
 
-    virtual void operator()(const int n, const real_t x, real_t r[3])
+
+    ObliqueRect2D()
     {
         c[0][0] = - 5.0;
         c[0][1] = - 5.0;
@@ -102,7 +103,11 @@ class ObliqueRect2D : public DomainMap
 
         c[3][0] = - 1.0;
         c[3][1] =   5.0;
+    }
 
+
+    virtual void operator()(const int n, const real_t x, real_t r[3])
+    {
         for (int i = 0; i < 2; ++i)
         {
             switch (n)
@@ -122,6 +127,103 @@ class ObliqueRect2D : public DomainMap
                 case 3:
                 case 7:
                     r[i] = c[0][i] + x * (c[3][i] - c[0][i]);
+                    break;
+                case 8:
+                    r[i] = c[0][i];
+                    break;
+                case 9:
+                    r[i] = c[1][i];
+                    break;
+                case 10:
+                    r[i] = c[2][i];
+                    break;
+                case 11:
+                    r[i] = c[3][i];
+                    break;
+            }
+        }
+
+        if (n < 4)
+            r[2] = -d2;
+        else if (n < 8)
+            r[2] = d2;
+        else
+            r[2] = d2 * (2 * x - 1);
+
+        return;
+    }
+};
+
+
+class WaveRect2D : public DomainMap
+{
+    public:
+    const real_t d2 = 0.5; // r2 = [-d2, d2]
+    real_t c[4][2]; // x,y coords of the rectangle's 4 corners
+    real_t A[4][2] = {}; // Amplitude of the sine wave in x & y for the 4 edges
+    real_t nwave[4] = {}; // No. of wavelengths for each of the four edges 
+
+
+    WaveRect2D()
+    {
+        /* Corners */
+        c[0][0] = - 5.0;
+        c[0][1] = - 5.0;
+
+        c[1][0] =   5.0;
+        c[1][1] = - 4.0;
+
+        c[2][0] =   9.0;
+        c[2][1] =   6.0;
+
+        c[3][0] = - 1.0;
+        c[3][1] =   5.0;
+
+        /* Wave amplitudes */
+        A[0][0] = 0.5;
+        A[0][1] = 1.0;
+        A[2][0] = 0.5;
+        A[2][1] = 1.0;
+
+        A[1][0] = -0.25;
+        A[1][1] = 0.25;
+        A[3][0] = -0.25;
+        A[3][1] = 0.25;
+
+        /* Numbers of wavelengths */
+        nwave[0] = 1.0;
+        nwave[2] = 1.0;
+
+        nwave[1] = 2.0;
+        nwave[3] = 2.0;
+    }
+
+
+    virtual void operator()(const int n, const real_t x, real_t r[3])
+    {
+        for (int i = 0; i < 2; ++i)
+        {
+            switch (n)
+            {
+                case 0:
+                case 4:
+                    r[i] = c[0][i] + x * (c[1][i] - c[0][i])
+                             + A[0][i]*std::sin(x*nwave[0]*2*pi);
+                    break;
+                case 1:
+                case 5:
+                    r[i] = c[1][i] + x * (c[2][i] - c[1][i])
+                             + A[1][i]*std::sin(x*nwave[1]*2*pi);
+                    break;
+                case 2:
+                case 6:
+                    r[i] = c[3][i] + x * (c[2][i] - c[3][i])
+                             + A[2][i]*std::sin(x*nwave[2]*2*pi);
+                    break;
+                case 3:
+                case 7:
+                    r[i] = c[0][i] + x * (c[3][i] - c[0][i])
+                             + A[3][i]*std::sin(x*nwave[3]*2*pi);
                     break;
                 case 8:
                     r[i] = c[0][i];
