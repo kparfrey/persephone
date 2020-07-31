@@ -16,7 +16,6 @@ class ElementBlock
     private:
     /* These only called by the setup() method */
     void allocate_on_host();
-    void free_setup_memory();
     void set_computational_coords();
     void set_physical_coords_simple();
     void set_physical_coords_full();
@@ -78,6 +77,7 @@ class ElementBlock
     inline int ids_full(int i, int j, int k, int ie, int je, int ke); 
     void setup();
     void free();
+    void free_setup_memory();
     void move_to_device();
 };
 

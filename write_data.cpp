@@ -44,6 +44,8 @@ void write_data(Process &proc)
 
     MPI_Barrier(MPI_COMM_WORLD);
 
+    /* MPI collective part */
+    { 
     write::message("Creating data file " + std::to_string(proc.data_output_counter));
     HighFive::File datafile(filename, HighFive::File::Create,
                                 HighFive::MPIOFileDriver(MPI_COMM_WORLD, MPI_INFO_NULL));
@@ -95,6 +97,26 @@ void write_data(Process &proc)
 
     delete[] primitives;
     delete[] data;
+    } // End of MPI collective part
+
+
+    /* Write time etc. from the root process */
+    if (proc.rank == 0)
+    {
+        write::message("Writing time etc.");
+
+        /* Reopen the mesh file in single-processor mode */
+        HighFive::File datafile(filename, HighFive::File::ReadWrite);
+        
+        HighFive::DataSet ds0 = datafile.createDataSet<real_t>("time", HighFive::DataSpace::From(proc.time));
+        ds0.write(proc.time);
+
+        HighFive::DataSet ds1 = datafile.createDataSet<int>("step", HighFive::DataSpace::From(proc.step));
+        ds1.write(proc.step);
+
+        HighFive::DataSet ds2 = datafile.createDataSet<real_t>("dt", HighFive::DataSpace::From(proc.dt));
+        ds2.write(proc.dt);
+    }
 
     proc.data_output_counter++;
     proc.time_last_write = proc.time;

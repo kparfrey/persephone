@@ -77,8 +77,6 @@ void ElementBlock::setup()
 
     fill_spectral_difference_matrices();
 
-    free_setup_memory();
-
     return;
 }
 

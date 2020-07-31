@@ -3,3 +3,4 @@ persephone
 *.swp
 *.d
 *.h5
+*.pyc

@@ -50,6 +50,8 @@ int main(int argc, char *argv[])
     
     write_mesh(proc); // Mesh data still on host
 
+    proc.elements.free_setup_memory(); // Keep edges until mesh has been written
+
     proc.move_to_device();
 
     write_data(proc); // Data generally lives on device
