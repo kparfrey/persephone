@@ -69,8 +69,8 @@ Rm[1] = 1.0
 Zm[1] = 2.0
 Rm[2] = 0.2
 Zm[2] = 0.2
-Rm[3] = 0.0
-Zm[3] = 0.0
+Rm[3] = -0.3
+Zm[3] = -0.1
 
 h = 0.4  # Inner square half-width on unit disc
 
