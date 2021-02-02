@@ -52,10 +52,6 @@ void ParamsCartesian::write_param_info()
 
 void ParamsCartesian::setup_process(Process &proc)
 {
-    /* Setup common to all geometries. */
-    setup_process_generic(proc);
-
-
     /* This process's set of indices in the global 3D array of processes   */
     int proc_idx[3];
 

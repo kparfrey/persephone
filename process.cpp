@@ -25,6 +25,18 @@ void Process::write_startup_info()
 }
 
 
+void Process::setup()
+{
+    write::message("Setting up process --- generic setup");
+    params.setup_process_generic(*this); // in params.cpp
+    
+    write::message("Setting up process --- parameter-type-specific setup");
+    params.setup_process(*this); // in params_cartesian.cpp etc.
+    
+    return;
+}
+
+
 /* Move all of the process's device-side data there, to be called at
  * the end of the setup phase. */
 void Process::move_to_device()

@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
 
     proc.write_startup_info();
     
-    proc.params.setup_process(proc); // Need to do something about this...
+    proc.setup();
     
     write_mesh(proc); // Mesh data still on host
 
