@@ -15,7 +15,6 @@ class ParamsCartesian : public Params
     
 
     /* Secondary or derived quantities */
-    int Nf[3];
     int Ns_elem; // Total numbers of soln/flux points per element
     int Nf_elem;
     int Nelem_proc;

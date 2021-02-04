@@ -24,7 +24,6 @@ void ParamsTorus::secondary_params()
             write::error("Torus central polygon not supported", destroy);
     }
 
-    //Nproc_group  = Nproc[0] * Nproc[1] * Nproc[2];
     //Nelem_proc   = Nelem[0] * Nelem[1] * Nelem[2];
     //Ns_elem      = Ns[0] * Ns[1] * Ns[2];
     
@@ -74,7 +73,7 @@ void ParamsTorus::setup_process(Process &proc)
 
     if (proc.rank < Nproc_group_central)
     {
-        proc.group = 0
+        proc.group = 0;
         proc.group_rank = proc.rank;
         proc.Nproc_group[0] = Nproc[0];
         proc.Nproc_group[1] = Nproc[0];
@@ -131,9 +130,9 @@ void ParamsTorus::setup_process(Process &proc)
         /* Start by setting neighbour_idx[3] relative to the group with a straightfoward
          * Cartesian connectivity */
         for (int d: dirs)
-            neighbour_idx[d] = proc.group_idx[d];
+            face.neighbour_idx[d] = proc.group_idx[d];
         
-        neighbour_idx[normal] += face.orientation;
+        face.neighbour_idx[normal] += face.orientation;
     }
 
     /* Make periodic in the 2-direction (phi) */
@@ -173,7 +172,7 @@ void ParamsTorus::setup_process(Process &proc)
                     // NB these are the indices in group-1, in which the coords have exchanged connectivity
                     FaceCommunicator& f = proc.faces[4];
                     f.neighbour_idx[0] = 0;
-                    f.neighbour_idx[1] = f.my_group_rank[0]; // group-1:dir-1 aligned with group-0:dir-0
+                    f.neighbour_idx[1] = proc.group_idx[0]; // group-1:dir-1 aligned with group-0:dir-0
                     f.neighbour_group  = 1;
                     f.neighbour_id     = 2;
                 }
@@ -198,7 +197,7 @@ void ParamsTorus::setup_process(Process &proc)
                     switch (proc.group)
                     {
                         case 1:
-                            f.neighbour_idx[0] = proc.group_rank[1];
+                            f.neighbour_idx[0] = proc.group_idx[1];
                             f.neighbour_idx[1] = 0;
                             f.neighbour_id     = 4;
                             break;
@@ -207,13 +206,13 @@ void ParamsTorus::setup_process(Process &proc)
                             f.neighbour_id     = 3;
                             break;
                         case 3:
-                            f.neighbour_idx[0] = Nproc_central - 1 - proc.group_rank[1];
+                            f.neighbour_idx[0] = Nproc_central - 1 - proc.group_idx[1];
                             f.neighbour_idx[1] = Nproc_central - 1;
                             f.neighbour_id     = 5;
                             break;
                         case 4:
                             f.neighbour_idx[0] = 0;
-                            f.neighbour_idx[1] = Nproc_central - 1 - proc.group_rank[1];
+                            f.neighbour_idx[1] = Nproc_central - 1 - proc.group_idx[1];
                             f.neighbour_id     = 2;
                             break;
                     }
@@ -256,20 +255,22 @@ void ParamsTorus::setup_process(Process &proc)
     /* Translate the groupwise neighbour_idx[3] into a global rank */
     for (int i: ifaces)
     {
+        FaceCommunicator& f = proc.faces[i];
+
         /* For the torus, Nproc_group[1] = Nproc_central for all groups, central and outer */
-        int neighbour_rank_groupwise = (neighbour_idx[0]  * proc.Nproc_group[1]
-                                      + neighbour_idx[1]) * proc.Nproc_group[2]
-                                      + neighbour_idx[2];
+        int neighbour_rank_groupwise = (f.neighbour_idx[0]  * proc.Nproc_group[1]
+                                      + f.neighbour_idx[1]) * proc.Nproc_group[2]
+                                      + f.neighbour_idx[2];
         
         int groupwise_to_global_offset;
-        int nbgrp = proc.faces[i].neighbour_group;
+        int nbgrp = f.neighbour_group;
         if (nbgrp < Ngroup_central)
-            groupwise_to_global_offset = nbgroup * Nproc_group_central;
+            groupwise_to_global_offset = nbgrp * Nproc_group_central;
         else
             groupwise_to_global_offset = Ngroup_central * Nproc_group_central
                                          + (nbgrp - Ngroup_central) * Nproc_group_outer;
 
-        proc.faces[i].neighbour_rank = groupwise_to_global_offset + neighbour_rank_groupwise;
+       f.neighbour_rank = groupwise_to_global_offset + neighbour_rank_groupwise;
     }
 
     return;
@@ -282,7 +283,6 @@ void ParamsTorus::setup_elementblock(ElementBlock &elements, Process &proc)
     {
         elements.Nelem[i] = Nelem[i];
         elements.Ns[i] = Ns[i];
-        elements.Nf[i] = Nf[i];
     }
 
     elements.Nelem_block = Nelem_proc; 

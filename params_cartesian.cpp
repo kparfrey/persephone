@@ -124,7 +124,6 @@ void ParamsCartesian::setup_elementblock(ElementBlock &elements, Process &proc)
     {
         elements.Nelem[i] = Nelem[i];
         elements.Ns[i] = Ns[i];
-        elements.Nf[i] = Nf[i];
     }
 
     elements.Nelem_block = Nelem_proc; 
