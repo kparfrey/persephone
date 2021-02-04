@@ -13,9 +13,6 @@ using std::endl;
 /* Called by the ParamsTorus constructor */
 void ParamsTorus::secondary_params()
 {
-    int Ngroup_central;
-    int Ngroup_outer;
-
     switch (central_polygon)
     {
         case square:
@@ -31,7 +28,13 @@ void ParamsTorus::secondary_params()
     //Nelem_proc   = Nelem[0] * Nelem[1] * Nelem[2];
     //Ns_elem      = Ns[0] * Ns[1] * Ns[2];
     
-    Nproc_domain = (Ngroup_central*Nproc[0]*Nproc[0] + Ngroup_outer*Nproc[0]*Nproc[1]) * Nproc[2];
+    Nproc_central = Nproc[0];
+    Nproc_outer   = Nproc[1];
+
+    Nproc_group_central = Nproc[0] * Nproc[0] * Nproc[2];
+    Nproc_group_outer   = Nproc[0] * Nproc[1] * Nproc[2];
+
+    Nproc_domain = Ngroup_central * Nproc_group_central + Ngroup_outer * Nproc_group_outer;
     Nelem_domain = (Ngroup_central*Nelem[0]*Nelem[0] + Ngroup_outer*Nelem[0]*Nelem[1]) * Nelem[2];
     Ns_domain    = (Ngroup_central*Ns[0]*Ns[0]       + Ngroup_outer*Ns[0]*Ns[1])       * Ns[2];
 }
@@ -145,7 +148,7 @@ void ParamsTorus::setup_process(Process &proc)
      * for faces with normals in the 0-1 (poloidal) plane */
     switch (central_polygon)
     {
-        case square:
+        case square: // Put the following into a separate private/static function?
             if (proc.group == 0) // central square
             {
                 if (proc.faces[2].neighbour_idx[0] < 0)
@@ -186,10 +189,6 @@ void ParamsTorus::setup_process(Process &proc)
             }
             else // the four outer quads
             {
-                /* Remember: Nproc[3] = Nproc[central, outer, phi] */
-                int Nproc_central = Nproc[0];
-                int Nproc_outer   = Nproc[1];
-
                 /* All face-2s point into the central square */
                 if (proc.faces[2].neighbour_idx[0] < 0)
                 {
@@ -257,11 +256,20 @@ void ParamsTorus::setup_process(Process &proc)
     /* Translate the groupwise neighbour_idx[3] into a global rank */
     for (int i: ifaces)
     {
+        /* For the torus, Nproc_group[1] = Nproc_central for all groups, central and outer */
         int neighbour_rank_groupwise = (neighbour_idx[0]  * proc.Nproc_group[1]
                                       + neighbour_idx[1]) * proc.Nproc_group[2]
                                       + neighbour_idx[2];
+        
+        int groupwise_to_global_offset;
+        int nbgrp = proc.faces[i].neighbour_group;
+        if (nbgrp < Ngroup_central)
+            groupwise_to_global_offset = nbgroup * Nproc_group_central;
+        else
+            groupwise_to_global_offset = Ngroup_central * Nproc_group_central
+                                         + (nbgrp - Ngroup_central) * Nproc_group_outer;
 
-        face.neighbour_rank = neighbour_group * Nproc_group + neighbour_rank_groupwise;
+        proc.faces[i].neighbour_rank = groupwise_to_global_offset + neighbour_rank_groupwise;
     }
 
     return;

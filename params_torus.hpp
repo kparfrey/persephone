@@ -16,15 +16,14 @@ class ParamsTorus : public Params
 
     /* Secondary or derived quantities */
     int Ngroup;  // No. of disc groups or disc zones
+    int Ngroup_central;  // 1 for square
+    int Ngroup_outer;    // 4 for square
+    int Nproc_central;   // equivalent to Nproc[0] --- 1D measurement
+    int Nproc_outer;     // equivalent to Nproc[1]
+    int Nproc_group_central; // total (3D) number of procs in the central group
+    int Nproc_group_outer;   
     
-    /* Remove from torus params, since these now depend on which group the proc is in
-    int Nproc_group;
-    int Nf[3];   // Where is this set?
-    int Ns_elem; // Total numbers of soln/flux points per element
-    int Nf_elem;
-    int Nelem_proc;
-     */
-
+    
 
     /* General methods */
     virtual void write_param_info();
