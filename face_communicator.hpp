@@ -18,7 +18,7 @@ class FaceCommunicator
     int my_group_rank;  // This process's rank within its group
     int neighbour_rank; // Rank of MPI process this face is paired with 
     int my_id;          // Index/label from 0 to 5 for this face
-    int neighbour_id;
+    int neighbour_id;   // 0-5 index label for this face's neighbour
     int neighbour_idx[3]; // 3D groupwise index of this face's neighbours
     int neighbour_group;  // The group of this face's neighbour
     int normal_dir; // Direction of the normal to the face: 0,1,2 in ref space

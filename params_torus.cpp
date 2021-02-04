@@ -154,46 +154,105 @@ void ParamsTorus::setup_process(Process &proc)
                     f.neighbour_idx[0] = 0;
                     f.neighbour_idx[1] = proc.Nproc_group[1] - proc.group_idx[1] - 1; // dir reverses
                     f.neighbour_group  = 4;
+                    f.neighbour_id     = 2;
                 }
+
                 if (proc.faces[3].neighbour_idx[0] > proc.Nproc_group[0] - 1)
                 {
                     FaceCommunicator& f = proc.faces[3];
                     f.neighbour_idx[0] = 0;
-                    f.neighbour_group   = 2;
+                    f.neighbour_group  = 2;
+                    f.neighbour_id     = 2;
                 }
+
                 if (proc.faces[4].neighbour_idx[1] < 0)
                 {
                     // NB these are the indices in group-1, in which the coords have exchanged connectivity
                     FaceCommunicator& f = proc.faces[4];
                     f.neighbour_idx[0] = 0;
                     f.neighbour_idx[1] = f.my_group_rank[0]; // group-1:dir-1 aligned with group-0:dir-0
-                    f.neighbour_group = 1;
+                    f.neighbour_group  = 1;
+                    f.neighbour_id     = 2;
                 }
+
                 if (proc.faces[5].neighbour_idx[1] > proc.Nproc_group[1] - 1)
                 {
                     FaceCommunicator& f = proc.faces[5];
                     f.neighbour_idx[0] = 0;
                     f.neighbour_idx[1] = proc.Nproc_group[0] - proc.group_idx[0] - 1;
-                    f.neighbour_group = 3;
+                    f.neighbour_group  = 3;
+                    f.neighbour_id     = 2;
                 }
             }
             else // the four outer quads
             {
-            }
+                /* Remember: Nproc[3] = Nproc[central, outer, phi] */
+                int Nproc_central = Nproc[0];
+                int Nproc_outer   = Nproc[1];
 
+                /* All face-2s point into the central square */
+                if (proc.faces[2].neighbour_idx[0] < 0)
+                {
+                    FaceCommunicator& f = proc.faces[2];
+                    f.neighbour_group = 0;
+
+                    switch (proc.group)
+                    {
+                        case 1:
+                            f.neighbour_idx[0] = proc.group_rank[1];
+                            f.neighbour_idx[1] = 0;
+                            f.neighbour_id     = 4;
+                            break;
+                        case 2:
+                            f.neighbour_idx[0] = Nproc_central - 1;
+                            f.neighbour_id     = 3;
+                            break;
+                        case 3:
+                            f.neighbour_idx[0] = Nproc_central - 1 - proc.group_rank[1];
+                            f.neighbour_idx[1] = Nproc_central - 1;
+                            f.neighbour_id     = 5;
+                            break;
+                        case 4:
+                            f.neighbour_idx[0] = 0;
+                            f.neighbour_idx[1] = Nproc_central - 1 - proc.group_rank[1];
+                            f.neighbour_id     = 2;
+                            break;
+                    }
+                }
+                
+                if (proc.faces[3].neighbour_idx[0] > proc.Nproc_group[0] - 1)
+                {
+                    FaceCommunicator& f = proc.faces[3];
+                    f.neighbour_idx[0] = -1;
+                    f.neighbour_group  = -1;
+                    f.neighbour_id     = -1;
+                    f.external_face = true;
+                }
+                
+                if (proc.faces[4].neighbour_idx[1] < 0)
+                {
+                    FaceCommunicator& f = proc.faces[4];
+                    f.neighbour_idx[1] = Nproc_central - 1;
+                    if (proc.group == 1)
+                        f.neighbour_group = 4;
+                    else
+                        f.neighbour_group = proc.group - 1;
+                }
+
+                if (proc.faces[5].neighbour_idx[1] > proc.Nproc_group[1] - 1)
+                {
+                    FaceCommunicator& f = proc.faces[5];
+                    f.neighbour_idx[1] = 0;
+                    if (proc.group == 4)
+                        f.neighbour_group = 1;
+                    else
+                        f.neighbour_group = proc.group + 1;
+                }
+            }
             break;
         default:
             write::error("Torus central polygon not supported", destroy);
     }
-
-    
-        
-
-        else // all faces in the 0-1 (i.e. poloidal) plane
-        {
-        }
-
-        
 
     /* Translate the groupwise neighbour_idx[3] into a global rank */
     for (int i: ifaces)
