@@ -95,23 +95,22 @@ void ParamsCartesian::setup_process(Process &proc)
         /* Inter-process connectivity */
         /* Make periodic for now */
         int normal = face.normal_dir;
-        int neighbour_idx[3];
         for (int d: dirs)
-            neighbour_idx[d] = proc.group_idx[d];
+            face.neighbour_idx[d] = proc.group_idx[d];
         
-        neighbour_idx[normal] += face.orientation;
+        face.neighbour_idx[normal] += face.orientation;
 
         /* Make periodic */
-        if (neighbour_idx[normal] < 0)
-            neighbour_idx[normal] = proc.Nproc_group[normal] - 1;
+        if (face.neighbour_idx[normal] < 0)
+            face.neighbour_idx[normal] = proc.Nproc_group[normal] - 1;
         
-        if (neighbour_idx[normal] > proc.Nproc_group[normal] - 1)
-            neighbour_idx[normal] = 0;
+        if (face.neighbour_idx[normal] > proc.Nproc_group[normal] - 1)
+            face.neighbour_idx[normal] = 0;
 
 
-        face.neighbour_rank = (neighbour_idx[0]  * proc.Nproc_group[1]
-                             + neighbour_idx[1]) * proc.Nproc_group[2]
-                             + neighbour_idx[2];
+        face.neighbour_rank = (face.neighbour_idx[0]  * proc.Nproc_group[1]
+                             + face.neighbour_idx[1]) * proc.Nproc_group[2]
+                             + face.neighbour_idx[2];
     }
 
     return;
