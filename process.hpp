@@ -32,11 +32,13 @@ class Process
      * A general dataset can be divided into a number of logically
      * Cartesian groups. A Cartesian dataset has only one group. */
     int group;
-    int group_idx[3]; // 3D indices of this process within its group
+    int group_rank;     // rank of this Process within its group
+    int group_idx[3];   // 3D indices of this process within its group
     int Nproc_group[3]; // No. of procs in each direction in this group
     
 
     /* Global data */
+    int Ngroup;
     int Nproc;
     int Nfield;
     real_t time;

@@ -23,6 +23,7 @@ enum BasicTimeMethod {rk2_midpoint, rk3_classic};
 enum WhoWrites {root_only, all_ranks, one_rank};
 enum Prognosis {destroy, survive};
 enum GeometryClass {simple_geometry, full_geometry};
+enum TorusCentralPolygon {square, hexagon, octagon};
 
 //enum Components {covariant, contravariant};
 //enum CoordTransDir {phys2ref, ref2phys};

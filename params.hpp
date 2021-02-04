@@ -18,6 +18,7 @@ class Params
 
     GeometryClass geometry; // "simple" (straight edges + 90 degree angles)
                             // or "full" (generally curved domain)
+                            // Should be moved to ParamsCartesian?
 
     /* Total quantities referring to whole domain */
     int Nproc_domain;

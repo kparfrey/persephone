@@ -61,6 +61,8 @@ void ParamsCartesian::setup_process(Process &proc)
 
     /* A Cartesian dataset needs only one Cartesian group */
     proc.group = 0;
+    proc.group_rank = proc.rank;
+
     for (int i: dirs)
     {
         proc.group_idx[i]   = proc_idx[i];

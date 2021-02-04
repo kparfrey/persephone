@@ -8,9 +8,11 @@ void FaceCommunicator::setup(Process& proc, int face_id)
 {
     my_id   = face_id;
     my_rank = proc.rank;
+    my_group_rank = proc.group_rank;
 
     /* neighbour_id corresponds to a simple Cartesian connectivity.
-     * Need to modify later if not true for this face. */
+     * Need to modify later if not true for this face (e.g. the face
+     * is on a group boundary. */
     switch (my_id)
     {
         case 0:
