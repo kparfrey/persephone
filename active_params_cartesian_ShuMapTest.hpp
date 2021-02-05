@@ -12,12 +12,12 @@
 
 static EqnSystem equations = euler;
 static BasicTimeMethod time_method = rk2_midpoint;
-static GeometryClass geometry = full_geometry;
 
 static int Nproc[3] = {2,2,1};
 static int Nelem[3] = {3,3,1};
 static int Ns[3]    = {12,8,1};
 
+static GeometryClass geometry = full_geometry;
 static real_t limits[3][2] = {{-5.,5.}, {-3.,3.}, {-0.1, 0.1}};
 
 static real_t cfl      = 0.8;
@@ -25,8 +25,8 @@ static real_t end_time = 75.0;
 static real_t dt_write = 0.25;
 
 ParamsCartesian active_parameters(equations, time_method, 
-                                  Nproc, Nelem, Ns, limits,
-                                  geometry,
-                                  cfl, end_time, dt_write);
+                                  Nproc, Nelem, Ns,
+                                  cfl, end_time, dt_write,
+                                  geometry, limits);
 
 #endif
