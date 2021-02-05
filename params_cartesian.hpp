@@ -13,7 +13,6 @@ class ParamsCartesian : public Params
      * domain shape and extent are taken directly from the mapping functions */
     real_t domain_limits[3][2];
     
-
     /* Secondary or derived quantities */
     int Ns_elem; // Total numbers of soln/flux points per element
     int Nf_elem;

@@ -36,16 +36,15 @@ class ParamsTorus : public Params
 
     /* Constructor */
     ParamsTorus(EqnSystem equations,
-                    BasicTimeMethod time_method,
-                    int (& Nproc_)[3], 
-                    int (& Nelem_)[3], 
-                    int (& Ns_)[3], 
-                    TorusCentralPolygon central_polygon,
-                    GeometryClass geometry = simple_geometry,
-                    real_t cfl = 0.8,
-                    real_t end_time = 1.0,
-                    real_t dt_write = 0.5)
-    : Params(equations, time_method, geometry, cfl, end_time, dt_write), 
+                BasicTimeMethod time_method,
+                int (& Nproc_)[3], 
+                int (& Nelem_)[3], 
+                int (& Ns_)[3], 
+                real_t cfl = 0.8,
+                real_t end_time = 1.0,
+                real_t dt_write = 0.5,
+                TorusCentralPolygon central_polygon = square)
+    : Params(equations, time_method, full_geometry, cfl, end_time, dt_write), 
       central_polygon(central_polygon)
     {
         for (int i=0; i<3; i++)

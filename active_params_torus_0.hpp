@@ -13,7 +13,6 @@
 static EqnSystem equations = euler;
 static BasicTimeMethod time_method = rk2_midpoint;
 static TorusCentralPolygon central_polygon = square;
-static GeometryClass geometry = simple_geometry;
 
 static int Nproc[3] = {2,2,1};
 static int Nelem[3] = {3,3,1};
@@ -25,7 +24,7 @@ static real_t dt_write = 0.25;
 
 ParamsTorus active_parameters(equations, time_method, 
                               Nproc, Nelem, Ns, 
-                              central_polygon, geometry,
-                              cfl, end_time, dt_write);
+                              cfl, end_time, dt_write,
+                              central_polygon);
 
 #endif
