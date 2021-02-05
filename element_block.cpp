@@ -5,6 +5,7 @@
 #include "lagrange_polynomials.hpp"
 #include "transfinite_map.hpp"
 #include "domain_map.hpp"
+#include "domain_map_torus.hpp"
 #include "edge.hpp"
 
 

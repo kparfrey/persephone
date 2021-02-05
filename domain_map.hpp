@@ -13,14 +13,17 @@
 class DomainMap
 {
     public:
+
+    int group; // group we're mapping for --- not used for Cartesian problems
+
     virtual void operator()(const int n, const real_t x, real_t r[3]) = 0;
 };
 
 
 
-/*********************************
- * Specific domain mappings
- *********************************/
+/************************************************
+ * Specific domain mappings for Cartesian domains
+ ************************************************/
 
 
 /* Based on M1 in Kopriva's book, p231 (243) */

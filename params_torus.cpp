@@ -5,7 +5,7 @@
 #include "element_block.hpp"
 #include "initial_state_cartesian.hpp"
 #include "write_screen.hpp"
-#include "domain_map.hpp"
+#include "domain_map_torus.hpp"
 
 using std::cout;
 using std::endl;
@@ -305,8 +305,8 @@ void ParamsTorus::setup_elementblock(ElementBlock &elements, Process &proc)
     elements.Nfield   = proc.Nfield;
     elements.geometry = full_geometry; // Torus has needs full_geometry
 
-    //elements.map = new CylinderMap;
-    elements.map = new WaveRect2D; //new QuarterAnnulusMap; // specify manually for now...
+    elements.map = new BasicSquareTorusMap;
+    elements.map->group = proc.group; 
 
     /* At this point all external information is present, and the internal
      * setup method can take over. */

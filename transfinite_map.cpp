@@ -1,6 +1,7 @@
 #include "transfinite_map.hpp"
 
 #include "domain_map.hpp"
+#include "domain_map_torus.hpp"
 #include "edge.hpp"
 
 
