@@ -279,24 +279,34 @@ void ParamsTorus::setup_process(Process &proc)
 
 void ParamsTorus::setup_elementblock(ElementBlock &elements, Process &proc)
 {
-    for (int i: dirs)
+    if (proc.group < Ngroup_central)
     {
-        elements.Nelem[i] = Nelem[i];
-        elements.Ns[i] = Ns[i];
+        /* In a central group */
+        elements.Nelem[0] = elements.Nelem[1] = Nelem[0];
+        elements.Ns[0] = elements.Ns[1] = Ns[0];
+    }
+    else 
+    {
+        /* In an outer group */
+        /* NB: ParamsTorus.Nelem[3] = Nelem[central, outer, phi], while
+         * ElementBlock.Nelem[3] refer to the three local coordinate directions */
+        elements.Nelem[0] = Nelem[1];
+        elements.Nelem[1] = Nelem[0];
+        elements.Ns[0] = Ns[1];
+        elements.Ns[1] = Ns[0];
     }
 
-    elements.Nelem_block = Nelem_proc; 
-    elements.Nfield      = proc.Nfield;
+    elements.Nelem[2] = Nelem[2];
+    elements.Ns[2]    = Ns[2];
 
-    elements.geometry = geometry;
+    // Can this be moved to ElementBlock::setup()? 
+    elements.Nelem_block = elements.Nelem[0] * elements.Nelem[1] * elements.Nelem[2];
 
-    if (geometry == simple_geometry)
-    {
-        elements.map = new CylinderMap;
-    }
-    //else // full_geometry
-    //    elements.map = new WaveRect2D; //new QuarterAnnulusMap; // specify manually for now...
+    elements.Nfield   = proc.Nfield;
+    elements.geometry = full_geometry; // Torus has needs full_geometry
 
+    //elements.map = new CylinderMap;
+    elements.map = new WaveRect2D; //new QuarterAnnulusMap; // specify manually for now...
 
     /* At this point all external information is present, and the internal
      * setup method can take over. */
