@@ -14,9 +14,11 @@ class DomainMap
 {
     public:
 
-    int group; // group we're mapping for --- not used for Cartesian problems
+    //int group; // group we're mapping for --- not used for Cartesian problems
 
     virtual void operator()(const int n, const real_t x, real_t r[3]) = 0;
+
+    void fill_local_data(int group){};
 };
 
 
