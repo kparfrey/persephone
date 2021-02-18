@@ -30,7 +30,7 @@ class BasicSquareTorusMap : public DomainMap
     real_t lc[4][2]; // local corners: the 4 corners of this group's quad
 
 
-    void fill_local_data(const int group)
+    virtual void fill_local_data(const int group)
     {
         for (int i = 0; i < 2; ++i)
         {

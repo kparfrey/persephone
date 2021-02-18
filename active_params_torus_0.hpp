@@ -14,12 +14,12 @@ static EqnSystem equations = euler;
 static BasicTimeMethod time_method = rk2_midpoint;
 static TorusCentralPolygon central_polygon = square;
 
-static int Nproc[3] = {2,2,1};
+static int Nproc[3] = {1,1,1};
 static int Nelem[3] = {3,3,1};
-static int Ns[3]    = {12,8,1};
+static int Ns[3]    = {8,8,1};
 
 static real_t cfl      = 0.8;
-static real_t end_time = 75.0;
+static real_t end_time = 0.5;
 static real_t dt_write = 0.25;
 
 ParamsTorus active_parameters(equations, time_method, 

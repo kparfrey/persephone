@@ -1,6 +1,7 @@
 #ifndef PROCESS_HPP
 #define PROCESS_HPP
 
+#include <mpi.h>
 #include "common.hpp"
 #include "face_communicator.hpp"
 #include "element_block.hpp"
@@ -37,6 +38,8 @@ class Process
     int Nproc_group[3]; // No. of procs in each direction in this group 
                         // Should be renamed to Nproc_idx[3] or similar
     
+    MPI_Comm group_comm; // A communicator for MPI calls within this group
+
 
     /* Global data */
     int Ngroup;

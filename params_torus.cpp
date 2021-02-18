@@ -1,5 +1,6 @@
 #include "params_torus.hpp"
 
+#include <mpi.h>
 #include <cmath>
 #include "process.hpp"
 #include "element_block.hpp"
@@ -71,6 +72,8 @@ void ParamsTorus::setup_process(Process &proc)
     int Nproc_group_central = Nproc[0] * Nproc[0] * Nproc[2]; // Move to params_torus variables?
     int Nproc_group_outer   = Nproc[0] * Nproc[1] * Nproc[2];
 
+    proc.Ngroup = Ngroup;
+
     if (proc.rank < Nproc_group_central)
     {
         proc.group = 0;
@@ -89,6 +92,9 @@ void ParamsTorus::setup_process(Process &proc)
 
     /* direction-2 is the same for all groups */
     proc.Nproc_group[2] = Nproc[2];
+
+    /* Create new MPI communicator for this group */
+    MPI_Comm_split(MPI_COMM_WORLD, proc.group, proc.group_rank, &proc.group_comm);
 
 
     /* Groupwise indices of this process */
@@ -306,7 +312,6 @@ void ParamsTorus::setup_elementblock(ElementBlock &elements, Process &proc)
     elements.geometry = full_geometry; // Torus has needs full_geometry
 
     elements.map = new BasicSquareTorusMap;
-    //elements.map->group = proc.group; 
     elements.map->fill_local_data(proc.group);
 
     /* At this point all external information is present, and the internal
