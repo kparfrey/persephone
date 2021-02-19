@@ -71,6 +71,8 @@ void ParamsCartesian::setup_process(Process &proc)
         proc.elements.group_idx[i]   = proc_idx[i];
         proc.elements.Nproc_group[i] = Nproc[i];
     }
+    
+    proc.Nproc_group_tot = proc.Nproc_group[0] * proc.Nproc_group[1] * proc.Nproc_group[2];
 
     setup_elementblock(proc.elements, proc);
     

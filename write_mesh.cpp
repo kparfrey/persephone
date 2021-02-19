@@ -7,6 +7,7 @@
 #include <highfive/H5DataSet.hpp>
 #include <highfive/H5DataSpace.hpp>
 #include <highfive/H5File.hpp>
+#include <highfive/H5Easy.hpp>
 
 #include "process.hpp"
 #include "element_block.hpp"
@@ -36,12 +37,16 @@ void write_mesh(Process &proc)
             if (std::filesystem::remove(filename))
                 write::message("Deleted existing mesh file.");
     
-        /* Create file and close immediately */
+        /* Create file and write global data 
+         * Use H5Easy to reduce amount of code for writing simple datasets */
         write::message("Creating mesh file");
-        HighFive::File meshfile(filename, HighFive::File::Create);
+        
+        H5Easy::File meshfile(filename, H5Easy::File::Create);
+        H5Easy::dump(meshfile, "/Ngroup", proc.Ngroup);
+        H5Easy::dump(meshfile, "/Nproc",  proc.Nproc);
+        H5Easy::dump(meshfile, "/Nfield", proc.Nfield);
     }
 
-    MPI_Barrier(MPI_COMM_WORLD);
 
     /* Start MPI output phase */
     /* Do groups one at a time. Need a full MPI barrier after each group. */
@@ -115,11 +120,11 @@ void write_mesh(Process &proc)
             local_dims[1] = 3;                      // coordinate components
             local_dims[2] = size_t(N); 
 
-            global_dims[0] = size_t(local_dims[0] * proc.Nproc); // This assumes only 1 group
+            global_dims[0] = size_t(local_dims[0] * proc.Nproc_group_tot);
             global_dims[1] = local_dims[1]; // i.e. only "stack" new data along the 0 axis
             global_dims[2] = local_dims[2];
 
-            offset[0] = size_t(proc.rank * local_dims[0]); // Again assume just 1 group
+            offset[0] = size_t(proc.group_rank * local_dims[0]); // Again assume just 1 group
             offset[1] = 0;
             offset[2] = 0;
 
@@ -146,47 +151,50 @@ void write_mesh(Process &proc)
         } // closes: if (ig == proc.Ngroup)
 
         MPI_Barrier(MPI_COMM_WORLD);
-
     } // End of MPI output phase - closes for loop over groups
 
 
-#if 0
-    /* Write group properties */
-    /* Assume all Processes are identical, so write from root proc */
-    if (proc.rank == 0)
+    /* Write group properties --- separate from collective MPI part
+     * Assume all Processes in the Group are identical, so write from one proc
+     * Could probably replace with the H5Easy interface at some point */
+    for (int ig = 0; ig < proc.Ngroup; ++ig)
     {
-        write::message("Writing group properties");
-
-        /* Reopen the mesh file in single-processor mode */
-        HighFive::File meshfile(filename, HighFive::File::ReadWrite);
-        
-        int scalar = 0;
-
-        /* Nelem_tot: total number of elements in the group */
-        HighFive::DataSet dset = meshfile.createDataSet<int>("Nelem_tot", HighFive::DataSpace::From(scalar));
-        dset.write(eb.Nelem_block * proc.Nproc);
-
-        std::vector<int> Nelem(3); // No. of elements in the group, in each direction
-        std::vector<int> Ns(3); // No. of solution points in each elem, in each dir
-        std::vector<int> Nf(3); 
-
-        for (int i: dirs)
+        if ((proc.group_rank == 0) && (ig == proc.group))
         {
-            Nelem[i] = eb.Nelem[i] * proc.Nproc_group[i];
-            Ns[i]    = eb.Ns[i];
-            Nf[i]    = eb.Nf[i];
+            write::message("Writing properties for group " + groupstring);
+
+            /* Reopen the mesh file in single-processor mode */
+            HighFive::File meshfile(filename, HighFive::File::ReadWrite);
+            
+            int scalar = 0;
+
+            /* Nelem_tot: total number of elements in the group */
+            HighFive::DataSet dset = meshfile.createDataSet<int>(groupstring + "/Nelem_tot", HighFive::DataSpace::From(scalar));
+            dset.write(eb.Nelem_block * proc.Nproc_group_tot);
+
+            std::vector<int> Nelem(3); // No. of elements in the group, in each direction
+            std::vector<int> Ns(3);    // No. of solution points in each elem, in each dir
+            std::vector<int> Nf(3); 
+
+            for (int i: dirs)
+            {
+                Nelem[i] = eb.Nelem[i] * proc.Nproc_group[i];
+                Ns[i]    = eb.Ns[i];
+                Nf[i]    = eb.Nf[i];
+            }
+
+            HighFive::DataSet ds0 = meshfile.createDataSet<int>(groupstring + "/Nelem", HighFive::DataSpace::From(Nelem));
+            ds0.write(Nelem);
+
+            HighFive::DataSet ds1 = meshfile.createDataSet<int>(groupstring + "/Ns", HighFive::DataSpace::From(Ns));
+            ds1.write(Ns);
+
+            HighFive::DataSet ds2 = meshfile.createDataSet<int>(groupstring + "/Nf", HighFive::DataSpace::From(Nf));
+            ds2.write(Nf);
         }
 
-        HighFive::DataSet ds0 = meshfile.createDataSet<int>("Nelem", HighFive::DataSpace::From(Nelem));
-        ds0.write(Nelem);
-
-        HighFive::DataSet ds1 = meshfile.createDataSet<int>("Ns", HighFive::DataSpace::From(Ns));
-        ds1.write(Ns);
-
-        HighFive::DataSet ds2 = meshfile.createDataSet<int>("Nf", HighFive::DataSpace::From(Nf));
-        ds2.write(Nf);
+        MPI_Barrier(MPI_COMM_WORLD);
     }
-#endif
 
 
     write::message("Finished writing mesh file to disk.");

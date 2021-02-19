@@ -37,6 +37,7 @@ class Process
     int group_idx[3];   // 3D indices of this process within its group
     int Nproc_group[3]; // No. of procs in each direction in this group 
                         // Should be renamed to Nproc_idx[3] or similar
+    int Nproc_group_tot;
     
     MPI_Comm group_comm; // A communicator for MPI calls within this group
 

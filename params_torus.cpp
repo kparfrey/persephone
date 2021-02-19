@@ -93,6 +93,8 @@ void ParamsTorus::setup_process(Process &proc)
     /* direction-2 is the same for all groups */
     proc.Nproc_group[2] = Nproc[2];
 
+    proc.Nproc_group_tot = proc.Nproc_group[0] * proc.Nproc_group[1] * proc.Nproc_group[2];
+
     /* Create new MPI communicator for this group */
     MPI_Comm_split(MPI_COMM_WORLD, proc.group, proc.group_rank, &proc.group_comm);
 

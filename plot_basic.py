@@ -4,36 +4,102 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 #from scipy.interpolate import griddata
 
+class Group(object):
+    group = None
+
+    r0 = None
+    r1 = None
+    r  = None
+
+    e0 = None
+    e1 = None
+    e2 = None
+    e3 = None
+    edges = None
+
+    def __init__(self, group_id):
+        self.group = group_id
+
+        return
+
+
+
 class Mesh(object):
+    Ngroup    = None
+    Nproc     = None
+    Nfield    = None
     Nelem_tot = None
     Nelem     = None
     Ns        = None
     Nf        = None
+    
+    g = dict() # Dictionary of Groups
 
     def __init__(self):
         print("Loading mesh file")
         filename = 'mesh.h5'
         m = h5py.File(filename)
 
-        self.r0 = m['coords']['r']['0']
-        self.r1 = m['coords']['r']['1']
-        self.r2 = m['coords']['r']['2']
-        self.r = np.array((self.r0,self.r1,self.r2))
-        
-        self.e0 = m['edges']['0']
-        self.e1 = m['edges']['1']
-        self.e2 = m['edges']['2']
-        self.e3 = m['edges']['3']
-        # List rather than array since edges don't all have same length
-        self.edges = [self.e0, self.e1, self.e2, self.e3]
+        self.Ngroup = m['Ngroup'][()]
+        self.Nproc  = m['Nproc'][()]
+        self.Nfield = m['Nfield'][()]
 
-        self.Nelem_tot = m['Nelem_tot'][()]
-        self.Nelem  = m['Nelem'][:]
-        self.Ns     = m['Ns'][:]
-        self.Nf     = m['Nf'][:]
+        for ig in range(self.Ngroup):
+            sg = str(ig)
+            group = Group(ig)
+
+            group.r0 = m[sg]['r']['0']
+            group.r1 = m[sg]['r']['1']
+            group.r2 = m[sg]['r']['2']
+            group.r  = [group.r0, group.r1, group.r2]
+            
+            ## This seems to load the data to disk - may want to use list 
+            #group.r  = np.array((group.r0,group.r1,group.r2))
+
+            group.e0 = m[sg]['edges']['0']
+            group.e1 = m[sg]['edges']['1']
+            group.e2 = m[sg]['edges']['2']
+            group.e3 = m[sg]['edges']['3']
+            # List rather than array since edges don't all have same length
+            group.edges = [group.e0, group.e1, group.e2, group.e3]
+
+            group.Nelem_tot = m[sg]['Nelem_tot'][()]
+            group.Nelem = m[sg]['Nelem'][:]
+            group.Ns    = m[sg]['Ns'][:]
+            group.Nf    = m[sg]['Nf'][:]
+
+            self.g[ig] = group
 
         # Don't close the file --- not loading arrays into memory
         return
+
+
+    def draw_edges(self, width = 0.2):
+        for ig in range(self.Ngroup):
+            edges = self.g[ig].edges
+            for i in range(self.g[ig].Nelem_tot):
+                for j in range(4):
+                    plt.plot(edges[j][i,0,:], edges[j][i,1,:], 'k-', lw=width, zorder=1) 
+
+        ax = plt.gca()
+        ax.set_aspect('equal')
+        return
+
+
+    def draw_soln_points(self, size = 5.0):
+        for i in range(self.Ngroup):
+            r0 = self.g[i].r0
+            r1 = self.g[i].r1
+            
+            # Add c='k' to draw the points in black
+            plt.scatter(r0[:,:,0], r1[:,:,0], marker='.', s=size)
+
+        ax = plt.gca()
+        ax.set_aspect('equal')
+        return
+
+
+
 
 
 class Snapshot(object):
@@ -44,9 +110,16 @@ class Snapshot(object):
     step    = None
     dt      = None
 
+    Ngroup  = None
+
+
     def __init__(self, filenum = 0):
         self.m = Mesh()
-        self.load_data(filenum)
+        self.Ngroup = self.m.Ngroup
+
+        if (filenum >= 0):
+            self.load_data(filenum)
+
         return
 
 
@@ -75,31 +148,8 @@ class Snapshot(object):
         return
 
 
-    def draw_edges(self, width = 0.2):
-        m = self.m
-
-        for i in range(m.Nelem_tot):
-            for j in range(4):
-                plt.plot(m.edges[j][i,0,:], m.edges[j][i,1,:], 'k-', lw=width, zorder=1) 
-
-        ax = plt.gca()
-        ax.set_aspect('equal')
-        return
-
-
-    def draw_soln_points(self, size = 5.0):
-        r0 = self.m.r0
-        r1 = self.m.r1
-        
-        # Add c='k' to draw the points in black
-        plt.scatter(r0[:,:,0], r1[:,:,0], marker='.', s=size)
-
-        ax = plt.gca()
-        ax.set_aspect('equal')
-        return
-
-
     # Assume 0-1 plane
+    """
     def contour_plot(self, var='rho', width=0.4, levels=[None,]):
         r0 = self.m.r0
         r1 = self.m.r1
@@ -114,4 +164,5 @@ class Snapshot(object):
         ax = plt.gca()
         ax.set_aspect('equal')
         return
+    """
 
