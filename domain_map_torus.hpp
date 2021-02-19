@@ -27,11 +27,16 @@ class BasicSquareTorusMap : public DomainMap
                                          { b, -b},  // 6
                                          {-b, -b}}; // 7
 
+    int group; 
     real_t lc[4][2]; // local corners: the 4 corners of this group's quad
+    real_t theta_offset; // The starting "colatitude" angle for the outer curved edges (group > 0)
 
 
+    /* Replace by a constructor? */
     virtual void fill_local_data(const int group)
     {
+        this->group = group;
+
         for (int i = 0; i < 2; ++i)
         {
             switch (group)
@@ -47,24 +52,28 @@ class BasicSquareTorusMap : public DomainMap
                     lc[1][i] = global_corners[4][i];
                     lc[2][i] = global_corners[5][i];
                     lc[3][i] = global_corners[1][i];
+                    theta_offset = - pi_4;
                     break;
                 case 2:
                     lc[0][i] = global_corners[1][i];
                     lc[1][i] = global_corners[5][i];
                     lc[2][i] = global_corners[6][i];
                     lc[3][i] = global_corners[2][i];
+                    theta_offset = pi_4;
                     break;
                 case 3:
                     lc[0][i] = global_corners[2][i];
                     lc[1][i] = global_corners[6][i];
                     lc[2][i] = global_corners[7][i];
                     lc[3][i] = global_corners[3][i];
+                    theta_offset = 3 * pi_4;
                     break;
                 case 4:
                     lc[0][i] = global_corners[3][i];
                     lc[1][i] = global_corners[7][i];
                     lc[2][i] = global_corners[4][i];
                     lc[3][i] = global_corners[0][i];
+                    theta_offset = 5 * pi_4;
                     break;
             }
         }
@@ -73,12 +82,14 @@ class BasicSquareTorusMap : public DomainMap
     }
 
 
-    // Do I actually need n > 3 here??
+    // Do I actually need n > 3 here?? Since am only ever doing 2D TFI,
+    // should only need four edges
     virtual void operator()(const int n, const real_t x, real_t r[3])
     {
         real_t start;
         real_t end;
 
+        /* The straight edges in unit-disc space */
         for (int i = 0; i < 2; ++i) // for each coord direction
         {
             switch (n) // switch on edge label
@@ -118,6 +129,15 @@ class BasicSquareTorusMap : public DomainMap
             }
 
             r[i] = start * (1.0 - x) + end * x;
+        }
+
+        /* Overwrite for the curved outer edges (always edge 1) */
+        if ((group > 0) && ((n == 1) || (n == 5)))
+        {
+            /* edge-1 is always aligned with increasing theta */
+            real_t theta = x * pi_2 + theta_offset;
+            r[0] = std::sin(theta); // effectively R or X in unit-disc space
+            r[1] = std::cos(theta); // effectively Z or Y in unit-disc space
         }
 
         if (n < 4)

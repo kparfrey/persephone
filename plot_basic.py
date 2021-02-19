@@ -32,6 +32,8 @@ class Mesh(object):
     Nelem     = None
     Ns        = None
     Nf        = None
+
+    fileref = None # Handle for h5py file object
     
     g = dict() # Dictionary of Groups
 
@@ -71,6 +73,8 @@ class Mesh(object):
             self.g[ig] = group
 
         # Don't close the file --- not loading arrays into memory
+        # Save handle to the h5py object in case want to close later
+        self.fileref = m
         return
 
 
