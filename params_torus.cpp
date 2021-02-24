@@ -311,7 +311,7 @@ void ParamsTorus::setup_elementblock(ElementBlock &elements, Process &proc)
     elements.Nelem_block = elements.Nelem[0] * elements.Nelem[1] * elements.Nelem[2];
 
     elements.Nfield   = proc.Nfield;
-    elements.geometry = full_geometry; // Torus has needs full_geometry
+    elements.geometry = full_geometry; // Torus needs full_geometry
 
     elements.map = new BasicSquareTorusMap;
     elements.map->fill_local_data(proc.group);

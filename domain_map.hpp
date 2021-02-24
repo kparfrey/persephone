@@ -14,11 +14,16 @@ class DomainMap
 {
     public:
 
+    const real_t domain_depth; // Extent of the full domain in the trivial-map direction
+
     //int group; // group we're mapping for --- not used for Cartesian problems
 
     virtual void operator()(const int n, const real_t x, real_t r[3]) = 0;
 
     virtual void fill_local_data(int group){};
+
+    /* Allow derived classes to set domain_depth via the base constructor */
+    DomainMap(real_t depth = 0.0): domain_depth(depth) {} 
 };
 
 
