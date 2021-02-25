@@ -10,9 +10,7 @@
 
 
 /* r[3] = (R, Z, phi) 
- * This map only goes into unit-disc space. Really a cylinder for now. 
- * Exploit the triviality of the dir-2/phi mapping --- this mapping is
- * just two-dimensional in reference space, so only uses 4 edges. */
+ * This map only goes into unit-disc space. Really a cylinder for now. */
 class BasicSquareTorusMap : public DomainMap
 {
     public:
@@ -35,7 +33,7 @@ class BasicSquareTorusMap : public DomainMap
     real_t theta_offset; // The starting "colatitude" angle for the outer curved edges (group > 0)
 
     /* Set the domain_depth using the constructor */
-    BasicSquareTorusMap(): DomainMap(0.5) {}
+    //BasicSquareTorusMap(): DomainMap(0.5) {}
 
     /* Replace by a constructor? */
     virtual void fill_local_data(const int group)
@@ -94,28 +92,32 @@ class BasicSquareTorusMap : public DomainMap
         real_t start;
         real_t end;
 
+        /* Do poloidal coordinates first, r[0] and r[1] */
         /* The straight edges in unit-disc space */
         for (int i = 0; i < 2; ++i) // for each coord direction
         {
             switch (n) // switch on edge label
             {
                 case 0:
+                case 4:
                     start = lc[0][i];
                     end   = lc[1][i];
                     break;
                 case 1:
+                case 5:
                     start = lc[1][i];
                     end   = lc[2][i];
                     break;
                 case 2:
+                case 6:
                     start = lc[3][i];
                     end   = lc[2][i];
                     break;
                 case 3:
+                case 7:
                     start = lc[0][i];
                     end   = lc[3][i];
                     break;
-                /*
                 case 8:
                     start = end = lc[0][i];
                     break;
@@ -128,9 +130,8 @@ class BasicSquareTorusMap : public DomainMap
                 case 11:
                     start = end = lc[3][i];
                     break;
-                */
                 default:
-                    write::error("Inappropriate edge number passed to quasi-2D domain map", destroy);
+                    write::error("Inappropriate edge number passed to BasicSquareTorusMap", destroy);
             }
 
             r[i] = start * (1.0 - x) + end * x;
@@ -145,9 +146,15 @@ class BasicSquareTorusMap : public DomainMap
             r[1] = std::cos(theta); // effectively Z or Y in unit-disc space
         }
 
+
+        /* Toroidal coordinate directly from x[2] */
+        if (n < 4)
+            r[2] = 0.0;      // "front" face
+        else if (n < 8)
+            r[2] = 2.0 * pi; // "back" face
+        else // send groupwise x[2] linearly into phi
+            r[2] = x * 2.0 * pi;
         
-        /* Note: don't set r[2] at all here --- this only does the mapping on a poloidal
-         * slice-by-slice basis. */
 
         return;
     }

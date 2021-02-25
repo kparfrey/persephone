@@ -15,8 +15,8 @@ static BasicTimeMethod time_method = rk2_midpoint;
 static TorusCentralPolygon central_polygon = square;
 
 static int Nproc[3] = {1,1,1};
-static int Nelem[3] = {3,3,1};
-static int Ns[3]    = {8,8,4};
+static int Nelem[3] = {3,3,2};
+static int Ns[3]    = {8,8,5};
 
 static real_t cfl      = 0.8;
 static real_t end_time = 0.5;

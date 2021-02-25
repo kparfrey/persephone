@@ -264,19 +264,16 @@ void ElementBlock::set_physical_coords_full()
     for (int d: dirs)
         group_width[d] = (real_t) Nproc_group[d]*Nelem[d];
 
-    /* All mapping is currently quasi-2D / slice-by-slice, so only need the primary four corners */
-    real_t group_corners[4][3];       // Group corner coords in physical space
+    /* Group corner coords in physical space */
+    real_t group_corners[8][3];       
     (*map)(0, 0.0, group_corners[0]); // Corner 0 is at groupwise-x=0.0 for edge 0 etc.
     (*map)(1, 0.0, group_corners[1]); 
     (*map)(2, 1.0, group_corners[2]); 
     (*map)(3, 1.0, group_corners[3]); 
-    
-    /***
     (*map)(4, 0.0, group_corners[4]); 
     (*map)(5, 0.0, group_corners[5]); 
     (*map)(6, 1.0, group_corners[6]); 
     (*map)(7, 1.0, group_corners[7]); 
-     ***/
 
 
     /* Elementwise constructs */
@@ -358,11 +355,11 @@ void ElementBlock::set_physical_coords_full()
             polynomial_transfinite_map_2D(xe, elem_edges, elem_corners, rp);
 
             /* For now just set r[2] = 0 --- 2D domain*/
-            //rs(2,mem_loc) = 0.0;
+            rs(2,mem_loc) = 0.0;
 
             /* The 2-dir map is assumed to be trivial for now */
-            real_t xg2 = (group_idx[2]*Nelem[2] + ke + xe[2]) / group_width[2];
-            rp[2] = xg2 * map->domain_depth;
+            //real_t xg2 = (group_idx[2]*Nelem[2] + ke + xe[2]) / group_width[2];
+            //rp[2] = xg2 * map->domain_depth;
 
             for (int d: dirs)
                 rs(d,mem_loc) = rp[d];
