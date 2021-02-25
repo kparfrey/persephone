@@ -115,34 +115,34 @@ void analytic_transfinite_map_2D(const real_t x[2], DomainMap* const map,
 void analytic_transfinite_map_3D(const real_t x[3], DomainMap* const map,
                                  const real_t corners[8][3], real_t r[3])
 {
-    real_t Gx[12][3]; /* Edge values: e.g. f(u,0,1) or f(1,v,1) */
-    real_t Fx[6][3];  /* Face values: e.g. f(u,v,0) or f(u,1,w) */
+    real_t G[12][3]; /* Edge values: e.g. f(u,0,1) or f(1,v,1) */
+    real_t F[6][3];  /* Face values: e.g. f(u,v,0) or f(u,1,w) */
     
     for (int i: iedges)
-        (*map)(i, x[edge_dir[i]], Gx[i]);
+        (*map)(i, x[edge_dir[i]], G[i]);
 
     /* Do the 2D TFI subproblem on each of the group's faces */
     /* Possibly split into function for calling by polynomial TFI too? */
-    real_t fx[2];    // 2D groupwise coord on this face
-    real_t fc[4][3]; // This face's 4 corners
-    real_t fe[4][3]; // Values evaluated at this face's 4 edges
+    real_t xf[2];    // 2D groupwise coord on this face
+    real_t cf[4][3]; // This face's 4 corners
+    real_t Gf[4][3]; // Values evaluated at this face's 4 edges
     for (int f: ifaces)
     {
-        fx[0] = dir_plus_one[face_normal[f]];
-        fx[1] = dir_plus_two[face_normal[f]];
+        xf[0] = x[dir_plus_one[face_normal[f]]];
+        xf[1] = x[dir_plus_two[face_normal[f]]];
 
         /* Iterate over this face's 4 corners and edges */
         for (int j = 0; j < 4; ++j)
         for (int d: dirs)
         {
-            fc[j][d] = corners[corner_map[f][j]][d]; 
-            fe[j][d] = Gx[edge_map[f][j]][d]; 
+            cf[j][d] = corners[corner_map[f][j]][d]; 
+            Gf[j][d] = G[edge_map[f][j]][d]; 
         }
 
-        transfinite_map_2D(fe, fc, fx, Fx[f]);
+        transfinite_map_2D(Gf, cf, xf, F[f]);
     }
 
-    transfinite_map_3D(Gx, corners, Fx, x, r);
+    transfinite_map_3D(G, corners, F, x, r);
 
     return;
 }

@@ -138,7 +138,7 @@ class BasicSquareTorusMap : public DomainMap
         }
 
         /* Overwrite for the curved outer edges (always edge 1) */
-        if ((group > 0) && (n == 1))
+        if ((group > 0) && ((n == 1) || (n == 5)))
         {
             /* edge-1 is always aligned with increasing theta */
             real_t theta = x * pi_2 + theta_offset;
