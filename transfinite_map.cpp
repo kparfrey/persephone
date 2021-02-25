@@ -44,6 +44,54 @@ static void transfinite_map_2D(const real_t Gx[4][3], const real_t corners[4][3]
 }
 
 
+static void transfinite_map_3D(const real_t Gx[12][3], const real_t corners[8][3], 
+                               const real_t Fx[6][3],  const real_t x[3], 
+                                     real_t r[3])
+{
+    /* u, v, w etc. language aligns with Eriksson (1985) */
+    const real_t u = x[0]; 
+    const real_t v = x[1];
+    const real_t w = x[2];
+
+    real_t pu, pv, pw;    // Eriksson's pi_u etc.
+    real_t puv, puw, pvw; // Eriksson's pi_u pi_v etc.
+    real_t puvw;          // Eriksson's pi_u pi_v pi_w
+
+    for (int i: dirs) // Iterate over coord-vector components
+    {
+        /* Face terms */
+        pu = (1 - u) * Fx[2][i] + u * Fx[3][i];
+        pv = (1 - v) * Fx[4][i] + v * Fx[5][i];
+        pw = (1 - w) * Fx[0][i] + w * Fx[1][i];
+
+        /* Edge terms */
+        puv =   (1 - u) * (1 - v) * Gx[8][i]  + u  * (1 - v) * Gx[9][i]
+              + (1 - u) *      v  * Gx[11][i] + u  *      v  * Gx[10][i];
+
+        puw =   (1 - u) * (1 - w) * Gx[3][i]  + u  * (1 - w) * Gx[1][i]
+              + (1 - u) *      w  * Gx[7][i]  + u  *      w  * Gx[5][i];
+        
+        pvw =   (1 - v) * (1 - w) * Gx[0][i]  + v  * (1 - w) * Gx[2][i]
+              + (1 - v) *      w  * Gx[4][i]  + v  *      w  * Gx[6][i];
+
+        /* Corner terms */
+        puvw =   (1 - u) * (1 - v) * (1 - w) * corners[0][i]
+               +      u  * (1 - v) * (1 - w) * corners[1][i]
+               + (1 - u) *      v  * (1 - w) * corners[3][i]
+               +      u  *      v  * (1 - w) * corners[2][i]
+               + (1 - u) * (1 - v) *      w  * corners[4][i]
+               +      u  * (1 - v) *      w  * corners[5][i]
+               + (1 - u) *      v  *      w  * corners[7][i]
+               +      u  *      v  *      w  * corners[6][i];
+
+        /* Compose the final Boolean sum */
+        r[i] = pu + pv + pw - puv - puw - pvw + puvw;
+    }
+
+    return;
+}
+
+
 /* x is in groupwise reference space, x = [0,1] 
  * Used to map from the Group boundary edges, given in map, to an element's edges */
 void analytic_transfinite_map_2D(const real_t x[2], DomainMap* const map,
@@ -94,7 +142,7 @@ void analytic_transfinite_map_3D(const real_t x[3], DomainMap* const map,
         transfinite_map_2D(fe, fc, fx, Fx[f]);
     }
 
-    //transfinite_map_2D(Gx, corners, x, r);
+    transfinite_map_3D(Gx, corners, Fx, x, r);
 
     return;
 }
