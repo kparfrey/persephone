@@ -10,6 +10,9 @@ class Edge;
 void analytic_transfinite_map_2D(const real_t x[2], DomainMap* const map,
                                  const real_t corners[4][3], real_t r[3]);
 
+void analytic_transfinite_map_3D(const real_t x[3], DomainMap* const map,
+                                 const real_t corners[8][3], real_t r[3]);
+
 void polynomial_transfinite_map_2D(const real_t x[2],
                                    const Edge edges[4], const real_t corners[4][3], 
                                    real_t r[3]);

@@ -18,6 +18,7 @@ class DomainMap
 
     //int group; // group we're mapping for --- not used for Cartesian problems
 
+    /* Change so it takes x[3] and then picks the right direction depending on n? */
     virtual void operator()(const int n, const real_t x, real_t r[3]) = 0;
 
     virtual void fill_local_data(int group){};

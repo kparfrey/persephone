@@ -66,7 +66,7 @@ void ElementBlock::setup()
         /* Set those parts of the edges which don't change
          * element to element */
         for (int i = 0; i < Nelem_block; ++i)
-            for (int j = 0; j < 12; ++j)
+            for (int j = 0; j < 4; ++j)
                 edges[i][j].setup(j, Nf, xf); // Use Lobatto points
 
         write::message("Setting up coords & metric in full geometry");
@@ -108,7 +108,7 @@ void ElementBlock::allocate_on_host()
     {
         edges = new Edge* [Nelem_block];
         for (int i = 0; i < Nelem_block; ++i)
-            edges[i] = new Edge [12]; // Each 3D element has 12 edges 
+            edges[i] = new Edge [4]; // 4 edges in 2D
     }
 
     return;
@@ -121,7 +121,7 @@ void ElementBlock::free_setup_memory()
     {
         for (int i = 0; i < Nelem_block; ++i)
         {
-            for (int j = 0; j < 12; ++j)
+            for (int j = 0; j < 4; ++j)
                 edges[i][j].free();
 
             delete[] edges[i];
@@ -277,10 +277,10 @@ void ElementBlock::set_physical_coords_full()
 
 
     /* Elementwise constructs */
-    real_t elem_corners[8][3]; // r[3] coords of an element's 8 corners
+    real_t elem_corners[4][3]; // For 2D TF map: r0, r1 coords of 4 corners
 
     /* Point constructs */
-    real_t xg[3];     // Groupwise reference-space coord
+    real_t xg[2];     // Groupwise reference-space coord
     real_t xe[3];     // Elementwise reference-space coord
     //int point_idx[2]; // Elementwise i,j indices of this point
     real_t rp[3];     // Physical coordinates of this point
@@ -295,14 +295,12 @@ void ElementBlock::set_physical_coords_full()
         elem_idx_1D = id_elem(ie, je, ke);
         mem_offset = elem_idx_1D * Ns_elem;
 
-        /* Pointer to this element's edges */
         Edge* elem_edges = edges[elem_idx_1D];
 
         /* Use "analytic" transfinite interpolation to interpolate from
          * the group mapping to this element's edge. */
-        for (int iedge = 0; iedge < 12; ++iedge)
+        for (int iedge = 0; iedge < 4; ++iedge)
         {
-            /* Reference to this particular edge */
             Edge& edge = elem_edges[iedge];
             real_t* offset = edge.offset;
 
@@ -310,26 +308,13 @@ void ElementBlock::set_physical_coords_full()
             for (int d: dirs)
                 along[d] = (edge.dir == d) ? 1.0 : 0.0;
 
-            /* Find the coordinates along each edge */
             for (int i = 0; i < edge.N; ++i)
             {
                 xg[0] = (group_idx[0]*Nelem[0] + ie + along[0]*edge.x[i] + offset[0]) 
                                                                        / group_width[0];
                 xg[1] = (group_idx[1]*Nelem[1] + je + along[1]*edge.x[i] + offset[1]) 
                                                                        / group_width[1];
-                xg[2] = (group_idx[2]*Nelem[2] + ke + along[2]*edge.x[i] + offset[2]) 
-                                                                       / group_width[2];
-                
-                /* First do the group-boundary to element-boundary interpolation */
-                /* "Analytic" because the group's boundary is given by functions */
-                /* For the torus this maps reference space to unit-disc space    */
-                analytic_transfinite_map_3D(xg, map, group_corners, rp);
-
-                /* Then apply an additional coordinate map to each point, on a
-                 * point-by-point basis. For the torus, this maps unit-disc space
-                 * to physical space. */
-                // ADD VMEC-like mapping here
-                
+                analytic_transfinite_map_2D(xg, map, group_corners, rp);
                 for (int j: dirs) edge.r(j, i) = rp[j]; 
             }
 
@@ -338,10 +323,10 @@ void ElementBlock::set_physical_coords_full()
             //edge.eval(1.0, edge.endpoints[1]); // r(s=1) --> endpoints[1]
 
             /* Storing at Lobatto points, directly read off endpoints */
-            for (int j: dirs)
+            for (int i = 0; i < 3; ++i)
             {
-                edge.endpoints[0][j] = edge.r(j, 0);
-                edge.endpoints[1][j] = edge.r(j, edge.N-1);
+                edge.endpoints[0][i] = edge.r(i, 0);
+                edge.endpoints[1][i] = edge.r(i, edge.N-1);
             }
         }
 
@@ -373,6 +358,7 @@ void ElementBlock::set_physical_coords_full()
             rs(2,mem_loc) = 0.0;
 
             /* The 2-dir map is assumed to be trivial for now */
+            //real_t xg2 = (group_idx[2]*Nelem[2] + ke + xe[2]) / group_width[2];
             //rp[2] = xg2 * map->domain_depth;
 
             for (int d: dirs)

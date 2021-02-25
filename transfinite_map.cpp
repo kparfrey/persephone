@@ -4,9 +4,31 @@
 #include "domain_map_torus.hpp"
 #include "edge.hpp"
 
+/* 3D label of each of the 6 faces' 4 corners. Ordering is via cyclic permutation from
+ * the face-normal direction; ie face 0 has normal-dir = 2, so its face coords are 
+ * {0, 1} with the 0 direction moving first. */
+constexpr int corner_map[6][4] = {{0, 1, 2, 3},  // face 0
+                                  {4, 5, 6, 7},  //      1
+                                  {0, 3, 7, 4},  //      2
+                                  {1, 2, 6, 5},  //      3
+                                  {0, 4, 5, 1},  //      4
+                                  {3, 7, 6, 2}}; //      5
+
+
+/* 3D label of each of the 6 faces' 4 edges. Ordering is as for corner_map ---
+ * these two much have identical ordering systems so that the edges and corners
+ * create the correct 2D edge-corner diagram. */
+constexpr int edge_map[6][4] = {{ 0,  1,  2,  3},  // face 0
+                                { 4,  5,  6,  7},  //      1
+                                { 3, 11,  7,  8},  //      2
+                                { 1, 10,  5,  9},  //      3
+                                { 8,  4,  9,  0},  //      4
+                                {11,  6, 10,  2}}; //      5
+
+
 
 static void transfinite_map_2D(const real_t Gx[4][3], const real_t corners[4][3], 
-                               const real_t x[3], real_t r[3])
+                               const real_t x[2], real_t r[3])
 {
     for (int i = 0; i < 2; ++i) // Iterate over coord-vector components
     {
@@ -22,10 +44,12 @@ static void transfinite_map_2D(const real_t Gx[4][3], const real_t corners[4][3]
 }
 
 
-/* x is in groupwise reference space, x = [0,1] */
-void analytic_transfinite_map_2D(const real_t x[3], DomainMap* const map,
+/* x is in groupwise reference space, x = [0,1] 
+ * Used to map from the Group boundary edges, given in map, to an element's edges */
+void analytic_transfinite_map_2D(const real_t x[2], DomainMap* const map,
                                  const real_t corners[4][3], real_t r[3])
 {
+    /* These are the values at the Group edges corresponding to x[0] and x[1] */
     real_t Gx[4][3]; /* Gamma(xi) or Gamma(eta) */
     
     (*map)(0, x[0], Gx[0]);
@@ -37,6 +61,45 @@ void analytic_transfinite_map_2D(const real_t x[3], DomainMap* const map,
 
     return;
 }
+
+
+/* For group-boundary to element-boundary mapping. Should rename. */
+void analytic_transfinite_map_3D(const real_t x[3], DomainMap* const map,
+                                 const real_t corners[8][3], real_t r[3])
+{
+    real_t Gx[12][3]; /* Edge values: e.g. f(u,0,1) or f(1,v,1) */
+    real_t Fx[6][3];  /* Face values: e.g. f(u,v,0) or f(u,1,w) */
+    
+    for (int i: iedges)
+        (*map)(i, x[edge_dir[i]], Gx[i]);
+
+    /* Do the 2D TFI subproblem on each of the group's faces */
+    /* Possibly split into function for calling by polynomial TFI too? */
+    real_t fx[2];    // 2D groupwise coord on this face
+    real_t fc[4][3]; // This face's 4 corners
+    real_t fe[4][3]; // Values evaluated at this face's 4 edges
+    for (int f: ifaces)
+    {
+        fx[0] = dir_plus_one[face_normal[f]];
+        fx[1] = dir_plus_two[face_normal[f]];
+
+        /* Iterate over this face's 4 corners and edges */
+        for (int j = 0; j < 4; ++j)
+        for (int d: dirs)
+        {
+            fc[j][d] = corners[corner_map[f][j]][d]; 
+            fe[j][d] = Gx[edge_map[f][j]][d]; 
+        }
+
+        transfinite_map_2D(fe, fc, fx, Fx[f]);
+    }
+
+    //transfinite_map_2D(Gx, corners, x, r);
+
+    return;
+}
+
+
 
 
 /* x is in elementwise reference space, x = [0,1] */

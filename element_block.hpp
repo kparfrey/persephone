@@ -46,7 +46,7 @@ class ElementBlock
     real_t corners[8][3]; // 3 physical-space coordinates for each of 8 corners
                           // Only used by simple_geometry
     DomainMap* map;       // Only used by full_geometry
-    Edge** edges; // Store 4 or 12 edges for every element; only full geometry
+    Edge** edges; // Store 12 edges for every element; only full geometry
 
     /* Computational space locations: one element's worth only */
     VectorField xs; // Soln point locations in computational space, in each direction 
