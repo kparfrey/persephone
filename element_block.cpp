@@ -264,8 +264,13 @@ void ElementBlock::set_physical_coords_full()
     for (int d: dirs)
         group_width[d] = (real_t) Nproc_group[d]*Nelem[d];
 
-    /* Group corner coords in physical space */
+    /* Group corner coords in physical space
+     * Use edge_to_corner[8] to find corner n's coord (0 or 1) along edge n */
     real_t group_corners[8][3];       
+    for (int i: icorners)
+        (*map)(i, double(edge_to_corner[i]), group_corners[i]); 
+    
+#if 0
     (*map)(0, 0.0, group_corners[0]); // Corner 0 is at groupwise-x=0.0 for edge 0 etc.
     (*map)(1, 0.0, group_corners[1]); 
     (*map)(2, 1.0, group_corners[2]); 
@@ -274,6 +279,7 @@ void ElementBlock::set_physical_coords_full()
     (*map)(5, 0.0, group_corners[5]); 
     (*map)(6, 1.0, group_corners[6]); 
     (*map)(7, 1.0, group_corners[7]); 
+#endif
 
     /* Elementwise constructs */
     real_t elem_corners[8][3]; // r[3] coords of an element's 8 corners
@@ -342,9 +348,13 @@ void ElementBlock::set_physical_coords_full()
             }
         }
 
+        for (int i: icorners)
         for (int d: dirs)
+            elem_corners[i][d] = elem_edges[i].endpoints[edge_to_corner[i]][d];
+
+#if 0
         {
-            /* Should tidy */
+
             elem_corners[0][d] = elem_edges[0].endpoints[0][d];
             elem_corners[1][d] = elem_edges[1].endpoints[0][d];
             elem_corners[2][d] = elem_edges[2].endpoints[1][d];
@@ -354,6 +364,7 @@ void ElementBlock::set_physical_coords_full()
             elem_corners[6][d] = elem_edges[6].endpoints[1][d];
             elem_corners[7][d] = elem_edges[7].endpoints[1][d];
         }
+#endif
         
         for (int k = 0; k < Ns[2]; ++k)
         for (int j = 0; j < Ns[1]; ++j)

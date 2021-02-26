@@ -54,6 +54,10 @@ constexpr int corner_coords[8][3] = {{0, 0, 0},  // 0
                                      {1, 1, 1},  // 6
                                      {0, 1, 1}}; // 7
 
+/* Corner-edge relationship: is corner n at the x = 0 or x = 1 point of edge n,
+ * where x is that edge's own internal 1D coordinate? */
+constexpr int edge_to_corner[8] = {0, 0, 1, 1, 0, 0, 1, 1};
+
 /* Reference coordinate direction along which each edge is aligned / anti-aligned */
 constexpr int edge_dir[12] = {0, 1, 0, 1, 0, 1, 0, 1, 2, 2, 2, 2};
 
