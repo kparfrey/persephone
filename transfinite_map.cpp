@@ -4,6 +4,10 @@
 #include "domain_map_torus.hpp"
 #include "edge.hpp"
 
+/* In the below the labels Gx/G, Fx/F are used interchangeably --- should pick one. */
+
+
+
 /* 3D label of each of the 6 faces' 4 corners. Ordering is via cyclic permutation from
  * the face-normal direction; ie face 0 has normal-dir = 2, so its face coords are 
  * {0, 1} with the 0 direction moving first. */
@@ -27,18 +31,19 @@ constexpr int edge_map[6][4] = {{ 0,  1,  2,  3},  // face 0
 
 
 
+/* A 2D mapping in that it uses 4 edges. Apply to all 3 coordinates, so are effectively
+ * doing an interpolation on a warped plane in 3D space. Used to find the required values
+ * on the hex element's 6 faces when doing 3D (volumetric) interpolation. */
 static void transfinite_map_2D(const real_t Gx[4][3], const real_t corners[4][3], 
                                const real_t x[2], real_t r[3])
 {
-    for (int i = 0; i < 2; ++i) // Iterate over coord-vector components
+    for (int i: dirs) // Iterate over coord-vector components
     {
         r[i] =   (1-x[0])*Gx[3][i] + x[0]*Gx[1][i] 
                + (1-x[1])*Gx[0][i] + x[1]*Gx[2][i]
                - (1-x[0])*((1-x[1])*corners[0][i] + x[1]*corners[3][i])
                -    x[0] *((1-x[1])*corners[1][i] + x[1]*corners[2][i]);
     }
-
-    r[2] = 0.0;
 
     return;
 }
@@ -92,6 +97,37 @@ static void transfinite_map_3D(const real_t Gx[12][3], const real_t corners[8][3
 }
 
 
+/* 3D TFI needs values at arbitrary locations on the hex's 6 faces, eg f(u,v,0),
+ * but we define the hex via its 12 edges. Find the required 6 face values with
+ * 2D TFI using each face's 4 corners and 4 edges */
+static void face_values_via_2D_TFI(const real_t G[12][3],
+                                   const real_t corners[8][3],
+                                   const real_t x[3],
+                                         real_t F[6][3])
+{
+    real_t xf[2];    // 2D groupwise coord on this face
+    real_t cf[4][3]; // This face's 4 corners
+    real_t Gf[4][3]; // Values evaluated at this face's 4 edges
+    for (int f: ifaces)
+    {
+        xf[0] = x[dir_plus_one[face_normal[f]]];
+        xf[1] = x[dir_plus_two[face_normal[f]]];
+
+        /* Iterate over this face's 4 corners and edges */
+        for (int j = 0; j < 4; ++j)
+        for (int d: dirs)
+        {
+            cf[j][d] = corners[corner_map[f][j]][d]; 
+            Gf[j][d] = G[edge_map[f][j]][d]; 
+        }
+
+        transfinite_map_2D(Gf, cf, xf, F[f]);
+    }
+
+    return;
+}
+
+
 /* x is in groupwise reference space, x = [0,1] 
  * Used to map from the Group boundary edges, given in map, to an element's edges */
 void analytic_transfinite_map_2D(const real_t x[2], DomainMap* const map,
@@ -121,26 +157,7 @@ void analytic_transfinite_map_3D(const real_t x[3], DomainMap* const map,
     for (int i: iedges)
         (*map)(i, x[edge_dir[i]], G[i]);
 
-    /* Do the 2D TFI subproblem on each of the group's faces */
-    /* Possibly split into function for calling by polynomial TFI too? */
-    real_t xf[2];    // 2D groupwise coord on this face
-    real_t cf[4][3]; // This face's 4 corners
-    real_t Gf[4][3]; // Values evaluated at this face's 4 edges
-    for (int f: ifaces)
-    {
-        xf[0] = x[dir_plus_one[face_normal[f]]];
-        xf[1] = x[dir_plus_two[face_normal[f]]];
-
-        /* Iterate over this face's 4 corners and edges */
-        for (int j = 0; j < 4; ++j)
-        for (int d: dirs)
-        {
-            cf[j][d] = corners[corner_map[f][j]][d]; 
-            Gf[j][d] = G[edge_map[f][j]][d]; 
-        }
-
-        transfinite_map_2D(Gf, cf, xf, F[f]);
-    }
+    face_values_via_2D_TFI(G, corners, x, F);
 
     transfinite_map_3D(G, corners, F, x, r);
 
@@ -151,9 +168,10 @@ void analytic_transfinite_map_3D(const real_t x[3], DomainMap* const map,
 
 
 /* x is in elementwise reference space, x = [0,1] */
-void polynomial_transfinite_map_2D(const real_t x[3],
-                                   const Edge edges[4], const real_t corners[4][3], 
-                                   real_t r[3])
+void polynomial_transfinite_map_2D(const real_t x[2],
+                                   const Edge edges[4], 
+                                   const real_t corners[4][3], 
+                                         real_t r[3])
 {
     real_t Gx[4][3]; 
     
@@ -162,6 +180,26 @@ void polynomial_transfinite_map_2D(const real_t x[3],
         edges[i].eval(x[edges[i].dir], Gx[i]);
 
     transfinite_map_2D(Gx, corners, x, r);
+
+    return;
+}
+
+
+void polynomial_transfinite_map_3D(const real_t x[3],
+                                   const Edge edges[12], 
+                                   const real_t corners[8][3], 
+                                         real_t r[3])
+{
+    real_t G[12][3]; /* Edge values: e.g. f(u,0,1) or f(1,v,1) */
+    real_t F[6][3];  /* Face values: e.g. f(u,v,0) or f(u,1,w) */
+    
+    /* Storing at Lobatto points -- need to interpolate to solution points */
+    for (int i: iedges)
+        edges[i].eval(x[edges[i].dir], G[i]);
+
+    face_values_via_2D_TFI(G, corners, x, F);
+
+    transfinite_map_3D(G, corners, F, x, r);
 
     return;
 }

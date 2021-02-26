@@ -275,16 +275,13 @@ void ElementBlock::set_physical_coords_full()
     (*map)(6, 1.0, group_corners[6]); 
     (*map)(7, 1.0, group_corners[7]); 
 
-
     /* Elementwise constructs */
     real_t elem_corners[8][3]; // r[3] coords of an element's 8 corners
 
     /* Point constructs */
     real_t xg[3];     // Groupwise reference-space coord
     real_t xe[3];     // Elementwise reference-space coord
-    //int point_idx[2]; // Elementwise i,j indices of this point
     real_t rp[3];     // Physical coordinates of this point
-
 
 
     /* Solution points */
@@ -300,7 +297,7 @@ void ElementBlock::set_physical_coords_full()
 
         /* Use "analytic" transfinite interpolation to interpolate from
          * the group mapping to this element's edge. */
-        for (int iedge = 0; iedge < 12; ++iedge)
+        for (int iedge: iedges)
         {
             /* Reference to this particular edge */
             Edge& edge = elem_edges[iedge];
@@ -347,10 +344,15 @@ void ElementBlock::set_physical_coords_full()
 
         for (int d: dirs)
         {
+            /* Should tidy */
             elem_corners[0][d] = elem_edges[0].endpoints[0][d];
             elem_corners[1][d] = elem_edges[1].endpoints[0][d];
             elem_corners[2][d] = elem_edges[2].endpoints[1][d];
             elem_corners[3][d] = elem_edges[3].endpoints[1][d];
+            elem_corners[4][d] = elem_edges[4].endpoints[0][d];
+            elem_corners[5][d] = elem_edges[5].endpoints[0][d];
+            elem_corners[6][d] = elem_edges[6].endpoints[1][d];
+            elem_corners[7][d] = elem_edges[7].endpoints[1][d];
         }
         
         for (int k = 0; k < Ns[2]; ++k)
@@ -363,17 +365,8 @@ void ElementBlock::set_physical_coords_full()
             xe[1] = xs(1,j);
             xe[2] = xs(2,k);
 
-            //point_idx[0] = i;
-            //point_idx[1] = j;
-
-            /* Do 2D transfinite map using polynomial interpolation */
-            polynomial_transfinite_map_2D(xe, elem_edges, elem_corners, rp);
-
-            /* For now just set r[2] = 0 --- 2D domain*/
-            rs(2,mem_loc) = 0.0;
-
-            /* The 2-dir map is assumed to be trivial for now */
-            //rp[2] = xg2 * map->domain_depth;
+            /* Do 3D transfinite map using polynomial interpolation */
+            polynomial_transfinite_map_3D(xe, elem_edges, elem_corners, rp);
 
             for (int d: dirs)
                 rs(d,mem_loc) = rp[d];

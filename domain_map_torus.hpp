@@ -29,7 +29,7 @@ class BasicSquareTorusMap : public DomainMap
                                          {-b, -b}}; // 7
 
     int group; 
-    real_t lc[4][2]; // local corners: the 4 corners of this group's quad
+    real_t lc[4][2]; // local corners: the 4 poloidal corners of this group's quad in the R-Z plane
     real_t theta_offset; // The starting "colatitude" angle for the outer curved edges (group > 0)
 
     /* Set the domain_depth using the constructor */
