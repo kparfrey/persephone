@@ -40,6 +40,11 @@ constexpr int icorners[8] = {0,1,2,3,4,5,6,7};
 
 constexpr int iedges[12] = {0,1,2,3,4,5,6,7,8,9,10,11}; 
 
+/* A lot (all?) of the following are only used in element_block.cpp, when 
+ * setting the physical coords. Break into a separate hpp file? Something 
+ * like geometry_labels.hpp maybe. Might be able to use some of this in
+ * FaceCommunicator too, for consistency. */ 
+
 /* Coordinate directions spanning each of the six faces. Order is by cyclic
  * permutation: {n plus 1, n plus 2} where n is the dir normal to the face */
 //constexpr int face_coords[6][2] = {{0,1},{0,1},{0,2},{0,2},{1,2},{1,2}};
