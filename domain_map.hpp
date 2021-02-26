@@ -23,6 +23,8 @@ class DomainMap
 
     virtual void fill_local_data(int group){};
 
+    virtual void pointwise_transformation(real_t r[3]){};
+
     /* Allow derived classes to set domain_depth via the base constructor */
     //DomainMap(real_t depth = 0.0): domain_depth(depth) {} 
 };

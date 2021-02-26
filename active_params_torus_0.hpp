@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "params_torus.hpp"
+#include "torus_mode_pack.hpp"
 
 /* Rather than choosing a problem-specific method, may want to pass in the 
  * various parameter changes directly here in the constructor. Then each 
@@ -21,6 +22,12 @@ static int Ns[3]    = {8,8,6};
 static real_t cfl      = 0.8;
 static real_t end_time = 0.5;
 static real_t dt_write = 0.25;
+
+constexpr int Nm = 1;
+constexpr int Nk = 1;
+static real_t Rmk[Nm][Nk] = {{2.0}};
+static real_t Zmk[Nm][Nk] = {{0.0}};
+BoundaryModePack BMP(Rmk, Zmk);
 
 ParamsTorus active_parameters(equations, time_method, 
                               Nproc, Nelem, Ns, 
