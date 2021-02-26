@@ -110,7 +110,8 @@ void write_mesh(Process &proc)
         /* Write edges */
         meshfile.createGroup(groupstring + "/edges");
 
-        for (int i = 0; i < 4; ++i) // for every edge index...
+        //for (int i = 0; i < 4; ++i) // for every edge index...
+        for (int i: iedges) // for every edge index...
         {
             string name = groupstring + "/edges/" + std::to_string(i);
 
@@ -130,6 +131,12 @@ void write_mesh(Process &proc)
 
             real_t* edge_data = new real_t [local_dims[0]*local_dims[1]*local_dims[2]];
 
+            /* Store edge data as
+             *    file[group][edge][elem_id, coord, point] 
+             * where edge is 0 .. 11
+             *       elem_id is from 0 to (no. of elems in the group) - 1 
+             *       coord is 0 .. 2
+             *       point indexes the points along the edge, 0 .. Nf-1  */
             int mem;
             for (int nelem = 0; nelem < eb.Nelem_block; ++nelem)
                 for (int d: dirs) // coordinate component
