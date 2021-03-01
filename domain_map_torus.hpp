@@ -41,23 +41,28 @@ static void unit_disc_to_physical_space(real_t r[3], TorusModePack &modes)
 
 
     /* Apply transformation with Fourier modes */
-    /* NB: with this choice, "theta = 0" in physical space is the line in the 
-     * +ve R direction and theta increases anti-clockwise, so for phi=0 
-     * group 1 is directly to the right of group 0, group 2 is on top etc. 
-     * In unit disc space, theta = 0 is the +ve Z axis and theta increases
-     * clockwise, so group 1 is on top of group 0 etc. Double-check VMEC's
-     * usage, and then adjust "theta" in UDS so that the arrangements agree. */
+    /* NB: for this choice (R -> sin, Z -> cos) the unit-disc and physical spaces
+     * have the same ordering arrangements. In both, theta = 0 is in the positive
+     * Z direction, and theta increases clockwise. This may be different to e.g. VMEC */
+    real_t R0 = 0.0;
+    real_t Z0 = 0.0;
+    for (int k = 0; k < modes.Nk; ++k)
+    {
+        R0 += modes.Rmk[0][k] * std::cos(k*r[2]);
+        Z0 += modes.Zmk[0][k] * std::cos(k*r[2]);
+    }
+
     real_t R = 0.0;
     real_t Z = 0.0;
     for (int m = 1; m < modes.Nm; ++m)
         for (int k = 0; k < modes.Nk; ++k)
         {
-            R += modes.Rmk[m][k] * std::cos(m*t_uds) * std::cos(k*r[2]);
-            Z += modes.Zmk[m][k] * std::sin(m*t_uds) * std::cos(k*r[2]);
+            R += modes.Rmk[m][k] * std::sin(m*t_uds) * std::cos(k*r[2]);
+            Z += modes.Zmk[m][k] * std::cos(m*t_uds) * std::cos(k*r[2]);
         }
 
-    r[0] = r_uds * R + modes.Rmk[0][0];
-    r[1] = r_uds * Z + modes.Zmk[0][0];
+    r[0] = r_uds * R + R0;
+    r[1] = r_uds * Z + Z0;
 
     return;
 }

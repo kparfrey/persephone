@@ -17,10 +17,19 @@ class Group(object):
     e3 = None
     edges = None
 
+    Nelem_tot = None
+    Nelem = None
+    Ns = None
+    Nf = None
+
     def __init__(self, group_id):
         self.group = group_id
 
         return
+    
+
+    def elem_id_1d(self, i, j, k):
+        return (k*self.Nelem[1] + j)*self.Nelem[0] + i
 
 
 
@@ -58,6 +67,7 @@ class Mesh(object):
             ## This seems to load the data to disk - may want to use list 
             #group.r  = np.array((group.r0,group.r1,group.r2))
 
+            # Edges 0-3, the "front" poloidal edges
             group.e0 = m[sg]['edges']['0']
             group.e1 = m[sg]['edges']['1']
             group.e2 = m[sg]['edges']['2']
@@ -78,25 +88,35 @@ class Mesh(object):
         return
 
 
-    def draw_edges(self, width = 0.2):
+    # Draw the "front" poloidal face of a slice of elements 
+    def draw_edges(self, nphi = 0, width = 0.2):
         for ig in range(self.Ngroup):
             edges = self.g[ig].edges
-            for i in range(self.g[ig].Nelem_tot):
-                for j in range(4):
-                    plt.plot(edges[j][i,0,:], edges[j][i,1,:], 'k-', lw=width, zorder=1) 
+            for i in range(self.g[ig].Nelem[0]):
+                for j in range(self.g[ig].Nelem[1]):
+                    elem = self.g[ig].elem_id_1d(i,j,nphi)
+                    for edge_id in range(4):
+                        plt.plot(edges[edge_id][elem,0,:], edges[edge_id][elem,1,:], 'k-', lw=width, zorder=1) 
 
         ax = plt.gca()
         ax.set_aspect('equal')
         return
 
 
-    def draw_soln_points(self, size = 5.0):
+    # Draw the points immediately inside the "front" poloidal face of the
+    # point or element slice indicated by nphi
+    def draw_soln_points(self, nphi = 0, size = 5.0, nphi_elemwise=False):
+        # By default nphi indexes by soln point. Convert to by element.
+        # Assume Ns[2] the same for all groups
+        if nphi_elemwise:
+            nphi *= self.g[0].Ns[2]
+            
         for i in range(self.Ngroup):
             r0 = self.g[i].r0
             r1 = self.g[i].r1
-            
+
             # Add c='k' to draw the points in black
-            plt.scatter(r0[:,:,0], r1[:,:,0], marker='.', s=size)
+            plt.scatter(r0[:,:,nphi], r1[:,:,nphi], marker='.', s=size)
 
         ax = plt.gca()
         ax.set_aspect('equal')
