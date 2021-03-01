@@ -21,19 +21,22 @@ static void unit_disc_to_physical_space(real_t r[3], TorusModePack &modes)
 
     using std::atan;
 
-    if (r[0] >= 0.0 )
+    if (r_uds > TINY)
     {
-        if (r[1] >= 0.0)
-            t_uds = atan(r[0]/r[1]);
+        if (r[0] >= 0.0 )
+        {
+            if (r[1] >= 0.0)
+                t_uds = atan(r[0]/r[1]);
+            else
+                t_uds = pi_2 + atan(-r[1]/r[0]);
+        }
         else
-            t_uds = pi_2 + atan(-r[1]/r[0]);
-    }
-    else
-    {
-        if (r[1] >= 0)
-            t_uds = 3.*pi_2 + atan(-r[1]/r[0]);
-        else
-            t_uds = pi + atan(r[0]/r[1]);
+        {
+            if (r[1] >= 0)
+                t_uds = 3.*pi_2 + atan(-r[1]/r[0]);
+            else
+                t_uds = pi + atan(r[0]/r[1]);
+        }
     }
 
 
