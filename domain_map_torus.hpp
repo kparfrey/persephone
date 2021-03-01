@@ -1,16 +1,69 @@
 #ifndef DOMAIN_MAP_TORUS_HPP
 #define DOMAIN_MAP_TORUS_HPP
 
+#include <cmath>
 #include "common.hpp"
 #include "domain_map.hpp"
-
-#include <cmath>
+#include "torus_mode_pack.hpp"
 #include "write_screen.hpp"
 
 
 
+/* All versions of the torus map will use this transformation from the origin-centred
+ * unit disc to physical space, applying the Fourier modes stored in boundary_modes. */
+static void unit_disc_to_physical_space(real_t r[3], TorusModePack &modes)
+{
+    /* Unit disc coords were stored as Cartesian/cylindrical for ease of testing.
+     * Convert back to polar coords... Probably should just do all of the first
+     * division of the disc directly in polar coords... */
+    real_t r_uds = std::sqrt(r[0]*r[0] + r[1]*r[1]);
+    real_t t_uds = 0.0;
+
+    using std::atan;
+
+    if (r[0] >= 0.0 )
+    {
+        if (r[1] >= 0.0)
+            t_uds = atan(r[0]/r[1]);
+        else
+            t_uds = pi_2 + atan(-r[1]/r[0]);
+    }
+    else
+    {
+        if (r[1] >= 0)
+            t_uds = 3.*pi_2 + atan(-r[1]/r[0]);
+        else
+            t_uds = pi + atan(r[0]/r[1]);
+    }
+
+
+    /* Apply transformation with Fourier modes */
+    /* NB: with this choice, "theta = 0" in physical space is the line in the 
+     * +ve R direction and theta increases anti-clockwise, so for phi=0 
+     * group 1 is directly to the right of group 0, group 2 is on top etc. 
+     * In unit disc space, theta = 0 is the +ve Z axis and theta increases
+     * clockwise, so group 1 is on top of group 0 etc. Double-check VMEC's
+     * usage, and then adjust "theta" in UDS so that the arrangements agree. */
+    real_t R = 0.0;
+    real_t Z = 0.0;
+    for (int m = 1; m < modes.Nm; ++m)
+        for (int k = 0; k < modes.Nk; ++k)
+        {
+            R += modes.Rmk[m][k] * std::cos(m*t_uds) * std::cos(k*r[2]);
+            Z += modes.Zmk[m][k] * std::sin(m*t_uds) * std::cos(k*r[2]);
+        }
+
+    r[0] = r_uds * R + modes.Rmk[0][0];
+    r[1] = r_uds * Z + modes.Zmk[0][0];
+
+    return;
+}
+
+
+
 /* r[3] = (R, Z, phi) 
- * This map only goes into unit-disc space. Really a cylinder for now. */
+ * This map only goes into unit-disc space, but it holds the modes for the subsequent
+ * pointwise map. */
 class BasicSquareTorusMap : public DomainMap
 {
     public:
@@ -29,17 +82,18 @@ class BasicSquareTorusMap : public DomainMap
                                          {-b, -b}}; // 7
 
     int group; 
-    real_t lc[4][2]; // local corners: the 4 poloidal corners of this group's quad in the R-Z plane
+    real_t lc[4][2];     // local corners: the 4 poloidal corners of this group's quad in the R-Z plane
     real_t theta_offset; // The starting "colatitude" angle for the outer curved edges (group > 0)
 
-    /* Set the domain_depth using the constructor */
-    //BasicSquareTorusMap(): DomainMap(0.5) {}
+    TorusModePack boundary_modes; // Used in the second, pointwise_transformation() to physical space
 
-    /* Replace by a constructor? */
-    virtual void fill_local_data(const int group)
+    /* Set the domain_depth using the constructor */
+    BasicSquareTorusMap(const int group, TorusModePack boundary_modes)
+    : boundary_modes(boundary_modes)
     {
         this->group = group;
 
+        /* The local corners for the disc division are only in the poloida/disc plane */
         for (int i = 0; i < 2; ++i)
         {
             switch (group)
@@ -80,13 +134,9 @@ class BasicSquareTorusMap : public DomainMap
                     break;
             }
         }
-
-        return;
     }
 
 
-    // Do I actually need n > 3 here?? Since am only ever doing 2D TFI,
-    // should only need four edges
     virtual void operator()(const int n, const real_t x, real_t r[3])
     {
         real_t start;
@@ -158,6 +208,12 @@ class BasicSquareTorusMap : public DomainMap
 
         return;
     }
+
+
+    virtual void pointwise_transformation(real_t r[3])
+    {
+        unit_disc_to_physical_space(r, boundary_modes);
+    };
 };
 
 

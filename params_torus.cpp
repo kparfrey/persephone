@@ -313,8 +313,8 @@ void ParamsTorus::setup_elementblock(ElementBlock &elements, Process &proc)
     elements.Nfield   = proc.Nfield;
     elements.geometry = full_geometry; // Torus needs full_geometry
 
-    elements.map = new BasicSquareTorusMap;
-    elements.map->fill_local_data(proc.group);
+    elements.map = new BasicSquareTorusMap(proc.group, boundary_modes);
+    //elements.map->fill_local_data(proc.group);
 
     /* At this point all external information is present, and the internal
      * setup method can take over. */

@@ -320,7 +320,7 @@ void ElementBlock::set_physical_coords_full()
                 /* Then apply an additional coordinate map to each point, on a
                  * point-by-point basis. For the torus, this maps unit-disc space
                  * to physical space. */
-                // ADD VMEC-like mapping here
+                map->pointwise_transformation(rp);
                 
                 for (int j: dirs) edge.r(j, i) = rp[j]; 
             }

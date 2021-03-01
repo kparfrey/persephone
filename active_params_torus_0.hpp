@@ -23,15 +23,15 @@ static real_t cfl      = 0.8;
 static real_t end_time = 0.5;
 static real_t dt_write = 0.25;
 
-constexpr int Nm = 1;
+constexpr int Nm = 4;
 constexpr int Nk = 1;
-static real_t Rmk[Nm][Nk] = {{2.0}};
-static real_t Zmk[Nm][Nk] = {{0.0}};
-BoundaryModePack BMP(Rmk, Zmk);
+static real_t Rmk[Nm][Nk] = {{2.0}, {1.0}, {0.0}, {0.0}};
+static real_t Zmk[Nm][Nk] = {{0.0}, {1.0}, {0.0}, {0.0}};
+TorusModePack TMP(Rmk, Zmk);
 
 ParamsTorus active_parameters(equations, time_method, 
                               Nproc, Nelem, Ns, 
                               cfl, end_time, dt_write,
-                              central_polygon);
+                              central_polygon, TMP);
 
 #endif

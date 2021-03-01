@@ -1,4 +1,9 @@
+#ifndef PARAMS_TORUS
+#define PARAMS_TORUS
+
 #include "params.hpp"
+#include "torus_mode_pack.hpp"
+
 
 class ParamsTorus : public Params
 {
@@ -13,6 +18,8 @@ class ParamsTorus : public Params
                    // NB: Nproc[2] gives the no. of Processes the whole way around
     int Nelem[3];  // No. of elements in each direction, in each process
     int Ns[3];     // No. of solution points in each direction, in each element
+
+    TorusModePack boundary_modes;
 
     /* Secondary or derived quantities */
     int Ngroup;          // No. of disc groups or disc zones
@@ -33,7 +40,6 @@ class ParamsTorus : public Params
     virtual void set_initial_state(ElementBlock& elements, EqnSystem equations);
     real_t set_dt_basic(ElementBlock& elements);
 
-
     /* Constructor */
     ParamsTorus(EqnSystem equations,
                 BasicTimeMethod time_method,
@@ -43,9 +49,10 @@ class ParamsTorus : public Params
                 real_t cfl = 0.8,
                 real_t end_time = 1.0,
                 real_t dt_write = 0.5,
-                TorusCentralPolygon central_polygon = square)
+                TorusCentralPolygon central_polygon = square,
+                TorusModePack boundary_modes = boundary_modes_default)
     : Params(equations, time_method, full_geometry, cfl, end_time, dt_write), 
-      central_polygon(central_polygon)
+      central_polygon(central_polygon), boundary_modes(boundary_modes)
     {
         for (int i=0; i<3; i++)
         {
@@ -57,3 +64,4 @@ class ParamsTorus : public Params
         secondary_params();
     }
 };
+#endif
