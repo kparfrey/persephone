@@ -9,11 +9,22 @@ def disc_to_physical_VMEC(r, theta, modes):
     R = 0.0
     Z = 0.0
     M = Rm.shape[0]
+
+    '''
     for m in range(1, M):
         R += Rm[m] * np.cos(m*theta)
         Z += Zm[m] * np.sin(m*theta)
     Rfinal = r*R + Rm[0]
     Zfinal = r*Z
+    '''
+
+    #'''
+    for m in range(1, M):
+        R += Rm[m] * (r**m) * np.cos(m*theta)
+        Z += Zm[m] * (r**m) * np.sin(m*theta)
+    Rfinal = R #+ Rm[0]
+    Zfinal = Z
+    #'''
     return (Rfinal, Zfinal)
 
 
@@ -109,10 +120,10 @@ M = 5
 Rm = np.zeros(M)
 Zm = np.zeros(M)
 
-Rm[0] = 2.0
+Rm[0] = 0.0
 Rm[1] = 1.0
 Zm[1] = 2.0
-Rm[2] = 0.2
+Rm[2] = 0.4
 Zm[2] = 0.2
 Rm[3] = -0.3
 Zm[3] = -0.1
@@ -135,11 +146,11 @@ w0 = [3.0, 0.0] # physical-space R,Z location of the polar-coordinate origin
 
 ### Choose mapping type
 
-#modes = [Rm, Zm]
-#disc_to_physical = disc_to_physical_VMEC
+modes = [Rm, Zm]
+disc_to_physical = disc_to_physical_VMEC
 
-modes = [Deltam, w0]
-disc_to_physical = disc_to_physical_Garabedian
+#modes = [Deltam, w0]
+#disc_to_physical = disc_to_physical_Garabedian
 
 
 
