@@ -10,21 +10,21 @@ def disc_to_physical_VMEC(r, theta, modes):
     Z = 0.0
     M = Rm.shape[0]
 
-    '''
+    #'''
     for m in range(1, M):
         R += Rm[m] * np.cos(m*theta)
         Z += Zm[m] * np.sin(m*theta)
     Rfinal = r*R + Rm[0]
     Zfinal = r*Z
-    '''
-
     #'''
+
+    '''
     for m in range(1, M):
         R += Rm[m] * (r**m) * np.cos(m*theta)
         Z += Zm[m] * (r**m) * np.sin(m*theta)
     Rfinal = R #+ Rm[0]
     Zfinal = Z
-    #'''
+    '''
     return (Rfinal, Zfinal)
 
 
