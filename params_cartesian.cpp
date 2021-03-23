@@ -1,6 +1,7 @@
 #include "params_cartesian.hpp"
 
 #include <cmath>
+#include <mpi.h>
 #include "process.hpp"
 #include "element_block.hpp"
 #include "initial_state_cartesian.hpp"
@@ -72,6 +73,9 @@ void ParamsCartesian::setup_process(Process &proc)
         proc.elements.Nproc_group[i] = Nproc[i];
     }
     
+    /* Used by mesh and data output routines. */
+    MPI_Comm_dup(MPI_COMM_WORLD, &proc.group_comm);
+
     proc.Nproc_group_tot = proc.Nproc_group[0] * proc.Nproc_group[1] * proc.Nproc_group[2];
 
     setup_elementblock(proc.elements, proc);

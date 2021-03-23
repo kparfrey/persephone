@@ -124,7 +124,7 @@ Zm = np.zeros(M)
 Rm[0] = 0.0
 Rm[1] = 1.0
 Zm[1] = 2.0
-Rm[2] = 0.3
+Rm[2] = 0.3 #0.3 or 0.4
 Zm[2] = 0.2
 Rm[3] = -0.3
 Zm[3] = -0.1
@@ -189,13 +189,19 @@ theta_cfm = np.linspace(0, 2*np.pi, Ntheta_cfm+1)[:-1]
 Rcfm, Zcfm = disc_to_physical(circle(theta_cfm), theta_cfm, modes)
 
 zcfm = Rcfm + 1j*Zcfm # pack the boundary in a complex number
-cm = cf.ConformalMap(zcfm, origin=0) # Create mapping object
+cm = cf.ConformalMap(zcfm, origin=0.2) # Create mapping object
 
 zo = cm.inverse(polar_to_z(circle(theta)-1e-9, theta))
 zs = cm.inverse(polar_to_z(square(theta,h), theta))
 zc = cm.inverse(polar_to_z(circle(outer_corners)-1e-9, outer_corners))
 
 zcl = corner_lines_conformal(outer_corners, h, cm)
+
+
+
+#### Average between direct and conformal map.... #####
+
+
 
 
 

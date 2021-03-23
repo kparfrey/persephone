@@ -1,9 +1,9 @@
 CXX = mpic++
 
 TARGET_ARCH =
-CPPFLAGS = -I../HighFive/include
-CXXFLAGS = -std=c++17 -Wall -Werror -g -fno-omit-frame-pointer
-LDFLAGS  = 
+CPPFLAGS = -I../HighFive/include -I/usr/include/hdf5/openmpi
+CXXFLAGS = -std=c++17 -Wall -g -fno-omit-frame-pointer -DHIGHFIVE_PARALLEL_HDF5=ON #-Werror
+LDFLAGS  = -L/usr/lib/x86_64-linux-gnu/hdf5/openmpi
 LDLIBS   = -lmpi -lm -lhdf5
 
 SRC = main.cpp kernels.cpp process.cpp element_block.cpp params.cpp  \

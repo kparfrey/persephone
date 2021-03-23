@@ -9,9 +9,9 @@
 /*** Avoid includes here without a good reason....                    ***/
 
 
-#define FLOAT_POINT_PRECISION DOUBLE
-
-
+#define FLOAT_POINT_PRECISION DOUBLE_PRECISION_MY
+//enum Precision {single_precision, double_precision}
+//const Precision precision = double_precision
 
 /***************************************************/
 /**** Options above this line, do not change below */
@@ -76,10 +76,10 @@ constexpr int face_normal[6] = {2, 2, 0, 0, 1, 1};
 #endif
 
 
-#define SINGLE 1
-#define DOUBLE 2
+#define SINGLE_PRECISION_MY 1
+#define DOUBLE_PRECISION_MY 2
 
-#if (FLOAT_POINT_PRECISION == SINGLE)
+#if (FLOAT_POINT_PRECISION == SINGLE_PRECISION_MY)
   #define real_t    float
   #define MPI_real_t MPI_FLOAT
 #else

@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
     
     write_mesh(proc); // Mesh data still on host
 
-    exit(99);
+    //exit(99);
 
     proc.elements.free_setup_memory(); // Keep edges until mesh has been written
 
