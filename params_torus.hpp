@@ -22,7 +22,6 @@ class ParamsTorus : public Params
     TorusModePack boundary_modes;
 
     /* Secondary or derived quantities */
-    int Ngroup;          // No. of disc groups or disc zones
     int Ngroup_central;  // 1 for square
     int Ngroup_outer;    // 4 for square
     int Nproc_central;   // equivalent to Nproc[0] --- 1D measurement

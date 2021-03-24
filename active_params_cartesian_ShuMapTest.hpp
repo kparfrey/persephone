@@ -14,7 +14,7 @@ static BasicTimeMethod time_method = rk2_midpoint;
 
 static int Nproc[3] = {2,2,1};
 static int Nelem[3] = {3,3,1};
-static int Ns[3]    = {4,4,1};
+static int Ns[3]    = {8,12,1};
 
 static GeometryClass geometry = full_geometry;
 static real_t limits[3][2] = {{-5.,5.}, {-3.,3.}, {-0.1, 0.1}};

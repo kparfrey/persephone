@@ -20,6 +20,7 @@ class Params
                             // "full" (deformed Cartesian, or any mesh with deformed regions)
 
     /* Total quantities referring to whole domain */
+    int Ngroup; 
     int Nproc_domain;
     int Nelem_domain;
     int Ns_domain;

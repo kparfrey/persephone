@@ -14,6 +14,7 @@ using std::endl;
 /* Called by the ParamsCartesian constructor */
 void ParamsCartesian::secondary_params()
 {
+    Ngroup       = 1;
     Nproc_domain = Nproc[0] * Nproc[1] * Nproc[2];
     Nelem_proc   = Nelem[0] * Nelem[1] * Nelem[2];
     Nelem_domain = Nelem_proc * Nproc_domain;
@@ -61,7 +62,8 @@ void ParamsCartesian::setup_process(Process &proc)
     proc_idx[0] = proc.rank / (Nproc[1]*Nproc[2]);
 
     /* A Cartesian dataset needs only one Cartesian group */
-    proc.group = 0;
+    proc.Ngroup = 1;
+    proc.group  = 0;
     proc.group_rank = proc.rank;
 
     for (int i: dirs)
