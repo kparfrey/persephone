@@ -10,6 +10,7 @@
 #include <highfive/H5DataSet.hpp>
 #include <highfive/H5DataSpace.hpp>
 #include <highfive/H5File.hpp>
+#include <highfive/H5Easy.hpp>
 
 #include "process.hpp"
 #include "element_block.hpp"
@@ -29,6 +30,8 @@ void write_data(Process &proc)
     std::vector<size_t> global_dims(3);
     std::vector<size_t> offset(3);
 
+    string groupstring = std::to_string(proc.group);
+
 
     /* Create filename */
     std::stringstream filenum;
@@ -45,59 +48,68 @@ void write_data(Process &proc)
     MPI_Barrier(MPI_COMM_WORLD);
 
     /* MPI collective part */
-    { 
-    write::message("Creating data file " + std::to_string(proc.data_output_counter));
-    HighFive::File datafile(filename, HighFive::File::Create,
-                                HighFive::MPIOFileDriver(MPI_COMM_WORLD, MPI_INFO_NULL));
-
-
-    /* Solution point locations */
-    /* Basic structured Cartesian grid: assume every process is identical etc. */
-    for (int i: dirs)
+    for (int ig = 0; ig < proc.Ngroup; ++ig)
     {
-        local_dims[i]  = size_t(eb.Ns_tot[i]);
-        global_dims[i] = size_t(local_dims[i] * proc.Nproc_group[i]);
-        offset[i]      = size_t(proc.group_idx[i] * local_dims[i]);
-    }
+        if (ig == proc.group)
+        { 
+        write::message("Creating data file " + std::to_string(proc.data_output_counter));
+        HighFive::File datafile(filename, HighFive::File::Create,
+                                    HighFive::MPIOFileDriver(proc.group_comm, MPI_INFO_NULL));
 
-    /* Transform from conserved to primitive variables */
-    real_t* primitives = new real_t [proc.Nfield * eb.Ns_block];
-    
-    real_t* Up = new real_t [proc.Nfield];
-    real_t* Pp = new real_t [proc.Nfield];
-    for (int n = 0; n < eb.Ns_block; ++n)
-    {
-        for (int field = 0; field < proc.Nfield; ++field)
-            Up[field] = eb.fields[n + field * eb.Ns_block];
+        /* Create HDF5 groups for our Groups of processes */
+        datafile.createGroup(groupstring);
 
-        (*proc.U_to_P)(Up, Pp); 
+        /* Data at solution points */
+        /* Assume every Process in a given Group is identical */
+        for (int i: dirs)
+        {
+            local_dims[i]  = size_t(eb.Ns_tot[i]);
+            global_dims[i] = size_t(local_dims[i] * proc.Nproc_group[i]);
+            offset[i]      = size_t(proc.group_idx[i] * local_dims[i]);
+        }
 
-        for (int field = 0; field < proc.Nfield; ++field)
-            primitives[n + field * eb.Ns_block] = Pp[field];
-    }
-    delete[] Up;
-    delete[] Pp;
+        /* Transform from conserved to primitive variables */
+        real_t* primitives = new real_t [proc.Nfield * eb.Ns_block];
+        
+        real_t* Up = new real_t [proc.Nfield];
+        real_t* Pp = new real_t [proc.Nfield];
+        for (int n = 0; n < eb.Ns_block; ++n)
+        {
+            for (int field = 0; field < proc.Nfield; ++field)
+                Up[field] = eb.fields[n + field * eb.Ns_block];
 
-    /* Allocate data buffer for repacking each component */
-    real_t* data = new real_t [local_dims[0]*local_dims[1]*local_dims[2]];
+            (*proc.U_to_P)(Up, Pp); 
 
-    for (int i = 0; i < proc.Nfield; ++i)
-    {
-        string name = proc.system_data->variables[i];
-        HighFive::DataSet dataset = datafile.createDataSet<real_t>(name, 
-                                             HighFive::DataSpace(global_dims));
+            for (int field = 0; field < proc.Nfield; ++field)
+                primitives[n + field * eb.Ns_block] = Pp[field];
+        }
+        delete[] Up;
+        delete[] Pp;
 
-        /* Need to repack data from native ordering to elementblock-wise logical */
-        repack(&primitives[i*eb.Ns_block], data, eb);
+        /* Allocate data buffer for repacking each component */
+        real_t* data = new real_t [local_dims[0]*local_dims[1]*local_dims[2]];
 
-        /* Pass the repacked 1D array cast as a triple pointer */
-        write::message("Writing " + name);
-        dataset.select(offset, local_dims).write((real_t***)data);
-    }
+        for (int i = 0; i < proc.Nfield; ++i)
+        {
+            string name = groupstring + "/" + proc.system_data->variables[i];
+            HighFive::DataSet dataset = datafile.createDataSet<real_t>(name, 
+                                                 HighFive::DataSpace(global_dims));
 
-    delete[] primitives;
-    delete[] data;
-    } // End of MPI collective part
+            /* Need to repack data from native ordering to elementblock-wise logical */
+            repack(&primitives[i*eb.Ns_block], data, eb);
+
+            /* Pass the repacked 1D array cast as a triple pointer */
+            write::message("Writing " + name);
+            dataset.select(offset, local_dims).write((real_t***)data);
+        }
+
+        delete[] primitives;
+        delete[] data;
+        }// closes: if (ig == proc.Ngroup) 
+
+        MPI_Barrier(MPI_COMM_WORLD);
+    }// End of MPI collective part -- closes for loop over groups
+
 
 
     /* Write time etc. from the root process */
@@ -106,6 +118,12 @@ void write_data(Process &proc)
         write::message("Writing time etc.");
 
         /* Reopen the mesh file in single-processor mode */
+        H5Easy::File datafile(filename, H5Easy::File::ReadWrite);
+        H5Easy::dump(datafile, "time", proc.time);
+        H5Easy::dump(datafile, "step", proc.step);
+        H5Easy::dump(datafile, "dt",   proc.dt);
+
+        /**
         HighFive::File datafile(filename, HighFive::File::ReadWrite);
         
         HighFive::DataSet ds0 = datafile.createDataSet<real_t>("time", HighFive::DataSpace::From(proc.time));
@@ -116,6 +134,7 @@ void write_data(Process &proc)
 
         HighFive::DataSet ds2 = datafile.createDataSet<real_t>("dt", HighFive::DataSpace::From(proc.dt));
         ds2.write(proc.dt);
+        **/
     }
 
     proc.data_output_counter++;
