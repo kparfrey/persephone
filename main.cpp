@@ -56,7 +56,6 @@ int main(int argc, char *argv[])
 
     write_data(proc); // Data generally lives on device
     
-    exit(99);
 
     while(proc.time < proc.end_time)
     {

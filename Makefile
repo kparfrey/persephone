@@ -11,7 +11,7 @@ SRC = main.cpp kernels.cpp process.cpp element_block.cpp params.cpp  \
 	  write_file_utils.cpp write_data.cpp lagrange_polynomials.cpp \
 	  face_communicator.cpp edge.cpp transfinite_map.cpp \
 	  params_cartesian.cpp initial_state_cartesian.cpp \
-	  params_torus.cpp
+	  params_torus.cpp initial_state_torus.cpp
 
 OBJ := $(SRC:%.cpp=%.o)
 DEP := $(SRC:%.cpp=%.d)

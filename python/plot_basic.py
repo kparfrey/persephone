@@ -49,7 +49,7 @@ class Mesh(object):
     def __init__(self):
         print("Loading mesh file")
         filename = 'mesh.h5'
-        m = h5py.File(filename)
+        m = h5py.File(filename, 'r')
 
         self.Ngroup = m['Ngroup'][()]
         self.Nproc  = m['Nproc'][()]
@@ -155,13 +155,22 @@ class Snapshot(object):
             self.dfile.close()
 
         filename = 'data%04d.h5' % filenum
-        self.dfile = h5py.File(filename)
+        self.dfile = h5py.File(filename,'r')
 
-        self.rho = self.dfile['rho']
-        self.p   = self.dfile['p']
-        self.v0  = self.dfile['v0']
-        self.v1  = self.dfile['v1']
-        self.v2  = self.dfile['v2']
+        self.rho = [0] * self.Ngroup 
+        self.p   = [0] * self.Ngroup 
+        self.v0  = [0] * self.Ngroup 
+        self.v1  = [0] * self.Ngroup 
+        self.v2  = [0] * self.Ngroup 
+        
+        for ig in range(self.Ngroup):
+            sg = str(ig)
+            self.rho[ig] = self.dfile[sg]['rho']
+            self.p[ig]   = self.dfile[sg]['p']
+            self.v0[ig]  = self.dfile[sg]['v0']
+            self.v1[ig]  = self.dfile[sg]['v1']
+            self.v2[ig]  = self.dfile[sg]['v2']
+
         self.v   = np.array((self.v0, self.v1, self.v2))
 
         self.time = self.dfile['time'][()]
@@ -173,20 +182,21 @@ class Snapshot(object):
 
 
     # Assume 0-1 plane
-    """
-    def contour_plot(self, var='rho', width=0.4, levels=[None,]):
-        r0 = self.m.r0
-        r1 = self.m.r1
-        
-        if levels[0] == None:
-            levels = np.linspace(0.5, 0.99, 12)
-        
-        plt.contour(r0[:,:,0], r1[:,:,0], self.dfile[var][:,:,0], levels=levels,
-                                                         linewidths=width, zorder=5)
+    def contour_plot(self, var='rho', width=0.7, levels=[None,]):
+        for ig in range(self.Ngroup):
+            sg = str(ig)
+            r0 = self.m.g[ig].r0
+            r1 = self.m.g[ig].r1
+            
+            if levels[0] == None:
+                levels = np.linspace(0.0, 0.99, 20)
+            
+            plt.contour(r0[:,:,0], r1[:,:,0], self.dfile[sg][var][:,:,0], levels=levels,
+                                                             linewidths=width, zorder=5)
+
         plt.title('t = %.2lf' % self.time)
 
         ax = plt.gca()
         ax.set_aspect('equal')
         return
-    """
 

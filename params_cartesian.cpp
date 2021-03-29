@@ -177,10 +177,10 @@ void ParamsCartesian::set_initial_state(ElementBlock &elements, EqnSystem equati
     switch (equations)
     {
         case scalar_advection:
-            set_scalar(elements);
+            set_scalar_cartesian(elements);
             break;
         case euler:
-            set_euler(elements);
+            set_euler_cartesian(elements);
             break;
     }
 

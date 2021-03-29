@@ -25,7 +25,7 @@ static real_t scalar_function(const real_t r[3])
 }
 
 
-void set_scalar(ElementBlock& eb)
+void set_scalar_cartesian(ElementBlock& eb)
 {
     int mem_offset;
     int loc;
@@ -91,7 +91,7 @@ static void shu_vortex(const real_t r[3],
 }
 
 
-void set_euler(ElementBlock& eb)
+void set_euler_cartesian(ElementBlock& eb)
 {
     int mem_offset;
     int loc0; // Memory location for the 0th field

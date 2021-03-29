@@ -4,7 +4,7 @@
 #include <cmath>
 #include "process.hpp"
 #include "element_block.hpp"
-#include "initial_state_cartesian.hpp"
+#include "initial_state_torus.hpp"
 #include "write_screen.hpp"
 #include "domain_map_torus.hpp"
 
@@ -314,7 +314,6 @@ void ParamsTorus::setup_elementblock(ElementBlock &elements, Process &proc)
     elements.geometry = full_geometry; // Torus needs full_geometry
 
     elements.map = new BasicSquareTorusMap(proc.group, boundary_modes);
-    //elements.map->fill_local_data(proc.group);
 
     /* At this point all external information is present, and the internal
      * setup method can take over. */
@@ -329,11 +328,8 @@ void ParamsTorus::set_initial_state(ElementBlock &elements, EqnSystem equations)
 {
     switch (equations)
     {
-        case scalar_advection:
-            set_scalar(elements);
-            break;
         case euler:
-            set_euler(elements);
+            set_euler_torus(elements);
             break;
     }
 

@@ -43,6 +43,8 @@ void write_data(Process &proc)
         if (std::filesystem::exists(filename))
             if (std::filesystem::remove(filename))
                 write::message("Deleted existing data file " + filename);
+        
+        H5Easy::File datafile(filename, H5Easy::File::Create);
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
@@ -53,7 +55,7 @@ void write_data(Process &proc)
         if (ig == proc.group)
         { 
         write::message("Creating data file " + std::to_string(proc.data_output_counter));
-        HighFive::File datafile(filename, HighFive::File::Create,
+        HighFive::File datafile(filename, HighFive::File::ReadWrite,
                                     HighFive::MPIOFileDriver(proc.group_comm, MPI_INFO_NULL));
 
         /* Create HDF5 groups for our Groups of processes */
@@ -113,6 +115,7 @@ void write_data(Process &proc)
 
 
     /* Write time etc. from the root process */
+    /* Move to top... */
     if (proc.rank == 0)
     {
         write::message("Writing time etc.");

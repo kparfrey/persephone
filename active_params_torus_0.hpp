@@ -22,19 +22,24 @@ static BasicTimeMethod time_method = rk2_midpoint;
 static TorusCentralPolygon central_polygon = square;
 
 static int Nproc[3] = {1,1,1};
-static int Nelem[3] = {4,3,32};
-static int Ns[3]    = {8,6,10};
+static int Nelem[3] = {3,3,1};
+static int Ns[3]    = {4,4,8};
 
 static real_t cfl      = 0.8;
-static real_t end_time = 0.5;
-static real_t dt_write = 0.25;
+static real_t end_time = 0.03;
+static real_t dt_write = 0.01;
 
-constexpr static int Nm = 3;
-constexpr static int Nk = 3;
-static real_t Rmk[Nm][Nk] = {{2.0, 0.289, 5.73e-2}, {0.8, 0.15, 6.89e-2}, {-0.2, -3.8e-3, 4.72e-2}};
-static real_t Zmk[Nm][Nk] = {{0.0, 0.45, 4.8e-3}, {1.6, -0.53, -9.28e-3}, {-0.2,5.73e-3, -2.04e-2}};
-//static real_t Rmk[Nm][Nk] = {{2.0}, {1.5}, {0.0}, {0.0}};
-//static real_t Zmk[Nm][Nk] = {{0.0}, {0.8}, {0.0}, {0.0}};
+//constexpr static int Nm = 3;
+//constexpr static int Nk = 3;
+//static real_t Rmk[Nm][Nk] = {{2.0, 0.289, 5.73e-2}, {0.8, 0.15, 6.89e-2}, {-0.2, -3.8e-3, 4.72e-2}};
+//static real_t Zmk[Nm][Nk] = {{0.0, 0.45, 4.8e-3}, {1.6, -0.53, -9.28e-3}, {-0.2,5.73e-3, -2.04e-2}};
+////static real_t Rmk[Nm][Nk] = {{2.0}, {1.5}, {0.0}, {0.0}};
+////static real_t Zmk[Nm][Nk] = {{0.0}, {0.8}, {0.0}, {0.0}};
+
+/* Circular unit-radius cylinder centred at the origin */
+static real_t Rmk[2][1] = {{0.0}, {1.0}};
+static real_t Zmk[2][1] = {{0.0}, {1.0}};
+
 static TorusModePack boundary_modes(Rmk, Zmk);
 
 static ParamsTorus active_parameters(equations, time_method, 
