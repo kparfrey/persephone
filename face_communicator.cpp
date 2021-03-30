@@ -139,11 +139,12 @@ MPI_Request FaceCommunicator::send_data()
 {
     /* Will need to add up/down data movement when using accelerators */
 
-    MPI_Request request;
+    MPI_Request request = MPI_REQUEST_NULL;
     int send_tag = my_id;
 
-    MPI_Isend(my_data_host, Ntot_all, MPI_real_t, neighbour_rank, send_tag, 
-                                               MPI_COMM_WORLD, &request);
+    if (!external_face)
+        MPI_Isend(my_data_host, Ntot_all, MPI_real_t, neighbour_rank, send_tag, 
+                                                   MPI_COMM_WORLD, &request);
 
     return request;
 }
@@ -154,11 +155,12 @@ MPI_Request FaceCommunicator::receive_data()
 {
     /* Will need to add up/down data movement when using accelerators */
 
-    MPI_Request request;
+    MPI_Request request = MPI_REQUEST_NULL;
     int recv_tag = neighbour_id;
     
-    MPI_Irecv(neighbour_data_host, Ntot_all, MPI_real_t, neighbour_rank,
-                                  recv_tag, MPI_COMM_WORLD, &request);
+    if (!external_face)
+        MPI_Irecv(neighbour_data_host, Ntot_all, MPI_real_t, neighbour_rank,
+                                      recv_tag, MPI_COMM_WORLD, &request);
 
     return request;
 }

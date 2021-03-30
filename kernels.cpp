@@ -517,15 +517,27 @@ namespace kernels
         const real_t* __restrict__ UL_data;
         const real_t* __restrict__ UR_data;
 
+        const real_t external_hack[5] = {1.0,0.0,0.0,0.0,1.758243690664908};
+
         if (face.orientation > 0)
         {
             UL_data = face.my_data;
-            UR_data = face.neighbour_data;
+            
+            if (face.external_face)
+                UR_data = external_hack;
+            else
+                UR_data = face.neighbour_data;
+
         }
         else
         {
-            UL_data = face.neighbour_data;
+            //UL_data = face.neighbour_data;
             UR_data = face.my_data;
+            
+            if (face.external_face)
+                UL_data = external_hack;
+            else
+                UL_data = face.neighbour_data;
         }
 
         /* Conserved variables and physical fluxes at one point */
