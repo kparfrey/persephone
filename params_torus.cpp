@@ -116,7 +116,7 @@ void ParamsTorus::setup_process(Process &proc)
     set_initial_state(proc.elements, equations);
 
     /* Should be made general and moved to a separate member function */
-    proc.dt = 1e-4; //5e-3; //cfl * set_dt_basic(proc.elements); 
+    proc.dt = 1e-3; //5e-3; //cfl * set_dt_basic(proc.elements); 
 
     write::variable<real_t>("CFL", proc.cfl);
     write::variable<real_t>("End time", proc.end_time);
@@ -186,8 +186,8 @@ void ParamsTorus::setup_process(Process &proc)
                     f.neighbour_idx[1] = proc.group_idx[0]; // group-1:dir-1 aligned with group-0:dir-0
                     f.neighbour_group  = 1;
                     f.neighbour_id     = 2;
-                    f.change_data_order = true;
-                    f.swap_index_order  = true;
+                    f.change_data_order = false;
+                    f.swap_index_order  = false;
                 }
 
                 if (proc.faces[5].neighbour_idx[1] > proc.Nproc_group[1] - 1)
@@ -217,8 +217,8 @@ void ParamsTorus::setup_process(Process &proc)
                             f.neighbour_idx[0] = proc.group_idx[1];
                             f.neighbour_idx[1] = 0;
                             f.neighbour_id     = 4;
-                            f.change_data_order = true;
-                            f.swap_index_order  = true;
+                            f.change_data_order = false;
+                            f.swap_index_order  = false;
                             break;
                         case 2:
                             f.neighbour_idx[0] = Nproc_central - 1;
@@ -247,10 +247,35 @@ void ParamsTorus::setup_process(Process &proc)
                 if (proc.faces[3].neighbour_idx[0] > proc.Nproc_group[0] - 1)
                 {
                     FaceCommunicator& f = proc.faces[3];
+#if 0
                     f.neighbour_idx[0] = -1;
                     f.neighbour_group  = -1;
                     f.neighbour_id     = -1;
                     f.external_face = true;
+#endif
+                    /* Make periodic for testing */
+                    f.neighbour_idx[0] = Nproc_outer - 1;
+                    f.neighbour_idx[1] = Nproc_central - 1 - proc.group_idx[1];
+                    f.neighbour_id     = 3;
+                    f.change_data_order = true;
+                    f.reverse_index_direction = true;
+                    f.index_to_reverse = 1; // reverse normal_dir + 1
+                    
+                    switch(proc.group)
+                    {
+                        case 1:
+                            f.neighbour_group = 3;
+                            break;
+                        case 2:
+                            f.neighbour_group = 4;
+                            break;
+                        case 3:
+                            f.neighbour_group = 1;
+                            break;
+                        case 4:
+                            f.neighbour_group = 2;
+                            break;
+                    }
                 }
                 
                 if (proc.faces[4].neighbour_idx[1] < 0)

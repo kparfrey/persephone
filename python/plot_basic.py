@@ -194,9 +194,8 @@ class Snapshot(object):
             plt.contour(r0[:,:,0], r1[:,:,0], self.dfile[sg][var][:,:,0], levels=levels,
                                                              linewidths=width, zorder=5)
 
-        plt.title('t = %.2lf' % self.time)
+        plt.title('t = %.4lf' % self.time)
 
         ax = plt.gca()
         ax.set_aspect('equal')
         return
-

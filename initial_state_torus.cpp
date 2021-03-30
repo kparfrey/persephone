@@ -22,8 +22,8 @@ static void implosion(const real_t r[3],
     const real_t specific_KE = 0.5 * (v0*v0 + v1*v1 + v2*v2);
 
     /* Density and pressure */
-    const real_t rramp  = 0.7;
-    const real_t density_floor = 0.1;
+    const real_t rramp  = 0.6;
+    const real_t density_floor = 0.01;
     real_t reff = 1.0;
     if (radial < rramp)
         reff = radial / rramp;
