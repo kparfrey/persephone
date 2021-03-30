@@ -72,6 +72,10 @@ void FaceCommunicator::setup(Process& proc, int face_id)
     Ntot_all = proc.Nfield * Ntot;
 
     external_face = false; // By default
+    change_data_order = false;
+    swap_index_order  = false;
+    reverse_index_direction = false;
+
    
     allocate();
 

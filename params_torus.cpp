@@ -165,6 +165,9 @@ void ParamsTorus::setup_process(Process &proc)
                     f.neighbour_idx[1] = proc.Nproc_group[1] - proc.group_idx[1] - 1; // dir reverses
                     f.neighbour_group  = 4;
                     f.neighbour_id     = 2;
+                    f.change_data_order = true;
+                    f.reverse_index_direction = true;
+                    f.index_to_reverse = 1; // reverse normal_dir + 1
                 }
 
                 if (proc.faces[3].neighbour_idx[0] > proc.Nproc_group[0] - 1)
@@ -183,6 +186,8 @@ void ParamsTorus::setup_process(Process &proc)
                     f.neighbour_idx[1] = proc.group_idx[0]; // group-1:dir-1 aligned with group-0:dir-0
                     f.neighbour_group  = 1;
                     f.neighbour_id     = 2;
+                    f.change_data_order = true;
+                    f.swap_index_order  = true;
                 }
 
                 if (proc.faces[5].neighbour_idx[1] > proc.Nproc_group[1] - 1)
@@ -192,6 +197,10 @@ void ParamsTorus::setup_process(Process &proc)
                     f.neighbour_idx[1] = proc.Nproc_group[0] - proc.group_idx[0] - 1;
                     f.neighbour_group  = 3;
                     f.neighbour_id     = 2;
+                    f.change_data_order = true;
+                    f.swap_index_order  = true;
+                    f.reverse_index_direction = true;
+                    f.index_to_reverse = 1; // reverse normal_dir + 1
                 }
             }
             else // the four outer quads
@@ -208,6 +217,8 @@ void ParamsTorus::setup_process(Process &proc)
                             f.neighbour_idx[0] = proc.group_idx[1];
                             f.neighbour_idx[1] = 0;
                             f.neighbour_id     = 4;
+                            f.change_data_order = true;
+                            f.swap_index_order  = true;
                             break;
                         case 2:
                             f.neighbour_idx[0] = Nproc_central - 1;
@@ -217,11 +228,18 @@ void ParamsTorus::setup_process(Process &proc)
                             f.neighbour_idx[0] = Nproc_central - 1 - proc.group_idx[1];
                             f.neighbour_idx[1] = Nproc_central - 1;
                             f.neighbour_id     = 5;
+                            f.change_data_order = true;
+                            f.swap_index_order  = true;
+                            f.reverse_index_direction = true;
+                            f.index_to_reverse = 2; // reverse normal_dir + 2
                             break;
                         case 4:
                             f.neighbour_idx[0] = 0;
                             f.neighbour_idx[1] = Nproc_central - 1 - proc.group_idx[1];
                             f.neighbour_id     = 2;
+                            f.change_data_order = true;
+                            f.reverse_index_direction = true;
+                            f.index_to_reverse = 1; // reverse normal_dir + 1
                             break;
                     }
                 }

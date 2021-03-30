@@ -47,6 +47,13 @@ class FaceCommunicator
     real_t* neighbour_data_host;
 
 
+    /* For handling non-trivial connectivity */
+    bool change_data_order;  // Set to true to use any of the following
+    bool swap_index_order;
+    bool reverse_index_direction;
+    int index_to_reverse;
+
+
     /* Member functions */
     void setup(Process& proc, int face_id);
     MPI_Request send_data();
