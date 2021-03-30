@@ -391,6 +391,107 @@ namespace kernels
                 }
             }
         }
+
+
+        /* Modify data ordering for non-trivial grid connectivity, so that the
+         * array's order corresponds to that expected by the matching process */
+        /* Get it working here first, then possibly integrate into the above
+         * main loop over fields ... */
+        if (face.change_data_order)
+        {
+            //real_t* buffer = alloc_raw(face.Ntot); // One field's worth, reuse for next field 
+            real_t* buffer = alloc_raw(face.N[0] * face.N[1]); // One element's worth, reuse for next element 
+            int id_elem_buffer;
+            int mem_offset_buffer;
+            int mem_buffer;
+            
+            const int Ns2 = lb.Ns[dir2]; // same as face.N[1] I think --- should tidy here and above!
+
+            for(int field = 0; field < lb.Nfield; ++field)
+            {
+                field_offset_face = field * face.Ntot;
+
+                for (int ne2 = 0; ne2 < face.Nelem[1]; ++ne2)
+                for (int ne1 = 0; ne1 < face.Nelem[0]; ++ne1)
+                {
+                    /* Original ordering */
+                    id_elem_face    = ne2 * lb.Nelem[dir1] + ne1;
+                    mem_offset_face = field_offset_face 
+                                          + id_elem_face * lb.Ns[dir2] * lb.Ns[dir1];
+
+                    /* The 5 types of modified ordering, for elements... */
+                    if (face.swap_index_order)
+                    {
+                        if (face.reverse_index_direction)
+                        {
+                            if (face.index_to_reverse == 1)
+                                /* Reverse the post-swap "normal+1" index */
+                                id_elem_buffer = ne1 * lb.Nelem[dir2] + face.Nelem[1] - 1 - ne2;
+                            else
+                                /* Reverse the post-swap "normal+2" index */
+                                id_elem_buffer = (face.Nelem[0] - 1 - ne1) * lb.Nelem[dir2] + ne2;
+                        }
+                        else
+                            /* Swapped ordering, no reversal */
+                            id_elem_buffer = ne1 * lb.Nelem[dir2] + ne2;
+                    }
+                    else // No swapping, must have reversing
+                    {
+                        if (face.index_to_reverse == 1)
+                            /* Reverse the original "normal+1" index */
+                            id_elem_buffer = (ne2 * lb.Nelem[dir1]) + face.Nelem[0] - 1 - ne1;
+                        else
+                            /* Reverse the original "normal+2" index */
+                            id_elem_buffer = (face.Nelem[1] - 1 - ne2) * lb.Nelem[dir1] + ne1;
+                    }
+
+                    mem_offset_buffer = id_elem_buffer * lb.Ns[dir2] * lb.Ns[dir1];
+                    
+                    for (int n2 = 0; n2 < face.N[1]; ++n2)
+                    for (int n1 = 0; n1 < face.N[0]; ++n1)
+                    {
+                        /* Original */
+                        mem_face = mem_offset_face +  n2 * Ns1 + n1;
+                        
+                        /* The 5 types of modified ordering, on solution points ... */
+                        if (face.swap_index_order)
+                        {
+                            if (face.reverse_index_direction)
+                            {
+                                if (face.index_to_reverse == 1)
+                                    /* Reverse the post-swap "normal+1" index */
+                                    mem_buffer = n1 * Ns2 + face.N[1] - 1 - n2;
+                                else
+                                    /* Reverse the post-swap "normal+2" index */
+                                    mem_buffer = (face.N[0] - 1 - n1) * Ns2 + n2;
+                            }
+                            else
+                                /* Swapped ordering, no reversal */
+                                mem_buffer = n1 * Ns2 + n2;
+                        }
+                        else // No swapping, must have reversing
+                        {
+                            if (face.index_to_reverse == 1)
+                                /* Reverse the original "normal+1" index */
+                                mem_buffer = n2 * Ns1 + face.N[0] - 1 - n1;
+                            else
+                                /* Reverse the original "normal+2" index */
+                                mem_buffer = (face.N[1] - 1 - n2) * Ns1 + n1;
+                        }
+
+                        buffer[mem_buffer] = face.my_data[mem_face];
+                    }
+
+                    /* Repack this element's worth of data back into face.my_data */
+                    for (int n2 = 0; n2 < face.N[1]; ++n2)
+                    for (int n1 = 0; n1 < face.N[0]; ++n1)
+                    {
+                        face.my_data[field_offset_face + mem_offset_buffer + n2*Ns1 + n1] = 
+                                                                      buffer[n2*Ns1 + n1] ;
+                    }
+                } // end of loop over elements
+            } // end of loop over fields
+        } // end of data rearrangement
         
         return;
     }

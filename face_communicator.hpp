@@ -51,7 +51,7 @@ class FaceCommunicator
     bool change_data_order;  // Set to true to use any of the following
     bool swap_index_order;
     bool reverse_index_direction;
-    int index_to_reverse;
+    int index_to_reverse; // either 1 or 2, to reverse normal_dir + 1 or ... + 2
 
 
     /* Member functions */

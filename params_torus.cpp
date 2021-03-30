@@ -116,7 +116,7 @@ void ParamsTorus::setup_process(Process &proc)
     set_initial_state(proc.elements, equations);
 
     /* Should be made general and moved to a separate member function */
-    proc.dt = 5e-3; //cfl * set_dt_basic(proc.elements); 
+    proc.dt = 1e-4; //5e-3; //cfl * set_dt_basic(proc.elements); 
 
     write::variable<real_t>("CFL", proc.cfl);
     write::variable<real_t>("End time", proc.end_time);
