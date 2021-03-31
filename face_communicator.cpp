@@ -115,8 +115,9 @@ void FaceCommunicator::setup(Process& proc, int face_id)
 
 void FaceCommunicator::allocate()
 {
-    my_data        = kernels::alloc(Ntot_all);
-    neighbour_data = kernels::alloc(Ntot_all);
+    my_data         = kernels::alloc(Ntot_all);
+    my_data_to_send = kernels::alloc(Ntot_all);
+    neighbour_data  = kernels::alloc(Ntot_all);
 
 #if USING_ACCEL
     my_data_host        = new real_t [Ntot_all];
@@ -124,7 +125,7 @@ void FaceCommunicator::allocate()
 #else
     /* If not using a GPU etc just point directly
      * to the device data arrays */
-    my_data_host        = my_data;
+    my_data_host        = my_data_to_send;
     neighbour_data_host = neighbour_data;
 #endif
 

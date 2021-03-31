@@ -21,13 +21,13 @@ static EqnSystem equations = euler;
 static BasicTimeMethod time_method = rk2_midpoint;
 static TorusCentralPolygon central_polygon = square;
 
-static int Nproc[3] = {1,1,1};
-static int Nelem[3] = {5,5,1};
-static int Ns[3]    = {4,4,8};
+static int Nproc[3] = {2,2,1};
+static int Nelem[3] = {4,3,2};
+static int Ns[3]    = {8,6,4};
 
 static real_t cfl      = 0.8;
-static real_t end_time = 0.005;
-static real_t dt_write = 0.001;
+static real_t end_time = 0.025;
+static real_t dt_write = 0.005;
 
 //constexpr static int Nm = 3;
 //constexpr static int Nk = 3;

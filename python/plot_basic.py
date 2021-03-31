@@ -162,6 +162,7 @@ class Snapshot(object):
         self.v0  = [0] * self.Ngroup 
         self.v1  = [0] * self.Ngroup 
         self.v2  = [0] * self.Ngroup 
+        self.v   = [0] * self.Ngroup
         
         for ig in range(self.Ngroup):
             sg = str(ig)
@@ -170,8 +171,11 @@ class Snapshot(object):
             self.v0[ig]  = self.dfile[sg]['v0']
             self.v1[ig]  = self.dfile[sg]['v1']
             self.v2[ig]  = self.dfile[sg]['v2']
+            self.v[ig]   = [self.v0, self.v1, self.v2]
 
-        self.v   = np.array((self.v0, self.v1, self.v2))
+        # Can't make "global" v array, since the groups can have
+        # different numbers of points, elements etc.
+        #self.v   = np.array((self.v0, self.v1, self.v2))
 
         self.time = self.dfile['time'][()]
         self.step = self.dfile['step'][()]

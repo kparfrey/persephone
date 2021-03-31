@@ -40,8 +40,9 @@ class FaceCommunicator
 
     VectorField normal;
 
-    real_t* my_data;
-    real_t* neighbour_data;
+    real_t* my_data;         // This face's data, in its native ordering
+    real_t* my_data_to_send; //  "     "      " , in ordering expected by the receiving proc
+    real_t* neighbour_data;  // Neighbour's data, in this proc's native ordering
 
     real_t* my_data_host;
     real_t* neighbour_data_host;

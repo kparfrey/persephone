@@ -10,6 +10,10 @@
 
 using std::cout;
 using std::endl;
+
+#include <string>
+using std::string;
+using std::to_string;
     
 /* Called by the ParamsTorus constructor */
 void ParamsTorus::secondary_params()
@@ -186,8 +190,8 @@ void ParamsTorus::setup_process(Process &proc)
                     f.neighbour_idx[1] = proc.group_idx[0]; // group-1:dir-1 aligned with group-0:dir-0
                     f.neighbour_group  = 1;
                     f.neighbour_id     = 2;
-                    f.change_data_order = false;
-                    f.swap_index_order  = false;
+                    f.change_data_order = true;
+                    f.swap_index_order  = true;
                 }
 
                 if (proc.faces[5].neighbour_idx[1] > proc.Nproc_group[1] - 1)
@@ -217,8 +221,8 @@ void ParamsTorus::setup_process(Process &proc)
                             f.neighbour_idx[0] = proc.group_idx[1];
                             f.neighbour_idx[1] = 0;
                             f.neighbour_id     = 4;
-                            f.change_data_order = false;
-                            f.swap_index_order  = false;
+                            f.change_data_order = true;
+                            f.swap_index_order  = true;
                             break;
                         case 2:
                             f.neighbour_idx[0] = Nproc_central - 1;
@@ -323,6 +327,30 @@ void ParamsTorus::setup_process(Process &proc)
 
        f.neighbour_rank = groupwise_to_global_offset + neighbour_rank_groupwise;
     }
+
+    /* Write out connectivity info for testing */
+#if 0
+    string sp = "  ";
+    string grouprank = sp + "Group rank:" + to_string(proc.group_rank) + sp;
+    string globalrank = sp + "Global rank:" + to_string(proc.rank) + sp;
+    for (int ig = 0; ig < 5; ++ig)
+    {
+        if (proc.group == ig)
+        {
+            string group_idx = sp + to_string(proc.group_idx[0])+sp+to_string(proc.group_idx[1]) + sp;
+            cout << "Group:"+to_string(proc.group) + group_idx + grouprank + globalrank << endl;
+        }
+        
+        MPI_Barrier(MPI_COMM_WORLD);
+    }
+
+    if (proc.rank == 18 || proc.rank == 19)
+    {
+        cout << globalrank + to_string(proc.faces[2].neighbour_rank) << endl;
+    }
+
+    MPI_Barrier(MPI_COMM_WORLD);
+#endif
 
     return;
 }
