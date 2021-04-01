@@ -512,27 +512,32 @@ namespace kernels
         const real_t* __restrict__ UL_data;
         const real_t* __restrict__ UR_data;
 
-        const real_t external_hack[5] = {1.0,0.0,0.0,0.0,1.758243690664908};
+        /* Hacked in boundary condition for torus wall */
+        if (face.external_face)
+        {
+            enum conserved {density, mom0, mom1, mom2, tot_energy};
+
+            /* For each point on the boundary... */
+            for (int i = 0; i < face.Ntot; ++i)
+            {
+                face.neighbour_data[density*face.Ntot + i] = 1.1;
+                face.neighbour_data[mom0*face.Ntot + i] = - face.my_data[mom0*face.Ntot + i];
+                face.neighbour_data[mom1*face.Ntot + i] = 0.0;
+                face.neighbour_data[mom2*face.Ntot + i] = 0.0;
+                face.neighbour_data[tot_energy*face.Ntot + i] = 1.758243690664908;
+            }
+        }
 
         if (face.orientation > 0)
         {
             UL_data = face.my_data;
-            
-            if (face.external_face)
-                UR_data = external_hack;
-            else
-                UR_data = face.neighbour_data;
+            UR_data = face.neighbour_data;
 
         }
         else
         {
-            //UL_data = face.neighbour_data;
+            UL_data = face.neighbour_data;
             UR_data = face.my_data;
-            
-            if (face.external_face)
-                UL_data = external_hack;
-            else
-                UL_data = face.neighbour_data;
         }
 
         /* Conserved variables and physical fluxes at one point */

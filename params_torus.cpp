@@ -251,12 +251,12 @@ void ParamsTorus::setup_process(Process &proc)
                 if (proc.faces[3].neighbour_idx[0] > proc.Nproc_group[0] - 1)
                 {
                     FaceCommunicator& f = proc.faces[3];
-#if 0
                     f.neighbour_idx[0] = -1;
                     f.neighbour_group  = -1;
                     f.neighbour_id     = -1;
                     f.external_face = true;
-#endif
+
+#if 0
                     /* Make periodic for testing */
                     f.neighbour_idx[0] = Nproc_outer - 1;
                     f.neighbour_idx[1] = Nproc_central - 1 - proc.group_idx[1];
@@ -280,6 +280,7 @@ void ParamsTorus::setup_process(Process &proc)
                             f.neighbour_group = 2;
                             break;
                     }
+#endif
                 }
                 
                 if (proc.faces[4].neighbour_idx[1] < 0)

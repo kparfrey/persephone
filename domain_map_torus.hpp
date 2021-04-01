@@ -195,7 +195,6 @@ class BasicSquareTorusMap : public DomainMap
             r[i] = start * (1.0 - x) + end * x;
         }
 
-#if 0
         /* Overwrite for the curved outer edges (always edge 1) */
         if ((group > 0) && ((n == 1) || (n == 5)))
         {
@@ -204,7 +203,6 @@ class BasicSquareTorusMap : public DomainMap
             r[0] = std::sin(theta); // effectively R or X in unit-disc space
             r[1] = std::cos(theta); // effectively Z or Y in unit-disc space
         }
-#endif
 
 
         /* Toroidal coordinate directly from x[2] */

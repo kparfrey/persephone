@@ -26,8 +26,8 @@ static int Nelem[3] = {4,3,2};
 static int Ns[3]    = {8,6,4};
 
 static real_t cfl      = 0.8;
-static real_t end_time = 0.025;
-static real_t dt_write = 0.005;
+static real_t end_time = 0.200;
+static real_t dt_write = 0.010;
 
 //constexpr static int Nm = 3;
 //constexpr static int Nk = 3;
