@@ -33,6 +33,10 @@ class Metric
     VectorField S[3];  // Physical->Reference vector transform
                        // S[i] = Jrdetg d ref^i/d phys^j 
 
+    VectorField timestep_transform[3]; // Transforms physical v^i to 
+                                       // ref v^j and includes dx^j 
+                                       // tt[i] = (1/Dx^i) d x^i/ d r^j
+
     /* At element faces */
     VectorField normal[3]; // One VectorField for each transform dir
 

@@ -44,7 +44,10 @@ void Metric::allocate_on_host(const int Ns, const int Nf[3])
          ***/
 
         for (int j: dirs)
+        {
             S[d](j) = new real_t [Nf[d]]();
+            timestep_transform[d](j) = new real_t [Nf[d]]();
+        }
 
         //rdetg_f[d] = new real_t [Nf[d]]();
     }
@@ -166,6 +169,9 @@ void Metric::setup_full(ElementBlock& eb)
     real_t detJ;
     real_t rdetg = 1.0; //Assume physical coords are flat-spacetime Cartesian
     int mem_loc;
+
+    /* For finding the timestep_transform */
+    real_t dx, dx_l, dx_r;
 
     /* Face normals only used in full geometry, so allocate here for now */
     for (int dir: dirs)
@@ -307,6 +313,22 @@ void Metric::setup_full(ElementBlock& eb)
                 /* Assume J.inv[ref][phys]... */
                 for (int dphys: dirs)
                     S[d](dphys,mem_loc) = detJ * rdetg * J.inv[d][dphys];
+                
+                /* Double check that xf[0] = 0, xf[-1] = 1 */
+                if (n0 == 0)
+                    dx = eb.xf(d, 1);
+                else if (n0 == eb.Nf[d]-1)
+                    dx = 1.0 - eb.xf(d,eb.Nf[d]-2);
+                else
+                {
+                    dx_l = eb.xf(d,n0)   - eb.xf(d,n0-1);
+                    dx_r = eb.xf(d,n0+1) - eb.xf(d,n0);
+                    dx = 1.0 / std::min(dx_l, dx_r);
+                }
+
+                /* tt[ref](phys,mem) = (1/delta x^ref) * dx^ref/dr^phys */
+                for (int dphys: dirs)
+                    timestep_transform[d](dphys,mem_loc) = (1.0/dx) * J.inv[d][dphys];
             }
 
             /* This needs to be tidied and rationalised... */
