@@ -323,7 +323,7 @@ void Metric::setup_full(ElementBlock& eb)
                 {
                     dx_l = eb.xf(d,n0)   - eb.xf(d,n0-1);
                     dx_r = eb.xf(d,n0+1) - eb.xf(d,n0);
-                    dx = 1.0 / std::min(dx_l, dx_r);
+                    dx = std::min(dx_l, dx_r);
                 }
 
                 /* tt[ref](phys,mem) = (1/delta x^ref) * dx^ref/dr^phys */
