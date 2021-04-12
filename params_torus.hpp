@@ -37,7 +37,6 @@ class ParamsTorus : public Params
     virtual void setup_process(Process &proc);
     virtual void setup_elementblock(ElementBlock& elements, Process &proc);
     virtual void set_initial_state(ElementBlock& elements, EqnSystem equations);
-    real_t set_dt_basic(ElementBlock& elements);
 
     /* Constructor */
     ParamsTorus(EqnSystem equations,

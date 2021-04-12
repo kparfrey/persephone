@@ -119,13 +119,8 @@ void ParamsTorus::setup_process(Process &proc)
     
     set_initial_state(proc.elements, equations);
 
-    /* Should be made general and moved to a separate member function */
-    proc.dt = 1e-3; //5e-3; //cfl * set_dt_basic(proc.elements); 
-
     write::variable<real_t>("CFL", proc.cfl);
     write::variable<real_t>("End time", proc.end_time);
-    write::variable<real_t>("dt", proc.dt);
-    write::variable<int>("No. of time steps", int(end_time/proc.dt));
 
 
     /*************** Setup Faces ******************************/
@@ -406,29 +401,4 @@ void ParamsTorus::set_initial_state(ElementBlock &elements, EqnSystem equations)
     }
 
     return;
-}
-
-
-/* Very basic method to set the time step. Assumes every ElementBlock
- * is indentical, so only useful for trivial Cartesian grids, and assumes
- * the wave speed is a constant */
-real_t ParamsTorus::set_dt_basic(ElementBlock& eb)
-{
-    real_t dt_max;
-    real_t wave_speed = 1.0;
-    real_t dmin[3];
-    real_t speed_over_dx;
-
-    /* Timestep based on minimal flux-point spacing */
-    for (int d: dirs)
-        dmin[d] = std::fabs(eb.rf[d](d,1) - eb.rf[d](d,0));
-
-    speed_over_dx = 0.0;
-    for (int d: dirs)
-        speed_over_dx += wave_speed / dmin[d];
-
-
-    dt_max = 1.0 / speed_over_dx;
-
-    return dt_max;
 }

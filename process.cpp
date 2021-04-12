@@ -53,7 +53,29 @@ void Process::move_to_device()
 
 void Process::time_advance()
 {
-    write::message("Starting time step " + std::to_string(step) + " --- t = " + std::to_string(time));
+    /********************************************/
+    /* Calculate timestep --- temporary */
+    /* Quasi-1D approach, seems to be approximately right but should
+     * be able to refine. Should check how much runtime this takes.
+     * Can probably restrict to each element's boundary. */
+    ElementBlock& eb = elements;
+    real_t dtmin_dir[3];
+    real_t dtmin;
+    for (int d: dirs)
+    {
+        real_t* Uf = kernels::alloc_raw(Nfield*eb.Nf_dir_block[d]);
+        kernels::soln_to_flux(eb.soln2flux(d), eb.fields, Uf, eb.lengths, d);
+        dtmin_dir[d] = kernels::local_timestep(Uf, eb.metric.timestep_transform[d],
+                                U_to_P, c_from_P, eb.lengths, d);                          
+        delete Uf;
+    }
+    dtmin = MIN(dtmin_dir[0], MIN(dtmin_dir[1], dtmin_dir[2]));
+    MPI_Allreduce(MPI_IN_PLACE, &dtmin, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+    dt = cfl * dtmin;
+    /********************************************/
+
+    write::message("Starting time step " + std::to_string(step) + " --- t = " + std::to_string(time)
+                                         + " --- dt = " + std::to_string(dt));
 
     /* Call the fundamental time step method we're using */
     (*time_integrator)(*this); //Since storing a pointer to a BasicTimeIntegrator
