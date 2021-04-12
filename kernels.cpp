@@ -668,4 +668,79 @@ namespace kernels
 
         return;
     }
+
+
+    /* Temporary standalone method. Should reintegrate into other operations. */
+    /* Returns the timestep restriction along this reference direction.       */
+    real_t local_timestep(const real_t* const __restrict__ Uf,
+                          const VectorField timestep_transform,
+                          const ConservedToPrimitive*  U_to_P,
+                          const WaveSpeedsFromPrimitive* c_from_P,
+                          const LengthBucket lb, const int dir)
+    { 
+        int id_elem;
+        int mem_offset;
+        int mem;
+        int dir1 = dir_plus_one[dir]; 
+        int dir2 = dir_plus_two[dir];
+
+        int Nf0 = lb.Nf[dir];
+        int Ns1 = lb.Ns[dir1];
+        int Nf_tot = lb.Nf_dir_block[dir]; //Total # of this-dir flux points in the block
+
+        /* Conserved vars, primitive vars, and max wavespeeds
+         * at a single point */
+        real_t* Up      = new real_t [lb.Nfield];
+        real_t* Pp      = new real_t [lb.Nfield];
+        real_t cp[3][2]; 
+        real_t cm[3];
+        real_t chi_v;
+        real_t chi_v_max = 0.0;
+
+
+        for (int ne2 = 0; ne2 < lb.Nelem[dir2]; ++ne2)
+        for (int ne1 = 0; ne1 < lb.Nelem[dir1]; ++ne1)
+        for (int ne0 = 0; ne0 < lb.Nelem[dir];  ++ne0)
+        {
+            id_elem = (ne2*lb.Nelem[dir1] + ne1)*lb.Nelem[dir] + ne0;
+            mem_offset = id_elem * lb.Nf_dir[dir];
+
+            for (int n2 = 0; n2 < lb.Ns[dir2]; ++n2)
+            for (int n1 = 0; n1 < lb.Ns[dir1]; ++n1)
+            for (int n0 = 0; n0 < lb.Nf[dir];  ++n0)
+            {
+                /* Memory location for the index-0 field */
+                mem = mem_offset + (n2 * Ns1 + n1) * Nf0 + n0;
+
+                /* Load all field variables at this location into
+                 * the Up array. */
+                for (int field = 0; field < lb.Nfield; ++field)
+                    Up[field] = Uf[mem + field * Nf_tot];
+
+                (*U_to_P)(Up, Pp); // conserved -> primitive variables
+
+                /* Uf is the physical solution at flux points
+                 * Calculate wavespeeds in all three physical dirs */
+                for (int d: dirs) // iterate over phys-space directions
+                {
+                    (*c_from_P)(Pp, cp[d], d);
+                    cm[d] = MAX(cp[d][0], std::abs(cp[d][1]));
+                }
+                
+                chi_v = 0.0;
+                for (int d: dirs) // physical dir
+                    chi_v += timestep_transform(d,mem) * cm[d];
+                
+
+                if (chi_v > chi_v_max)
+                    chi_v_max = chi_v;
+            }
+        }
+
+        delete[] Up;
+        delete[] Pp;
+
+        return(1.0 / chi_v_max);
+    }
+
 }

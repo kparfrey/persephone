@@ -6,6 +6,9 @@ class ConservedToPrimitive;
 class FluxesFromPrimitive;
 class NumericalFlux;
 
+class WaveSpeedsFromPrimitive;
+
+
 namespace kernels
 {
     /* Memory allocation on device --- don't use for host-side only memory */
@@ -60,4 +63,12 @@ namespace kernels
                                  const VectorField                normal,
                                  const LengthBucket               lb,
                                  const int                        dir);    
+
+     
+    /* Not a final kernel, obviously */
+    real_t local_timestep(const real_t* const __restrict__ Uf,
+                      const VectorField timestep_transform,
+                      const ConservedToPrimitive*  U_to_P,
+                      const WaveSpeedsFromPrimitive* c_from_P,
+                      const LengthBucket lb, const int dir);
 }
