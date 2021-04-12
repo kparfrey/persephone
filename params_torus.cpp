@@ -7,6 +7,7 @@
 #include "initial_state_torus.hpp"
 #include "write_screen.hpp"
 #include "domain_map_torus.hpp"
+#include "boundary_conditions.hpp"
 
 using std::cout;
 using std::endl;
@@ -303,12 +304,13 @@ void ParamsTorus::setup_process(Process &proc)
             write::error("Torus central polygon not supported", destroy);
     }
 
-    /* Translate the groupwise neighbour_idx[3] into a global rank */
     for (int i: ifaces)
     {
         FaceCommunicator& f = proc.faces[i];
 
-        /* For the torus, Nproc_group[1] = Nproc_central for all groups, central and outer */
+
+        /* Translate the groupwise neighbour_idx[3] into a global rank 
+         * For the torus, Nproc_group[1] = Nproc_central for all groups, central and outer */
         int neighbour_rank_groupwise = (f.neighbour_idx[0]  * proc.Nproc_group[1]
                                       + f.neighbour_idx[1]) * proc.Nproc_group[2]
                                       + f.neighbour_idx[2];
@@ -321,7 +323,16 @@ void ParamsTorus::setup_process(Process &proc)
             groupwise_to_global_offset = Ngroup_central * Nproc_group_central
                                          + (nbgrp - Ngroup_central) * Nproc_group_outer;
 
-       f.neighbour_rank = groupwise_to_global_offset + neighbour_rank_groupwise;
+        f.neighbour_rank = groupwise_to_global_offset + neighbour_rank_groupwise;
+
+
+        /* Set up external boundary conditions */
+        if (f.external_face == true)
+        {
+            f->BC = new ImplosionTestBC(f.Ntot, proc.Nfield);
+            // What's the cleanest way of getting the ICs on this face
+            // into BC.stored_data?
+        }
     }
 
     /* Write out connectivity info for testing */

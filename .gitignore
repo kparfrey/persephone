@@ -5,6 +5,7 @@ persephone
 *.h5
 *.pyc
 .DS_Store
+gmon.out
 data/
 data/*
 

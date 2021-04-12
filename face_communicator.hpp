@@ -6,6 +6,7 @@
 #include "tensor_field.hpp"
 
 class Process;
+class BoundaryCondition;
 
 class FaceCommunicator
 {
@@ -27,6 +28,7 @@ class FaceCommunicator
 
     bool external_face; // True if this face needs a boundary condition rather
                         // than communication from another process
+    BoundaryConditions* BC;  // Object for applying the boundary conditions
 
     int n0;  // Normal-direction flux-point index of this face
     int ne0; // Normal-direction element index of this face
