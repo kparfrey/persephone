@@ -147,8 +147,8 @@ class BasicSquareTorusMap : public DomainMap
 
     virtual void operator()(const int n, const real_t x, real_t r[3])
     {
-        real_t start;
-        real_t end;
+        real_t start = 0.0;
+        real_t end   = 1.0;
 
         /* Do poloidal coordinates first, r[0] and r[1] */
         /* The straight edges in unit-disc space */
