@@ -6,7 +6,7 @@
 #include "tensor_field.hpp"
 
 class Process;
-class BoundaryCondition;
+class BoundaryConditions;
 
 class FaceCommunicator
 {

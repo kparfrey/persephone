@@ -54,8 +54,9 @@ int main(int argc, char *argv[])
 
     proc.move_to_device();
 
+    proc.fill_external_boundary_data();
+
     write_data(proc); // Data generally lives on device
-    
 
     while(proc.time < proc.end_time)
     {

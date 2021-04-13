@@ -3,6 +3,8 @@
 #include "kernels.hpp"
 #include "physics_includes.hpp"
 #include "numerical_flux.hpp"
+#include "boundary_conditions.hpp"
+
 
 namespace kernels
 {
@@ -512,21 +514,10 @@ namespace kernels
         const real_t* __restrict__ UL_data;
         const real_t* __restrict__ UR_data;
 
-        /* Hacked in boundary condition for torus wall */
+        /* Includes an external loop in boundary_conditions.hpp. Should probably move the loop
+         * here unless I'm sure this will play well with CUDA. */
         if (face.external_face)
-        {
-            enum conserved {density, mom0, mom1, mom2, tot_energy};
-
-            /* For each point on the boundary... */
-            for (int i = 0; i < face.Ntot; ++i)
-            {
-                face.neighbour_data[density*face.Ntot + i] = 1.1;
-                face.neighbour_data[mom0*face.Ntot + i] = - face.my_data[mom0*face.Ntot + i];
-                face.neighbour_data[mom1*face.Ntot + i] = 0.0;
-                face.neighbour_data[mom2*face.Ntot + i] = 0.0;
-                face.neighbour_data[tot_energy*face.Ntot + i] = 1.758243690664908;
-            }
-        }
+            face.BC->apply(face.my_data, face.neighbour_data);
 
         if (face.orientation > 0)
         {

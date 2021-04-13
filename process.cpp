@@ -5,6 +5,7 @@
 #include "params.hpp"
 #include "write_screen.hpp"
 #include "basic_time_integrator.hpp"
+#include "boundary_conditions.hpp"
 
 //#include <stdlib.h>
 
@@ -144,6 +145,36 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
         kernels::free( F(i));
         kernels::free(dF(i));
     }
+
+    return;
+}
+
+
+/* Fill the stored_data array of external faces with the initial conditions 
+ * extrapolated to the face. Needs to use soln_to_flux(), so everything 
+ * should live on the device. */
+void Process::fill_external_boundary_data()
+{
+    write::message("Filling initial boundary data on external faces");
+
+    ElementBlock& eb = elements;
+    VectorField Uf; // Solution interpolated to flux points
+
+    for (int i: dirs)
+    {
+        Uf(i) = kernels::alloc_raw(Nfield * eb.Nf_dir_block[i]);
+        kernels::soln_to_flux(eb.soln2flux(i), eb.fields, Uf(i), eb.lengths, i);
+    }
+
+    for (int i: ifaces)
+        if (faces[i].external_face == true)
+        {
+            kernels::fill_face_data(Uf(faces[i].normal_dir), faces[i], eb.lengths);
+            faces[i].BC->setup(faces[i].my_data);
+        }
+
+    for (int i: dirs)
+        kernels::free(Uf(i));
 
     return;
 }

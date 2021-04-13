@@ -329,7 +329,7 @@ void ParamsTorus::setup_process(Process &proc)
         /* Set up external boundary conditions */
         if (f.external_face == true)
         {
-            f->BC = new ImplosionTestBC(f.Ntot, proc.Nfield);
+            f.BC = new ImplosionTestBC(f.Ntot, proc.Nfield);
             // What's the cleanest way of getting the ICs on this face
             // into BC.stored_data?
         }
@@ -408,6 +408,9 @@ void ParamsTorus::set_initial_state(ElementBlock &elements, EqnSystem equations)
     {
         case euler:
             set_euler_torus(elements);
+            break;
+        case scalar_advection:
+            write::error("Scalar advection not implemented for torus", destroy);
             break;
     }
 

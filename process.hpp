@@ -73,6 +73,7 @@ class Process
     void time_advance();
     void find_divF(const real_t* const U, const real_t t, real_t* const divF);
     void move_to_device();
+    void fill_external_boundary_data();
     void exchange_boundary_data();
 };
 #endif
