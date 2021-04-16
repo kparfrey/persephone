@@ -514,16 +514,17 @@ namespace kernels
         const real_t* __restrict__ UL_data;
         const real_t* __restrict__ UR_data;
 
-        /* Includes an external loop in boundary_conditions.hpp. Should probably move the loop
-         * here unless I'm sure this will play well with CUDA. */
+        /* To apply external boundary conditions, set the incoming neighbour data on
+         * external faces such that the fluxes are as desired. */
         if (face.external_face)
-            face.BC->apply(face.my_data, face.neighbour_data);
+            for (int field = 0; field < lb.Nfield; ++field)
+                for (int i = 0; i < face.Ntot; ++i)
+                    face.neighbour_data[field*face.Ntot + i] = (*face.BC)(field, i, face.my_data);
 
         if (face.orientation > 0)
         {
             UL_data = face.my_data;
             UR_data = face.neighbour_data;
-
         }
         else
         {
