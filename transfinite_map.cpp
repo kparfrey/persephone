@@ -254,3 +254,109 @@ void drdx_transfinite_map_2D(const int dir, const real_t x[3],
 
     return;
 }
+
+
+static void drdx_on_faces(const real_t G[12][3],
+                          const real_t dG[12][3],
+                          const real_t corners[8][3],
+                          const real_t x[3],
+                                real_t dF[6][2][3])
+{
+    real_t xf[2];     // 2D groupwise coord on this face
+    real_t cf[4][3];  // This face's 4 corners
+    real_t Gf[4][3];  // Values evaluated at this face's 4 edges
+    real_t dGf[4][3]; // Derivative along this face's 4 edges
+
+    for (int f: ifaces)
+    {
+        xf[0] = x[dir_plus_one[face_normal[f]]];
+        xf[1] = x[dir_plus_two[face_normal[f]]];
+
+        /* Iterate over this face's 4 corners and edges */
+        for (int j = 0; j < 4; ++j)
+        for (int d: dirs)
+        {
+            cf[j][d] = corners[corner_map[f][j]][d]; 
+            Gf[j][d] = G[edge_map[f][j]][d]; 
+        }
+
+        // Should reimplement 2D drdx here since the evaluation
+        // and differentiation has been taken care of already
+        drdx_transfinite_map_2D(i, xf, );
+    }
+
+    return;
+}
+
+
+/* Only used for polynomial-based interpolation, so include all the Edge
+ * and Edge-derivative evaluation in this function. */
+void drdx_transfinite_map_3D(const real_t x[3], const Edge edges[12],
+                             const real_t corners[8][3], 
+                                   real_t dr[3], const int diff_dir)
+{
+    /* u, v, w etc. language aligns with Eriksson (1985) */
+    const real_t u = x[0]; 
+    const real_t v = x[1];
+    const real_t w = x[2];
+
+    real_t pu, pv, pw;    // Eriksson's pi_u etc.
+    real_t puv, puw, pvw; // Eriksson's pi_u pi_v etc.
+    real_t puvw;          // Eriksson's pi_u pi_v pi_w
+
+    real_t  G[12][3]; /* Edge values: e.g. f(u,0,1) or f(1,v,1) */
+    real_t  F[6][3];  /* Face values: e.g. f(u,v,0) or f(u,1,w) */
+    real_t dG[12][3]; /* Derivative along each edge             */
+    real_t dF[6][2][3]; /* Derivatives on each face             */
+
+    /* Evaluate values on edges and faces. Duplicates work done
+     * when calculating the coords in the first place...        */
+    for (int i: iedges)
+        edges[i].eval(x[edges[i].dir], G[i]);
+
+    face_values_via_2D_TFI(G, corners, x, F);
+
+    /* Calculate derivatives along edges and on faces */
+    for (int i: iedges)
+        edges[i].diff(x[edges[i].dir], dG[i]);
+
+    drdx_on_faces(G, dG, corners, x, dF);
+
+    // This function complete up to here....
+
+
+    for (int i: dirs) // Iterate over coord-vector components
+    {
+        /* Face terms */
+        pu = (1 - u) * F[2][i] + u * F[3][i];
+        pv = (1 - v) * F[4][i] + v * F[5][i];
+        pw = (1 - w) * F[0][i] + w * F[1][i];
+
+        /* Edge terms */
+        puv =   (1 - u) * (1 - v) * G[8][i]  + u  * (1 - v) * G[9][i]
+              + (1 - u) *      v  * G[11][i] + u  *      v  * G[10][i];
+
+        puw =   (1 - u) * (1 - w) * G[3][i]  + u  * (1 - w) * G[1][i]
+              + (1 - u) *      w  * G[7][i]  + u  *      w  * G[5][i];
+        
+        pvw =   (1 - v) * (1 - w) * G[0][i]  + v  * (1 - w) * G[2][i]
+              + (1 - v) *      w  * G[4][i]  + v  *      w  * G[6][i];
+
+        /* Corner terms */
+        puvw =   (1 - u) * (1 - v) * (1 - w) * corners[0][i]
+               +      u  * (1 - v) * (1 - w) * corners[1][i]
+               + (1 - u) *      v  * (1 - w) * corners[3][i]
+               +      u  *      v  * (1 - w) * corners[2][i]
+               + (1 - u) * (1 - v) *      w  * corners[4][i]
+               +      u  * (1 - v) *      w  * corners[5][i]
+               + (1 - u) *      v  *      w  * corners[7][i]
+               +      u  *      v  *      w  * corners[6][i];
+
+        /* Compose the final Boolean sum */
+        r[i] = pu + pv + pw - puv - puw - pvw + puvw;
+    }
+
+    return;
+}
+
+
