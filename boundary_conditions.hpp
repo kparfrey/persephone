@@ -7,13 +7,14 @@
 class BoundaryConditions
 {
     public:
+    
     const int Ntot;   // Total number of points on the face
     const int Nfield;
 
     real_t* stored_data; // Usually the initial conditions
 
     BoundaryConditions(const int Ntot, const int Nfield)
-        : Ntot(Ntot), Nfield(Nfield) {}
+        : Ntot(Ntot), Nfield(Nfield){}
 
     void setup(const real_t* const data);
 
@@ -45,11 +46,16 @@ inline void BoundaryConditions::setup(const real_t* const data)
 class ImplosionTestBC : public BoundaryConditions
 {
     enum conserved {density, mom0, mom1, mom2, tot_energy};
+    const EqnSystem equations = euler;
 
     public:
 
-    ImplosionTestBC(const int Ntot, const int Nfield)
-        : BoundaryConditions(Ntot, Nfield) {}
+    ImplosionTestBC(const int Ntot, const int Nfield, const EqnSystem evolved_system)
+        : BoundaryConditions(Ntot, Nfield) 
+    {
+        if (evolved_system != equations)
+            write::error("Chosen boundary conditions not applicable for this equation system", destroy);
+    }
 
     
     virtual real_t operator()(const int field, const int i,

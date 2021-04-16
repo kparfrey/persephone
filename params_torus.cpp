@@ -328,11 +328,7 @@ void ParamsTorus::setup_process(Process &proc)
 
         /* Set up external boundary conditions */
         if (f.external_face == true)
-        {
-            f.BC = new ImplosionTestBC(f.Ntot, proc.Nfield);
-            // What's the cleanest way of getting the ICs on this face
-            // into BC.stored_data?
-        }
+            f.BC = new ImplosionTestBC(f.Ntot, proc.Nfield, equations);
     }
 
     /* Write out connectivity info for testing */
