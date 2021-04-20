@@ -3,28 +3,7 @@
 #include "domain_map.hpp"
 #include "domain_map_torus.hpp"
 #include "edge.hpp"
-
-
-/* 3D label of each of the 6 faces' 4 corners. Ordering is via cyclic permutation from
- * the face-normal direction; ie face 0 has normal-dir = 2, so its face coords are 
- * {0, 1} with the 0 direction moving first. */
-constexpr int corner_map[6][4] = {{0, 1, 2, 3},  // face 0
-                                  {4, 5, 6, 7},  //      1
-                                  {0, 3, 7, 4},  //      2
-                                  {1, 2, 6, 5},  //      3
-                                  {0, 4, 5, 1},  //      4
-                                  {3, 7, 6, 2}}; //      5
-
-
-/* 3D label of each of the 6 faces' 4 edges. Ordering is as for corner_map ---
- * these two much have identical ordering systems so that the edges and corners
- * create the correct 2D edge-corner diagram. */
-constexpr int edge_map[6][4] = {{ 0,  1,  2,  3},  // face 0
-                                { 4,  5,  6,  7},  //      1
-                                { 3, 11,  7,  8},  //      2
-                                { 1, 10,  5,  9},  //      3
-                                { 8,  4,  9,  0},  //      4
-                                {11,  6, 10,  2}}; //      5
+#include "geometry_labels.hpp"
 
 
 

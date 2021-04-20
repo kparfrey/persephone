@@ -6,6 +6,7 @@
 #include "element_block.hpp"
 #include "edge.hpp"
 #include "transfinite_map.hpp"
+#include "geometry_labels.hpp"
 
 
 void Metric::allocate_on_host(const int Ns, const int Nf[3])

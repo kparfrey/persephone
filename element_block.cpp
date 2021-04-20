@@ -7,6 +7,7 @@
 #include "domain_map.hpp"
 #include "domain_map_torus.hpp"
 #include "edge.hpp"
+#include "geometry_labels.hpp"
 
 
 void ElementBlock::setup()

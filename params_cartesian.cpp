@@ -7,6 +7,7 @@
 #include "initial_state_cartesian.hpp"
 #include "write_screen.hpp"
 #include "domain_map.hpp"
+#include "geometry_labels.hpp"
 
 using std::cout;
 using std::endl;
