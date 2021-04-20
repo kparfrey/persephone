@@ -166,6 +166,7 @@ void Metric::setup_full(ElementBlock& eb)
     real_t xe[3];
     real_t drdx[3][3]; 
     //real_t drdx[3]; // For 2D method, which is ref-dir by ref-dir
+    
     Matrix J; // dPHYS/dREF -- J.arr[phys][ref]
     real_t detJ;
     real_t rdetg = 1.0; //Assume physical coords are flat-spacetime Cartesian
@@ -197,16 +198,6 @@ void Metric::setup_full(ElementBlock& eb)
 
         elem_edges = eb.edges[elem_idx_1D];
 
-        /***
-        for (int d: dirs)
-        {
-            elem_corners[0][d] = elem_edges[0].endpoints[0][d];
-            elem_corners[1][d] = elem_edges[1].endpoints[0][d];
-            elem_corners[2][d] = elem_edges[2].endpoints[1][d];
-            elem_corners[3][d] = elem_edges[3].endpoints[1][d];
-        }
-         ***/
-
         for (int i: icorners)
             for (int m: dirs)
                 elem_corners[i][m] = elem_edges[i].endpoints[edge_to_corner[i]][m];
@@ -218,13 +209,10 @@ void Metric::setup_full(ElementBlock& eb)
             real_t Jarr[3][3] = {}; 
             mem_loc = eb.ids(i,j,k) + mem_offset;
 
-            //xe[0] = eb.xs(0,i);
-            //xe[1] = eb.xs(1,j);
-
             for (int d: dirs)
                 xe[d] = eb.xs(d,j);
 
-            /***
+            /***  2D Method --- leave here for now
             for (int dref: dirs)
             {
                 drdx_transfinite_map_2D(dref, xe, elem_edges, elem_corners, drdx);
@@ -296,16 +284,6 @@ void Metric::setup_full(ElementBlock& eb)
 
             elem_edges = eb.edges[id_elem_s];
 
-            /***
-            for (int m: dirs)
-            {
-                elem_corners[0][m] = elem_edges[0].endpoints[0][m];
-                elem_corners[1][m] = elem_edges[1].endpoints[0][m];
-                elem_corners[2][m] = elem_edges[2].endpoints[1][m];
-                elem_corners[3][m] = elem_edges[3].endpoints[1][m];
-            }
-             ***/
-
             for (int i: icorners)
                 for (int m: dirs)
                     elem_corners[i][m] = elem_edges[i].endpoints[edge_to_corner[i]][m];
@@ -322,7 +300,7 @@ void Metric::setup_full(ElementBlock& eb)
                 xe[d1] = eb.xs(d1,n1);
                 xe[d2] = eb.xs(d2,n2);
 
-                /***
+                /*** 2D Method --- leave here for now
                 for (int dref: dirs)
                 {
                     drdx_transfinite_map_2D(dref, xe, elem_edges, elem_corners, drdx);

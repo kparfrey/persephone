@@ -4,9 +4,6 @@
 #include "domain_map_torus.hpp"
 #include "edge.hpp"
 
-/* In the below the labels Gx/G, Fx/F are used interchangeably --- should pick one. */
-
-
 
 /* 3D label of each of the 6 faces' 4 corners. Ordering is via cyclic permutation from
  * the face-normal direction; ie face 0 has normal-dir = 2, so its face coords are 
@@ -34,13 +31,13 @@ constexpr int edge_map[6][4] = {{ 0,  1,  2,  3},  // face 0
 /* A 2D mapping in that it uses 4 edges. Apply to all 3 coordinates, so are effectively
  * doing an interpolation on a warped plane in 3D space. Used to find the required values
  * on the hex element's 6 faces when doing 3D (volumetric) interpolation. */
-static void transfinite_map_2D(const real_t Gx[4][3], const real_t corners[4][3], 
-                               const real_t x[2], real_t r[3])
+static void transfinite_map_2D(const real_t G[4][3], const real_t corners[4][3], 
+                               const real_t x[2],          real_t r[3])
 {
     for (int i: dirs) // Iterate over coord-vector components
     {
-        r[i] =   (1-x[0])*Gx[3][i] + x[0]*Gx[1][i] 
-               + (1-x[1])*Gx[0][i] + x[1]*Gx[2][i]
+        r[i] =   (1-x[0])*G[3][i] + x[0]*G[1][i] 
+               + (1-x[1])*G[0][i] + x[1]*G[2][i]
                - (1-x[0])*((1-x[1])*corners[0][i] + x[1]*corners[3][i])
                -    x[0] *((1-x[1])*corners[1][i] + x[1]*corners[2][i]);
     }
@@ -49,8 +46,8 @@ static void transfinite_map_2D(const real_t Gx[4][3], const real_t corners[4][3]
 }
 
 
-static void transfinite_map_3D(const real_t Gx[12][3], const real_t corners[8][3], 
-                               const real_t Fx[6][3],  const real_t x[3], 
+static void transfinite_map_3D(const real_t G[12][3], const real_t corners[8][3], 
+                               const real_t F[6][3],  const real_t x[3], 
                                      real_t r[3])
 {
     /* u, v, w etc. language aligns with Eriksson (1985) */
@@ -65,19 +62,19 @@ static void transfinite_map_3D(const real_t Gx[12][3], const real_t corners[8][3
     for (int i: dirs) // Iterate over coord-vector components
     {
         /* Face terms */
-        pu = (1 - u) * Fx[2][i] + u * Fx[3][i];
-        pv = (1 - v) * Fx[4][i] + v * Fx[5][i];
-        pw = (1 - w) * Fx[0][i] + w * Fx[1][i];
+        pu = (1 - u) * F[2][i] + u * F[3][i];
+        pv = (1 - v) * F[4][i] + v * F[5][i];
+        pw = (1 - w) * F[0][i] + w * F[1][i];
 
         /* Edge terms */
-        puv =   (1 - u) * (1 - v) * Gx[8][i]  + u  * (1 - v) * Gx[9][i]
-              + (1 - u) *      v  * Gx[11][i] + u  *      v  * Gx[10][i];
+        puv =   (1 - u) * (1 - v) * G[8][i]  + u  * (1 - v) * G[9][i]
+              + (1 - u) *      v  * G[11][i] + u  *      v  * G[10][i];
 
-        puw =   (1 - u) * (1 - w) * Gx[3][i]  + u  * (1 - w) * Gx[1][i]
-              + (1 - u) *      w  * Gx[7][i]  + u  *      w  * Gx[5][i];
+        puw =   (1 - u) * (1 - w) * G[3][i]  + u  * (1 - w) * G[1][i]
+              + (1 - u) *      w  * G[7][i]  + u  *      w  * G[5][i];
         
-        pvw =   (1 - v) * (1 - w) * Gx[0][i]  + v  * (1 - w) * Gx[2][i]
-              + (1 - v) *      w  * Gx[4][i]  + v  *      w  * Gx[6][i];
+        pvw =   (1 - v) * (1 - w) * G[0][i]  + v  * (1 - w) * G[2][i]
+              + (1 - v) *      w  * G[4][i]  + v  *      w  * G[6][i];
 
         /* Corner terms */
         puvw =   (1 - u) * (1 - v) * (1 - w) * corners[0][i]
@@ -134,14 +131,14 @@ void analytic_transfinite_map_2D(const real_t x[2], DomainMap* const map,
                                  const real_t corners[4][3], real_t r[3])
 {
     /* These are the values at the Group edges corresponding to x[0] and x[1] */
-    real_t Gx[4][3]; /* Gamma(xi) or Gamma(eta) */
+    real_t G[4][3]; /* Gamma(xi) or Gamma(eta) */
     
-    (*map)(0, x[0], Gx[0]);
-    (*map)(1, x[1], Gx[1]);
-    (*map)(2, x[0], Gx[2]);
-    (*map)(3, x[1], Gx[3]);
+    (*map)(0, x[0], G[0]);
+    (*map)(1, x[1], G[1]);
+    (*map)(2, x[0], G[2]);
+    (*map)(3, x[1], G[3]);
 
-    transfinite_map_2D(Gx, corners, x, r);
+    transfinite_map_2D(G, corners, x, r);
 
     return;
 }
@@ -173,13 +170,13 @@ void polynomial_transfinite_map_2D(const real_t x[2],
                                    const real_t corners[4][3], 
                                          real_t r[3])
 {
-    real_t Gx[4][3]; 
+    real_t G[4][3]; 
     
     /* Storing at Lobatto points -- need to interpolate to solution points */
     for (int i = 0; i < 4; ++i) // for each edge...
-        edges[i].eval(x[edges[i].dir], Gx[i]);
+        edges[i].eval(x[edges[i].dir], G[i]);
 
-    transfinite_map_2D(Gx, corners, x, r);
+    transfinite_map_2D(G, corners, x, r);
 
     return;
 }
@@ -208,9 +205,9 @@ void polynomial_transfinite_map_3D(const real_t x[3],
 /* dir is the reference-space direction along which to take the derivative */
 void drdx_transfinite_map_2D(const int dir, const real_t x[3], 
                              const Edge edges[4], const real_t corners[4][3], 
-                                   real_t dr[3])
+                                   real_t drdx[3])
 {
-    real_t Gx[4][3]; // Keep all four rows for clarity, even though will only use 
+    real_t G[4][3];  // Keep all four rows for clarity, even though will only use 
     real_t dG[4][3]; // two rows in each of these for a given direction
     
     switch (dir)
@@ -218,37 +215,37 @@ void drdx_transfinite_map_2D(const int dir, const real_t x[3],
         case 0: // xi
             edges[0].diff(x[0], dG[0]);
             edges[2].diff(x[0], dG[2]);
-            edges[1].eval(x[1], Gx[1]);
-            edges[3].eval(x[1], Gx[3]);
+            edges[1].eval(x[1], G[1]);
+            edges[3].eval(x[1], G[3]);
 
             for (int i = 0; i < 2; ++i) // For each component r^i...
-                dr[i] = (1-x[1]) * (dG[0][i] + corners[0][i] - corners[1][i])
-                         + x[1]  * (dG[2][i] + corners[3][i] - corners[2][i])
-                                 +  Gx[1][i] - Gx[3][i];
+                drdx[i] = (1-x[1]) * (dG[0][i] + corners[0][i] - corners[1][i])
+                           + x[1]  * (dG[2][i] + corners[3][i] - corners[2][i])
+                                   +  G[1][i] - G[3][i];
 
-            dr[2] = 0.0;
+            drdx[2] = 0.0;
 
             break;
 
         case 1: // eta
             edges[1].diff(x[1], dG[1]);
             edges[3].diff(x[1], dG[3]);
-            edges[0].eval(x[0], Gx[0]);
-            edges[2].eval(x[0], Gx[2]);
+            edges[0].eval(x[0], G[0]);
+            edges[2].eval(x[0], G[2]);
 
             for (int i = 0; i < 2; ++i)
-                dr[i] = (1-x[0]) * (dG[3][i] + corners[0][i] - corners[3][i])
-                         + x[0]  * (dG[1][i] + corners[1][i] - corners[2][i])
-                                 +  Gx[2][i] - Gx[0][i];
+                drdx[i] = (1-x[0]) * (dG[3][i] + corners[0][i] - corners[3][i])
+                           + x[0]  * (dG[1][i] + corners[1][i] - corners[2][i])
+                                   +  G[2][i] - G[0][i];
 
-            dr[2] = 0.0;
+            drdx[2] = 0.0;
 
             break;
 
         case 2:
-            dr[0] = 0.0;
-            dr[1] = 0.0;
-            dr[2] = 1.0;
+            drdx[0] = 0.0;
+            drdx[1] = 0.0;
+            drdx[2] = 1.0;
             break;
     }
 
@@ -317,7 +314,7 @@ static void face_derivs_via_2D_TFI(const real_t G[12][3],
  * Store dr as dr[reference][physical] --- note the reverse of Jarr in Metric */
 void drdx_transfinite_map_3D(const real_t x[3], const Edge edges[12],
                              const real_t corners[8][3], 
-                                   real_t dr[3][3])
+                                   real_t drdx[3][3])
 {
     /* u, v, w etc. language aligns with Eriksson (1985) */
     const real_t u = x[0]; 
@@ -379,7 +376,7 @@ void drdx_transfinite_map_3D(const real_t x[3], const Edge edges[12],
                -      v  *      w  * corners[7][i]
                +      v  *      w  * corners[6][i];
 
-        dr[0][i] = pu + pv + pw - puv - puw - pvw + puvw;
+        drdx[0][i] = pu + pv + pw - puv - puw - pvw + puvw;
         
 
         /*** Differentiate wrt reference-direction-1, aka v ***/
@@ -408,7 +405,7 @@ void drdx_transfinite_map_3D(const real_t x[3], const Edge edges[12],
                + (1 - u) *      w  * corners[7][i]
                +      u  *      w  * corners[6][i];
 
-        dr[1][i] = pu + pv + pw - puv - puw - pvw + puvw;
+        drdx[1][i] = pu + pv + pw - puv - puw - pvw + puvw;
         
 
         /*** Differentiate wrt reference-direction-2, aka w ***/
@@ -437,10 +434,8 @@ void drdx_transfinite_map_3D(const real_t x[3], const Edge edges[12],
                + (1 - u) *      v  * corners[7][i]
                +      u  *      v  * corners[6][i];
 
-        dr[2][i] = pu + pv + pw - puv - puw - pvw + puvw;
+        drdx[2][i] = pu + pv + pw - puv - puw - pvw + puvw;
     }
 
     return;
 }
-
-

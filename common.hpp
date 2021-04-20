@@ -40,7 +40,7 @@ constexpr int icorners[8] = {0,1,2,3,4,5,6,7};
 
 constexpr int iedges[12] = {0,1,2,3,4,5,6,7,8,9,10,11}; 
 
-/* A lot (all?) of the following are only used in element_block.cpp, when 
+/* Some of the following are only used in element_block.cpp, when 
  * setting the physical coords. Break into a separate hpp file? Something 
  * like geometry_labels.hpp maybe. Might be able to use some of this in
  * FaceCommunicator too, for consistency. */ 

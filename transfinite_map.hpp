@@ -31,10 +31,11 @@ void drdx_transfinite_map_2D(const int dir,
                              const real_t x[2],
                              const Edge edges[4], 
                              const real_t corners[4][3], 
-                                   real_t dr[3]);
+                                   real_t drdx[3]);
 
-void drdx_transfinite_map_3D(const real_t x[3], const Edge edges[12],
+void drdx_transfinite_map_3D(const real_t x[3], 
+                             const Edge edges[12],
                              const real_t corners[8][3], 
-                                   real_t dr[3][3]);
+                                   real_t drdx[3][3]);
 
 #endif
