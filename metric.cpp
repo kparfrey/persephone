@@ -158,13 +158,14 @@ void Metric::setup_full(ElementBlock& eb)
 
     /* Elementwise constructs */
     Edge* elem_edges;
-    real_t elem_corners[4][3]; // For 2D TF map
+    real_t elem_corners[8][3]; // For 3D TF map
     int elem_idx_1D;
     int mem_offset;
 
     /* Pointwise constructs */
     real_t xe[3];
-    real_t drdx[3]; 
+    real_t drdx[3][3]; 
+    //real_t drdx[3]; // For 2D method, which is ref-dir by ref-dir
     Matrix J; // dPHYS/dREF -- J.arr[phys][ref]
     real_t detJ;
     real_t rdetg = 1.0; //Assume physical coords are flat-spacetime Cartesian
@@ -196,6 +197,7 @@ void Metric::setup_full(ElementBlock& eb)
 
         elem_edges = eb.edges[elem_idx_1D];
 
+        /***
         for (int d: dirs)
         {
             elem_corners[0][d] = elem_edges[0].endpoints[0][d];
@@ -203,6 +205,11 @@ void Metric::setup_full(ElementBlock& eb)
             elem_corners[2][d] = elem_edges[2].endpoints[1][d];
             elem_corners[3][d] = elem_edges[3].endpoints[1][d];
         }
+         ***/
+
+        for (int i: icorners)
+            for (int m: dirs)
+                elem_corners[i][m] = elem_edges[i].endpoints[edge_to_corner[i]][m];
 
         for (int k = 0; k < eb.Ns[2]; ++k)
         for (int j = 0; j < eb.Ns[1]; ++j)
@@ -211,15 +218,26 @@ void Metric::setup_full(ElementBlock& eb)
             real_t Jarr[3][3] = {}; 
             mem_loc = eb.ids(i,j,k) + mem_offset;
 
-            xe[0] = eb.xs(0,i);
-            xe[1] = eb.xs(1,j);
+            //xe[0] = eb.xs(0,i);
+            //xe[1] = eb.xs(1,j);
 
+            for (int d: dirs)
+                xe[d] = eb.xs(d,j);
+
+            /***
             for (int dref: dirs)
             {
                 drdx_transfinite_map_2D(dref, xe, elem_edges, elem_corners, drdx);
                 for (int dphys: dirs)
                     Jarr[dphys][dref] = drdx[dphys];
             }
+             ***/
+
+            drdx_transfinite_map_3D(xe, elem_edges, elem_corners, drdx);
+            
+            for (int dphys: dirs)
+            for (int dref: dirs)
+                Jarr[dphys][dref] = drdx[dref][dphys];
             
             J.fill(Jarr);
             J.find_determinant();
@@ -278,6 +296,7 @@ void Metric::setup_full(ElementBlock& eb)
 
             elem_edges = eb.edges[id_elem_s];
 
+            /***
             for (int m: dirs)
             {
                 elem_corners[0][m] = elem_edges[0].endpoints[0][m];
@@ -285,6 +304,11 @@ void Metric::setup_full(ElementBlock& eb)
                 elem_corners[2][m] = elem_edges[2].endpoints[1][m];
                 elem_corners[3][m] = elem_edges[3].endpoints[1][m];
             }
+             ***/
+
+            for (int i: icorners)
+                for (int m: dirs)
+                    elem_corners[i][m] = elem_edges[i].endpoints[edge_to_corner[i]][m];
 
             /* S matrix for this element */
             for (int n2 = 0; n2 < eb.Ns[d2]; ++n2)
@@ -298,13 +322,21 @@ void Metric::setup_full(ElementBlock& eb)
                 xe[d1] = eb.xs(d1,n1);
                 xe[d2] = eb.xs(d2,n2);
 
+                /***
                 for (int dref: dirs)
                 {
                     drdx_transfinite_map_2D(dref, xe, elem_edges, elem_corners, drdx);
                     for (int dphys: dirs)
                         Jarr[dphys][dref] = drdx[dphys];
                 }
+                 ***/
                 
+                drdx_transfinite_map_3D(xe, elem_edges, elem_corners, drdx);
+                
+                for (int dphys: dirs)
+                for (int dref: dirs)
+                    Jarr[dphys][dref] = drdx[dref][dphys];
+
                 J.fill(Jarr);
                 J.find_determinant();
                 J.find_inverse();
@@ -314,6 +346,7 @@ void Metric::setup_full(ElementBlock& eb)
                 for (int dphys: dirs)
                     S[d](dphys,mem_loc) = detJ * rdetg * J.inv[d][dphys];
                 
+                /* Calculate helper array for finding timestep limit */
                 /* Double check that xf[0] = 0, xf[-1] = 1 */
                 if (n0 == 0)
                     dx = eb.xf(d, 1);
@@ -372,7 +405,6 @@ void Metric::setup_full(ElementBlock& eb)
             }
         }
     }
-
 
 
     return;

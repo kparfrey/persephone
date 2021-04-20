@@ -256,12 +256,14 @@ void drdx_transfinite_map_2D(const int dir, const real_t x[3],
 }
 
 
-static void drdx_on_faces(const real_t G[12][3],
-                          const real_t dG[12][3],
-                          const real_t corners[8][3],
-                          const real_t x[3],
-                                real_t dF[6][2][3])
+/* dF[face-id][derivative-dir][phys-vector-component] */
+static void face_derivs_via_2D_TFI(const real_t G[12][3],
+                                   const real_t dG[12][3],
+                                   const real_t corners[8][3],
+                                   const real_t x[3],
+                                         real_t dF[6][3][3])
 {
+    int d0, d1, d2;   // face-normal-dir, ... + 1, and ... + 2
     real_t xf[2];     // 2D groupwise coord on this face
     real_t cf[4][3];  // This face's 4 corners
     real_t Gf[4][3];  // Values evaluated at this face's 4 edges
@@ -269,20 +271,41 @@ static void drdx_on_faces(const real_t G[12][3],
 
     for (int f: ifaces)
     {
-        xf[0] = x[dir_plus_one[face_normal[f]]];
-        xf[1] = x[dir_plus_two[face_normal[f]]];
+        d0    = face_normal[f];
+        d1    = dir_plus_one[d0];
+        d2    = dir_plus_two[d0];
+        xf[0] = x[d1];
+        xf[1] = x[d2];
 
         /* Iterate over this face's 4 corners and edges */
-        for (int j = 0; j < 4; ++j)
-        for (int d: dirs)
+        /* Express everything in 2D language on the face, so can use
+         * the known 2D TFI method directly. */
+        for (int j = 0; j < 4; ++j) // corner and edge indices in 2D
+        for (int i: dirs) // physical vector components
         {
-            cf[j][d] = corners[corner_map[f][j]][d]; 
-            Gf[j][d] = G[edge_map[f][j]][d]; 
+            cf[j][i] = corners[corner_map[f][j]][i]; 
+            Gf[j][i] = G[edge_map[f][j]][i]; 
+            dGf[j][i] = dG[edge_map[f][j]][i]; 
         }
 
         // Should reimplement 2D drdx here since the evaluation
         // and differentiation has been taken care of already
-        drdx_transfinite_map_2D(i, xf, );
+
+        for (int i: dirs) // physical vector components
+        {
+            /* differentiate along d1 = dir-0 on the 2D face */
+            dF[f][d1][i] = (1-xf[1]) * (dGf[0][i] + cf[0][i] - cf[1][i])
+                            + xf[1]  * (dGf[2][i] + cf[3][i] - cf[2][i])
+                            + Gf[1][i] - Gf[3][i];
+            
+            /* differentiate along d2 = dir-1 on the 2D face */
+            dF[f][d2][i] = (1-xf[0]) * (dGf[3][i] + cf[0][i] - cf[3][i])
+                            + xf[0]  * (dGf[1][i] + cf[1][i] - cf[2][i])
+                            + Gf[2][i] - Gf[0][i];
+
+            dF[f][d0][i] = 0.0; // derivative normal to the face is zero
+        }
+
     }
 
     return;
@@ -290,10 +313,11 @@ static void drdx_on_faces(const real_t G[12][3],
 
 
 /* Only used for polynomial-based interpolation, so include all the Edge
- * and Edge-derivative evaluation in this function. */
+ * and Edge-derivative evaluation in this function. 
+ * Store dr as dr[reference][physical] --- note the reverse of Jarr in Metric */
 void drdx_transfinite_map_3D(const real_t x[3], const Edge edges[12],
                              const real_t corners[8][3], 
-                                   real_t dr[3], const int diff_dir)
+                                   real_t dr[3][3])
 {
     /* u, v, w etc. language aligns with Eriksson (1985) */
     const real_t u = x[0]; 
@@ -307,7 +331,7 @@ void drdx_transfinite_map_3D(const real_t x[3], const Edge edges[12],
     real_t  G[12][3]; /* Edge values: e.g. f(u,0,1) or f(1,v,1) */
     real_t  F[6][3];  /* Face values: e.g. f(u,v,0) or f(u,1,w) */
     real_t dG[12][3]; /* Derivative along each edge             */
-    real_t dF[6][2][3]; /* Derivatives on each face             */
+    real_t dF[6][3][3]; /* Derivatives on each face             */
 
     /* Evaluate values on edges and faces. Duplicates work done
      * when calculating the coords in the first place...        */
@@ -320,40 +344,100 @@ void drdx_transfinite_map_3D(const real_t x[3], const Edge edges[12],
     for (int i: iedges)
         edges[i].diff(x[edges[i].dir], dG[i]);
 
-    drdx_on_faces(G, dG, corners, x, dF);
+    face_derivs_via_2D_TFI(G, dG, corners, x, dF);
 
-    // This function complete up to here....
-
-
+    /* Deliberately make this section very simple to avoid confusion.
+     * Find the derivative along each reference direction by direct
+     * differentiation of the transformation in transfinite_map_3D().
+     * Don't rearrange or group terms, to make the correspondence to 
+     * the original transformation obvious. */
     for (int i: dirs) // Iterate over coord-vector components
     {
+        /*** Differentiate wrt reference-direction-0, aka u ***/
         /* Face terms */
-        pu = (1 - u) * F[2][i] + u * F[3][i];
-        pv = (1 - v) * F[4][i] + v * F[5][i];
-        pw = (1 - w) * F[0][i] + w * F[1][i];
+        pu = - F[2][i] + F[3][i];
+        pv = (1 - v) * dF[4][0][i] + v * dF[5][0][i];
+        pw = (1 - w) * dF[0][0][i] + w * dF[1][0][i];
 
         /* Edge terms */
-        puv =   (1 - u) * (1 - v) * G[8][i]  + u  * (1 - v) * G[9][i]
-              + (1 - u) *      v  * G[11][i] + u  *      v  * G[10][i];
+        puv = - (1 - v) * G[8][i]  + (1 - v) * G[9][i]
+              -      v  * G[11][i] +      v  * G[10][i];
 
-        puw =   (1 - u) * (1 - w) * G[3][i]  + u  * (1 - w) * G[1][i]
-              + (1 - u) *      w  * G[7][i]  + u  *      w  * G[5][i];
+        puw = - (1 - w) * G[3][i]  + (1 - w) * G[1][i]
+              -      w  * G[7][i]  +      w  * G[5][i];
         
-        pvw =   (1 - v) * (1 - w) * G[0][i]  + v  * (1 - w) * G[2][i]
-              + (1 - v) *      w  * G[4][i]  + v  *      w  * G[6][i];
+        pvw =   (1 - v) * (1 - w) * dG[0][i]  + v  * (1 - w) * dG[2][i]
+              + (1 - v) *      w  * dG[4][i]  + v  *      w  * dG[6][i];
 
         /* Corner terms */
-        puvw =   (1 - u) * (1 - v) * (1 - w) * corners[0][i]
-               +      u  * (1 - v) * (1 - w) * corners[1][i]
-               + (1 - u) *      v  * (1 - w) * corners[3][i]
-               +      u  *      v  * (1 - w) * corners[2][i]
-               + (1 - u) * (1 - v) *      w  * corners[4][i]
-               +      u  * (1 - v) *      w  * corners[5][i]
-               + (1 - u) *      v  *      w  * corners[7][i]
-               +      u  *      v  *      w  * corners[6][i];
+        puvw = - (1 - v) * (1 - w) * corners[0][i]
+               + (1 - v) * (1 - w) * corners[1][i]
+               -      v  * (1 - w) * corners[3][i]
+               +      v  * (1 - w) * corners[2][i]
+               - (1 - v) *      w  * corners[4][i]
+               + (1 - v) *      w  * corners[5][i]
+               -      v  *      w  * corners[7][i]
+               +      v  *      w  * corners[6][i];
 
-        /* Compose the final Boolean sum */
-        r[i] = pu + pv + pw - puv - puw - pvw + puvw;
+        dr[0][i] = pu + pv + pw - puv - puw - pvw + puvw;
+        
+
+        /*** Differentiate wrt reference-direction-1, aka v ***/
+        /* Face terms */
+        pu = (1 - u) * dF[2][1][i] + u * dF[3][1][i];
+        pv = - F[4][i] + F[5][i];
+        pw = (1 - w) * dF[0][1][i] + w * dF[1][1][i];
+
+        /* Edge terms */
+        puv = - (1 - u) * G[8][i]  - u * G[9][i]
+              + (1 - u) * G[11][i] + u * G[10][i];
+
+        puw =   (1 - u) * (1 - w) * dG[3][i]  + u  * (1 - w) * dG[1][i]
+              + (1 - u) *      w  * dG[7][i]  + u  *      w  * dG[5][i];
+        
+        pvw = - (1 - w) * G[0][i]  + (1 - w) * G[2][i]
+              -      w  * G[4][i]  +      w  * G[6][i];
+
+        /* Corner terms */
+        puvw = - (1 - u) * (1 - w) * corners[0][i]
+               -      u  * (1 - w) * corners[1][i]
+               + (1 - u) * (1 - w) * corners[3][i]
+               +      u  * (1 - w) * corners[2][i]
+               - (1 - u) *      w  * corners[4][i]
+               -      u  *      w  * corners[5][i]
+               + (1 - u) *      w  * corners[7][i]
+               +      u  *      w  * corners[6][i];
+
+        dr[1][i] = pu + pv + pw - puv - puw - pvw + puvw;
+        
+
+        /*** Differentiate wrt reference-direction-2, aka w ***/
+        /* Face terms */
+        pu = (1 - u) * dF[2][2][i] + u * dF[3][2][i];
+        pv = (1 - v) * dF[4][2][i] + v * dF[5][2][i];
+        pw = - F[0][i] + F[1][i];
+
+        /* Edge terms */
+        puv =   (1 - u) * (1 - v) * dG[8][i]  + u  * (1 - v) * dG[9][i]
+              + (1 - u) *      v  * dG[11][i] + u  *      v  * dG[10][i];
+
+        puw = - (1 - u) * G[3][i] - u * G[1][i]
+              + (1 - u) * G[7][i] + u * G[5][i];
+        
+        pvw = - (1 - v) * G[0][i] - v * G[2][i]
+              + (1 - v) * G[4][i] + v * G[6][i];
+
+        /* Corner terms */
+        puvw = - (1 - u) * (1 - v) * corners[0][i]
+               -      u  * (1 - v) * corners[1][i]
+               - (1 - u) *      v  * corners[3][i]
+               -      u  *      v  * corners[2][i]
+               + (1 - u) * (1 - v) * corners[4][i]
+               +      u  * (1 - v) * corners[5][i]
+               + (1 - u) *      v  * corners[7][i]
+               +      u  *      v  * corners[6][i];
+
+        dr[2][i] = pu + pv + pw - puv - puw - pvw + puvw;
     }
 
     return;
