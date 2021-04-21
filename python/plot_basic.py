@@ -76,9 +76,9 @@ class Mesh(object):
             group.edges = [group.e0, group.e1, group.e2, group.e3]
 
             group.Nelem_tot = m[sg]['Nelem_tot'][()]
-            group.Nelem = m[sg]['Nelem'][:]
-            group.Ns    = m[sg]['Ns'][:]
-            group.Nf    = m[sg]['Nf'][:]
+            group.Nelem = m[sg]['Nelem'][:] # No. elems in this group, in each dir
+            group.Ns    = m[sg]['Ns'][:]    # Soln points per elem, in each dir
+            group.Nf    = m[sg]['Nf'][:]    # Flux    "      "          "
 
             self.g[ig] = group
 

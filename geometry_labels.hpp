@@ -4,10 +4,17 @@
 /* This file stores useful integer arrays for organising the various 
  * relationships between corners, edges, faces, and directions. Only
  * used in the setup phase, so will only be included by a few .cpp files.
+ * Currently included by:
+ *    element_block.cpp
+ *    metric.cpp
+ *    transfinite_map.cpp
+ *    params_cartesian.cpp
  */
 
 
-/* Relative locations of the 8 corners for a unit cube */
+/* Relative locations of the 8 corners for a unit cube 
+ * Used only by params_cartesian.cpp, in setting the corners
+ * for simple_geometry */
 constexpr int corner_coords[8][3] = {{0, 0, 0},  // 0
                                      {1, 0, 0},  // 1
                                      {1, 1, 0},  // 2
