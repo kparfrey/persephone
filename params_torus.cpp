@@ -405,6 +405,9 @@ void ParamsTorus::set_initial_state(ElementBlock &elements, EqnSystem equations)
         case euler:
             set_euler_torus(elements);
             break;
+        case mhd:
+            write::error("MHD not implemented for torus", destroy);
+            break;
         case scalar_advection:
             write::error("Scalar advection not implemented for torus", destroy);
             break;

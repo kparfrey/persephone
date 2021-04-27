@@ -176,6 +176,7 @@ void ParamsCartesian::set_initial_state(ElementBlock &elements, EqnSystem equati
             set_scalar_cartesian(elements);
             break;
         case euler:
+        case mhd:
             set_euler_cartesian(elements);
             break;
     }

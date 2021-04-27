@@ -16,7 +16,7 @@
 /***************************************************/
 /**** Options above this line, do not change below */
 
-enum EqnSystem {scalar_advection, euler};
+enum EqnSystem {scalar_advection, euler, mhd};
 enum BasicTimeMethod {rk2_midpoint, rk3_classic};
 
 
