@@ -25,35 +25,6 @@ static real_t scalar_function(const real_t r[3])
 }
 
 
-void set_scalar_cartesian(ElementBlock& eb)
-{
-    int mem_offset;
-    int loc;
-    real_t r[3];
-
-    for (int ke = 0; ke < eb.Nelem[2]; ++ke)
-    for (int je = 0; je < eb.Nelem[1]; ++je)
-    for (int ie = 0; ie < eb.Nelem[0]; ++ie)
-    {
-        mem_offset = eb.id_elem(ie, je, ke) * eb.Ns_elem;
-
-        for (int k = 0; k < eb.Ns[2]; ++k)
-        for (int j = 0; j < eb.Ns[1]; ++j)
-        for (int i = 0; i < eb.Ns[0]; ++i)
-        {
-            loc = eb.ids(i,j,k) + mem_offset;
-            for (int d: dirs)
-                r[d] = eb.rs(d,loc);
-
-            eb.fields[loc] = scalar_function(r);
-        }
-    }
-
-    return;
-}
-
-
-
 /* From Sun, Wang, Liu (2007), CiCP */
 static void shu_vortex(const real_t r[3],
                              real_t* const __restrict__ fields,
@@ -91,7 +62,60 @@ static void shu_vortex(const real_t r[3],
 }
 
 
-void set_euler_cartesian(ElementBlock& eb)
+/* From Toth (2000), section 6.3.1 */
+static void alfven_wave(const real_t r[3],
+                              real_t* const __restrict__ fields,
+                        const int loc0,
+                        const int Ns_block)
+{
+    enum conserved {Density, mom0, mom1, mom2, energy, B0, B1, B2, psi};
+    real_t density, v0, v1, v2, pressure, b0, b1, b2; // primitive variables
+
+    real_t x, y, alpha, cosa, sina;
+    real_t bpar, bperp, vpar, vperp;
+    real_t kinetic_energy, magnetic_energy;
+
+    density  = 1.0;
+    pressure = 0.1;
+
+    alpha = pi / 6.0;
+    cosa  = std::cos(alpha);
+    sina  = std::sin(alpha);
+    x = r[0];
+    y = r[1];
+
+    vpar = 0.0; // vpar = 1 gives standing wave
+    bpar = 1.0;
+
+    vperp = 0.1 * std::sin(2*pi*(x*cosa + y*sina));
+    bperp = vperp;
+    v2    = 0.1 * std::cos(2*pi*(x*cosa + y*sina));
+    b2    = v2;
+
+    v0 = vpar*cosa - vperp*sina;
+    v1 = vpar*sina + vperp*cosa;
+    b0 = bpar*cosa - bperp*sina;
+    b1 = bpar*sina + bperp*cosa;
+
+    kinetic_energy  = 0.5 * density * (v0*v0 + v1*v1 + v2*v2);
+    magnetic_energy = 0.5 * (b0*b0 + b1*b1 + b2*b2);
+
+    /* Convert to conserved variables */
+    fields[loc0 + Density*Ns_block] = density;
+    fields[loc0 +    mom0*Ns_block] = density * v0;
+    fields[loc0 +    mom1*Ns_block] = density * v1;
+    fields[loc0 +    mom2*Ns_block] = density * v2;
+    fields[loc0 +  energy*Ns_block] = kinetic_energy + magnetic_energy + pressure / gm1_mhd;
+    fields[loc0 +      B0*Ns_block] = b0;
+    fields[loc0 +      B1*Ns_block] = b1;
+    fields[loc0 +      B2*Ns_block] = b2;
+    fields[loc0 +     psi*Ns_block] = 0.0;
+
+    return;
+}
+
+
+void set_initial_state_cartesian(ElementBlock& eb, EqnSystem system)
 {
     int mem_offset;
     int loc0; // Memory location for the 0th field
@@ -111,7 +135,18 @@ void set_euler_cartesian(ElementBlock& eb)
             for (int d: dirs)
                 r[d] = eb.rs(d,loc0);
 
-            shu_vortex(r, eb.fields, loc0, eb.Ns_block);
+            switch(system)
+            {
+                case scalar_advection:
+                    eb.fields[loc0] = scalar_function(r);
+                    break;
+                case euler:
+                    shu_vortex(r, eb.fields, loc0, eb.Ns_block);
+                    break;
+                case mhd:
+                    alfven_wave(r, eb.fields, loc0, eb.Ns_block);
+                    break;
+            }
         }
     }
 

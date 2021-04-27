@@ -156,7 +156,8 @@ void ParamsCartesian::setup_elementblock(ElementBlock &elements, Process &proc)
                 elements.corners[i][j] = proc_origin[j] + corner_coords[i][j]*length_per_proc[j];
     }
     else // full_geometry
-        elements.map = new WaveRect2D; //new QuarterAnnulusMap; // specify manually for now...
+        elements.map = new ObliqueRect2D;
+        //elements.map = new WaveRect2D; //new QuarterAnnulusMap; // specify manually for now...
 
 
     /* At this point all external information is present, and the internal
@@ -167,19 +168,9 @@ void ParamsCartesian::setup_elementblock(ElementBlock &elements, Process &proc)
 }
 
 
-/* Should this be moved to initial_state_cartesian? */
 void ParamsCartesian::set_initial_state(ElementBlock &elements, EqnSystem equations)
 {
-    switch (equations)
-    {
-        case scalar_advection:
-            set_scalar_cartesian(elements);
-            break;
-        case euler:
-        case mhd:
-            set_euler_cartesian(elements);
-            break;
-    }
+    set_initial_state_cartesian(elements, equations);
 
     return;
 }
