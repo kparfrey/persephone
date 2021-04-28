@@ -232,8 +232,9 @@ void Metric::setup_full(ElementBlock& eb)
             real_t Jarr[3][3] = {}; 
             mem_loc = eb.ids(i,j,k) + mem_offset;
 
-            for (int d: dirs)
-                xe[d] = eb.xs(d,j);
+            xe[0] = eb.xs(0,i);
+            xe[1] = eb.xs(1,j);
+            xe[2] = eb.xs(2,k);
 
             /***  2D Method --- leave here for now
             for (int dref: dirs)
