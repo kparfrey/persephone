@@ -52,6 +52,7 @@ void Params::setup_process_generic(Process &proc)
             write::error("Equation system not recognised.");
     }
 
+    proc.system   = equations;
     proc.Nfield   = proc.system_data->Nfield;
 
     /* Move inside a switch once more flux choices are defined */

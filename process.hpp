@@ -59,6 +59,7 @@ class Process
     
     BasicTimeIntegrator*     time_integrator;
 
+    EqnSystem                system;
     SystemData*              system_data;
     ConservedToPrimitive*    U_to_P;
     WaveSpeedsFromPrimitive* c_from_P;

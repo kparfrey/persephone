@@ -351,6 +351,42 @@ namespace kernels
     }
 
 
+    void scalar_field_source(      real_t* const __restrict__ divF,
+                             const real_t* const __restrict__ U, 
+                             const LengthBucket lb,
+                             const real_t c_h, const real_t c_p)
+    {
+        int id_elem;
+        int mem_offset;
+        int field_offset;
+        int mem;
+
+        const int field = 8; // psi is the 9th field
+        const real_t factor = c_h*c_h/(c_p*c_p);
+
+        field_offset = field * lb.Ns_block;
+
+        for (int ke = 0; ke < lb.Nelem[2]; ++ke)
+        for (int je = 0; je < lb.Nelem[1]; ++je)
+        for (int ie = 0; ie < lb.Nelem[0]; ++ie)
+        {
+            id_elem = (ke*lb.Nelem[1] + je)*lb.Nelem[0] + ie;
+            mem_offset = field_offset + id_elem * lb.Ns_elem;
+
+            for (int k = 0; k < lb.Ns[2]; ++k)
+            for (int j = 0; j < lb.Ns[1]; ++j)
+            for (int i = 0; i < lb.Ns[0]; ++i)
+            {
+                mem  = mem_offset + (k * lb.Ns[1]  + j) * lb.Ns[0] + i;
+
+                divF[mem] +=  factor * U[mem];
+            }
+        }
+
+        return;
+    }
+
+
     void fill_face_data(const real_t* const __restrict__ Uf,
                               FaceCommunicator           face,
                         const LengthBucket               lb)

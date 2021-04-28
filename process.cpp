@@ -2,6 +2,7 @@
 
 #include <string>
 #include <mpi.h>
+#include <cmath>
 #include "params.hpp"
 #include "write_screen.hpp"
 #include "basic_time_integrator.hpp"
@@ -139,6 +140,15 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
         kernels::fluxDeriv_to_soln(eb.fluxDeriv2soln(i), F(i), dF(i), eb.lengths, i);
 
     kernels::flux_divergence(dF, eb.metric.Jrdetg(), divF, eb.lengths);
+
+    /* Add div-cleaning scalar field's source directly here. Could alternatively do operator
+     * splitting, and directly reduce psi in a subsequent substep. */
+    if (system == mhd)
+    {
+        const real_t c_h = 0.9;        
+        const real_t c_p = std::sqrt(0.18 * c_h);
+        kernels::scalar_field_source(divF, U, eb.lengths, c_h, c_p);
+    }
 
     for (int i: dirs)
     {

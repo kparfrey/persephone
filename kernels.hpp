@@ -46,6 +46,11 @@ namespace kernels
                                real_t* const __restrict__ divF,
                          const LengthBucket lb);
 
+    void scalar_field_source(      real_t* const __restrict__ divF,
+                             const real_t* const __restrict__ U, 
+                             const LengthBucket lb,
+                             const real_t c_h, const real_t c_p);
+
     void fill_face_data(const real_t* const __restrict__ Uf,
                               FaceCommunicator           face,
                         const LengthBucket               lb);
