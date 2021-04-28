@@ -3,7 +3,6 @@
 #include "process.hpp"
 #include "kernels.hpp"
 #include "write_screen.hpp"
-#include "params.hpp"
 
 void FaceCommunicator::setup(Process& proc, int face_id)
 {
@@ -81,8 +80,6 @@ void FaceCommunicator::setup(Process& proc, int face_id)
     allocate();
 
     /* Fill normal array from ElementBlock */
-    if (proc.params.geometry == full_geometry)
-    {
     int id_elem_face, id_elem_normals;
     int mem_offset_face, mem_offset_normals;
     int mem_face, mem_normals;
@@ -110,7 +107,6 @@ void FaceCommunicator::setup(Process& proc, int face_id)
             for (int i: dirs)
                 normal(i,mem_face) = proc.elements.metric.normal[normal_dir](i,mem_normals);
         }
-    }
     }
 
     return;

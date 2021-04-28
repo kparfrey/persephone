@@ -160,8 +160,8 @@ void ParamsCartesian::setup_elementblock(ElementBlock &elements, Process &proc)
                 elements.corners[i][j] = proc_origin[j] + corner_coords[i][j]*length_per_proc[j];
     }
     else // full_geometry
-        elements.map = new BasicRect2D;
-        //elements.map = new WaveRect2D; //new QuarterAnnulusMap; // specify manually for now...
+        //elements.map = new BasicRect2D;
+        elements.map = new WaveRect2D; //new QuarterAnnulusMap; // specify manually for now...
 
 
     /* At this point all external information is present, and the internal

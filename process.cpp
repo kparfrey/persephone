@@ -71,6 +71,7 @@ void Process::time_advance()
         delete Uf;
     }
     dtmin = MIN(dtmin_dir[0], MIN(dtmin_dir[1], dtmin_dir[2]));
+    //dtmin = 1.0/(1/dtmin_dir[0] + 1/dtmin_dir[1] + 1/dtmin_dir[2]);
     MPI_Allreduce(MPI_IN_PLACE, &dtmin, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
     dt = cfl * dtmin;
     /********************************************/

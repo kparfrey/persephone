@@ -179,18 +179,6 @@ void Metric::setup_full(ElementBlock& eb)
 
     allocate_on_host(eb.Ns_block, eb.Nf_dir_block);
 
-    /* Face normals only used in full geometry, allocate here */
-    for (int dir: dirs)
-    {
-        int d1 = dir_plus_one[dir];
-        int d2 = dir_plus_two[dir];
-        int Nfaces = eb.Nelem[d1] * eb.Nelem[d2] * (eb.Nelem[dir]+1);
-        int points_per_face = eb.Ns[d1]*eb.Ns[d2];
-
-        for (int dphys: dirs)
-            normal[dir](dphys) = new real_t [Nfaces * points_per_face]();
-    }
-
     /* Elementwise constructs */
     Edge* elem_edges;
     real_t elem_corners[8][3]; // For 3D TF map
@@ -209,6 +197,18 @@ void Metric::setup_full(ElementBlock& eb)
 
     /* For finding the timestep_transform */
     real_t dx, dx_l, dx_r;
+
+    /* Face normals only used in full geometry, allocate here */
+    for (int dir: dirs)
+    {
+        int d1 = dir_plus_one[dir];
+        int d2 = dir_plus_two[dir];
+        int Nfaces = eb.Nelem[d1] * eb.Nelem[d2] * (eb.Nelem[dir]+1);
+        int points_per_face = eb.Ns[d1]*eb.Ns[d2];
+
+        for (int dphys: dirs)
+            normal[dir](dphys) = new real_t [Nfaces * points_per_face]();
+    }
 
 
     /* Solution points */

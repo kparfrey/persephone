@@ -150,7 +150,7 @@ class Fluxes_mhd : public FluxesFromPrimitive
             F[B1][d] = P[B1]*v - B*P[v1]; 
             F[B2][d] = P[B2]*v - B*P[v2]; 
 
-            F[B0+d][d] = P[psi]; // Overwrite the above
+            F[B0+d][d] = 0.0; //P[psi]; // Overwrite the above
 
             F[psi][d] = 0.0 * B; // c_h = 0.0
         }
