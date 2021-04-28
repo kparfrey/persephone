@@ -15,6 +15,7 @@
 #include "write_file_utils.hpp"
 #include "tensor_field.hpp"
 #include "edge.hpp"
+#include "params.hpp"
 
 using std::string;
 
@@ -108,52 +109,55 @@ void write_mesh(Process &proc)
 
 
         /* Write edges */
-        meshfile.createGroup(groupstring + "/edges");
-
-        //for (int i = 0; i < 4; ++i) // for every edge index...
-        for (int i: iedges) // for every edge index...
+        if (proc.params.geometry == full_geometry)
         {
-            string name = groupstring + "/edges/" + std::to_string(i);
+            meshfile.createGroup(groupstring + "/edges");
 
-            int N = eb.edges[0][i].N; // N along edge; use 0th elem as prototype
+            //for (int i = 0; i < 4; ++i) // for every edge index...
+            for (int i: iedges) // for every edge index...
+            {
+                string name = groupstring + "/edges/" + std::to_string(i);
 
-            local_dims[0] = size_t(eb.Nelem_block); // 1D element index
-            local_dims[1] = 3;                      // coordinate components
-            local_dims[2] = size_t(N); 
+                int N = eb.edges[0][i].N; // N along edge; use 0th elem as prototype
 
-            global_dims[0] = size_t(local_dims[0] * proc.Nproc_group_tot);
-            global_dims[1] = local_dims[1]; // i.e. only "stack" new data along the 0 axis
-            global_dims[2] = local_dims[2];
+                local_dims[0] = size_t(eb.Nelem_block); // 1D element index
+                local_dims[1] = 3;                      // coordinate components
+                local_dims[2] = size_t(N); 
 
-            offset[0] = size_t(proc.group_rank * local_dims[0]); // Again assume just 1 group
-            offset[1] = 0;
-            offset[2] = 0;
+                global_dims[0] = size_t(local_dims[0] * proc.Nproc_group_tot);
+                global_dims[1] = local_dims[1]; // i.e. only "stack" new data along the 0 axis
+                global_dims[2] = local_dims[2];
 
-            real_t* edge_data = new real_t [local_dims[0]*local_dims[1]*local_dims[2]];
+                offset[0] = size_t(proc.group_rank * local_dims[0]); // Again assume just 1 group
+                offset[1] = 0;
+                offset[2] = 0;
 
-            /* Store edge data as
-             *    file[group][edge][elem_id, coord, point] 
-             * where edge is 0 .. 11
-             *       elem_id is from 0 to (no. of elems in the group) - 1 
-             *       coord is 0 .. 2
-             *       point indexes the points along the edge, 0 .. Nf-1  */
-            int mem;
-            for (int nelem = 0; nelem < eb.Nelem_block; ++nelem)
-                for (int d: dirs) // coordinate component
-                    for (int j = 0; j < N; ++j) // edge node 
-                    {
-                        mem = (nelem * 3 + d) * N + j;
-                        edge_data[mem] = eb.edges[nelem][i].r(d,j);
-                    }
+                real_t* edge_data = new real_t [local_dims[0]*local_dims[1]*local_dims[2]];
 
-            write::message("Writing " + name);
+                /* Store edge data as
+                 *    file[group][edge][elem_id, coord, point] 
+                 * where edge is 0 .. 11
+                 *       elem_id is from 0 to (no. of elems in the group) - 1 
+                 *       coord is 0 .. 2
+                 *       point indexes the points along the edge, 0 .. Nf-1  */
+                int mem;
+                for (int nelem = 0; nelem < eb.Nelem_block; ++nelem)
+                    for (int d: dirs) // coordinate component
+                        for (int j = 0; j < N; ++j) // edge node 
+                        {
+                            mem = (nelem * 3 + d) * N + j;
+                            edge_data[mem] = eb.edges[nelem][i].r(d,j);
+                        }
 
-            HighFive::DataSet dataset = meshfile.createDataSet<real_t>(name, 
-                                               HighFive::DataSpace(global_dims));
-            dataset.select(offset, local_dims).write((real_t***)edge_data);
+                write::message("Writing " + name);
 
-            delete[] edge_data;
-        }
+                HighFive::DataSet dataset = meshfile.createDataSet<real_t>(name, 
+                                                   HighFive::DataSpace(global_dims));
+                dataset.select(offset, local_dims).write((real_t***)edge_data);
+
+                delete[] edge_data;
+            }
+        } // closes: if using full_geometry
 
         } // closes: if (ig == proc.Ngroup)
 

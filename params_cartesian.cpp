@@ -94,6 +94,8 @@ void ParamsCartesian::setup_process(Process &proc)
     {
         FaceCommunicator& face = proc.faces[i];
 
+        write::variable<int>("Setting up face:", i);
+
         face.setup(proc, i);
 
         /* Inter-process connectivity */
@@ -116,6 +118,8 @@ void ParamsCartesian::setup_process(Process &proc)
                              + face.neighbour_idx[1]) * proc.Nproc_group[2]
                              + face.neighbour_idx[2];
     }
+
+    write::message("Finished setup_process()");
 
     return;
 }
@@ -156,7 +160,7 @@ void ParamsCartesian::setup_elementblock(ElementBlock &elements, Process &proc)
                 elements.corners[i][j] = proc_origin[j] + corner_coords[i][j]*length_per_proc[j];
     }
     else // full_geometry
-        elements.map = new ObliqueRect2D;
+        elements.map = new BasicRect2D;
         //elements.map = new WaveRect2D; //new QuarterAnnulusMap; // specify manually for now...
 
 

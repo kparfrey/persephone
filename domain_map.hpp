@@ -86,6 +86,83 @@ class QuarterAnnulusMap : public DomainMap
 };
 
 
+class BasicRect2D : public DomainMap
+{
+    public:
+    const real_t d2 = 0.5; // r2 = [-d2, d2]
+    real_t c[4][2]; // x,y coords of the rectangle's 4 corners
+
+    const real_t xmin = 0.0;
+    const real_t xmax = 1.0/std::cos(pi/6.0);
+    const real_t ymin = 0.0;
+    const real_t ymax = 1.0/std::sin(pi/6.0);
+
+
+    BasicRect2D()
+    {
+        c[0][0] =   xmin;
+        c[0][1] =   ymin;
+
+        c[1][0] =   xmax;
+        c[1][1] =   ymin; 
+
+        c[2][0] =   xmax; 
+        c[2][1] =   ymax; 
+
+        c[3][0] =   xmin; 
+        c[3][1] =   ymax;
+    }
+
+
+    virtual void operator()(const int n, const real_t x, real_t r[3])
+    {
+        for (int i = 0; i < 2; ++i)
+        {
+            switch (n)
+            {
+                case 0:
+                case 4:
+                    r[i] = c[0][i] + x * (c[1][i] - c[0][i]);
+                    break;
+                case 1:
+                case 5:
+                    r[i] = c[1][i] + x * (c[2][i] - c[1][i]);
+                    break;
+                case 2:
+                case 6:
+                    r[i] = c[3][i] + x * (c[2][i] - c[3][i]);
+                    break;
+                case 3:
+                case 7:
+                    r[i] = c[0][i] + x * (c[3][i] - c[0][i]);
+                    break;
+                case 8:
+                    r[i] = c[0][i];
+                    break;
+                case 9:
+                    r[i] = c[1][i];
+                    break;
+                case 10:
+                    r[i] = c[2][i];
+                    break;
+                case 11:
+                    r[i] = c[3][i];
+                    break;
+            }
+        }
+
+        if (n < 4)
+            r[2] = -d2;
+        else if (n < 8)
+            r[2] = d2;
+        else
+            r[2] = d2 * (2 * x - 1);
+
+        return;
+    }
+};
+
+
 class ObliqueRect2D : public DomainMap
 {
     public:

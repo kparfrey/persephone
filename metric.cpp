@@ -52,6 +52,8 @@ void Metric::allocate_on_host(const int Ns, const int Nf[3])
 
         //rdetg_f[d] = new real_t [Nf[d]]();
     }
+    
+
 
     return;
 }
@@ -117,6 +119,26 @@ void Metric::setup_simple(const int Nelem[3], const int Ns_block,
             /* Assume J.inv[ref][phys]... */
             for (int j: dirs)
                 S[d](j,n) = detJ * rdetg * J.inv[d][j];
+            
+#if 0
+            /* Calculate helper array for finding timestep limit */
+            /* Copied directly from setup_full() */
+            if (n0 == 0)
+                dx = xf(d, 1);
+            else if (n0 == Nf[d]-1)
+                dx = 1.0 - xf(d,Nf[d]-2);
+            else
+            {
+                dx_l = xf(d,n0)   - xf(d,n0-1);
+                dx_r = xf(d,n0+1) - xf(d,n0);
+                //dx = std::min(dx_l, dx_r);  // Cautious
+                dx = 0.5 * (dx_l + dx_r);  // Slightly less cautious...
+            }
+
+            /* tt[ref](phys,mem) = (1/delta x^ref) * dx^ref/dr^phys */
+            for (int dphys: dirs)
+                timestep_transform[d](dphys,mem_loc) = (1.0/dx) * J.inv[d][dphys];
+#endif
         }
 
 
@@ -157,6 +179,18 @@ void Metric::setup_full(ElementBlock& eb)
 
     allocate_on_host(eb.Ns_block, eb.Nf_dir_block);
 
+    /* Face normals only used in full geometry, allocate here */
+    for (int dir: dirs)
+    {
+        int d1 = dir_plus_one[dir];
+        int d2 = dir_plus_two[dir];
+        int Nfaces = eb.Nelem[d1] * eb.Nelem[d2] * (eb.Nelem[dir]+1);
+        int points_per_face = eb.Ns[d1]*eb.Ns[d2];
+
+        for (int dphys: dirs)
+            normal[dir](dphys) = new real_t [Nfaces * points_per_face]();
+    }
+
     /* Elementwise constructs */
     Edge* elem_edges;
     real_t elem_corners[8][3]; // For 3D TF map
@@ -175,18 +209,6 @@ void Metric::setup_full(ElementBlock& eb)
 
     /* For finding the timestep_transform */
     real_t dx, dx_l, dx_r;
-
-    /* Face normals only used in full geometry, so allocate here for now */
-    for (int dir: dirs)
-    {
-        int d1 = dir_plus_one[dir];
-        int d2 = dir_plus_two[dir];
-        int Nfaces = eb.Nelem[d1] * eb.Nelem[d2] * (eb.Nelem[dir]+1);
-        int points_per_face = eb.Ns[d1]*eb.Ns[d2];
-
-        for (int dphys: dirs)
-            normal[dir](dphys) = new real_t [Nfaces * points_per_face]();
-    }
 
 
     /* Solution points */
