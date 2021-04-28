@@ -19,9 +19,9 @@ static int Ns[3]    = {8,8,1};
 static GeometryClass geometry = full_geometry;
 static real_t limits[3][2] = {{-5.,5.}, {-3.,3.}, {-0.1, 0.1}};
 
-static real_t cfl      = 0.1;
+static real_t cfl      = 0.9;
 static real_t end_time = 1.0;
-static real_t dt_write = 0.1;
+static real_t dt_write = 0.05;
 
 static ParamsCartesian active_parameters(equations, time_method, 
                                   Nproc, Nelem, Ns,
