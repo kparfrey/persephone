@@ -53,8 +53,7 @@ namespace kernels
 
     void store_divB(const real_t* const __restrict__ divF,
                           real_t* const __restrict__ divB, 
-                    const LengthBucket lb,
-                    const real_t c_h);
+                    const LengthBucket lb);
     
     void fill_face_data(const real_t* const __restrict__ Uf,
                               FaceCommunicator           face,

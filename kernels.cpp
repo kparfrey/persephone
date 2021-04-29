@@ -362,7 +362,8 @@ namespace kernels
         int mem;
 
         const int field = 8; // psi is the 9th field
-        const real_t factor = c_h*c_h/(c_p*c_p);
+        const real_t chsq   = c_h*c_h;
+        const real_t factor = chsq/(c_p*c_p);
 
         field_offset = field * lb.Ns_block;
 
@@ -379,7 +380,7 @@ namespace kernels
             {
                 mem = mem_offset + (k * lb.Ns[1]  + j) * lb.Ns[0] + i;
 
-                divF[mem] +=  factor * U[mem];
+                divF[mem] = chsq * divF[mem] + factor * U[mem];
             }
         }
 
@@ -389,8 +390,7 @@ namespace kernels
 
     void store_divB(const real_t* const __restrict__ divF,
                           real_t* const __restrict__ divB, 
-                    const LengthBucket lb,
-                    const real_t c_h)
+                    const LengthBucket lb)
     {
         int id_elem;
         int mem_offset;
@@ -398,7 +398,6 @@ namespace kernels
         int mem, mem0;
 
         const int field = 8; // psi is the 9th field
-        const real_t factor = 1.0 / (c_h * c_h);
 
         field_offset = field * lb.Ns_block;
 
@@ -416,7 +415,8 @@ namespace kernels
                 mem  = mem_offset + (k * lb.Ns[1]  + j) * lb.Ns[0] + i;
                 mem0 = mem - field_offset; // divB has only one field's worth
 
-                divB[mem0] = factor * divF[mem];
+                /* Haven't multiplied by c_h^2 yet: divB is just psi's stored divF */
+                divB[mem0] = divF[mem];
             }
         }
 

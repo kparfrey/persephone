@@ -152,7 +152,8 @@ class Fluxes_mhd : public FluxesFromPrimitive
 
             F[B0+d][d] = P[psi]; // Overwrite the above
 
-            F[psi][d] = 0.81 * B; // c_h = 0.9
+            F[psi][d] = B; // NB: multiply by c_h^2 when adding the
+                           // scalar field's source term!
         }
 
         return;
