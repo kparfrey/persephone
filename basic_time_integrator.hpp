@@ -25,9 +25,11 @@ class RK2_midpoint : public BasicTimeIntegrator
         real_t* divF       = kernels::alloc_raw(Ntot);
 
         /* dU/dt = - divF */
+        proc.substep = 1;
         proc.find_divF(eb.fields, proc.time, divF);
         kernels::add_2_vectors(eb.fields, divF, 1.0, -0.5*proc.dt, fields_mid, Ntot);
 
+        proc.substep = 2;
         proc.find_divF(fields_mid, proc.time + 0.5*proc.dt, divF);
         kernels::add_2_vectors(eb.fields, divF, 1.0,     -proc.dt,  eb.fields, Ntot);
 

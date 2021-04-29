@@ -18,6 +18,7 @@ void Params::setup_process_generic(Process &proc)
     proc.step     = 0;
     proc.cfl      = cfl;
     proc.data_output_counter = 0;
+    proc.is_output_step = false;
 
     switch (time_method)
     {

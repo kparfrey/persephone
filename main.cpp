@@ -60,13 +60,16 @@ int main(int argc, char *argv[])
 
     while(proc.time < proc.end_time)
     {
+        if ((proc.time - proc.time_last_write) > proc.dt_write)
+            proc.is_output_step = true;
+
         proc.time_advance();
 
-        if ((proc.time - proc.time_last_write) > proc.dt_write)
+        if (proc.is_output_step)
             write_data(proc);
     }
 
-    if ((proc.step - proc.step_last_write) > 10)
+    if (proc.step > proc.step_last_write + 1)
         write_data(proc);
 
     MPI_Finalize();

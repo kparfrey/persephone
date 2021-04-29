@@ -156,10 +156,12 @@ void write_data(Process &proc)
         **/
     }
 
+    write::message("Finished writing data file to disk.");
+
     proc.data_output_counter++;
     proc.time_last_write = proc.time;
     proc.step_last_write = proc.step;
+    proc.is_output_step  = false; 
 
-    write::message("Finished writing data file to disk.");
     return;
 }

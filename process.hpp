@@ -56,6 +56,9 @@ class Process
     real_t time_last_write;
     real_t step_last_write;
     int data_output_counter;
+    bool is_output_step; // true when writing data at the end of this step
+    int substep; // The number of the substep being calculated - e.g. for
+                 // RK3 will be 1, 2, or 3
     
     BasicTimeIntegrator*     time_integrator;
 
