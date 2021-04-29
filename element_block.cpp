@@ -98,6 +98,9 @@ void ElementBlock::allocate_on_host()
 
     fields = new real_t [Nfield * Ns_block];
 
+    if (Nfield == 9) // hacky way to test for mhd for now...
+        divB = new real_t [Ns_block];
+
     for (int i: dirs)
     {
         int matrix_size = Ns[i] * Nf[i]; 

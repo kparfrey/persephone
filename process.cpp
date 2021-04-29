@@ -147,6 +147,7 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
     {
         const real_t c_h = 0.9;        
         const real_t c_p = std::sqrt(0.18 * c_h);
+        kernels::store_divB(divF, elements.divB, eb.lengths, c_h); // Only do this at output stage...
         kernels::scalar_field_source(divF, U, eb.lengths, c_h, c_p);
     }
 

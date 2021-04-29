@@ -104,8 +104,24 @@ void write_data(Process &proc)
             write::message("Writing " + name);
             dataset.select(offset, local_dims).write((real_t***)data);
         }
-
+        
         delete[] primitives;
+
+        /* Diagnostic field output: just divB for now */
+        if (proc.system == mhd)
+        {
+            string name = groupstring + "/divB";
+            HighFive::DataSet dataset = datafile.createDataSet<real_t>(name, 
+                                                 HighFive::DataSpace(global_dims));
+
+            /* Need to repack data from native ordering to elementblock-wise logical */
+            repack(eb.divB, data, eb);
+
+            /* Pass the repacked 1D array cast as a triple pointer */
+            write::message("Writing " + name);
+            dataset.select(offset, local_dims).write((real_t***)data);
+        }
+
         delete[] data;
         }// closes: if (ig == proc.Ngroup) 
 
