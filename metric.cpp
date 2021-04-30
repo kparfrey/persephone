@@ -197,6 +197,8 @@ void Metric::setup_full(ElementBlock& eb)
 
     /* For finding the timestep_transform */
     real_t dx, dx_l, dx_r;
+    real_t tt;
+    eb.timestep_transform_max = 0.0;
 
     /* Face normals only used in full geometry, allocate here */
     for (int dir: dirs)
@@ -364,7 +366,15 @@ void Metric::setup_full(ElementBlock& eb)
 
                 /* tt[ref](phys,mem) = (1/delta x^ref) * dx^ref/dr^phys */
                 for (int dphys: dirs)
-                    timestep_transform[d](dphys,mem_loc) = (1.0/dx) * J.inv[d][dphys];
+                {
+                    //timestep_transform[d](dphys,mem_loc) = (1.0/dx) * J.inv[d][dphys];
+                    tt = (1.0/dx) * J.inv[d][dphys];
+                    timestep_transform[d](dphys,mem_loc) = tt;
+
+                    if (tt > eb.timestep_transform_max)
+                        eb.timestep_transform_max = tt;
+                }
+
             }
 
             /* This needs to be tidied and rationalised... */

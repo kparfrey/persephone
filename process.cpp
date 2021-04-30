@@ -7,6 +7,7 @@
 #include "write_screen.hpp"
 #include "basic_time_integrator.hpp"
 #include "boundary_conditions.hpp"
+#include "physics_includes.hpp"
 
 //#include <stdlib.h>
 
@@ -68,13 +69,17 @@ void Process::time_advance()
         real_t* Uf = kernels::alloc_raw(Nfield*eb.Nf_dir_block[d]);
         kernels::soln_to_flux(eb.soln2flux(d), eb.fields, Uf, eb.lengths, d);
         dtmin_dir[d] = kernels::local_timestep(Uf, eb.metric.timestep_transform[d],
-                                U_to_P, c_from_P, eb.lengths, d);                          
+                                               U_to_P, c_from_P, eb.lengths, d);                          
         delete Uf;
     }
     dtmin = MIN(dtmin_dir[0], MIN(dtmin_dir[1], dtmin_dir[2]));
     //dtmin = 1.0/(1/dtmin_dir[0] + 1/dtmin_dir[1] + 1/dtmin_dir[2]);
     MPI_Allreduce(MPI_IN_PLACE, &dtmin, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
     dt = cfl * dtmin;
+
+    /* Calculate maximum stable div-cleaning wavespeed */
+    if (system == mhd)
+        system_data->c_h = cfl /(dt * tt_max_global);
     /********************************************/
 
     write::message("Starting time step " + std::to_string(step) + " --- t = " + std::to_string(time)
@@ -145,14 +150,12 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
      * splitting, and directly reduce psi in a subsequent substep. */
     if (system == mhd)
     {
-        const real_t c_h = 0.9;        
-        const real_t c_r = 1.0; // Dedner recommends 0.18
-        const real_t c_p = std::sqrt(c_r * c_h);
+        const real_t c_p = std::sqrt(system_data->c_r * system_data->c_h);
         
         if (is_output_step && (substep == 1))
             kernels::store_divB(divF, elements.divB, eb.lengths);
 
-        kernels::scalar_field_source(divF, U, eb.lengths, c_h, c_p);
+        kernels::scalar_field_source(divF, U, eb.lengths, system_data->c_h, c_p);
     }
 
     for (int i: dirs)

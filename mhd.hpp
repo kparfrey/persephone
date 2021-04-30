@@ -34,6 +34,7 @@ constexpr real_t gm1_mhd = gamma_mhd - 1.0;
 class SystemData_mhd : public SystemData
 {
     public:
+
     SystemData_mhd()
     {
         Nfield = 9;
@@ -47,6 +48,10 @@ class SystemData_mhd : public SystemData
         variables[6] = "B1";
         variables[7] = "B2";
         variables[8] = "psi";
+
+        /* Divergence-cleaning parameters */
+        c_h = 0.9; // wavespeed of hyperbolic part --- calc for each step
+        c_r = 1.0; // ratio of hyperbolic and parabolic effects
     }
 };
 

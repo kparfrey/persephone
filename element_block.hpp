@@ -71,6 +71,8 @@ class ElementBlock
                                 // back to soln points
 
     Metric metric;
+    real_t timestep_transform_max;     // Max value for this ElementBlock
+                                       // Use to calculate c_h
 
 
     /* Methods */

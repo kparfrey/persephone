@@ -60,6 +60,8 @@ class Process
     int substep; // The number of the substep being calculated - e.g. for
                  // RK3 will be 1, 2, or 3
     
+    real_t tt_max_global;  // Global maximum of timestep transform, for finding c_h 
+
     BasicTimeIntegrator*     time_integrator;
 
     EqnSystem                system;

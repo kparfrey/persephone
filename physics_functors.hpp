@@ -11,6 +11,9 @@ class SystemData
     public:
     int Nfield;
     string* variables;
+
+    /* Only used by MHD */
+    real_t c_h, c_r;
 };
 
 
