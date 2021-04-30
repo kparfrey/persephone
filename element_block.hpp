@@ -5,9 +5,6 @@
 #include "metric.hpp"
 #include "tensor_field.hpp"
 
-//#include "edge.hpp"
-//#include "domain_map.hpp"
-
 class DomainMap;
 class Edge;
 
@@ -17,8 +14,7 @@ class ElementBlock
     /* These only called by the setup() method */
     void allocate_on_host();
     void set_computational_coords();
-    void set_physical_coords_simple();
-    void set_physical_coords_full();
+    void set_physical_coords_full(); // Should rename without _full
     void fill_spectral_difference_matrices();
 
     public:
@@ -40,12 +36,8 @@ class ElementBlock
     int group_idx[3];     // These two are copied down from Process
     int Nproc_group[3];   // Used to convert to groupwise reference coords
 
-
     /* Geometrical information */
-    GeometryClass geometry;
-    real_t corners[8][3]; // 3 physical-space coordinates for each of 8 corners
-                          // Only used by simple_geometry
-    DomainMap* map;       // Only used by full_geometry
+    DomainMap* map;
     Edge** edges; // Store 12 edges for every element; only full geometry
 
     /* Computational space locations: one element's worth only */
@@ -71,8 +63,8 @@ class ElementBlock
                                 // back to soln points
 
     Metric metric;
-    real_t timestep_transform_max;     // Max value for this ElementBlock
-                                       // Use to calculate c_h
+    real_t timestep_transform_max; // Max value for this ElementBlock
+                                   // Use to calculate c_h at each timestep
 
 
     /* Methods */

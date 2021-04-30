@@ -68,9 +68,7 @@ class Metric
 
 
     /* Methods */
-    void setup_simple(const int Nelem[3], const int Ns_block, 
-                      const int Nf_dir_block[3], const real_t corners[8][3]);
-    void setup_full(ElementBlock& eb);
+    void setup_full(ElementBlock& eb); // Rename without _full
     void move_to_device();
     
 };

@@ -13,8 +13,8 @@
 
 
 /* Relative locations of the 8 corners for a unit cube 
- * Used only by params_cartesian.cpp, in setting the corners
- * for simple_geometry */
+ * Was only used  by the simple_geometry setup routines,
+ * leaving here as a reminder of how the corners are labeled.
 constexpr int corner_coords[8][3] = {{0, 0, 0},  // 0
                                      {1, 0, 0},  // 1
                                      {1, 1, 0},  // 2
@@ -23,6 +23,7 @@ constexpr int corner_coords[8][3] = {{0, 0, 0},  // 0
                                      {1, 0, 1},  // 5
                                      {1, 1, 1},  // 6
                                      {0, 1, 1}}; // 7
+ */
 
 /* Corner-edge relationship: is corner n at the x = 0 or x = 1 point of edge n,
  * where x is that edge's own internal 1D coordinate? */

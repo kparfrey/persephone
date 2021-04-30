@@ -55,62 +55,60 @@ void write_mesh(Process &proc)
     {
         if (ig == proc.group)
         {
-        HighFive::File meshfile(filename, HighFive::File::ReadWrite,
-                                    HighFive::MPIOFileDriver(proc.group_comm, MPI_INFO_NULL));
-        //HighFive::File meshfile(filename, HighFive::File::Create,
-        //                            HighFive::MPIOFileDriver(MPI_COMM_WORLD, MPI_INFO_NULL));
+            HighFive::File meshfile(filename, HighFive::File::ReadWrite,
+                                        HighFive::MPIOFileDriver(proc.group_comm, MPI_INFO_NULL));
+            //HighFive::File meshfile(filename, HighFive::File::Create,
+            //                            HighFive::MPIOFileDriver(MPI_COMM_WORLD, MPI_INFO_NULL));
 
-        /* Create HDF5 groups for our Groups of processes */
-        meshfile.createGroup(groupstring);
+            /* Create HDF5 groups for our Groups of processes */
+            meshfile.createGroup(groupstring);
 
-        /* Solution point locations */
-        /* Assume every Process in a given Group is identical */
-        for (int i: dirs)
-        {
-            local_dims[i]  = size_t(eb.Ns_tot[i]);
-            global_dims[i] = size_t(local_dims[i] * proc.Nproc_group[i]);
-            offset[i]      = size_t(proc.group_idx[i] * local_dims[i]);
-        }
+            /* Solution point locations */
+            /* Assume every Process in a given Group is identical */
+            for (int i: dirs)
+            {
+                local_dims[i]  = size_t(eb.Ns_tot[i]);
+                global_dims[i] = size_t(local_dims[i] * proc.Nproc_group[i]);
+                offset[i]      = size_t(proc.group_idx[i] * local_dims[i]);
+            }
 
-        /* For now, just write all data as separate scalar variables */
-        constexpr int Nvec   = 1;
-        constexpr int Nscal  = 0;
-        constexpr int Nwrite = Nscal + 3*Nvec;
-        int count = 0; // For keeping track of the variable lists
+            /* For now, just write all data as separate scalar variables */
+            constexpr int Nvec   = 1;
+            constexpr int Nscal  = 0;
+            constexpr int Nwrite = Nscal + 3*Nvec;
+            int count = 0; // For keeping track of the variable lists
 
-        /* Automating the organization of vector components --- will want
-         * to break this into a function for use with data output too. */
-        string names[Nwrite];
-        real_t* datalist[Nwrite];
+            /* Automating the organization of vector components --- will want
+             * to break this into a function for use with data output too. */
+            string names[Nwrite];
+            real_t* datalist[Nwrite];
 
-        string group              = groupstring; // + "/coords";
-        string vecnames[Nvec]     = {"r"};
-        VectorField veclist[Nvec] = {eb.rs};
+            string group              = groupstring; // + "/coords";
+            string vecnames[Nvec]     = {"r"};
+            VectorField veclist[Nvec] = {eb.rs};
 
-        vector_organization(meshfile, Nvec, count, group, vecnames, veclist, names, datalist);
+            vector_organization(meshfile, Nvec, count, group, vecnames, veclist, names, datalist);
 
-        /* Allocate data buffer for repacking each component */
-        real_t* data = new real_t [local_dims[0]*local_dims[1]*local_dims[2]];
+            /* Allocate data buffer for repacking each component */
+            real_t* data = new real_t [local_dims[0]*local_dims[1]*local_dims[2]];
 
-        for (int i = 0; i < Nwrite; i++)
-        {
-            HighFive::DataSet dataset = meshfile.createDataSet<real_t>(names[i], 
-                                               HighFive::DataSpace(global_dims));
+            for (int i = 0; i < Nwrite; i++)
+            {
+                HighFive::DataSet dataset = meshfile.createDataSet<real_t>(names[i], 
+                                                   HighFive::DataSpace(global_dims));
 
-            /* Need to repack data from native ordering to elementblock-wise logical */
-            repack(datalist[i], data, eb);
+                /* Need to repack data from native ordering to elementblock-wise logical */
+                repack(datalist[i], data, eb);
 
-            /* Pass the repacked 1D array cast as a triple pointer */
-            write::message("Writing " + names[i]);
-            dataset.select(offset, local_dims).write((real_t***)data);
-        }
+                /* Pass the repacked 1D array cast as a triple pointer */
+                write::message("Writing " + names[i]);
+                dataset.select(offset, local_dims).write((real_t***)data);
+            }
 
-        delete[] data;
+            delete[] data;
 
 
-        /* Write edges */
-        if (proc.params.geometry == full_geometry)
-        {
+            /* Write edges */
             meshfile.createGroup(groupstring + "/edges");
 
             //for (int i = 0; i < 4; ++i) // for every edge index...
@@ -156,9 +154,7 @@ void write_mesh(Process &proc)
                 dataset.select(offset, local_dims).write((real_t***)edge_data);
 
                 delete[] edge_data;
-            }
-        } // closes: if using full_geometry
-
+            } // closes: loop over this element's 12 edges
         } // closes: if (ig == proc.Ngroup)
 
         MPI_Barrier(MPI_COMM_WORLD);

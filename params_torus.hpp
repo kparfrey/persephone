@@ -49,7 +49,7 @@ class ParamsTorus : public Params
                 real_t dt_write = 0.5,
                 TorusCentralPolygon central_polygon = square,
                 TorusModePack boundary_modes = boundary_modes_default)
-    : Params(equations, time_method, full_geometry, cfl, end_time, dt_write), 
+    : Params(equations, time_method, cfl, end_time, dt_write), 
       central_polygon(central_polygon), boundary_modes(boundary_modes)
     {
         for (int i=0; i<3; i++)

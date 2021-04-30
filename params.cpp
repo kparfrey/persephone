@@ -57,10 +57,7 @@ void Params::setup_process_generic(Process &proc)
     proc.Nfield   = proc.system_data->Nfield;
 
     /* Move inside a switch once more flux choices are defined */
-    if (geometry == simple_geometry) 
-        proc.F_numerical = new HLL_straight;
-    else
-        proc.F_numerical = new HLL;
+    proc.F_numerical = new HLL;
 
     proc.F_numerical->Nfield   = proc.Nfield;
     proc.F_numerical->U_to_P   = proc.U_to_P;   // Convenience pointers

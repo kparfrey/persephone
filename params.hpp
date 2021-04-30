@@ -16,9 +16,6 @@ class Params
     EqnSystem equations;
     BasicTimeMethod time_method;
 
-    GeometryClass geometry; // "simple" (straight edges + 90 degree angles, Cartesian only)
-                            // "full" (deformed Cartesian, or any mesh with deformed regions)
-
     /* Total quantities referring to whole domain */
     int Ngroup; 
     int Nproc_domain;
@@ -30,9 +27,9 @@ class Params
     real_t dt_write; // elapsed time between writing to disk
 
     /* Constructor */
-    Params(EqnSystem equations, BasicTimeMethod time_method, GeometryClass geometry,
+    Params(EqnSystem equations, BasicTimeMethod time_method, 
            real_t cfl, real_t end_time, real_t dt_write)
-          : equations(equations), time_method(time_method), geometry(geometry),
+          : equations(equations), time_method(time_method),
             cfl(cfl), end_time(end_time), dt_write(dt_write){}
  
 

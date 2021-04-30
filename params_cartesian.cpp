@@ -42,10 +42,6 @@ void ParamsCartesian::write_param_info()
 
     cout << endl;
 
-    cout << "Domain:   ";
-    for (int i: dirs) cout << domain_limits[i][0] << " --> " << domain_limits[i][1] << "   ";
-    cout << endl;
-
     cout << "***********************************************" << endl;
     cout << endl;
 
@@ -136,33 +132,8 @@ void ParamsCartesian::setup_elementblock(ElementBlock &elements, Process &proc)
     elements.Nelem_block = Nelem_proc; 
     elements.Nfield      = proc.Nfield;
 
-    elements.geometry = geometry;
-
-    if (geometry == simple_geometry)
-    {
-        /* Basic Cartesian shape --- 90 degree angles etc. 
-         * Move more of this to ElementBlock.set_physical_coords_simple().
-         * Corners not really needed in this simple case. */
-        real_t domain_length;
-        real_t length_per_proc[3];
-        for (int i: dirs) 
-        {
-            domain_length = domain_limits[i][1] - domain_limits[i][0];
-            length_per_proc[i] = domain_length / Nproc[i]; // Evenly tile
-        }
-
-        real_t proc_origin[3]; // Coordinates of corner 0
-        for (int i: dirs) 
-            proc_origin[i] = domain_limits[i][0] + proc.group_idx[i] * length_per_proc[i];
-
-        for (int i: icorners)
-            for (int j: dirs)
-                elements.corners[i][j] = proc_origin[j] + corner_coords[i][j]*length_per_proc[j];
-    }
-    else // full_geometry
-        elements.map = new BasicRect2D;
-        //elements.map = new WaveRect2D; //new QuarterAnnulusMap; // specify manually for now...
-
+    elements.map = new BasicRect2D;
+    //elements.map = new WaveRect2D; //new QuarterAnnulusMap; // specify manually for now...
 
     /* At this point all external information is present, and the internal
      * setup method can take over. */

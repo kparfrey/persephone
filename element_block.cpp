@@ -56,26 +56,15 @@ void ElementBlock::setup()
 
     set_computational_coords();
 
-    if (geometry == simple_geometry)
-    {
-        write::message("Setting up coords & metric in simple geometry");
-        set_physical_coords_simple();
-        metric.setup_simple(Nelem, Ns_block, Nf_dir_block, corners);
-    }
-    else if (geometry == full_geometry)
-    {
-        /* Set those parts of the edges which don't change
-         * element to element */
-        for (int i = 0; i < Nelem_block; ++i)
-            for (int j = 0; j < 12; ++j)
-                edges[i][j].setup(j, Nf, xf); // Use Lobatto points
+    /* Set those parts of the edges which don't change
+     * element to element */
+    for (int i = 0; i < Nelem_block; ++i)
+        for (int j = 0; j < 12; ++j)
+            edges[i][j].setup(j, Nf, xf); // Use Lobatto points
 
-        write::message("Setting up coords & metric in full geometry");
-        set_physical_coords_full();
-        metric.setup_full(*this);
-    }
-    else
-        write::error("Chosen GeometryClass not recognized.");
+    write::message("Setting up coords & metric");
+    set_physical_coords_full();
+    metric.setup_full(*this);
 
     fill_spectral_difference_matrices();
 
@@ -108,12 +97,9 @@ void ElementBlock::allocate_on_host()
         fluxDeriv2soln(i) = new real_t [matrix_size]; // Ns x Nf matrices
     }
 
-    if (geometry == full_geometry)
-    {
-        edges = new Edge* [Nelem_block];
-        for (int i = 0; i < Nelem_block; ++i)
-            edges[i] = new Edge [12]; // Each 3D element has 12 edges 
-    }
+    edges = new Edge* [Nelem_block];
+    for (int i = 0; i < Nelem_block; ++i)
+        edges[i] = new Edge [12]; // Each 3D element has 12 edges 
 
     return;
 }
@@ -121,18 +107,15 @@ void ElementBlock::allocate_on_host()
 
 void ElementBlock::free_setup_memory()
 {
-    if (geometry == full_geometry)
+    for (int i = 0; i < Nelem_block; ++i)
     {
-        for (int i = 0; i < Nelem_block; ++i)
-        {
-            for (int j = 0; j < 12; ++j)
-                edges[i][j].free();
+        for (int j = 0; j < 12; ++j)
+            edges[i][j].free();
 
-            delete[] edges[i];
-        }
-
-        delete[] edges;
+        delete[] edges[i];
     }
+
+    delete[] edges;
 
     return;
 }
@@ -175,6 +158,8 @@ void ElementBlock::set_computational_coords()
 
 
 /* Assume that everything is trivially Cartesian. */
+/* Save for a reminder of how to set the flux point locations */
+#if 0
 void ElementBlock::set_physical_coords_simple()
 {
     real_t dr_elemblock[3];
@@ -247,11 +232,10 @@ void ElementBlock::set_physical_coords_simple()
             }
         }
     }
-    
 
     return;
 }
-
+#endif // 0
 
 
 
