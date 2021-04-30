@@ -36,6 +36,10 @@ void Process::setup()
     write::message("Setting up process --- parameter-type-specific setup");
     params.setup_process(*this); // in params_cartesian.cpp etc.
     
+    /* Calculates the global maximum of the timestep_transform array, for use
+     * in calculating the maximum stable div-cleaning speed c_h in MHD */
+    MPI_Allreduce(&elements.timestep_transform_max, &tt_max_global, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+    
     return;
 }
 

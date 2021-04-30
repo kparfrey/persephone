@@ -83,10 +83,6 @@ void ParamsCartesian::setup_process(Process &proc)
 
     setup_elementblock(proc.elements, proc);
     
-    /* Move somewhere else so automatically called for all geometries */
-    MPI_Allreduce(&proc.elements.timestep_transform_max, &proc.tt_max_global, 
-                  1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
-    
     set_initial_state(proc.elements, equations);
 
     write::variable<real_t>("CFL", proc.cfl);
