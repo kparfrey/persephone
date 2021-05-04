@@ -24,6 +24,10 @@ namespace kernels
                        real_t  a1,     real_t               a2, 
                        real_t* result, const int N);
 
+    void multiply_by_scalar(      real_t* __restrict__ v, 
+                            const real_t               scalar,
+                            const int                  N);
+
     void soln_to_flux(const real_t* const __restrict__ matrix, 
                       const real_t* const __restrict__ U, 
                             real_t* const __restrict__ Uf, 

@@ -17,6 +17,7 @@ class SystemData
     real_t psi_damping_const; // Mignone & Tzeferacos's alpha, 0 < const < 1
     real_t psi_damping_rate;  // d psi/dt ... = - rate * psi
                               // p_d_rate = CFL * p_d_const / dt
+    real_t psi_damping_exp;   // exp(-damping_rate * dt)
 };
 
 

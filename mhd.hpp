@@ -50,7 +50,7 @@ class SystemData_mhd : public SystemData
         variables[8] = "psi";
 
         /* Divergence-cleaning parameters */
-        psi_damping_const = 0.001; // 0 < p_d_const < 1
+        psi_damping_const = 0.0; // 0 < p_d_const < 1
     }
 };
 

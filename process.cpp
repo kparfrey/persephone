@@ -86,6 +86,7 @@ void Process::time_advance()
     {
         system_data->c_h = cfl /(dt * tt_max_global);
         system_data->psi_damping_rate = cfl * system_data->psi_damping_const / dt;
+        //system_data->psi_damping_exp = std::exp(-cfl * system_data->psi_damping_const);
     }
     /********************************************/
 

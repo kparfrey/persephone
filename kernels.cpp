@@ -101,6 +101,16 @@ namespace kernels
     }
 
 
+    void multiply_by_scalar(      real_t* __restrict__ v, 
+                            const real_t               scalar,
+                            const int                  N)
+    {
+        for (int i = 0; i < N; ++i)
+            v[i] *= scalar;
+
+        return;
+    }
+
 
     void soln_to_flux(const real_t* const __restrict__ matrix, 
                       const real_t* const __restrict__ U, 
@@ -379,6 +389,7 @@ namespace kernels
             {
                 mem = mem_offset + (k * lb.Ns[1]  + j) * lb.Ns[0] + i;
 
+                //divF[mem] = chsq * divF[mem];
                 divF[mem] = chsq * divF[mem] + damping_rate * U[mem];
             }
         }

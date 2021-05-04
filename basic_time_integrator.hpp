@@ -3,6 +3,7 @@
 
 #include "process.hpp"
 #include "kernels.hpp"
+#include "physics_includes.hpp"
 
 
 /* Abstract base class for underlying fundamental time step functor */
@@ -32,6 +33,10 @@ class RK2_midpoint : public BasicTimeIntegrator
         proc.substep = 2;
         proc.find_divF(fields_mid, proc.time + 0.5*proc.dt, divF);
         kernels::add_2_vectors(eb.fields, divF, 1.0,     -proc.dt,  eb.fields, Ntot);
+
+        /* psi source term as a separate substep */
+        //kernels::multiply_by_scalar(&eb.fields[8*eb.Ns_block], 
+        //        proc.system_data->psi_damping_exp, eb.Ns_block);
 
         kernels::free(fields_mid);
         kernels::free(divF);
