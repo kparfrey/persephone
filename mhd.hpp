@@ -50,8 +50,7 @@ class SystemData_mhd : public SystemData
         variables[8] = "psi";
 
         /* Divergence-cleaning parameters */
-        c_h = 0.9; // wavespeed of hyperbolic part --- calc for each step
-        c_r = 1.0; // ratio of hyperbolic and parabolic effects
+        psi_damping_const = 0.001; // 0 < p_d_const < 1
     }
 };
 

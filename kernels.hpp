@@ -49,7 +49,7 @@ namespace kernels
     void scalar_field_source(      real_t* const __restrict__ divF,
                              const real_t* const __restrict__ U, 
                              const LengthBucket lb,
-                             const real_t c_h, const real_t c_p);
+                             const real_t c_h, const real_t damping_rate);
 
     void store_divB(const real_t* const __restrict__ divF,
                           real_t* const __restrict__ divB, 

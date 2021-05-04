@@ -354,7 +354,7 @@ namespace kernels
     void scalar_field_source(      real_t* const __restrict__ divF,
                              const real_t* const __restrict__ U, 
                              const LengthBucket lb,
-                             const real_t c_h, const real_t c_p)
+                             const real_t c_h, const real_t damping_rate)
     {
         int id_elem;
         int mem_offset;
@@ -363,7 +363,6 @@ namespace kernels
 
         const int field = 8; // psi is the 9th field
         const real_t chsq   = c_h*c_h;
-        const real_t factor = chsq/(c_p*c_p);
 
         field_offset = field * lb.Ns_block;
 
@@ -380,7 +379,7 @@ namespace kernels
             {
                 mem = mem_offset + (k * lb.Ns[1]  + j) * lb.Ns[0] + i;
 
-                divF[mem] = chsq * divF[mem] + factor * U[mem];
+                divF[mem] = chsq * divF[mem] + damping_rate * U[mem];
             }
         }
 

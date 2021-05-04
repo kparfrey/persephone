@@ -83,7 +83,10 @@ void Process::time_advance()
 
     /* Calculate maximum stable div-cleaning wavespeed */
     if (system == mhd)
+    {
         system_data->c_h = cfl /(dt * tt_max_global);
+        system_data->psi_damping_rate = cfl * system_data->psi_damping_const / dt;
+    }
     /********************************************/
 
     write::message("Starting time step " + std::to_string(step) + " --- t = " + std::to_string(time)
@@ -154,12 +157,10 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
      * splitting, and directly reduce psi in a subsequent substep. */
     if (system == mhd)
     {
-        const real_t c_p = std::sqrt(system_data->c_r * system_data->c_h);
-        
         if (is_output_step && (substep == 1))
             kernels::store_divB(divF, elements.divB, eb.lengths);
 
-        kernels::scalar_field_source(divF, U, eb.lengths, system_data->c_h, c_p);
+        kernels::scalar_field_source(divF, U, eb.lengths, system_data->c_h, system_data->psi_damping_rate);
     }
 
     for (int i: dirs)

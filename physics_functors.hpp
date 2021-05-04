@@ -13,7 +13,10 @@ class SystemData
     string* variables;
 
     /* Only used by MHD */
-    real_t c_h, c_r;
+    real_t c_h; // Wave/transport speed for hyperbolic part of div cleaning
+    real_t psi_damping_const; // Mignone & Tzeferacos's alpha, 0 < const < 1
+    real_t psi_damping_rate;  // d psi/dt ... = - rate * psi
+                              // p_d_rate = CFL * p_d_const / dt
 };
 
 
