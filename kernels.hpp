@@ -77,6 +77,13 @@ namespace kernels
                                  const LengthBucket               lb,
                                  const int                        dir);    
 
+    void external_interface_average(const FaceCommunicator           face,
+                                          real_t* const __restrict__ Uf,
+                                    const LengthBucket               lb);
+
+    void internal_interface_average(      real_t* const __restrict__ Uf,
+                                    const LengthBucket               lb,
+                                    const int                        dir);    
      
     /* Not a final kernel, obviously */
     real_t local_timestep(const real_t* const __restrict__ Uf,

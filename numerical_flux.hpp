@@ -83,6 +83,7 @@ class HLL : public NumericalFlux
             {
                 cp = cpos[i];
                 cn = cneg[i];
+
                 Fstar = (cp*FL[field][i] - cn*FR[field][i]
                                  + cp*cn*(UR[field] - UL[field])) / (cp - cn + TINY);
 

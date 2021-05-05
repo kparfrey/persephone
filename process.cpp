@@ -149,6 +149,27 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
         kernels::internal_numerical_flux(Uf(i), F(i), F_numerical,
                                          eb.metric.S[i], eb.metric.normal[i], eb.lengths, i);
 
+    /* For explicit diffusive terms, include calculation of the diffusive flux here
+     * and add to the advective fluxes before taking the flux deriv: F += F_diffusive */
+    if ((system == euler) && system_data->viscous)
+    {
+        VectorField  Fd; // Diffusive fluxes for all fields
+        for (int i: dirs)
+            Fd(i) = kernels::alloc_raw(Nfield * eb.Nf_dir_block[i]);
+
+        /* Average Uf on process-external faces. Data already present in FaceComm objects */
+        for (int i: ifaces)
+            kernels::external_interface_average(faces[i], Uf(faces[i].normal_dir), eb.lengths);
+
+        /* Average Uf on process-internal faces. */
+        for (int i: dirs)
+            kernels::internal_interface_average(Uf(i), eb.lengths, i);
+
+
+        for (int i: dirs)
+            kernels::free(Fd(i));
+    }
+
     for (int i: dirs)
         kernels::fluxDeriv_to_soln(eb.fluxDeriv2soln(i), F(i), dF(i), eb.lengths, i);
 

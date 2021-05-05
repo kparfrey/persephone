@@ -12,6 +12,10 @@ class SystemData
     int Nfield;
     string* variables;
 
+    /* Should be used by Euler and MHD */
+    bool viscous;
+    real_t viscosity; // dynamic viscosity ("mu")
+
     /* Only used by MHD */
     real_t c_h; // Wave/transport speed for hyperbolic part of div cleaning
     real_t psi_damping_const; // Mignone & Tzeferacos's alpha, 0 < const < 1

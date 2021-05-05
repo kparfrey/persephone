@@ -745,6 +745,118 @@ namespace kernels
     }
 
 
+    /* Average the conserved variables on process-external interfaces.
+     * Only required when have diffusive terms. */
+    void external_interface_average(const FaceCommunicator           face,
+                                          real_t* const __restrict__ Uf,
+                                    const LengthBucket               lb)
+    {
+        const int dir  = face.normal_dir;
+        const int dir1 = dir_plus_one[dir]; 
+        const int dir2 = dir_plus_two[dir];
+        int id_elem, id_elem_face;
+        int mem_offset, mem_offset_face;
+        int mem, mem_face, mem_face_field;
+
+        const int Nf0 = lb.Nf[dir];
+        const int Ns1 = lb.Ns[dir1];
+        const int Nf_tot = lb.Nf_dir_block[dir]; //Total # of this-dir flux points in the block
+
+        /* To apply external boundary conditions, set the incoming neighbour data on
+         * external faces such that the fluxes are as desired. */
+        /** Will need to take account of this ... 
+        if (face.external_face)
+            for (int field = 0; field < lb.Nfield; ++field)
+                for (int i = 0; i < face.Ntot; ++i)
+                    face.neighbour_data[field*face.Ntot + i] = (*face.BC)(field, i, face.my_data);
+         **/
+
+        
+        for (int ne2 = 0; ne2 < face.Nelem[1]; ++ne2)
+        for (int ne1 = 0; ne1 < face.Nelem[0]; ++ne1)
+        {
+            id_elem_face    = (ne2 * lb.Nelem[dir1]) + ne1;
+            mem_offset_face = id_elem_face * lb.Ns[dir2] * lb.Ns[dir1];
+
+            id_elem    = (ne2*lb.Nelem[dir1] + ne1)*lb.Nelem[dir] + face.ne0;
+            mem_offset = id_elem * lb.Nf_dir[dir];
+
+            for (int n2 = 0; n2 < face.N[1]; ++n2)
+            for (int n1 = 0; n1 < face.N[0]; ++n1)
+            {
+                /* Memory location on the face, for the zeroth field */
+                mem_face = mem_offset_face +  n2 * Ns1 + n1;
+                /* Memory location in the full 3D flux array, zeroth field */
+                mem      = mem_offset + (n2 * Ns1 + n1) * Nf0 + face.n0;
+                
+                for (int field = 0; field < lb.Nfield; ++field)
+                {
+                    mem_face_field = mem_face + field * face.Ntot;
+                    Uf[mem + field * Nf_tot] = 0.5 * (face.my_data[mem_face_field] +
+                                                      face.neighbour_data[mem_face_field]);
+                }
+            }
+        }
+        
+        return;
+    }
+
+
+    /* Average the conserved variables on process-internal interfaces.
+     * Only required when have diffusive terms. */
+    void internal_interface_average(      real_t* const __restrict__ Uf,
+                                    const LengthBucket               lb,
+                                    const int                        dir)
+    {
+        const int Nif = lb.Nelem[dir] - 1; // No. of surfaces of internal faces
+                                           // normal to direction dir
+        const int dir1 = dir_plus_one[dir];
+        const int dir2 = dir_plus_two[dir];
+
+        const int Nf0 = lb.Nf[dir];
+        const int Ns1 = lb.Ns[dir1];
+
+        /* Total # of this-direction flux points in the block */
+        const int Nf_tot = lb.Nf_dir_block[dir]; 
+
+        //int ne0L, ne0R; //Element indices in the normal dir on either side of face
+        int id_elem_L, id_elem_R;
+        int mem_offset_L, mem_offset_R;
+        int mem_L, mem_R, mem_L0, mem_R0;
+
+        for (int ne2 = 0; ne2 < lb.Nelem[dir2]; ++ne2)
+        for (int ne1 = 0; ne1 < lb.Nelem[dir1]; ++ne1)
+        for (int ne0 = 0; ne0 < Nif; ++ne0)
+        {
+            /* For each element, do the face between this one and the one to its
+             * right, ie at greater dir-coord and element index in this direction */
+            id_elem_L = (ne2*lb.Nelem[dir1] + ne1)*lb.Nelem[dir] + ne0;
+            id_elem_R = id_elem_L + 1;
+
+            mem_offset_L = id_elem_L * lb.Nf_dir[dir];
+            mem_offset_R = id_elem_R * lb.Nf_dir[dir];
+        
+            for (int n2 = 0; n2 < lb.Ns[dir2]; ++n2)
+            for (int n1 = 0; n1 < lb.Ns[dir1]; ++n1)
+            {
+                /* Memory locations for the 0th field variable */
+                mem_L0 = mem_offset_L + (n2 * Ns1 + n1) * Nf0 + Nf0 - 1;
+                mem_R0 = mem_offset_R + (n2 * Ns1 + n1) * Nf0 + 0;
+
+                for (int field = 0; field < lb.Nfield; ++field)
+                {
+                    mem_L = mem_L0 + field * Nf_tot;
+                    mem_R = mem_R0 + field * Nf_tot;
+
+                    Uf[mem_L] = 0.5 * (Uf[mem_L] + Uf[mem_R]);
+                    Uf[mem_R] = Uf[mem_L];
+                }
+            }
+        }
+
+        return;
+    }
+
     /* Temporary standalone method. Should reintegrate into other operations. */
     /* Returns the timestep restriction along this reference direction.       */
     real_t local_timestep(const real_t* const __restrict__ Uf,
