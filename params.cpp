@@ -42,6 +42,7 @@ void Params::setup_process_generic(Process &proc)
             proc.U_to_P   = new UtoP_euler;
             proc.c_from_P = new WaveSpeeds_euler;
             proc.F_from_P = new Fluxes_euler;
+            proc.F_diff   = new DiffusiveFluxes_euler;
             break;
         case mhd:
             proc.system_data = new SystemData_mhd;

@@ -14,6 +14,7 @@ class ConservedToPrimitive;
 class WaveSpeedsFromPrimitive;
 class FluxesFromPrimitive;
 class NumericalFlux;
+class DiffusiveFluxes;
 
 class Process
 {
@@ -70,6 +71,7 @@ class Process
     WaveSpeedsFromPrimitive* c_from_P;
     FluxesFromPrimitive*     F_from_P;
     NumericalFlux*           F_numerical;
+    DiffusiveFluxes*         F_diff;
 
 
     /* Methods */

@@ -5,6 +5,7 @@
 class ConservedToPrimitive;
 class FluxesFromPrimitive;
 class NumericalFlux;
+class DiffusiveFluxes;
 
 class WaveSpeedsFromPrimitive;
 
@@ -97,10 +98,14 @@ namespace kernels
                               const VectorField dxdr[3],
                               const LengthBucket lb);
 
-    void viscous_flux(const VectorField                dU,
-                            real_t* const __restrict__ Fvisc, 
-                      const real_t viscosity,
-                      const LengthBucket lb, const int dir);
+    void add_diffusive_flux(const real_t* const __restrict__ Uf,
+                            const VectorField                dUf,
+                                  real_t* const __restrict__ F,
+                            const DiffusiveFluxes*           F_diff,
+                            const real_t* const __restrict__ args,
+                            const VectorField                S,
+                            const LengthBucket               lb,
+                            const int                        dir);
 
 #if 0
     void fill_velocity_vector(      VectorField Vf,

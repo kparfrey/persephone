@@ -130,7 +130,7 @@ class DiffusiveFluxes_euler : public DiffusiveFluxes
     enum primitive {density, v0  , v1  , v2,   pressure  };
 
     ACCEL_DECORATOR
-    inline virtual void operator()(const real_t* const __restrict__ P, 
+    inline virtual void operator()(const real_t* const __restrict__ U, 
                                    const real_t (* const __restrict__ dU)[3],
                                          real_t (*__restrict__ F)[3],
                                    const real_t* const __restrict__ args) const 
@@ -138,14 +138,18 @@ class DiffusiveFluxes_euler : public DiffusiveFluxes
         const real_t mu = args[0]; // dynamic viscosity
         const real_t lambda = - (2.0/3.0) * mu; // bulk viscosity
         
+        real_t v[3];
         real_t tau[3][3];
         real_t dv[3][3]; // dv[component][deriv dir]
         real_t divv;
 
+        for (int d: dirs)
+            v[d] = U[mom0+d] / U[Density];
+
         for (int comp: dirs)
             for (int deriv: dirs)
-                dv[comp][deriv] = (dU[mom0+comp][deriv] - P[v0+comp]*dU[Density][deriv])
-                                                                             / P[density];
+                dv[comp][deriv] = (dU[mom0+comp][deriv] - v[comp]*dU[Density][deriv])
+                                                                             / U[Density];
         divv = dv[0][0] + dv[1][1] + dv[2][2]; // Assuming Cartesian...
 
         for (int d: dirs)
@@ -162,7 +166,7 @@ class DiffusiveFluxes_euler : public DiffusiveFluxes
             for (int i: dirs)
                 F[mom0+i][d] = tau[d][i];
 
-            F[tot_energy][d] = P[v0]*tau[0][d] + P[v1]*tau[1][d] + P[v2]*tau[2][d];
+            F[tot_energy][d] = v[0]*tau[0][d] + v[1]*tau[1][d] + v[2]*tau[2][d];
         }
 
         return;

@@ -38,6 +38,9 @@ namespace kernels
     }
 
    
+    /* This function adds to F (rather than assigns to F) so that can call
+     * the same function when adding the diffusive fluxes. Need to make 
+     * sure that F is always initialised to zero at the start of each substep */
     inline static void fluxes_phys_to_ref(const real_t      (*Fphys)[3],
                                                 real_t* __restrict__ F,
                                           const VectorField          S,
@@ -53,7 +56,7 @@ namespace kernels
             for (int d: dirs) 
                 lsum += S(d,memory_loc) * Fphys[field][d];
 
-            F[memory_loc + field * Nf_tot] = lsum; // Save reference fluxes
+            F[memory_loc + field * Nf_tot] += lsum; // Save into reference fluxes
         }
 
         return;
@@ -277,6 +280,7 @@ namespace kernels
     }
 
 
+    /* Think I can replace with a single for loop */
     void bulk_fluxes(const real_t* const __restrict__ Uf,
                            real_t* const __restrict__ F ,
                      const VectorField                S ,
@@ -907,39 +911,52 @@ namespace kernels
         return;
     }
 
-
-    /* This needs to be the physical-space flux, so can be averaged
-     * at element interfaces --- don't transform to ref-space */
-    void viscous_flux(const VectorField                dU,
-                            real_t* const __restrict__ Fvisc, 
-                      const real_t viscosity,
-                      const LengthBucket lb, const int dir)
+    
+    void add_diffusive_flux(const real_t* const __restrict__ Uf,
+                            const VectorField                dUf,
+                                  real_t* const __restrict__ F,
+                            const DiffusiveFluxes*           F_diff,
+                            const real_t* const __restrict__ args,
+                            const VectorField                S,
+                            const LengthBucket               lb,
+                            const int                        dir)
     {
-        enum conserved {Density, mom0, mom1, mom2, tot_energy};
-        const int N = lb.Nf_dir_block[dir]; // Number of flux points in the block in this dir
-        //const int dir1 = dir_plus_one[dir];
-        //const int dir2 = dir_plus_two[dir];
-        real_t div_v;
-        int i0, i1, i2; // indices for the mem locations for the velocities in the three directions
+        int N = lb.Nf_dir_block[dir]; //Total # of this-dir flux points in the block
 
-        //real_t lambda = - (2.0/3.0)*viscosity; // bulk viscosity via Stokes hypothesis
+        /* Conserved vars, primitive vars, and physical-direction fluxes
+         * at a single point */
+        real_t* Up       = new real_t [lb.Nfield];
+        real_t (*dUp)[3] = new real_t [lb.Nfield][3]; 
+        real_t (*F_diff_p)[3] = new real_t [lb.Nfield][3]; // pointer to an array
 
-        /* Iterate over all flux points */
-        for (int i = 0; i < N; ++i)
+
+        for (int i = 0; i < N; ++i) // i = mem loc for zeroth field
         {
-            i0 = i + mom0*N;
-            i1 = i + mom1*N;
-            i2 = i + mom2*N;
+            /* Load all field variables at this location into
+             * the Up array. */
+            for (int field = 0; field < lb.Nfield; ++field)
+            {
+                Up[field] = Uf[i + field * N];
+                
+                for (int d: dirs)
+                    dUp[field][d] = dUf(d, i + field*N);
+            }
 
-            div_v = dU(0, i + mom0*N);
+            (*F_diff)(Up, dUp, F_diff_p, args);
 
-            /* tau_{ii} component */
-            //Fvisc[i + (mom0+dir)*N] = ;
-
+            /* Transform from physical to reference-space fluxes
+             * for all fields */
+            /* Need to modify so this function adds to F rather than assigns */
+            fluxes_phys_to_ref(F_diff_p, F, S, i, lb.Nfield, N);
         }
+
+        delete[] Up;
+        delete[] dUp;
+        delete[] F_diff_p;
 
         return;
     }
+
 
 
 #if 0

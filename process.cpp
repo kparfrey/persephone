@@ -122,7 +122,7 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
     for (int i: dirs)
     {
         Uf(i) = kernels::alloc_raw(Nfield * eb.Nf_dir_block[i]);
-         F(i) = kernels::alloc_raw(Nfield * eb.Nf_dir_block[i]);
+         F(i) = kernels::alloc(Nfield * eb.Nf_dir_block[i]); // Need to zero-initialise
         dF(i) = kernels::alloc_raw(Nfield * eb.Ns_block);
     }
     
