@@ -26,12 +26,18 @@ class Metric
 
     public:
     /* On solution points... */
-    ScalarField Jrdetg; // |J| sqrt{det(g)}
+    ScalarField Jrdetg;  // |J| sqrt{det(g)}
+    VectorField dxdr[3]; // dxdr[i](j,...) = d x^i / d r^j 
+                         // Only used to find grad(U) for diffusive flux
+    //ScalarField J;     // |J| : only used for diffusive fluxes
 
 
     /* ...and on flux points */
     VectorField S[3];  // Physical->Reference vector transform
-                       // S[i] = Jrdetg d ref^i/d phys^j 
+                       // Has rdetg because used to calculate divF
+                       // S[i] = |J| rdetg d ref^i/d phys^j 
+    //VectorField Sg[3]; // Only used for finding the gradient for the
+    //                   // diffusive fluxes: Sg = S / rdetg
 
     VectorField timestep_transform[3]; // Transforms physical v^i to 
                                        // ref v^j and includes dx^j 

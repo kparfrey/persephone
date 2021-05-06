@@ -121,4 +121,51 @@ class Fluxes_euler : public FluxesFromPrimitive
         return;
     }
 };
+
+
+class DiffusiveFluxes_euler : public DiffusiveFluxes
+{
+    public:
+    enum conserved {Density, mom0, mom1, mom2, tot_energy};
+    enum primitive {density, v0  , v1  , v2,   pressure  };
+
+    ACCEL_DECORATOR
+    inline virtual void operator()(const real_t* const __restrict__ P, 
+                                   const real_t (* const __restrict__ dU)[3],
+                                         real_t (*__restrict__ F)[3],
+                                   const real_t* const __restrict__ args) const 
+    {
+        const real_t mu = args[0]; // dynamic viscosity
+        const real_t lambda = - (2.0/3.0) * mu; // bulk viscosity
+        
+        real_t tau[3][3];
+        real_t dv[3][3]; // dv[component][deriv dir]
+        real_t divv;
+
+        for (int comp: dirs)
+            for (int deriv: dirs)
+                dv[comp][deriv] = (dU[mom0+comp][deriv] - P[v0+comp]*dU[Density][deriv])
+                                                                             / P[density];
+        divv = dv[0][0] + dv[1][1] + dv[2][2]; // Assuming Cartesian...
+
+        for (int d: dirs)
+            tau[d][d] = 2*mu*dv[d][d] + lambda*divv;
+
+        tau[0][1] = tau[1][0] = mu * (dv[0][1] + dv[1][0]);
+        tau[0][2] = tau[2][0] = mu * (dv[0][2] + dv[2][0]);
+        tau[1][2] = tau[2][1] = mu * (dv[1][2] + dv[2][1]);
+
+        for (int d: dirs) // flux direction
+        {
+            F[Density][d] = 0.0;
+
+            for (int i: dirs)
+                F[mom0+i][d] = tau[d][i];
+
+            F[tot_energy][d] = P[v0]*tau[0][d] + P[v1]*tau[1][d] + P[v2]*tau[2][d];
+        }
+
+        return;
+    }
+};
 #endif

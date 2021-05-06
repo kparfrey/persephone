@@ -101,6 +101,22 @@ namespace kernels
     }
 
 
+    /* Element-by-element product along two arrays, giving a third
+     * array of the same size. */
+#if 0
+    void product_2_vectors(const real_t* const __restrict__ v1,
+                           const real_t* const __restrict__ v2,
+                                 real_t* const __restrict__ result,
+                           const int N)
+    {
+        for (int i = 0; i < N; ++i)
+            result[i] = v1[i] * v2[i];
+
+        return;
+    }
+#endif
+
+
     void multiply_by_scalar(      real_t* __restrict__ v, 
                             const real_t               scalar,
                             const int                  N)
@@ -747,7 +763,7 @@ namespace kernels
     }
 
 
-    /* Average the conserved variables on process-external interfaces.
+    /* Average the conserved variables or their derivatives on process-external interfaces.
      * Only required when have diffusive terms. */
     void external_interface_average(const FaceCommunicator           face,
                                           real_t* const __restrict__ Uf,
@@ -804,7 +820,7 @@ namespace kernels
     }
 
 
-    /* Average the conserved variables on process-internal interfaces.
+    /* Average the conserved variables or their derivatives on process-internal interfaces.
      * Only required when have diffusive terms. */
     void internal_interface_average(      real_t* const __restrict__ Uf,
                                     const LengthBucket               lb,
@@ -859,6 +875,38 @@ namespace kernels
         return;
     }
 
+    
+    void gradient_ref_to_phys(const VectorField dU_ref,
+                                    VectorField dU_phys,
+                              const VectorField dxdr[3],
+                              const LengthBucket lb)
+    {
+        int field_offset;
+        int mem;
+        real_t lsum;
+
+        for (int field = 0; field < lb.Nfield; ++field)
+        {
+            field_offset = field * lb.Ns_block;
+
+            for (int i = 0; i < lb.Ns_block; ++i)
+            {
+                mem = i + field_offset;
+
+                for (int phys: dirs)
+                {
+                    lsum = 0.0;
+                    for (int ref: dirs)
+                        lsum += dxdr[ref](phys, i) * dU_ref(ref, mem);
+
+                    dU_phys(phys, mem) = lsum;
+                }
+            }
+        }
+
+        return;
+    }
+
 
     /* This needs to be the physical-space flux, so can be averaged
      * at element interfaces --- don't transform to ref-space */
@@ -869,12 +917,12 @@ namespace kernels
     {
         enum conserved {Density, mom0, mom1, mom2, tot_energy};
         const int N = lb.Nf_dir_block[dir]; // Number of flux points in the block in this dir
-        const int dir1 = dir_plus_one[dir];
-        const int dir2 = dir_plus_two[dir];
+        //const int dir1 = dir_plus_one[dir];
+        //const int dir2 = dir_plus_two[dir];
         real_t div_v;
         int i0, i1, i2; // indices for the mem locations for the velocities in the three directions
 
-        real_t lambda = - (2.0/3.0)*viscosity; // bulk viscosity via Stokes hypothesis
+        //real_t lambda = - (2.0/3.0)*viscosity; // bulk viscosity via Stokes hypothesis
 
         /* Iterate over all flux points */
         for (int i = 0; i < N; ++i)
@@ -883,7 +931,7 @@ namespace kernels
             i1 = i + mom1*N;
             i2 = i + mom2*N;
 
-            div_v = dU(0, i + mom0*N
+            div_v = dU(0, i + mom0*N);
 
             /* tau_{ii} component */
             //Fvisc[i + (mom0+dir)*N] = ;
@@ -894,6 +942,7 @@ namespace kernels
     }
 
 
+#if 0
     void fill_velocity_vector(      VectorField Vf,
                               const VectorField Uf,
                               const LengthBucket lb)
@@ -914,6 +963,7 @@ namespace kernels
 
         return;
     }
+#endif
 
 
     /* Temporary standalone method. Should reintegrate into other operations. */

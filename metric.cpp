@@ -27,6 +27,11 @@ void Metric::allocate_on_host(const int Ns, const int Nf[3])
      ***/
 
     Jrdetg = new real_t [Ns]();
+    //J      = new real_t [Ns](); // Only used for diffusive terms
+    
+    for(int dref: dirs)
+        for(int dphys: dirs)
+            dxdr[dref](dphys) = new real_t [Ns]();
 
 
     /* Flux points */
@@ -46,7 +51,8 @@ void Metric::allocate_on_host(const int Ns, const int Nf[3])
 
         for (int j: dirs)
         {
-            S[d](j) = new real_t [Nf[d]]();
+            S[d](j)  = new real_t [Nf[d]]();
+            //Sg[d](j) = new real_t [Nf[d]](); // Only for diffusive terms
             timestep_transform[d](j) = new real_t [Nf[d]]();
         }
 
@@ -152,6 +158,15 @@ void Metric::setup_full(ElementBlock& eb)
             detJ = std::abs(J.det);
 
             Jrdetg(mem_loc) = detJ * rdetg;
+            //J(mem_loc)      = detJ;
+
+            /* Used to find grad(U) for diffusive terms */
+            J.find_inverse();
+            
+            /* J.inv[ref][phys] */
+            for (int dref: dirs)
+                for (int dphys: dirs)
+                    dxdr[dref](dphys,mem_loc) = J.inv[dref][dphys];
         }
     }
 
@@ -242,7 +257,10 @@ void Metric::setup_full(ElementBlock& eb)
 
                 /* Assume J.inv[ref][phys]... */
                 for (int dphys: dirs)
-                    S[d](dphys,mem_loc) = detJ * rdetg * J.inv[d][dphys];
+                {
+                    S[d](dphys,mem_loc)  = detJ * rdetg * J.inv[d][dphys];
+                    //Sg[d](dphys,mem_loc) = detJ *         J.inv[d][dphys];
+                }
                 
                 /* Calculate helper array for finding timestep limit */
                 /* Double check that xf[0] = 0, xf[-1] = 1 */

@@ -24,6 +24,13 @@ namespace kernels
                        real_t  a1,     real_t               a2, 
                        real_t* result, const int N);
 
+#if 0
+    void product_2_vectors(const real_t* const __restrict__ v1,
+                           const real_t* const __restrict__ v2,
+                                 real_t* const __restrict__ result,
+                           const int N);
+#endif
+
     void multiply_by_scalar(      real_t* __restrict__ v, 
                             const real_t               scalar,
                             const int                  N);
@@ -85,14 +92,21 @@ namespace kernels
                                     const LengthBucket               lb,
                                     const int                        dir);    
      
+    void gradient_ref_to_phys(const VectorField dU_ref,
+                                    VectorField dU_phys,
+                              const VectorField dxdr[3],
+                              const LengthBucket lb);
+
     void viscous_flux(const VectorField                dU,
                             real_t* const __restrict__ Fvisc, 
                       const real_t viscosity,
                       const LengthBucket lb, const int dir);
 
+#if 0
     void fill_velocity_vector(      VectorField Vf,
                               const VectorField Uf,
                               const LengthBucket lb);    
+#endif
     
     /* Not a final kernel, obviously */
     real_t local_timestep(const real_t* const __restrict__ Uf,

@@ -59,4 +59,15 @@ class FluxesFromPrimitive
     inline virtual void operator()(const real_t* const __restrict__ P, 
                                          real_t (*__restrict__ F)[3]) const = 0;
 };
+
+
+class DiffusiveFluxes
+{
+    public:
+    ACCEL_DECORATOR
+    inline virtual void operator()(const real_t* const __restrict__ P, 
+                                   const real_t (* const __restrict__ dU)[3],
+                                         real_t (*__restrict__ F)[3],
+                                   const real_t* const __restrict__ args) const = 0;
+};
 #endif
