@@ -376,6 +376,7 @@ namespace kernels
 
         field_offset = field * lb.Ns_block;
 
+        /* Replace by a single loop from 0 to Ns_block */
         for (int ke = 0; ke < lb.Nelem[2]; ++ke)
         for (int je = 0; je < lb.Nelem[1]; ++je)
         for (int ie = 0; ie < lb.Nelem[0]; ++ie)
@@ -411,6 +412,7 @@ namespace kernels
 
         field_offset = field * lb.Ns_block;
 
+        /* Replace with single loop --- don't need to break into elements */
         for (int ke = 0; ke < lb.Nelem[2]; ++ke)
         for (int je = 0; je < lb.Nelem[1]; ++je)
         for (int ie = 0; ie < lb.Nelem[0]; ++ie)
@@ -856,6 +858,63 @@ namespace kernels
 
         return;
     }
+
+
+    /* This needs to be the physical-space flux, so can be averaged
+     * at element interfaces --- don't transform to ref-space */
+    void viscous_flux(const VectorField                dU,
+                            real_t* const __restrict__ Fvisc, 
+                      const real_t viscosity,
+                      const LengthBucket lb, const int dir)
+    {
+        enum conserved {Density, mom0, mom1, mom2, tot_energy};
+        const int N = lb.Nf_dir_block[dir]; // Number of flux points in the block in this dir
+        const int dir1 = dir_plus_one[dir];
+        const int dir2 = dir_plus_two[dir];
+        real_t div_v;
+        int i0, i1, i2; // indices for the mem locations for the velocities in the three directions
+
+        real_t lambda = - (2.0/3.0)*viscosity; // bulk viscosity via Stokes hypothesis
+
+        /* Iterate over all flux points */
+        for (int i = 0; i < N; ++i)
+        {
+            i0 = i + mom0*N;
+            i1 = i + mom1*N;
+            i2 = i + mom2*N;
+
+            div_v = dU(0, i + mom0*N
+
+            /* tau_{ii} component */
+            //Fvisc[i + (mom0+dir)*N] = ;
+
+        }
+
+        return;
+    }
+
+
+    void fill_velocity_vector(      VectorField Vf,
+                              const VectorField Uf,
+                              const LengthBucket lb)
+    {
+        int N; // No. flux points in the block for a given dir
+        real_t density;
+
+        for (int d: dirs) // Fill for all 3 flux-point blocks
+        {
+           N = lb.Nf_dir_block[d];
+           for (int i=0; i<N; ++i) // For each flux point
+           {
+               density = Uf(d,i); // Density is the zeroth field
+               for (int vcomp=0; vcomp < 3; ++vcomp) // for each velocity component...
+                   Vf(d,i + vcomp*N) = Uf(d,i + (vcomp+1)*N) / density; // mom0 is 1st field
+           }
+        }
+
+        return;
+    }
+
 
     /* Temporary standalone method. Should reintegrate into other operations. */
     /* Returns the timestep restriction along this reference direction.       */

@@ -153,22 +153,68 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
      * and add to the advective fluxes before taking the flux deriv: F += F_diffusive */
     if ((system == euler) && system_data->viscous)
     {
-        VectorField  Fd; // Diffusive fluxes for all fields
-        for (int i: dirs)
-            Fd(i) = kernels::alloc_raw(Nfield * eb.Nf_dir_block[i]);
+        VectorField Fd;  // Diffusive fluxes for all fields
+        VectorField Vf;  // Vector field used to construct fluxes, at flux points
+        VectorField dV;  // Derivatives of V at the solution points
+        VectorField dVf; // Derivatives of V at the flux points
 
-        /* Average Uf on process-external faces. Data already present in FaceComm objects */
+        /* Most operations will be only over the 3 components of the vector field 
+         * being used (velocity or B), rather than over all the fields. Temporarily
+         * reset Nfields here so don't need to change the kernels. */
+        eb.lengths.Nfield = 3;
+
+        for (int i: dirs)
+        {
+            Fd(i) = kernels::alloc(Nfield * eb.Nf_dir_block[i]); // Make sure to zero-initialise
+            Vf(i) = kernels::alloc_raw(3 * eb.Nf_dir_block[i]); // Just one 3-vector for now
+            dV(i) = kernels::alloc_raw(3 * eb.Ns_block);
+        }
+
+        kernels::fill_velocity_vector(Vf, Uf, eb.lengths);
         for (int i: ifaces)
-            kernels::external_interface_average(faces[i], Uf(faces[i].normal_dir), eb.lengths);
+            kernels::fill_face_data(Vf, faces[i], eb.lengths);
+        exchange_boundary_data(); // Does all fields, not 3...
 
-        /* Average Uf on process-internal faces. */
+        /* Average Vf on process-external faces. */
+        for (int i: ifaces)
+            kernels::external_interface_average(faces[i], Vf(faces[i].normal_dir), eb.lengths);
+
+        /* Average Vf on process-internal faces. */
         for (int i: dirs)
-            kernels::internal_interface_average(Uf(i), eb.lengths, i);
+            kernels::internal_interface_average(Vf(i), eb.lengths, i);
 
+        for (int i: dirs) // i = derivative direction
+        {
+            // Uf(i): the U at the i-direction's flux points
+            // dU(i): gradients of the U in the i direction, at the solution points
+            kernels::fluxDeriv_to_soln(eb.fluxDeriv2soln(i), Uf(i), dU(i), eb.lengths, i);
+        }
+
+        for (int j: dirs) // j sets the flux-point block
+        {
+            /* dUf(i) is the i-direction derivative of Uf in this block */
+            for (int i: dirs)
+                dUf(i) = kernels::alloc_raw(Nfield * eb.Nf_dir_block[j]);
+
+            for (int i: dirs) // i = derivative direction
+                kernels::soln_to_flux(eb.soln2flux(j), dU(i), dUf(i), eb.lengths, j);
+
+            kernels::viscous_flux(dUf, Fd(j), system_data->viscosity, eb.lengths, j);
+
+            for (int i: dirs)
+                kernels::free(dUf(i));
+        }
 
         for (int i: dirs)
+        {
+            kernels::free(Vf(i));
             kernels::free(Fd(i));
-    }
+            kernels::free(dV(i));
+        }
+        
+        /* Set back to true number of fields */
+        eb.lengths.Nfield = Nfield;
+    } // end of viscous section
 
     for (int i: dirs)
         kernels::fluxDeriv_to_soln(eb.fluxDeriv2soln(i), F(i), dF(i), eb.lengths, i);

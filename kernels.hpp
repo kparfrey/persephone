@@ -85,6 +85,15 @@ namespace kernels
                                     const LengthBucket               lb,
                                     const int                        dir);    
      
+    void viscous_flux(const VectorField                dU,
+                            real_t* const __restrict__ Fvisc, 
+                      const real_t viscosity,
+                      const LengthBucket lb, const int dir);
+
+    void fill_velocity_vector(      VectorField Vf,
+                              const VectorField Uf,
+                              const LengthBucket lb);    
+    
     /* Not a final kernel, obviously */
     real_t local_timestep(const real_t* const __restrict__ Uf,
                       const VectorField timestep_transform,
