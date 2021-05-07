@@ -100,6 +100,9 @@ void Metric::setup_full(ElementBlock& eb)
     real_t tt;
     eb.timestep_transform_max = 0.0;
 
+    eb.l_min = 1e9;
+    real_t lhere;
+
     /* Face normals only used in full geometry, allocate here */
     for (int dir: dirs)
     {
@@ -287,7 +290,12 @@ void Metric::setup_full(ElementBlock& eb)
                         eb.timestep_transform_max = tt;
                 }
 
-            }
+                /* Assume Cartesian geometry for now... */
+                lhere = std::sqrt(dx*dx*(drdx[d][0]*drdx[d][0] + drdx[d][1]*drdx[d][1] + drdx[d][2]*drdx[d][2]));
+                if (lhere < eb.l_min)
+                    eb.l_min = lhere;
+
+            } // end loop over every flux point
 
             /* This needs to be tidied and rationalised... */
             /* Face normals in this transform direction for this element  */

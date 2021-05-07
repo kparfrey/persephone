@@ -62,6 +62,7 @@ class Process
                  // RK3 will be 1, 2, or 3
     
     real_t tt_max_global;  // Global maximum of timestep transform, for finding c_h 
+    real_t l_min_global;   // Global minimum of length spacing along a flux line
 
     BasicTimeIntegrator*     time_integrator;
 

@@ -14,11 +14,11 @@ static BasicTimeMethod time_method = rk2_midpoint;
 
 static int Nproc[3] = {2,2,1};
 static int Nelem[3] = {3,3,1};
-static int Ns[3]    = {8,8,1};
+static int Ns[3]    = {12,8,1};
 
-static real_t cfl      = 0.1; // 0.6 should be stable
+static real_t cfl      = 0.5; // 0.6 should be stable
 static real_t end_time = 30.0;
-static real_t dt_write = 0.25;
+static real_t dt_write = 0.5;
 
 static ParamsCartesian active_parameters(equations, time_method, 
                                          Nproc, Nelem, Ns,
