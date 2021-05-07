@@ -132,8 +132,8 @@ void ParamsCartesian::setup_elementblock(ElementBlock &elements, Process &proc)
     elements.Nelem_block = Nelem_proc; 
     elements.Nfield      = proc.Nfield;
 
-    //elements.map = new BasicRect2D;
-    elements.map = new WaveRect2D; //new QuarterAnnulusMap; // specify manually for now...
+    elements.map = new BasicRect2D;
+    //elements.map = new WaveRect2D; //new QuarterAnnulusMap; // specify manually for now...
 
     /* At this point all external information is present, and the internal
      * setup method can take over. */

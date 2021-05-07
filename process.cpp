@@ -68,6 +68,8 @@ void Process::time_advance()
     ElementBlock& eb = elements;
     real_t dtmin_dir[3];
     real_t dtmin;
+    real_t dtmin_diff, dt_ratio;
+
     for (int d: dirs)
     {
         real_t* Uf = kernels::alloc_raw(Nfield*eb.Nf_dir_block[d]);
@@ -79,7 +81,12 @@ void Process::time_advance()
     dtmin = MIN(dtmin_dir[0], MIN(dtmin_dir[1], dtmin_dir[2]));
     //dtmin = 1.0/(1/dtmin_dir[0] + 1/dtmin_dir[1] + 1/dtmin_dir[2]);
     MPI_Allreduce(MPI_IN_PLACE, &dtmin, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
-    dt = cfl * dtmin;
+
+    dtmin_diff = (1/1e-3) * (1./(tt_max_global*tt_max_global));
+
+    //dt = cfl * dtmin;
+    dt = MIN(cfl * dtmin, dtmin_diff);
+    dt_ratio = dtmin_diff/(cfl*dtmin);
 
     /* Calculate maximum stable div-cleaning wavespeed */
     if (system == mhd)
@@ -91,7 +98,8 @@ void Process::time_advance()
     /********************************************/
 
     write::message("Starting time step " + std::to_string(step) + " --- t = " + std::to_string(time)
-                                         + " --- dt = " + std::to_string(dt));
+                                         + " --- dt = " + std::to_string(dt)
+                                         + " --- dt ratio: " + std::to_string(dt_ratio));
 
     /* Call the fundamental time step method we're using */
     (*time_integrator)(*this); //Since storing a pointer to a BasicTimeIntegrator
