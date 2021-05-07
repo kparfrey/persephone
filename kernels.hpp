@@ -25,6 +25,10 @@ namespace kernels
                        real_t  a1,     real_t               a2, 
                        real_t* result, const int N);
 
+    void add_vectors_in_place(      real_t* const __restrict__ v,
+                              const real_t* const __restrict__ v_add,
+                              const int N);
+    
 #if 0
     void product_2_vectors(const real_t* const __restrict__ v1,
                            const real_t* const __restrict__ v2,
@@ -98,14 +102,14 @@ namespace kernels
                               const VectorField dxdr[3],
                               const LengthBucket lb);
 
-    void add_diffusive_flux(const real_t* const __restrict__ Uf,
-                            const VectorField                dUf,
-                                  real_t* const __restrict__ F,
-                            const DiffusiveFluxes*           F_diff,
-                            const real_t* const __restrict__ args,
-                            const VectorField                S,
-                            const LengthBucket               lb,
-                            const int                        dir);
+    void diffusive_flux(const real_t* const __restrict__ Uf,
+                        const VectorField                dUf,
+                              real_t* const __restrict__ F,
+                        const DiffusiveFluxes*           F_diff,
+                        const real_t* const __restrict__ args,
+                        const VectorField                S,
+                        const LengthBucket               lb,
+                        const int                        dir);
 
 #if 0
     void fill_velocity_vector(      VectorField Vf,

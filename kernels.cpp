@@ -5,6 +5,7 @@
 #include "numerical_flux.hpp"
 #include "boundary_conditions.hpp"
 
+//#include<stdio.h>
 
 namespace kernels
 {
@@ -38,9 +39,6 @@ namespace kernels
     }
 
    
-    /* This function adds to F (rather than assigns to F) so that you can call
-     * the same function when adding the diffusive fluxes. Need to make 
-     * sure that F is always initialised to zero at the start of each substep */
     inline static void fluxes_phys_to_ref(const real_t      (*Fphys)[3],
                                                 real_t* __restrict__ F,
                                           const VectorField          S,
@@ -56,7 +54,7 @@ namespace kernels
             for (int d: dirs) 
                 lsum += S(d,memory_loc) * Fphys[field][d];
 
-            F[memory_loc + field * Nf_tot] += lsum; // Save into reference fluxes
+            F[memory_loc + field * Nf_tot] = lsum; // Save into reference fluxes
         }
 
         return;
@@ -99,6 +97,17 @@ namespace kernels
     {
         for (int i = 0; i < N; ++i)
             result[i] = a1 * v1[i] + a2 * v2[i];
+
+        return;
+    }
+
+
+    void add_vectors_in_place(      real_t* const __restrict__ v,
+                              const real_t* const __restrict__ v_add,
+                              const int N)
+    {
+        for (int i = 0; i < N; ++i)
+            v[i] += v_add[i];
 
         return;
     }
@@ -912,14 +921,14 @@ namespace kernels
     }
 
     
-    void add_diffusive_flux(const real_t* const __restrict__ Uf,
-                            const VectorField                dUf,
-                                  real_t* const __restrict__ F,
-                            const DiffusiveFluxes*           F_diff,
-                            const real_t* const __restrict__ args,
-                            const VectorField                S,
-                            const LengthBucket               lb,
-                            const int                        dir)
+    void diffusive_flux(const real_t* const __restrict__ Uf,
+                        const VectorField                dUf,
+                              real_t* const __restrict__ F,
+                        const DiffusiveFluxes*           F_diff,
+                        const real_t* const __restrict__ args,
+                        const VectorField                S,
+                        const LengthBucket               lb,
+                        const int                        dir)
     {
         int N = lb.Nf_dir_block[dir]; //Total # of this-dir flux points in the block
 
@@ -946,7 +955,6 @@ namespace kernels
 
             /* Transform from physical to reference-space fluxes
              * for all fields */
-            /* Need to modify so this function adds to F rather than assigns */
             fluxes_phys_to_ref(F_diff_p, F, S, i, lb.Nfield, N);
         }
 
