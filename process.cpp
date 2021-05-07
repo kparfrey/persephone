@@ -68,7 +68,7 @@ void Process::time_advance()
     ElementBlock& eb = elements;
     real_t dtmin_dir[3];
     real_t dtmin;
-    real_t dtmin_diff, dt_ratio;
+    //real_t dtmin_diff, dt_ratio;
 
     for (int d: dirs)
     {
@@ -82,11 +82,11 @@ void Process::time_advance()
     //dtmin = 1.0/(1/dtmin_dir[0] + 1/dtmin_dir[1] + 1/dtmin_dir[2]);
     MPI_Allreduce(MPI_IN_PLACE, &dtmin, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
 
-    dtmin_diff = (1/1e-3) * (1./(tt_max_global*tt_max_global));
+    //dtmin_diff = (1/1e-3) * (1./(tt_max_global*tt_max_global));
 
-    //dt = cfl * dtmin;
-    dt = MIN(cfl * dtmin, dtmin_diff);
-    dt_ratio = dtmin_diff/(cfl*dtmin);
+    dt = cfl * dtmin;
+    //dt = MIN(cfl * dtmin, dtmin_diff);
+    //dt_ratio = dtmin_diff/(cfl*dtmin);
 
     /* Calculate maximum stable div-cleaning wavespeed */
     if (system == mhd)
@@ -98,8 +98,8 @@ void Process::time_advance()
     /********************************************/
 
     write::message("Starting time step " + std::to_string(step) + " --- t = " + std::to_string(time)
-                                         + " --- dt = " + std::to_string(dt)
-                                         + " --- dt ratio: " + std::to_string(dt_ratio));
+                                         + " --- dt = " + std::to_string(dt));
+                                         //+ " --- dt ratio: " + std::to_string(dt_ratio));
 
     /* Call the fundamental time step method we're using */
     (*time_integrator)(*this); //Since storing a pointer to a BasicTimeIntegrator
@@ -158,12 +158,6 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
                                          eb.metric.S[i], eb.metric.normal[i], eb.lengths, i);
 
 
-    /*
-    for (int i: dirs)
-        for (int 
-        for (int j = 0; j < eb.Nf_dir_block[i]; ++j)
-            printf("%g\n", F(i)
-            */
 
     /* For explicit diffusive terms, include calculation of the diffusive flux here
      * and add to the advective fluxes before taking the flux deriv: F += F_diffusive */

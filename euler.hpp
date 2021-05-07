@@ -36,8 +36,8 @@ class SystemData_euler : public SystemData
         variables[3] = "v2";
         variables[4] = "p";
 
-        viscous = false; //true;
-        viscosity = 1e-3;
+        viscous = true; //true;
+        viscosity = 1e-2;
     }
 };
 
@@ -123,6 +123,9 @@ class Fluxes_euler : public FluxesFromPrimitive
 };
 
 
+/* This is the flux that should go into the flux divergence on the
+ * "left hand side": i.e. dU/dt + divF = 0, F = F_advective + F_diffusive 
+ * Many references define it on the RHS, so the negative of this. */
 class DiffusiveFluxes_euler : public DiffusiveFluxes
 {
     public:
@@ -164,9 +167,9 @@ class DiffusiveFluxes_euler : public DiffusiveFluxes
             F[Density][d] = 0.0;
 
             for (int i: dirs)
-                F[mom0+i][d] = tau[d][i];
+                F[mom0+i][d] = - tau[d][i];
 
-            F[tot_energy][d] = v[0]*tau[0][d] + v[1]*tau[1][d] + v[2]*tau[2][d];
+            F[tot_energy][d] = - (v[0]*tau[0][d] + v[1]*tau[1][d] + v[2]*tau[2][d]);
         }
 
         return;
