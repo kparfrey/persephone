@@ -16,10 +16,10 @@ static int Nproc[3] = {2,2,1};
 static int Nelem[3] = {3,3,1};
 static int Ns[3]    = {8,12,1};
 
-static real_t cfl      = 0.6;
-static real_t end_time = 75.0;
+static real_t cfl      = 0.1; // 0.6 should be stable
+static real_t end_time = 15.0;
 static real_t dt_write = 0.25;
 
 static ParamsCartesian active_parameters(equations, time_method, 
-                                  Nproc, Nelem, Ns,
-                                  cfl, end_time, dt_write);
+                                         Nproc, Nelem, Ns,
+                                         cfl, end_time, dt_write);

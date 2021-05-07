@@ -38,7 +38,7 @@ namespace kernels
     }
 
    
-    /* This function adds to F (rather than assigns to F) so that can call
+    /* This function adds to F (rather than assigns to F) so that you can call
      * the same function when adding the diffusive fluxes. Need to make 
      * sure that F is always initialised to zero at the start of each substep */
     inline static void fluxes_phys_to_ref(const real_t      (*Fphys)[3],

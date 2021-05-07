@@ -122,7 +122,7 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
     for (int i: dirs)
     {
         Uf(i) = kernels::alloc_raw(Nfield * eb.Nf_dir_block[i]);
-         F(i) = kernels::alloc(Nfield * eb.Nf_dir_block[i]); // Need to zero-initialise
+         F(i) = kernels::alloc(Nfield * eb.Nf_dir_block[i]); // Need to zero-initialise!
         dF(i) = kernels::alloc_raw(Nfield * eb.Ns_block);
     }
     
@@ -160,6 +160,8 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
         VectorField dU;     // Physical-space derivatives of U at the solution points
         VectorField dUf[3]; // Physical-space derivatives of U at the flux points
                             // Note: dUf[flux-point dir](deriv dir, ...)
+
+        write::message("Starting viscous flux calculation...");
 
         for (int i: dirs)
         {
@@ -211,7 +213,10 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
             for (int dderiv: dirs)
                 kernels::internal_interface_average(dUf[dflux](dderiv), eb.lengths, dflux);
 
-        /* Add the viscous fluxes to the advective fluxes */
+        const real_t coeffs[1] = {system_data->viscosity};
+        for (int i: dirs) // flux-point direction
+            kernels::add_diffusive_flux(Uf(i), dUf[i], F(i), F_diff, coeffs, eb.metric.S[i],
+                                                                               eb.lengths, i);
 
         for (int i: dirs)
         {

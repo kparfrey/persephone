@@ -36,8 +36,8 @@ class SystemData_euler : public SystemData
         variables[3] = "v2";
         variables[4] = "p";
 
-        viscous = true;
-        viscosity = 0.1;
+        viscous = false;
+        viscosity = 0.0;
     }
 };
 
