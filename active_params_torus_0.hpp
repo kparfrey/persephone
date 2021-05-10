@@ -22,10 +22,10 @@ static BasicTimeMethod time_method = rk2_midpoint;
 static TorusCentralPolygon central_polygon = square;
 
 static int Nproc[3] = {1,1,1};
-static int Nelem[3] = {8,6,4};
-static int Ns[3]    = {12,16,4};
+static int Nelem[3] = {5,5,1};
+static int Ns[3]    = {6,6,1};
 
-static real_t cfl      = 1.0;
+static real_t cfl      = 0.05;
 static real_t end_time = 0.200;
 static real_t dt_write = 0.010;
 

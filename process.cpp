@@ -83,17 +83,22 @@ void Process::time_advance()
     dtmin = MIN(dtmin_dir[0], MIN(dtmin_dir[1], dtmin_dir[2]));
     //dtmin = 1.0/(1/dtmin_dir[0] + 1/dtmin_dir[1] + 1/dtmin_dir[2]);
     MPI_Allreduce(MPI_IN_PLACE, &dtmin, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
-
-    // This factor of 0.25 seems to be the stability limit -- 0.27 breaks for the WaveRect
-    // Can use up to 0.33 for a rectilinear grid
-    // Seems to be excessively restrictive when have an inhomogeneous grid?
-    dtmin_diff = 0.15 * l_min_global*l_min_global / system_data->viscosity; 
-    //dtmin_diff   = 0.25 * (1/system_data->viscosity) * (1./(tt_max_global*tt_max_global));
-
     dtmin_advect = cfl * dtmin;
 
-    dt = MIN(dtmin_advect, dtmin_diff); 
-    dt_ratio = dtmin_diff/dtmin_advect;
+    if (system_data->diffusive)
+    {
+        // This factor of 0.25 seems to be the stability limit -- 0.27 breaks for the WaveRect
+        // Can use up to 0.33 for a rectilinear grid
+        // Seems to be excessively restrictive when have an inhomogeneous grid?
+        dtmin_diff   = 0.25 * (1/system_data->viscosity) * (1./(tt_max_global*tt_max_global));
+        //dtmin_diff = 0.15 * l_min_global*l_min_global / (system_data->viscosity + TINY);
+
+        dt = MIN(dtmin_advect, dtmin_diff); 
+        dt_ratio = dtmin_diff/dtmin_advect;
+    }
+    else
+        dt = dtmin_advect;
+
 
     /* Calculate maximum stable div-cleaning wavespeed */
     if (system == mhd)
@@ -104,9 +109,13 @@ void Process::time_advance()
     }
     /********************************************/
 
-    write::message("Starting time step " + std::to_string(step) + " --- t = " + std::to_string(time)
-                                         + " --- dt = " + std::to_string(dt)
-                                         + " --- dt ratio: " + std::to_string(dt_ratio));
+    if (system_data->diffusive)
+        write::message("Starting time step " + std::to_string(step) + " --- t = " + std::to_string(time)
+                                             + " --- dt = " + std::to_string(dt)
+                                             + " --- dt ratio: " + std::to_string(dt_ratio));
+    else
+        write::message("Starting time step " + std::to_string(step) + " --- t = " + std::to_string(time)
+                                             + " --- dt = " + std::to_string(dt));
 
     /* Call the fundamental time step method we're using */
     (*time_integrator)(*this); //Since storing a pointer to a BasicTimeIntegrator
