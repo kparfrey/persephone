@@ -17,7 +17,7 @@
  * guards.
  */
 
-static EqnSystem equations = euler;
+static EqnSystem equations = navier_stokes;
 static BasicTimeMethod time_method = rk2_midpoint;
 static TorusCentralPolygon central_polygon = square;
 

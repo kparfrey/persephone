@@ -46,7 +46,7 @@ inline void BoundaryConditions::setup(const real_t* const data)
 class ImplosionTestBC : public BoundaryConditions
 {
     enum conserved {density, mom0, mom1, mom2, tot_energy};
-    const EqnSystem equations = euler;
+    const EqnSystem equations = navier_stokes;
 
     public:
 

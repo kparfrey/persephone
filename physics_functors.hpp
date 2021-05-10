@@ -12,9 +12,9 @@ class SystemData
     int Nfield;
     string* variables;
 
-    /* Should be used by Euler and MHD */
-    bool viscous;
-    real_t viscosity; // dynamic viscosity ("mu")
+    bool diffusive;
+    real_t viscosity;   // dynamic viscosity ("mu")
+    real_t resistivity; // really magnetic diffusivity...
 
     /* Only used by MHD */
     real_t c_h; // Wave/transport speed for hyperbolic part of div cleaning
@@ -22,6 +22,13 @@ class SystemData
     real_t psi_damping_rate;  // d psi/dt ... = - rate * psi
                               // p_d_rate = CFL * p_d_const / dt
     real_t psi_damping_exp;   // exp(-damping_rate * dt)
+
+
+    SystemData()
+    {
+        /* Default values unless overriden in derived classes */
+        diffusive = false;
+    }
 };
 
 

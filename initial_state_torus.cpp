@@ -29,14 +29,14 @@ static void implosion(const real_t r[3],
         reff = radial / rramp;
 
     density  = density_floor + 0.5*(1.0 - std::cos(reff * pi));
-    pressure = std::pow(density, gamma_euler); // Since entropy = 1
+    pressure = std::pow(density, gamma_navstokes); // Since entropy = 1
 
     /* Convert to conserved variables */
     fields[loc0 + Density*Ns_block] = density;
     fields[loc0 +    mom0*Ns_block] = density * v0;
     fields[loc0 +    mom1*Ns_block] = density * v1;
     fields[loc0 +    mom2*Ns_block] = density * v2;
-    fields[loc0 +  energy*Ns_block] = density * specific_KE + pressure / gm1_euler;
+    fields[loc0 +  energy*Ns_block] = density * specific_KE + pressure / gm1_navstokes;
 
     return;
 }

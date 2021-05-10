@@ -37,12 +37,12 @@ void Params::setup_process_generic(Process &proc)
             proc.c_from_P = new WaveSpeeds_scalar_advection;
             proc.F_from_P = new Fluxes_scalar_advection;
             break;
-        case euler:
-            proc.system_data = new SystemData_euler;
-            proc.U_to_P   = new UtoP_euler;
-            proc.c_from_P = new WaveSpeeds_euler;
-            proc.F_from_P = new Fluxes_euler;
-            proc.F_diff   = new DiffusiveFluxes_euler;
+        case navier_stokes:
+            proc.system_data = new SystemData_navstokes;
+            proc.U_to_P   = new UtoP_navstokes;
+            proc.c_from_P = new WaveSpeeds_navstokes;
+            proc.F_from_P = new Fluxes_navstokes;
+            proc.F_diff   = new DiffusiveFluxes_navstokes;
             break;
         case mhd:
             proc.system_data = new SystemData_mhd;

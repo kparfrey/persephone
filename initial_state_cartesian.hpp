@@ -5,9 +5,5 @@
 
 class ElementBlock;
 
-//void set_scalar_cartesian(ElementBlock&);
-
-//void set_euler_cartesian(ElementBlock&);
-
 void set_initial_state_cartesian(ElementBlock&, EqnSystem system);
 #endif

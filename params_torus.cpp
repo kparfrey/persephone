@@ -401,7 +401,7 @@ void ParamsTorus::set_initial_state(ElementBlock &elements, EqnSystem equations)
 {
     switch (equations)
     {
-        case euler:
+        case navier_stokes:
             set_euler_torus(elements);
             break;
         case mhd:

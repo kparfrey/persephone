@@ -3,7 +3,7 @@
 
 #include "physics_functors.hpp"
 #include "scalar_advection.hpp"
-#include "euler.hpp"
+#include "navier_stokes.hpp"
 #include "mhd.hpp"
 
 #endif

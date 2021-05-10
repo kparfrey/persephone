@@ -46,17 +46,17 @@ static void shu_vortex(const real_t r[3],
     const real_t specific_KE = 0.5 * (v0*v0 + v1*v1 + v2*v2);
 
     /* Density and pressure */
-    const real_t dT = - gm1_euler * eps*eps * std::exp(1.0-rsq) 
-                                        / (8 * gamma_euler * pi*pi);
-    density  = std::pow(1.0 + dT, 1.0/gm1_euler);
-    pressure = std::pow(density, gamma_euler); // Since entropy = 1
+    const real_t dT = - gm1_navstokes * eps*eps * std::exp(1.0-rsq) 
+                                        / (8 * gamma_navstokes * pi*pi);
+    density  = std::pow(1.0 + dT, 1.0/gm1_navstokes);
+    pressure = std::pow(density, gamma_navstokes); // Since entropy = 1
 
     /* Convert to conserved variables */
     fields[loc0 + Density*Ns_block] = density;
     fields[loc0 +    mom0*Ns_block] = density * v0;
     fields[loc0 +    mom1*Ns_block] = density * v1;
     fields[loc0 +    mom2*Ns_block] = density * v2;
-    fields[loc0 +  energy*Ns_block] = density * specific_KE + pressure / gm1_euler;
+    fields[loc0 +  energy*Ns_block] = density * specific_KE + pressure / gm1_navstokes;
 
     return;
 }
@@ -140,7 +140,7 @@ void set_initial_state_cartesian(ElementBlock& eb, EqnSystem system)
                 case scalar_advection:
                     eb.fields[loc0] = scalar_function(r);
                     break;
-                case euler:
+                case navier_stokes:
                     shu_vortex(r, eb.fields, loc0, eb.Ns_block);
                     break;
                 case mhd:

@@ -1,5 +1,5 @@
-#ifndef EULER_HPP
-#define EULER_HPP
+#ifndef NAVIER_STOKES_HPP
+#define NAVIER_STOKES_HPP
 
 #include <cmath>
 #include "physics_functors.hpp"
@@ -19,14 +19,14 @@
  * 4 p  ---  pressure
  */
 
-constexpr real_t gamma_euler = 5.0/3.0;
-constexpr real_t gm1_euler = gamma_euler - 1.0;
+constexpr real_t gamma_navstokes = 5.0/3.0;
+constexpr real_t gm1_navstokes = gamma_navstokes - 1.0;
 
 
-class SystemData_euler : public SystemData
+class SystemData_navstokes : public SystemData
 {
     public:
-    SystemData_euler()
+    SystemData_navstokes()
     {
         Nfield = 5;
         variables = new string [5];
@@ -36,13 +36,13 @@ class SystemData_euler : public SystemData
         variables[3] = "v2";
         variables[4] = "p";
 
-        viscous = true;
-        viscosity = 0.01;
+        diffusive = true;
+        viscosity = 0.05;
     }
 };
 
 
-class UtoP_euler : public ConservedToPrimitive
+class UtoP_navstokes : public ConservedToPrimitive
 {
     public:
     enum conserved {Density, mom0, mom1, mom2, tot_energy};
@@ -61,14 +61,14 @@ class UtoP_euler : public ConservedToPrimitive
         const real_t KE_density = 0.5 * P[density] 
                                    * (P[v0]*P[v0] + P[v1]*P[v1] + P[v2]*P[v2]);
 
-        P[pressure] = gm1_euler * (U[tot_energy] - KE_density);
+        P[pressure] = gm1_navstokes * (U[tot_energy] - KE_density);
 
         return;
     }
 };
 
 
-class WaveSpeeds_euler : public WaveSpeedsFromPrimitive
+class WaveSpeeds_navstokes : public WaveSpeedsFromPrimitive
 {
     public:
     enum primitive {density, v0, v1, v2, pressure};
@@ -78,7 +78,7 @@ class WaveSpeeds_euler : public WaveSpeedsFromPrimitive
                                          real_t* const __restrict__ c,
                                    const int dir) const 
     {
-        const real_t sound_speed = std::sqrt(gamma_euler * P[pressure] / P[density]);
+        const real_t sound_speed = std::sqrt(gamma_navstokes * P[pressure] / P[density]);
 
         c[0] = MAX(0.0, P[v0+dir] + sound_speed);
         c[1] = MIN(0.0, P[v0+dir] - sound_speed);
@@ -88,7 +88,7 @@ class WaveSpeeds_euler : public WaveSpeedsFromPrimitive
 };
 
 
-class Fluxes_euler : public FluxesFromPrimitive
+class Fluxes_navstokes : public FluxesFromPrimitive
 {
     public:
     enum conserved {Density, mom0, mom1, mom2, tot_energy};
@@ -100,7 +100,7 @@ class Fluxes_euler : public FluxesFromPrimitive
     {
         const real_t KE_density = 0.5 * P[density] 
                                    * (P[v0]*P[v0] + P[v1]*P[v1] + P[v2]*P[v2]);
-        const real_t E = KE_density + P[pressure] / gm1_euler;
+        const real_t E = KE_density + P[pressure] / gm1_navstokes;
 
         real_t v;
 
@@ -126,7 +126,7 @@ class Fluxes_euler : public FluxesFromPrimitive
 /* This is the flux that should go into the flux divergence on the
  * "left hand side": i.e. dU/dt + divF = 0, F = F_advective + F_diffusive 
  * Many references define it on the RHS, so the negative of this. */
-class DiffusiveFluxes_euler : public DiffusiveFluxes
+class DiffusiveFluxes_navstokes : public DiffusiveFluxes
 {
     public:
     enum conserved {Density, mom0, mom1, mom2, tot_energy};

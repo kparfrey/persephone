@@ -9,7 +9,7 @@
 
 /* For discussion of non-standard features see active_params_torus_0.hpp */
 
-static EqnSystem equations = euler;
+static EqnSystem equations = navier_stokes;
 static BasicTimeMethod time_method = rk2_midpoint;
 
 static int Nproc[3] = {2,2,1};

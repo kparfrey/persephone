@@ -168,7 +168,7 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
 
     /* For explicit diffusive terms, include calculation of the diffusive flux here
      * and add to the advective fluxes before taking the flux deriv: F += F_diffusive */
-    if ((system == euler) && system_data->viscous)
+    if ((system == navier_stokes) && system_data->diffusive)
     {
         VectorField Fd;     // Diffusive fluxes for all fields
         VectorField dU_ref; // Ref-space derivatives of U at the solution points
@@ -242,7 +242,7 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
             for (int j: dirs)
                 kernels::free(dUf[i](j));
         }
-    } // end of viscous section
+    } // end of diffusive section
 
 
 
