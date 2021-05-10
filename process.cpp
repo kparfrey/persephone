@@ -90,8 +90,8 @@ void Process::time_advance()
         // This factor of 0.25 seems to be the stability limit -- 0.27 breaks for the WaveRect
         // Can use up to 0.33 for a rectilinear grid
         // Seems to be excessively restrictive when have an inhomogeneous grid?
-        dtmin_diff   = 0.25 * (1/system_data->viscosity) * (1./(tt_max_global*tt_max_global));
-        //dtmin_diff = 0.15 * l_min_global*l_min_global / (system_data->viscosity + TINY);
+        //dtmin_diff   = 0.25 * (1/system_data->viscosity) * (1./(tt_max_global*tt_max_global));
+        dtmin_diff = 0.15 * l_min_global*l_min_global / (system_data->viscosity + TINY);
 
         dt = MIN(dtmin_advect, dtmin_diff); 
         dt_ratio = dtmin_diff/dtmin_advect;
@@ -173,88 +173,10 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
         kernels::internal_numerical_flux(Uf(i), F(i), F_numerical,
                                          eb.metric.S[i], eb.metric.normal[i], eb.lengths, i);
 
-
-
-    /* For explicit diffusive terms, include calculation of the diffusive flux here
-     * and add to the advective fluxes before taking the flux deriv: F += F_diffusive */
-    if ((system == navier_stokes) && system_data->diffusive)
-    {
-        VectorField Fd;     // Diffusive fluxes for all fields
-        VectorField dU_ref; // Ref-space derivatives of U at the solution points
-        VectorField dU;     // Physical-space derivatives of U at the solution points
-        VectorField dUf[3]; // Physical-space derivatives of U at the flux points
-                            // Note: dUf[flux-point dir](deriv dir, ...)
-
-        for (int i: dirs)
-        {
-            Fd(i) = kernels::alloc_raw(Nfield * eb.Nf_dir_block[i]);
-            dU(i) = kernels::alloc_raw(Nfield * eb.Ns_block);
-            dU_ref(i) = kernels::alloc_raw(Nfield * eb.Ns_block);
-
-            for (int j: dirs)
-                dUf[i](j) = kernels::alloc_raw(Nfield * eb.Nf_dir_block[i]);
-        }
-
-        /* Average Uf on process-external faces. 
-         * Data already in FaceCommunicators from the earlier exchange */
-        for (int i: ifaces)
-            kernels::external_interface_average(faces[i], Uf(faces[i].normal_dir), eb.lengths);
-
-        /* Average Uf on process-internal faces. */
-        for (int i: dirs)
-            kernels::internal_interface_average(Uf(i), eb.lengths, i);
-
-        for (int i: dirs) // i = derivative direction
-        {
-            // Uf(i): the U at the i-direction's flux points
-            // dU_ref(i): gradients of the U in the i direction, at the solution points
-            kernels::fluxDeriv_to_soln(eb.fluxDeriv2soln(i), Uf(i), dU_ref(i), eb.lengths, i);
-        }
-
-        /* Transform to physical-space gradient */
-        kernels::gradient_ref_to_phys(dU_ref, dU, eb.metric.dxdr, eb.lengths);
-
-        for (int dderiv: dirs)
-            for (int dflux: dirs) // for each flux-point direction...
-                kernels::soln_to_flux(eb.soln2flux(dflux), dU(dderiv), dUf[dflux](dderiv), 
-                                                                         eb.lengths, dflux);
-        
-        /* For now, do the interface averaging separately for each physical derivative direction */
-        for (int dderiv: dirs)
-        {
-            for (int i: ifaces)
-                kernels::fill_face_data(dUf[faces[i].normal_dir](dderiv), faces[i], eb.lengths);
-
-            exchange_boundary_data(); // So have to do 3 separate MPI calls...
-
-            for (int i: ifaces)
-                kernels::external_interface_average(faces[i], dUf[faces[i].normal_dir](dderiv), eb.lengths);
-        }
-            
-        for (int dflux: dirs)
-            for (int dderiv: dirs)
-                kernels::internal_interface_average(dUf[dflux](dderiv), eb.lengths, dflux);
-
-        const real_t coeffs[1] = {system_data->viscosity};
-        for (int i: dirs) // flux-point direction
-            kernels::diffusive_flux(Uf(i), dUf[i], Fd(i), F_diff, coeffs, eb.metric.S[i], eb.lengths, i);
-
-        for (int i: dirs)
-            kernels::add_vectors_in_place(F(i), Fd(i), Nfield*eb.Nf_dir_block[i]);
-
-        for (int i: dirs)
-        {
-            kernels::free(Fd(i));
-            kernels::free(dU(i));
-            kernels::free(dU_ref(i));
-
-            for (int j: dirs)
-                kernels::free(dUf[i](j));
-        }
-    } // end of diffusive section
-
-
-
+    /* For explicit diffusive terms, calculate the diffusive flux and add
+     * to the advective fluxes before taking the flux deriv: F += F_diffusive */
+    if (system_data->diffusive)
+        add_diffusive_flux(Uf, F);
 
     for (int i: dirs)
         kernels::fluxDeriv_to_soln(eb.fluxDeriv2soln(i), F(i), dF(i), eb.lengths, i);
@@ -276,6 +198,88 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
         kernels::free(Uf(i));
         kernels::free( F(i));
         kernels::free(dF(i));
+    }
+
+    return;
+}
+
+
+/* Finds the diffusive flux, adds in place to the advective flux in F */
+void Process::add_diffusive_flux(VectorField Uf, VectorField F)
+{
+    VectorField Fd;     // Diffusive fluxes for all fields
+    VectorField dU_ref; // Ref-space derivatives of U at the solution points
+    VectorField dU;     // Physical-space derivatives of U at the solution points
+    VectorField dUf[3]; // Physical-space derivatives of U at the flux points
+                        // Note: dUf[flux-point dir](deriv dir, ...)
+
+    ElementBlock& eb = elements;
+
+    for (int i: dirs)
+    {
+        Fd(i) = kernels::alloc_raw(Nfield * eb.Nf_dir_block[i]);
+        dU(i) = kernels::alloc_raw(Nfield * eb.Ns_block);
+        dU_ref(i) = kernels::alloc_raw(Nfield * eb.Ns_block);
+
+        for (int j: dirs)
+            dUf[i](j) = kernels::alloc_raw(Nfield * eb.Nf_dir_block[i]);
+    }
+
+    /* Average Uf on process-external faces. 
+     * Data already in FaceCommunicators from the earlier exchange */
+    for (int i: ifaces)
+        kernels::external_interface_average(faces[i], Uf(faces[i].normal_dir), eb.lengths);
+
+    /* Average Uf on process-internal faces. */
+    for (int i: dirs)
+        kernels::internal_interface_average(Uf(i), eb.lengths, i);
+
+    for (int i: dirs) // i = derivative direction
+    {
+        // Uf(i): the U at the i-direction's flux points
+        // dU_ref(i): gradients of the U in the i direction, at the solution points
+        kernels::fluxDeriv_to_soln(eb.fluxDeriv2soln(i), Uf(i), dU_ref(i), eb.lengths, i);
+    }
+
+    /* Transform to physical-space gradient */
+    kernels::gradient_ref_to_phys(dU_ref, dU, eb.metric.dxdr, eb.lengths);
+
+    for (int dderiv: dirs)
+        for (int dflux: dirs) // for each flux-point direction...
+            kernels::soln_to_flux(eb.soln2flux(dflux), dU(dderiv), dUf[dflux](dderiv), 
+                                                                     eb.lengths, dflux);
+    
+    /* For now, do the interface averaging separately for each physical derivative direction */
+    for (int dderiv: dirs)
+    {
+        for (int i: ifaces)
+            kernels::fill_face_data(dUf[faces[i].normal_dir](dderiv), faces[i], eb.lengths);
+
+        exchange_boundary_data(); // So have to do 3 separate MPI calls...
+
+        for (int i: ifaces)
+            kernels::external_interface_average(faces[i], dUf[faces[i].normal_dir](dderiv), eb.lengths);
+    }
+        
+    for (int dflux: dirs)
+        for (int dderiv: dirs)
+            kernels::internal_interface_average(dUf[dflux](dderiv), eb.lengths, dflux);
+
+    const real_t coeffs[1] = {system_data->viscosity};
+    for (int i: dirs) // flux-point direction
+        kernels::diffusive_flux(Uf(i), dUf[i], Fd(i), F_diff, coeffs, eb.metric.S[i], eb.lengths, i);
+
+    for (int i: dirs)
+        kernels::add_vectors_in_place(F(i), Fd(i), Nfield*eb.Nf_dir_block[i]);
+
+    for (int i: dirs)
+    {
+        kernels::free(Fd(i));
+        kernels::free(dU(i));
+        kernels::free(dU_ref(i));
+
+        for (int j: dirs)
+            kernels::free(dUf[i](j));
     }
 
     return;
