@@ -17,7 +17,7 @@
 /**** Options above this line, do not change below */
 
 enum EqnSystem {scalar_advection, navier_stokes, mhd};
-enum BasicTimeMethod {rk2_midpoint, rk3_classic};
+enum BasicTimeMethod {rk2_midpoint, rk3_ssp};
 
 
 enum WhoWrites {root_only, all_ranks, one_rank};

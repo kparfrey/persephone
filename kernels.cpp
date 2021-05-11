@@ -102,6 +102,19 @@ namespace kernels
     }
 
 
+    /* Can have the same pointer in v1 or v2 and result */
+    void add_3_vectors(const real_t* const v1, const real_t* const v2, 
+                       const real_t* const __restrict__ v3,
+                       const real_t a1, const real_t a2, const real_t a3, 
+                       real_t* const result, const int N)
+    {
+        for (int i = 0; i < N; ++i)
+            result[i] = a1 * v1[i] + a2 * v2[i] + a3 * v3[i];
+
+        return;
+    }
+
+
     void add_vectors_in_place(      real_t* const __restrict__ v,
                               const real_t* const __restrict__ v_add,
                               const int N)

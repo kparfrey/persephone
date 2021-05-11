@@ -37,7 +37,7 @@ class SystemData_navstokes : public SystemData
         variables[4] = "p";
 
         diffusive = true;
-        viscosity = 1e-2;
+        viscosity = 1e-3;
     }
 };
 

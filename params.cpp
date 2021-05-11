@@ -25,6 +25,9 @@ void Params::setup_process_generic(Process &proc)
         case rk2_midpoint:
             proc.time_integrator = new RK2_midpoint; 
             break;
+        case rk3_ssp:
+            proc.time_integrator = new RK3_SSP; 
+            break;
         default:
             write::error("Time integration method not recognized.");
     }

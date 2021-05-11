@@ -87,11 +87,13 @@ void Process::time_advance()
 
     if (system_data->diffusive)
     {
-        // This factor of 0.25 seems to be the stability limit -- 0.27 breaks for the WaveRect
-        // Can use up to 0.33 for a rectilinear grid
+        // This factor of ~0.25 seems to be the stability limit -- 
+        // 0.27 still works for the WaveRect (w/RK3) but 0.28 breaks [at 6th & 8th order]
+        // At 10th order +, 0.33 still stable but 0.4 break for nu = 0.01 (though stable for 0.02..)
+        // Can use up to 0.33 for a rectilinear grid (w/RK2 - check for RK3)
         // Seems to be excessively restrictive when have an inhomogeneous grid?
-        //dtmin_diff   = 0.25 * (1/system_data->viscosity) * (1./(tt_max_global*tt_max_global));
-        dtmin_diff = 0.15 * l_min_global*l_min_global / (system_data->viscosity + TINY);
+        dtmin_diff   = 0.25 * (1/system_data->viscosity) * (1./(tt_max_global*tt_max_global));
+        //dtmin_diff = 0.15 * l_min_global*l_min_global / (system_data->viscosity + TINY);
 
         dt = MIN(dtmin_advect, dtmin_diff); 
         dt_ratio = dtmin_diff/dtmin_advect;

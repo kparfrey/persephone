@@ -10,13 +10,14 @@
 /* For discussion of non-standard features see active_params_torus_0.hpp */
 
 static EqnSystem equations = navier_stokes;
-static BasicTimeMethod time_method = rk2_midpoint;
+static BasicTimeMethod time_method = rk3_ssp;
 
 static int Nproc[3] = {2,2,1};
 static int Nelem[3] = {5,5,1};
-static int Ns[3]    = {6,6,1};
+static int Ns[3]    = {8,8,1};
 
-static real_t cfl      = 0.4; // 0.6 stable for Euler, ~0.4 for NS? Is this order dependent??
+// 0.6 stable for Euler, ~0.5 for NS? RK3_SSP more stable.
+static real_t cfl      = 0.5; 
 static real_t end_time = 30.0;
 static real_t dt_write = 0.5;
 
