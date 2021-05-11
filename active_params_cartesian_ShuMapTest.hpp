@@ -13,10 +13,10 @@ static EqnSystem equations = navier_stokes;
 static BasicTimeMethod time_method = rk2_midpoint;
 
 static int Nproc[3] = {2,2,1};
-static int Nelem[3] = {3,3,1};
-static int Ns[3]    = {12,8,1};
+static int Nelem[3] = {5,5,1};
+static int Ns[3]    = {6,6,1};
 
-static real_t cfl      = 0.5; // 0.6 should be stable
+static real_t cfl      = 0.4; // 0.6 stable for Euler, ~0.4 for NS? Is this order dependent??
 static real_t end_time = 30.0;
 static real_t dt_write = 0.5;
 

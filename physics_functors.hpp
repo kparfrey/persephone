@@ -13,7 +13,7 @@ class SystemData
     string* variables;
 
     bool diffusive;
-    real_t viscosity;   // dynamic viscosity ("mu")
+    real_t viscosity;   // kinematic viscosity ("nu")
     real_t resistivity; // really magnetic diffusivity...
 
     /* Only used by MHD */

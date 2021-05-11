@@ -138,8 +138,8 @@ class DiffusiveFluxes_navstokes : public DiffusiveFluxes
                                          real_t (*__restrict__ F)[3],
                                    const real_t* const __restrict__ args) const 
     {
-        const real_t mu = args[0]; // dynamic viscosity
-        const real_t lambda = - (2.0/3.0) * mu; // bulk viscosity
+        const real_t mu = U[Density] * args[0]; // dynamic viscosity
+        const real_t lambda = - (2.0/3.0) * mu; // from Stokes hypothesis
         
         real_t v[3];
         real_t tau[3][3];
