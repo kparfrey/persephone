@@ -39,7 +39,6 @@ void Process::setup()
     /* Calculates the global maximum of the timestep_transform array, for use
      * in calculating the maximum stable div-cleaning speed c_h in MHD */
     MPI_Allreduce(&elements.timestep_transform_max, &tt_max_global, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
-    MPI_Allreduce(&elements.l_min, &l_min_global, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
     
     return;
 }
@@ -81,7 +80,6 @@ void Process::time_advance()
         delete Uf;
     }
     dtmin = MIN(dtmin_dir[0], MIN(dtmin_dir[1], dtmin_dir[2]));
-    //dtmin = 1.0/(1/dtmin_dir[0] + 1/dtmin_dir[1] + 1/dtmin_dir[2]);
     MPI_Allreduce(MPI_IN_PLACE, &dtmin, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
     dtmin_advect = cfl * dtmin;
 
@@ -95,7 +93,6 @@ void Process::time_advance()
         // Seems very problem dependent: can use 0.9 for the MHD Alfven wave problem
         const real_t diffusion = MAX(system_data->viscosity, system_data->resistivity);
         dtmin_diff   = (0.9/diffusion) * (1./(tt_max_global*tt_max_global));
-        //dtmin_diff = 0.15 * l_min_global*l_min_global / (system_data->viscosity + TINY);
 
         dt = MIN(dtmin_advect, dtmin_diff); 
         dt_ratio = dtmin_diff/dtmin_advect;

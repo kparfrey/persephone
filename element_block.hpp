@@ -65,8 +65,6 @@ class ElementBlock
     Metric metric;
     real_t timestep_transform_max; // Max value for this ElementBlock
                                    // Use to calculate c_h at each timestep
-    real_t l_min; // Minimum lengthscale along a flux-point line
-
 
     /* Methods */
     inline int ids(int i, int j, int k); // soln-point index map
