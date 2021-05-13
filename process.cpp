@@ -107,9 +107,10 @@ void Process::time_advance()
     /* Calculate maximum stable div-cleaning wavespeed */
     if (system == mhd)
     {
-        /* Should be able to use larger c_h when running with diffusion-limited timestep... */
-        system_data->c_h = cfl /(dtmin_advect * tt_max_global);
-        system_data->psi_damping_rate = cfl * system_data->psi_damping_const / dtmin_advect; 
+        system_data->c_h = 1.0 /(dt * tt_max_global); // Should be stable...could add factor of ~0.7?
+        F_from_P->ch_sq = system_data->c_h * system_data->c_h;
+
+        system_data->psi_damping_rate = system_data->psi_damping_const / dt; 
         //system_data->psi_damping_exp = std::exp(-cfl * system_data->psi_damping_const);
     }
     /********************************************/
@@ -193,7 +194,7 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
     if (system == mhd)
     {
         if (is_output_step && (substep == 1))
-            kernels::store_divB(divF, elements.divB, eb.lengths);
+            kernels::store_divB(divF, elements.divB, system_data->c_h, eb.lengths);
 
         kernels::scalar_field_source(divF, U, eb.lengths, system_data->c_h, system_data->psi_damping_rate);
     }

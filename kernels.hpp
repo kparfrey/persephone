@@ -74,6 +74,7 @@ namespace kernels
 
     void store_divB(const real_t* const __restrict__ divF,
                           real_t* const __restrict__ divB, 
+                    const real_t c_h,
                     const LengthBucket lb);
     
     void fill_face_data(const real_t* const __restrict__ Uf,
@@ -116,13 +117,7 @@ namespace kernels
                         const LengthBucket               lb,
                         const int                        dir);
 
-#if 0
-    void fill_velocity_vector(      VectorField Vf,
-                              const VectorField Uf,
-                              const LengthBucket lb);    
-#endif
-    
-    /* Not a final kernel, obviously */
+    /* Not a final "kernel", obviously */
     real_t local_timestep(const real_t* const __restrict__ Uf,
                       const VectorField timestep_transform,
                       const ConservedToPrimitive*  U_to_P,

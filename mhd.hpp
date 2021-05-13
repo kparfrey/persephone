@@ -50,11 +50,11 @@ class SystemData_mhd : public SystemData
         variables[8] = "psi";
 
         diffusive = true;
-        viscosity = 1e-2;
-        resistivity = 1e-2;
+        viscosity = 3e-2;
+        resistivity = 1e-3;
 
         /* Divergence-cleaning parameters */
-        psi_damping_const = 0.0; // 0 < p_d_const < 1
+        psi_damping_const = 0.01; // 0 < p_d_const < 1
     }
 };
 
@@ -160,8 +160,7 @@ class Fluxes_mhd : public FluxesFromPrimitive
 
             F[B0+d][d] = P[psi]; // Overwrite the above
 
-            F[psi][d] = B; // NB: multiply by c_h^2 when adding the
-                           // scalar field's source term!
+            F[psi][d] = ch_sq * B; 
         }
 
         return;

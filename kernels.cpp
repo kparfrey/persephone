@@ -403,6 +403,7 @@ namespace kernels
     }
 
 
+    /* If only adding the source, could replace with add_2_vectors() */
     void scalar_field_source(      real_t* const __restrict__ divF,
                              const real_t* const __restrict__ U, 
                              const LengthBucket lb,
@@ -414,7 +415,7 @@ namespace kernels
         int mem;
 
         const int field = 8; // psi is the 9th field
-        const real_t chsq   = c_h*c_h;
+        //const real_t chsq   = c_h*c_h;
 
         field_offset = field * lb.Ns_block;
 
@@ -433,7 +434,8 @@ namespace kernels
                 mem = mem_offset + (k * lb.Ns[1]  + j) * lb.Ns[0] + i;
 
                 //divF[mem] = chsq * divF[mem];
-                divF[mem] = chsq * divF[mem] + damping_rate * U[mem];
+                //divF[mem] = chsq * divF[mem] + damping_rate * U[mem];
+                divF[mem] += damping_rate * U[mem];
             }
         }
 
@@ -441,8 +443,10 @@ namespace kernels
     }
 
 
+    /* Replace by multiply_by_scalar() or similar */
     void store_divB(const real_t* const __restrict__ divF,
                           real_t* const __restrict__ divB, 
+                    const real_t c_h,
                     const LengthBucket lb)
     {
         int id_elem;
@@ -451,6 +455,7 @@ namespace kernels
         int mem, mem0;
 
         const int field = 8; // psi is the 9th field
+        const real_t over_chsq   = 1.0 / (c_h*c_h);
 
         field_offset = field * lb.Ns_block;
 
@@ -470,7 +475,7 @@ namespace kernels
                 mem0 = mem - field_offset; // divB has only one field's worth
 
                 /* Haven't multiplied by c_h^2 yet: divB is just psi's stored divF */
-                divB[mem0] = divF[mem];
+                divB[mem0] = over_chsq * divF[mem];
             }
         }
 

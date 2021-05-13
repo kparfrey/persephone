@@ -64,6 +64,8 @@ class WaveSpeedsFromPrimitive
 class FluxesFromPrimitive
 {
     public:
+    real_t ch_sq; // MHD only: square of the div-cleaning wavespeed
+
     ACCEL_DECORATOR
     inline virtual void operator()(const real_t* const __restrict__ P, 
                                          real_t (*__restrict__ F)[3]) const = 0;
