@@ -52,6 +52,7 @@ void Params::setup_process_generic(Process &proc)
             proc.U_to_P   = new UtoP_mhd;
             proc.c_from_P = new WaveSpeeds_mhd;
             proc.F_from_P = new Fluxes_mhd;
+            proc.F_diff   = new DiffusiveFluxes_mhd;
             break;
         default:
             write::error("Equation system not recognised.");

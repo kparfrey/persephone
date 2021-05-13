@@ -28,6 +28,8 @@ class SystemData
     {
         /* Default values unless overriden in derived classes */
         diffusive = false;
+        viscosity = 0.0;
+        resistivity = 0.0;
     }
 };
 

@@ -10,13 +10,13 @@
 /* For discussion of non-standard features see active_params_torus_0.hpp */
 
 static EqnSystem equations = mhd;
-static BasicTimeMethod time_method = rk2_midpoint;
+static BasicTimeMethod time_method = rk3_ssp;
 
 static int Nproc[3] = {2,2,1};
 static int Nelem[3] = {3,3,1};
-static int Ns[3]    = {16,10,1};
+static int Ns[3]    = {8,8,1};
 
-static real_t cfl      = 0.8;
+static real_t cfl      = 0.5;
 static real_t end_time = 5.0;
 static real_t dt_write = 0.2;
 

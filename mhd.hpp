@@ -49,6 +49,10 @@ class SystemData_mhd : public SystemData
         variables[7] = "B2";
         variables[8] = "psi";
 
+        diffusive = true;
+        viscosity = 1e-2;
+        resistivity = 1e-2;
+
         /* Divergence-cleaning parameters */
         psi_damping_const = 0.0; // 0 < p_d_const < 1
     }
@@ -158,6 +162,67 @@ class Fluxes_mhd : public FluxesFromPrimitive
 
             F[psi][d] = B; // NB: multiply by c_h^2 when adding the
                            // scalar field's source term!
+        }
+
+        return;
+    }
+};
+
+
+class DiffusiveFluxes_mhd : public DiffusiveFluxes
+{
+    public:
+    enum conserved {Density, mom0, mom1, mom2, tot_energy, B0, B1, B2, psi};
+
+    ACCEL_DECORATOR
+    inline virtual void operator()(const real_t* const __restrict__ U, 
+                                   const real_t (* const __restrict__ dU)[3],
+                                         real_t (*__restrict__ F)[3],
+                                   const real_t* const __restrict__ args) const 
+    {
+        const real_t mu = U[Density] * args[0]; // dynamic viscosity
+        const real_t lambda = - (2.0/3.0) * mu; // from Stokes hypothesis
+        const real_t eta = args[1]; // magnetic diffusivity
+        
+        real_t v[3];
+        real_t tau[3][3];
+        real_t dv[3][3]; // dv[component][deriv dir]
+        real_t divv;
+
+        for (int d: dirs)
+            v[d] = U[mom0+d] / U[Density];
+
+        for (int comp: dirs)
+            for (int deriv: dirs)
+                dv[comp][deriv] = (dU[mom0+comp][deriv] - v[comp]*dU[Density][deriv])
+                                                                             / U[Density];
+        divv = dv[0][0] + dv[1][1] + dv[2][2]; // Assuming Cartesian...
+
+        for (int d: dirs)
+            tau[d][d] = 2*mu*dv[d][d] + lambda*divv;
+
+        tau[0][1] = tau[1][0] = mu * (dv[0][1] + dv[1][0]);
+        tau[0][2] = tau[2][0] = mu * (dv[0][2] + dv[2][0]);
+        tau[1][2] = tau[2][1] = mu * (dv[1][2] + dv[2][1]);
+
+        for (int d: dirs) // flux direction
+        {
+            /* Hydro part */
+            F[Density][d] = 0.0;
+
+            for (int i: dirs)
+                F[mom0+i][d] = - tau[d][i];
+
+            F[tot_energy][d] = - (v[0]*tau[0][d] + v[1]*tau[1][d] + v[2]*tau[2][d]);
+
+            /* Magnetic part */
+            F[B0][d] = - eta * (dU[B0][d] - dU[B0+d][0]); 
+            F[B1][d] = - eta * (dU[B1][d] - dU[B0+d][1]); 
+            F[B2][d] = - eta * (dU[B2][d] - dU[B0+d][2]); 
+
+            F[B0+d][d] = 0.0; // Overwrite the above
+
+            F[psi][d] = 0.0;
         }
 
         return;

@@ -92,10 +92,10 @@ class BasicRect2D : public DomainMap
     const real_t d2 = 0.5; // r2 = [-d2, d2]
     real_t c[4][2]; // x,y coords of the rectangle's 4 corners
 
-    const real_t xmin = -3.0; //0.0;
-    const real_t xmax = 3.0; //1.0/std::cos(pi/6.0);
-    const real_t ymin = -3.0;// 0.0;
-    const real_t ymax = 3.0; //1.0/std::sin(pi/6.0);
+    const real_t xmin = 0.0;
+    const real_t xmax = 1.0/std::cos(pi/6.0);
+    const real_t ymin = 0.0;
+    const real_t ymax = 1.0/std::sin(pi/6.0);
 
 
     BasicRect2D()

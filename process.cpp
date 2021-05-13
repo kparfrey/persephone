@@ -92,7 +92,9 @@ void Process::time_advance()
         // At 10th order +, 0.33 still stable but 0.4 break for nu = 0.01 (though stable for 0.02..)
         // Can use up to 0.33 for a rectilinear grid (w/RK2 - check for RK3)
         // Seems to be excessively restrictive when have an inhomogeneous grid?
-        dtmin_diff   = 0.25 * (1/system_data->viscosity) * (1./(tt_max_global*tt_max_global));
+        // Seems very problem dependent: can use 0.9 for the MHD Alfven wave problem
+        const real_t diffusion = MAX(system_data->viscosity, system_data->resistivity);
+        dtmin_diff   = (0.9/diffusion) * (1./(tt_max_global*tt_max_global));
         //dtmin_diff = 0.15 * l_min_global*l_min_global / (system_data->viscosity + TINY);
 
         dt = MIN(dtmin_advect, dtmin_diff); 
@@ -105,8 +107,9 @@ void Process::time_advance()
     /* Calculate maximum stable div-cleaning wavespeed */
     if (system == mhd)
     {
-        system_data->c_h = cfl /(dt * tt_max_global);
-        system_data->psi_damping_rate = cfl * system_data->psi_damping_const / dt;
+        /* Should be able to use larger c_h when running with diffusion-limited timestep... */
+        system_data->c_h = cfl /(dtmin_advect * tt_max_global);
+        system_data->psi_damping_rate = cfl * system_data->psi_damping_const / dtmin_advect; 
         //system_data->psi_damping_exp = std::exp(-cfl * system_data->psi_damping_const);
     }
     /********************************************/
@@ -219,7 +222,9 @@ void Process::add_diffusive_flux(VectorField Uf, VectorField F)
 
     for (int i: dirs)
     {
-        Fd(i) = kernels::alloc_raw(Nfield * eb.Nf_dir_block[i]);
+        /* Initialise Fd to zero - otherwise have problems if forget to set 
+         * a component in the DiffusiveFluxes functor. Doesn't seem to work?? */
+        Fd(i) = kernels::alloc(Nfield * eb.Nf_dir_block[i]);
         dU(i) = kernels::alloc_raw(Nfield * eb.Ns_block);
         dU_ref(i) = kernels::alloc_raw(Nfield * eb.Ns_block);
 
@@ -267,7 +272,7 @@ void Process::add_diffusive_flux(VectorField Uf, VectorField F)
         for (int dderiv: dirs)
             kernels::internal_interface_average(dUf[dflux](dderiv), eb.lengths, dflux);
 
-    const real_t coeffs[1] = {system_data->viscosity};
+    const real_t coeffs[2] = {system_data->viscosity, system_data->resistivity};
     for (int i: dirs) // flux-point direction
         kernels::diffusive_flux(Uf(i), dUf[i], Fd(i), F_diff, coeffs, eb.metric.S[i], eb.lengths, i);
 
