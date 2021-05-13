@@ -50,7 +50,7 @@ class SystemData_mhd : public SystemData
         variables[8] = "psi";
 
         diffusive = true;
-        viscosity = 3e-2;
+        viscosity = 3e-3;
         resistivity = 1e-3;
 
         /* Divergence-cleaning parameters */

@@ -115,12 +115,24 @@ namespace kernels
     }
 
 
-    void add_vectors_in_place(      real_t* const __restrict__ v,
+    void add_vectors_inPlace(       real_t* const __restrict__ v,
                               const real_t* const __restrict__ v_add,
                               const int N)
     {
         for (int i = 0; i < N; ++i)
             v[i] += v_add[i];
+
+        return;
+    }
+
+
+    void add_scaled_vectors_inPlace(      real_t* const __restrict__ v,
+                                    const real_t* const __restrict__ v_add,
+                                    const real_t                     scalar,
+                                    const int N)
+    {
+        for (int i = 0; i < N; ++i)
+            v[i] += scalar * v_add[i];
 
         return;
     }
@@ -142,9 +154,21 @@ namespace kernels
 #endif
 
 
-    void multiply_by_scalar(      real_t* __restrict__ v, 
-                            const real_t               scalar,
-                            const int                  N)
+    void multiply_by_scalar(const real_t* const __restrict__ v, 
+                            const real_t                     scalar,
+                                  real_t* const __restrict__ result,
+                            const int                        N)
+    {
+        for (int i = 0; i < N; ++i)
+            result[i] = scalar * v[i];
+
+        return;
+    }
+
+
+    void multiply_by_scalar_inPlace(      real_t* const __restrict__ v, 
+                                    const real_t                     scalar,
+                                    const int                        N)
     {
         for (int i = 0; i < N; ++i)
             v[i] *= scalar;
@@ -403,6 +427,7 @@ namespace kernels
     }
 
 
+#if 0
     /* If only adding the source, could replace with add_2_vectors() */
     void scalar_field_source(      real_t* const __restrict__ divF,
                              const real_t* const __restrict__ U, 
@@ -481,6 +506,7 @@ namespace kernels
 
         return;
     }
+#endif
 
 
     void fill_face_data(const real_t* const __restrict__ Uf,

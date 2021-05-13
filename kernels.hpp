@@ -30,10 +30,15 @@ namespace kernels
                        const real_t a1, const real_t a2, const real_t a3, 
                        real_t* const result, const int N);
 
-    void add_vectors_in_place(      real_t* const __restrict__ v,
-                              const real_t* const __restrict__ v_add,
-                              const int N);
-    
+    void add_vectors_inPlace(      real_t* const __restrict__ v,
+                             const real_t* const __restrict__ v_add,
+                             const int N);
+
+    void add_scaled_vectors_inPlace(      real_t* const __restrict__ v,
+                                    const real_t* const __restrict__ v_add,
+                                    const real_t                     scalar,
+                                    const int N);
+ 
 #if 0
     void product_2_vectors(const real_t* const __restrict__ v1,
                            const real_t* const __restrict__ v2,
@@ -41,9 +46,14 @@ namespace kernels
                            const int N);
 #endif
 
-    void multiply_by_scalar(      real_t* __restrict__ v, 
-                            const real_t               scalar,
-                            const int                  N);
+    void multiply_by_scalar(const real_t* const __restrict__ v, 
+                            const real_t                     scalar,
+                                  real_t* const __restrict__ result,
+                            const int                        N);
+
+    void multiply_by_scalar_inPlace(      real_t* const __restrict__ v, 
+                                    const real_t                     scalar,
+                                    const int                        N);
 
     void soln_to_flux(const real_t* const __restrict__ matrix, 
                       const real_t* const __restrict__ U, 
@@ -67,6 +77,7 @@ namespace kernels
                                real_t* const __restrict__ divF,
                          const LengthBucket lb);
 
+#if 0
     void scalar_field_source(      real_t* const __restrict__ divF,
                              const real_t* const __restrict__ U, 
                              const LengthBucket lb,
@@ -76,6 +87,7 @@ namespace kernels
                           real_t* const __restrict__ divB, 
                     const real_t c_h,
                     const LengthBucket lb);
+#endif
     
     void fill_face_data(const real_t* const __restrict__ Uf,
                               FaceCommunicator           face,

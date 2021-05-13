@@ -193,10 +193,17 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
      * splitting, and directly reduce psi in a subsequent substep. */
     if (system == mhd)
     {
-        if (is_output_step && (substep == 1))
-            kernels::store_divB(divF, elements.divB, system_data->c_h, eb.lengths);
+        const int psi = 8 * eb.Ns_block; // mem location at which the psi field begins
 
-        kernels::scalar_field_source(divF, U, eb.lengths, system_data->c_h, system_data->psi_damping_rate);
+        if (is_output_step && (substep == 1))
+        {
+            /* Find divB from divF[psi] and save into elements.divB */
+            const real_t over_chsq = 1.0/(system_data->c_h*system_data->c_h);
+            kernels::multiply_by_scalar(&divF[psi], over_chsq, eb.divB, eb.Ns_block);
+        }
+
+        kernels::add_scaled_vectors_inPlace(&divF[psi], &U[psi], 
+                                            system_data->psi_damping_rate, eb.Ns_block);
     }
 
     for (int i: dirs)
@@ -278,7 +285,7 @@ void Process::add_diffusive_flux(VectorField Uf, VectorField F)
         kernels::diffusive_flux(Uf(i), dUf[i], Fd(i), F_diff, coeffs, eb.metric.S[i], eb.lengths, i);
 
     for (int i: dirs)
-        kernels::add_vectors_in_place(F(i), Fd(i), Nfield*eb.Nf_dir_block[i]);
+        kernels::add_vectors_inPlace(F(i), Fd(i), Nfield*eb.Nf_dir_block[i]);
 
     for (int i: dirs)
     {
