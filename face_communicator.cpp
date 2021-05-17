@@ -105,7 +105,7 @@ void FaceCommunicator::setup(Process& proc, int face_id)
             mem_normals = mem_offset_normals + n2 * N[0] + n1;  
 
             for (int i: dirs)
-                normal(i,mem_face) = proc.elements.metric.normal[normal_dir](i,mem_normals);
+                normal(i,mem_face) = proc.elements.geometry.normal[normal_dir](i,mem_normals);
         }
     }
 

@@ -64,7 +64,7 @@ void ElementBlock::setup()
 
     write::message("Setting up coords & metric");
     set_physical_coords_full();
-    metric.setup_full(*this);
+    geometry.setup_full(*this);
 
     fill_spectral_difference_matrices();
 
@@ -125,7 +125,7 @@ void ElementBlock::move_to_device()
 {
     write::message("Copying ElementBlock's data to device");
 
-    metric.move_to_device();
+    geometry.move_to_device();
 
     return;
 }

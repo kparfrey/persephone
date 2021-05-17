@@ -1,5 +1,5 @@
 #include <cmath>
-#include "metric.hpp"
+#include "geometry.hpp"
 #include "kernels.hpp"
 #include "matrix.hpp"
 #include "write_screen.hpp"
@@ -9,7 +9,7 @@
 #include "geometry_labels.hpp"
 
 
-void Metric::allocate_on_host(const int Ns, const int Nf[3])
+void Geometry::allocate_on_host(const int Ns, const int Nf[3])
 {
     /* Ns and Nf[3] are the total quantities in the block */
 
@@ -65,15 +65,15 @@ void Metric::allocate_on_host(const int Ns, const int Nf[3])
 }
 
 
-void Metric::move_to_device()
+void Geometry::move_to_device()
 {
-    write::message("Copying Metric's data to device");
+    write::message("Copying Geometry's data to device");
 
     return;
 }
 
 
-void Metric::setup_full(ElementBlock& eb)
+void Geometry::setup_full(ElementBlock& eb)
 {
     using write::str;
 
@@ -339,7 +339,7 @@ void Metric::setup_full(ElementBlock& eb)
  * and physical coordinates */
 /* This function may no longer be needed */
 /***
-void Metric::transform_twoTensor(const TensorField& T_in, TensorField& T_out, const int N,
+void Geometry::transform_twoTensor(const TensorField& T_in, TensorField& T_out, const int N,
                                  const CoordTransDir ctd, const Components c)
 {
     TensorField* V;

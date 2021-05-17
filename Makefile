@@ -7,7 +7,7 @@ LDFLAGS  = #-L/usr/lib/x86_64-linux-gnu/hdf5/openmpi #-pg
 LDLIBS   = -lmpi -lm -lhdf5
 
 SRC = main.cpp kernels.cpp process.cpp element_block.cpp params.cpp  \
-	  write_mesh.cpp metric.cpp matrix.cpp write_screen.cpp  \
+	  write_mesh.cpp geometry.cpp matrix.cpp write_screen.cpp  \
 	  write_file_utils.cpp write_data.cpp lagrange_polynomials.cpp \
 	  face_communicator.cpp edge.cpp transfinite_map.cpp \
 	  params_cartesian.cpp initial_state_cartesian.cpp \

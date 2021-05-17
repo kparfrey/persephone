@@ -1,5 +1,5 @@
-#ifndef METRIC_HPP
-#define METRIC_HPP
+#ifndef GEOMETRY_HPP
+#define GEOMETRY_HPP
 
 #include "common.hpp"
 #include "tensor_field.hpp"
@@ -18,7 +18,7 @@ class ElementBlock;
  * like real_t* g_flux[3][3][3], where the FIRST array index picks out
  * the transform direction, like with ElementBlock.rf[3][3] */
 
-class Metric
+class Geometry
 {
     private:
     void allocate_on_host(const int Ns, const int Nf[3]);
@@ -78,6 +78,4 @@ class Metric
     void move_to_device();
     
 };
-
-
 #endif

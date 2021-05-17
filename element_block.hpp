@@ -2,7 +2,7 @@
 #define ELEMENT_BLOCK_HPP
 
 #include "common.hpp"
-#include "metric.hpp"
+#include "geometry.hpp"
 #include "tensor_field.hpp"
 
 class DomainMap;
@@ -62,7 +62,7 @@ class ElementBlock
     VectorField fluxDeriv2soln; // Take derivative of values on flux points, interpolate
                                 // back to soln points
 
-    Metric metric;
+    Geometry geometry;
     real_t timestep_transform_max; // Max value for this ElementBlock
                                    // Use to calculate c_h at each timestep
 

@@ -75,7 +75,7 @@ void Process::time_advance()
     {
         real_t* Uf = kernels::alloc_raw(Nfield*eb.Nf_dir_block[d]);
         kernels::soln_to_flux(eb.soln2flux(d), eb.fields, Uf, eb.lengths, d);
-        dtmin_dir[d] = kernels::local_timestep(Uf, eb.metric.timestep_transform[d],
+        dtmin_dir[d] = kernels::local_timestep(Uf, eb.geometry.timestep_transform[d],
                                                U_to_P, c_from_P, eb.lengths, d);                          
         delete Uf;
     }
@@ -157,7 +157,7 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
         kernels::soln_to_flux(eb.soln2flux(i), U, Uf(i), eb.lengths, i);
 
     for (int i: dirs)
-        kernels::bulk_fluxes(Uf(i), F(i), eb.metric.S[i], 
+        kernels::bulk_fluxes(Uf(i), F(i), eb.geometry.S[i], 
                              U_to_P, F_from_P, eb.lengths, i);
 
     for (int i: ifaces)
@@ -169,12 +169,12 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
     {
         int dir = faces[i].normal_dir;
         kernels::external_numerical_flux(faces[i], F(dir), F_numerical,
-                                         eb.metric.S[dir], eb.lengths);
+                                         eb.geometry.S[dir], eb.lengths);
     }
     
     for (int i: dirs)
         kernels::internal_numerical_flux(Uf(i), F(i), F_numerical,
-                                         eb.metric.S[i], eb.metric.normal[i], eb.lengths, i);
+                                         eb.geometry.S[i], eb.geometry.normal[i], eb.lengths, i);
 
     /* For explicit diffusive terms, calculate the diffusive flux and add
      * to the advective fluxes before taking the flux deriv: F += F_diffusive */
@@ -184,7 +184,7 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
     for (int i: dirs)
         kernels::fluxDeriv_to_soln(eb.fluxDeriv2soln(i), F(i), dF(i), eb.lengths, i);
 
-    kernels::flux_divergence(dF, eb.metric.Jrdetg(), divF, eb.lengths);
+    kernels::flux_divergence(dF, eb.geometry.Jrdetg(), divF, eb.lengths);
 
     /* Add div-cleaning scalar field's source directly here. Could alternatively do operator
      * splitting, and directly reduce psi in a subsequent substep. */
@@ -254,7 +254,7 @@ void Process::add_diffusive_flux(VectorField Uf, VectorField F)
     }
 
     /* Transform to physical-space gradient */
-    kernels::gradient_ref_to_phys(dU_ref, dU, eb.metric.dxdr, eb.lengths);
+    kernels::gradient_ref_to_phys(dU_ref, dU, eb.geometry.dxdr, eb.lengths);
 
     for (int dderiv: dirs)
         for (int dflux: dirs) // for each flux-point direction...
@@ -279,7 +279,7 @@ void Process::add_diffusive_flux(VectorField Uf, VectorField F)
 
     const real_t coeffs[2] = {system_data->viscosity, system_data->resistivity};
     for (int i: dirs) // flux-point direction
-        kernels::diffusive_flux(Uf(i), dUf[i], Fd(i), F_diff, coeffs, eb.metric.S[i], eb.lengths, i);
+        kernels::diffusive_flux(Uf(i), dUf[i], Fd(i), F_diff, coeffs, eb.geometry.S[i], eb.lengths, i);
 
     for (int i: dirs)
         kernels::add_vectors_inPlace(F(i), Fd(i), Nfield*eb.Nf_dir_block[i]);
