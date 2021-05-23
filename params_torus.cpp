@@ -8,6 +8,7 @@
 #include "write_screen.hpp"
 #include "domain_map_torus.hpp"
 #include "boundary_conditions.hpp"
+#include "spatial_metric.hpp"
 
 using std::cout;
 using std::endl;
@@ -387,6 +388,8 @@ void ParamsTorus::setup_elementblock(ElementBlock &elements, Process &proc)
     elements.Nfield   = proc.Nfield;
 
     elements.map = new BasicSquareTorusMap(proc.group, boundary_modes);
+
+    elements.geometry.metric_s = new DiagonalSpatialMetric(cylindrical);
 
     /* At this point all external information is present, and the internal
      * setup method can take over. */

@@ -6,6 +6,7 @@
 
 class Edge;
 class ElementBlock;
+class SpatialMetric;
 
 /* REFERENCE coords are the 3D Cartesian coordinates local to the
  * reference element --- i.e. x[0-2] in [0,1]
@@ -26,6 +27,7 @@ class Geometry
 
     public:
     /* On solution points... */
+    SpatialMetric* metric_s;
     ScalarField Jrdetg;  // |J| sqrt{det(g)}
     VectorField dxdr[3]; // dxdr[i](j,...) = d x^i / d r^j 
                          // Only used to find grad(U) for diffusive flux
