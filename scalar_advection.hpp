@@ -3,13 +3,61 @@
 
 #include "physics_functors.hpp"
 
-//#include <string>
+
+class ScalarAdvection : public Physics
+{
+    private:
+    const real_t wave_speed[3] = {0.7, -0.3, 0.2};
+
+    public:
+    ScalarAdvection()
+    {
+        Nfield = 1;
+        variables = new string [1];
+        variables[0] = "phi";
+    }
 
 
-static real_t wave_speed_scalar_advection[3] = {0.7, -0.3, 0.2};
+    void ConservedToPrimitive(const real_t* const __restrict__ U, 
+                                    real_t* const __restrict__ P) const override
+    {
+        P[0] = U[0];
+        return;
+    }
 
 
+    void WaveSpeeds(const real_t* const P, real_t* const c,
+                    const int dir) const override
+    {
+        c[0] = MAX(0.0, wave_speed[dir]);
+        c[1] = MIN(0.0, wave_speed[dir]);
 
+        return;
+    }
+
+
+    void Fluxes(const real_t* const P, real_t (*F)[3]) const override
+    {
+        for (int i: dirs)
+            F[0][i] = wave_speed[i] * P[0];
+
+        return;
+    }
+
+
+    void DiffusiveFluxes(const real_t* const __restrict__ U, 
+                         const real_t (* const __restrict__ dU)[3],
+                               real_t (*__restrict__ F)[3],
+                         const real_t* const __restrict__ args) const override
+    {
+        return;
+    }
+};
+
+
+/****************************************************************/
+
+#if 0 
 class SystemData_scalar_advection : public SystemData
 {
     public:
@@ -63,4 +111,5 @@ class  Fluxes_scalar_advection: public FluxesFromPrimitive
         return;
     }
 };
+#endif
 #endif
