@@ -7,6 +7,7 @@
 #include "edge.hpp"
 #include "transfinite_map.hpp"
 #include "geometry_labels.hpp"
+#include "spatial_metric.hpp"
 
 
 void Geometry::allocate_on_host(const int Ns, const int Nf[3])
@@ -33,6 +34,8 @@ void Geometry::allocate_on_host(const int Ns, const int Nf[3])
         for(int dphys: dirs)
             dxdr[dref](dphys) = new real_t [Ns]();
 
+    metric_s->allocate_on_host(Ns);
+
 
     /* Flux points */
     for (int d: dirs)
@@ -56,11 +59,9 @@ void Geometry::allocate_on_host(const int Ns, const int Nf[3])
             timestep_transform[d](j) = new real_t [Nf[d]]();
         }
 
-        //rdetg_f[d] = new real_t [Nf[d]]();
+        metric_f[d]->allocate_on_host(Nf[d]);
     }
     
-
-
     return;
 }
 
@@ -89,6 +90,7 @@ void Geometry::setup_full(ElementBlock& eb)
     real_t xe[3];
     real_t drdx[3][3]; 
     //real_t drdx[3]; // For 2D method, which is ref-dir by ref-dir
+    real_t rp[3]; // Phys coord --- use for setting spatial metric
     
     Matrix J; // dPHYS/dREF -- J.arr[phys][ref]
     real_t detJ;
@@ -167,6 +169,11 @@ void Geometry::setup_full(ElementBlock& eb)
             for (int dref: dirs)
                 for (int dphys: dirs)
                     dxdr[dref](dphys,mem_loc) = J.inv[dref][dphys];
+
+            /* Fill in the spatial metric arrays */
+            for (int d: dirs)
+                rp[d] = eb.rs(d, mem_loc);
+            metric_s->fill(rp, mem_loc);
         }
     }
 
@@ -257,10 +264,14 @@ void Geometry::setup_full(ElementBlock& eb)
 
                 /* Assume J.inv[ref][phys]... */
                 for (int dphys: dirs)
-                {
                     S[d](dphys,mem_loc)  = detJ * rdetg * J.inv[d][dphys];
-                    //Sg[d](dphys,mem_loc) = detJ *         J.inv[d][dphys];
-                }
+
+
+                /* Fill spatial metric --- need to interpolate to find r at flux
+                 * point first, since this isn't being stored.                   */
+                polynomial_transfinite_map_3D(xe, elem_edges, elem_corners, rp);
+                metric_f[d]->fill(rp, mem_loc);
+
                 
                 /* Calculate helper array for finding timestep limit */
                 /* Double check that xf[0] = 0, xf[-1] = 1 */
@@ -287,6 +298,8 @@ void Geometry::setup_full(ElementBlock& eb)
                         eb.timestep_transform_max = tt;
                 }
             } // end loop over every flux point
+
+
 
             /* This needs to be tidied and rationalised... */
             /* Face normals in this transform direction for this element  */

@@ -56,7 +56,7 @@ class DiagonalSpatialMetric : public SpatialMetric
     {
         switch(metric_coords)
         {
-            case Cartesian:
+            case cartesian:
                 g[0][i] = 1.0;
                 g[1][i] = 1.0;
                 g[2][i] = 1.0;

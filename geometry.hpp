@@ -38,8 +38,7 @@ class Geometry
     VectorField S[3];  // Physical->Reference vector transform
                        // Has rdetg because used to calculate divF
                        // S[i] = |J| rdetg d ref^i/d phys^j 
-    //VectorField Sg[3]; // Only used for finding the gradient for the
-    //                   // diffusive fluxes: Sg = S / rdetg
+    SpatialMetric* metric_f[3];
 
     VectorField timestep_transform[3]; // Transforms physical v^i to 
                                        // ref v^j and includes dx^j 

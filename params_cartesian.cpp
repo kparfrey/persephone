@@ -8,6 +8,7 @@
 #include "write_screen.hpp"
 #include "domain_map.hpp"
 #include "geometry_labels.hpp"
+#include "spatial_metric.hpp"
 
 using std::cout;
 using std::endl;
@@ -134,6 +135,10 @@ void ParamsCartesian::setup_elementblock(ElementBlock &elements, Process &proc)
 
     elements.map = new BasicRect2D;
     //elements.map = new WaveRect2D; //new QuarterAnnulusMap; // specify manually for now...
+
+    elements.geometry.metric_s = new DiagonalSpatialMetric(cartesian);
+    for (int d: dirs)
+        elements.geometry.metric_f[d] = new DiagonalSpatialMetric(cartesian);
 
     /* At this point all external information is present, and the internal
      * setup method can take over. */

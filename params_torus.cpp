@@ -390,6 +390,8 @@ void ParamsTorus::setup_elementblock(ElementBlock &elements, Process &proc)
     elements.map = new BasicSquareTorusMap(proc.group, boundary_modes);
 
     elements.geometry.metric_s = new DiagonalSpatialMetric(cylindrical);
+    for (int d: dirs)
+        elements.geometry.metric_f[d] = new DiagonalSpatialMetric(cylindrical);
 
     /* At this point all external information is present, and the internal
      * setup method can take over. */
