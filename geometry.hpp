@@ -31,7 +31,6 @@ class Geometry
     ScalarField Jrdetg;  // |J| sqrt{det(g)}
     VectorField dxdr[3]; // dxdr[i](j,...) = d x^i / d r^j 
                          // Only used to find grad(U) for diffusive flux
-    //ScalarField J;     // |J| : only used for diffusive fluxes
 
 
     /* ...and on flux points */
@@ -39,39 +38,13 @@ class Geometry
                        // Has rdetg because used to calculate divF
                        // S[i] = |J| rdetg d ref^i/d phys^j 
     SpatialMetric* metric_f[3];
-
     VectorField timestep_transform[3]; // Transforms physical v^i to 
                                        // ref v^j and includes dx^j 
                                        // tt[i] = (1/Dx^i) d x^i/ d r^j
+ 
 
     /* At element faces */
     VectorField normal[3]; // One VectorField for each transform dir
-
-    //TensorField g[3];  // Physical components
-    // Will need others eventually
-
-
-
-    /* Transforms between physical and reference coords */
-    //TensorField    J; // d(PHYSICAL)/d(REFERENCE)
-    //TensorField Jinv; // d(REFERENCE)/d(PHYSICAL)
-
-    /* Reference coords */ 
-    //TensorField g;     // Spatial 3-metric (dual/covariant)
-    //TensorField ginv;  // Inverse 3-metric (vector/contravariant)
-    //ScalarField rdetg; // Square root of 3-metric determinant
-    
-    /* ...and on flux points */
-    //TensorField     J_f[3];
-    //TensorField  Jinv_f[3];
-    //TensorField     g_f[3];
-    //TensorField  ginv_f[3];
-    //ScalarField rdetg_f[3]; 
-
-
-    /* Physical coords */
-    //TensorField gphys; // Spatial 3-metric, in chosen physical coords
-    //TensorField gphys_f[3];
 
 
     /* Methods */

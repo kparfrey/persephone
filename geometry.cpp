@@ -15,20 +15,7 @@ void Geometry::allocate_on_host(const int Ns, const int Nf[3])
     /* Ns and Nf[3] are the total quantities in the block */
 
     /* Solution points */
-    /***
-    for (int i: dirs)
-        for (int j: dirs)
-        {
-            //   J(i,j)  = new real_t [Ns]();
-            //Jinv(i,j)  = new real_t [Ns]();
-            //   g(i,j)  = new real_t [Ns]();
-            //ginv(i,j)  = new real_t [Ns]();
-            //gphys(i,j) = new real_t [Ns]();
-        }
-     ***/
-
     Jrdetg = new real_t [Ns]();
-    //J      = new real_t [Ns](); // Only used for diffusive terms
     
     for(int dref: dirs)
         for(int dphys: dirs)
@@ -40,22 +27,9 @@ void Geometry::allocate_on_host(const int Ns, const int Nf[3])
     /* Flux points */
     for (int d: dirs)
     {
-        /***
-        for (int i: dirs)
-            for (int j: dirs)
-            {
-                //    J_f[d](i,j) = new real_t [Nf[d]]();
-                // Jinv_f[d](i,j) = new real_t [Nf[d]]();
-                //    g_f[d](i,j) = new real_t [Nf[d]]();
-                // ginv_f[d](i,j) = new real_t [Nf[d]]();
-                //gphys_f[d](i,j) = new real_t [Nf[d]]();
-            }
-         ***/
-
         for (int j: dirs)
         {
             S[d](j)  = new real_t [Nf[d]]();
-            //Sg[d](j) = new real_t [Nf[d]](); // Only for diffusive terms
             timestep_transform[d](j) = new real_t [Nf[d]]();
         }
 
