@@ -1,7 +1,7 @@
 #ifndef SCALAR_ADVECTION_HPP
 #define SCALAR_ADVECTION_HPP
 
-#include "physics_functors.hpp"
+#include "physics.hpp"
 
 
 class ScalarAdvection : public Physics

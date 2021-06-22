@@ -1,5 +1,5 @@
-#ifndef PHYSICS_FUNCTORS_HPP
-#define PHYSICS_FUNCTORS_HPP
+#ifndef PHYSICS_HPP
+#define PHYSICS_HPP
 
 #include "common.hpp"
 #include <string>

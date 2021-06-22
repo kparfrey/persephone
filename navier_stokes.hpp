@@ -2,7 +2,7 @@
 #define NAVIER_STOKES_HPP
 
 #include <cmath>
-#include "physics_functors.hpp"
+#include "physics.hpp"
 
 /* U --- conserved
  * 0 rho
