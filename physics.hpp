@@ -2,6 +2,7 @@
 #define PHYSICS_HPP
 
 #include "common.hpp"
+#include "spatial_metric.hpp"
 #include <string>
 using std::string;
 
@@ -12,6 +13,10 @@ class Physics
     EqnSystem system;
     int Nfield;
     string* variables;
+
+    /* Will need to be reset to the correct SpatialMetric pointer, 
+     * depending on which set of points is being operated on... */
+    SpatialMetric* metric;
 
     bool diffusive;
     real_t viscosity;   // kinematic viscosity ("nu")

@@ -10,6 +10,12 @@ class SpatialMetric
 
     MetricCoords metric_coords;
 
+    /* The active memory location when accessing the metric arrays.
+     * Need to explicitly set this before using the metric at each location.
+     * This method avoids having to copy into temporary pointwise arrays,
+     * and in particular having to know whether the metric is diagonal
+     * or full. */
+    int mem;
     
     SpatialMetric(MetricCoords metric_coords) 
         : metric_coords(metric_coords) {}
@@ -22,8 +28,12 @@ class SpatialMetric
                       const int i) = 0;
 
     virtual void lower(const real_t* const __restrict__ Vu,
-                             real_t* const __restrict__ Vl,
-                       const int i) = 0;
+                             real_t* const __restrict__ Vl) = 0;
+
+    virtual real_t dot(const real_t* const __restrict__ Au,
+                       const real_t* const __restrict__ Bu) = 0;
+
+    virtual real_t square(const real_t* const __restrict__ Vu) = 0;
 
     /* Convert from an orthonormal basis to contravariant
      * components in a coordinate basis. */
@@ -42,7 +52,7 @@ class DiagonalSpatialMetric : public SpatialMetric
     DiagonalSpatialMetric(MetricCoords metric_coords) 
         : SpatialMetric(metric_coords) {}
     
-    void allocate_on_host(const int N)
+    void allocate_on_host(const int N) override
     {
         for (int d: dirs)
             g[d] = new real_t [N]();
@@ -52,7 +62,7 @@ class DiagonalSpatialMetric : public SpatialMetric
 
         
     void fill(const real_t* const __restrict__ r,
-              const int i)
+              const int i) override
     {
         switch(metric_coords)
         {
@@ -72,16 +82,30 @@ class DiagonalSpatialMetric : public SpatialMetric
     }
 
 
+    /* Note mem must be explicitly set before using this */
     void lower(const real_t* const __restrict__ Vu,
-                     real_t* const __restrict__ Vl,
-               const int i)
+                     real_t* const __restrict__ Vl) override
     {
-        Vl[0] = g[0][i] * Vu[0];
-        Vl[1] = g[1][i] * Vu[1];
-        Vl[2] = g[2][i] * Vu[2];
+        Vl[0] = g[0][mem] * Vu[0];
+        Vl[1] = g[1][mem] * Vu[1];
+        Vl[2] = g[2][mem] * Vu[2];
 
         return;
     }
+
+
+    real_t dot(const real_t* const __restrict__ Au,
+               const real_t* const __restrict__ Bu) override
+    {
+        return g[0][mem]*Au[0]*Bu[0] + g[1][mem]*Au[1]*Bu[1] + g[2][mem]*Au[2]*Bu[2];
+    }
+
+
+    real_t square(const real_t* const __restrict__ Vu) override
+    {
+        return g[0][mem]*Vu[0]*Vu[0] + g[1][mem]*Vu[1]*Vu[1] + g[2][mem]*Vu[2]*Vu[2];
+    }
+
 };
 
 #endif
