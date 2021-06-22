@@ -12,6 +12,7 @@ class ScalarAdvection : public Physics
     public:
     ScalarAdvection()
     {
+        system = scalar_advection;
         Nfield = 1;
         variables = new string [1];
         variables[0] = "phi";

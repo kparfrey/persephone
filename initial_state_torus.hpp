@@ -4,7 +4,8 @@
 #include "common.hpp"
 
 class ElementBlock;
+class Physics;
 
-void set_euler_torus(ElementBlock&);
+void set_euler_torus(ElementBlock&, Physics* physics);
 
 #endif

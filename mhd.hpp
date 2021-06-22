@@ -40,6 +40,7 @@ class MHD : public Physics
 
     MHD()
     {
+        system = mhd;
         Nfield = 9;
         variables = new string [9];
         variables[0] = "rho";

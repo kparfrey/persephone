@@ -9,6 +9,7 @@ using std::string;
 class Physics
 {
     public:
+    EqnSystem system;
     int Nfield;
     string* variables;
 

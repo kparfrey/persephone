@@ -9,6 +9,7 @@
 #include "domain_map_torus.hpp"
 #include "boundary_conditions.hpp"
 #include "spatial_metric.hpp"
+#include "physics_includes.hpp"
 
 using std::cout;
 using std::endl;
@@ -119,7 +120,7 @@ void ParamsTorus::setup_process(Process &proc)
 
     setup_elementblock(proc.elements, proc);
     
-    set_initial_state(proc.elements, equations);
+    set_initial_state(proc.elements, proc.physics);
 
     write::variable<real_t>("CFL", proc.cfl);
     write::variable<real_t>("End time", proc.end_time);
@@ -402,12 +403,12 @@ void ParamsTorus::setup_elementblock(ElementBlock &elements, Process &proc)
 
 
 /* Should this be moved to initial_state_torus? */
-void ParamsTorus::set_initial_state(ElementBlock &elements, EqnSystem equations)
+void ParamsTorus::set_initial_state(ElementBlock &elements, Physics* physics)
 {
-    switch (equations)
+    switch (physics->system)
     {
         case navier_stokes:
-            set_euler_torus(elements);
+            set_euler_torus(elements, physics);
             break;
         case mhd:
             write::error("MHD not implemented for torus", destroy);

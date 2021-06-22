@@ -4,6 +4,7 @@
 #include "common.hpp"
 
 class ElementBlock;
+class Physics;
 
-void set_initial_state_cartesian(ElementBlock&, EqnSystem system);
+void set_initial_state_cartesian(ElementBlock&, Physics* physics);
 #endif

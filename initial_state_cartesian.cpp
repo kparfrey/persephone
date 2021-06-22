@@ -29,11 +29,14 @@ static real_t scalar_function(const real_t r[3])
 static void shu_vortex(const real_t r[3],
                              real_t* const __restrict__ fields,
                        const int loc0,
-                       const int Ns_block)
+                       const int Ns_block,
+                       const NavierStokes* const __restrict__ physics)
 {
     enum conserved {Density, mom0, mom1, mom2, energy};
     real_t density, v0, v1, v2, pressure; // primitive variables
 
+    const real_t gamma = physics->gamma;
+    const real_t gm1   = physics->gm1;
     const real_t eps = 5.0;
     const real_t rsq = r[0]*r[0] + r[1]*r[1];
 
@@ -46,17 +49,17 @@ static void shu_vortex(const real_t r[3],
     const real_t specific_KE = 0.5 * (v0*v0 + v1*v1 + v2*v2);
 
     /* Density and pressure */
-    const real_t dT = - gm1_navstokes * eps*eps * std::exp(1.0-rsq) 
-                                        / (8 * gamma_navstokes * pi*pi);
-    density  = std::pow(1.0 + dT, 1.0/gm1_navstokes);
-    pressure = std::pow(density, gamma_navstokes); // Since entropy = 1
+    const real_t dT = - gm1 * eps*eps * std::exp(1.0-rsq) 
+                                        / (8 * gamma * pi*pi);
+    density  = std::pow(1.0 + dT, 1.0/gm1);
+    pressure = std::pow(density, gamma); // Since entropy = 1
 
     /* Convert to conserved variables */
     fields[loc0 + Density*Ns_block] = density;
     fields[loc0 +    mom0*Ns_block] = density * v0;
     fields[loc0 +    mom1*Ns_block] = density * v1;
     fields[loc0 +    mom2*Ns_block] = density * v2;
-    fields[loc0 +  energy*Ns_block] = density * specific_KE + pressure / gm1_navstokes;
+    fields[loc0 +  energy*Ns_block] = density * specific_KE + pressure / gm1;
 
     return;
 }
@@ -66,10 +69,13 @@ static void shu_vortex(const real_t r[3],
 static void alfven_wave(const real_t r[3],
                               real_t* const __restrict__ fields,
                         const int loc0,
-                        const int Ns_block)
+                        const int Ns_block,
+                        const MHD* const __restrict__ physics)
 {
     enum conserved {Density, mom0, mom1, mom2, energy, B0, B1, B2, psi};
     real_t density, v0, v1, v2, pressure, b0, b1, b2; // primitive variables
+
+    const real_t gm1   = physics->gm1;
 
     real_t x, y, alpha, cosa, sina;
     real_t bpar, bperp, vpar, vperp;
@@ -105,7 +111,7 @@ static void alfven_wave(const real_t r[3],
     fields[loc0 +    mom0*Ns_block] = density * v0;
     fields[loc0 +    mom1*Ns_block] = density * v1;
     fields[loc0 +    mom2*Ns_block] = density * v2;
-    fields[loc0 +  energy*Ns_block] = kinetic_energy + magnetic_energy + pressure / gm1_mhd;
+    fields[loc0 +  energy*Ns_block] = kinetic_energy + magnetic_energy + pressure / gm1;
     fields[loc0 +      B0*Ns_block] = b0;
     fields[loc0 +      B1*Ns_block] = b1;
     fields[loc0 +      B2*Ns_block] = b2;
@@ -115,7 +121,7 @@ static void alfven_wave(const real_t r[3],
 }
 
 
-void set_initial_state_cartesian(ElementBlock& eb, EqnSystem system)
+void set_initial_state_cartesian(ElementBlock& eb, Physics* physics)
 {
     int mem_offset;
     int loc0; // Memory location for the 0th field
@@ -135,16 +141,16 @@ void set_initial_state_cartesian(ElementBlock& eb, EqnSystem system)
             for (int d: dirs)
                 r[d] = eb.rs(d,loc0);
 
-            switch(system)
+            switch(physics->system)
             {
                 case scalar_advection:
                     eb.fields[loc0] = scalar_function(r);
                     break;
                 case navier_stokes:
-                    shu_vortex(r, eb.fields, loc0, eb.Ns_block);
+                    shu_vortex(r, eb.fields, loc0, eb.Ns_block, (NavierStokes*)physics);
                     break;
                 case mhd:
-                    alfven_wave(r, eb.fields, loc0, eb.Ns_block);
+                    alfven_wave(r, eb.fields, loc0, eb.Ns_block, (MHD*)physics);
                     break;
             }
         }

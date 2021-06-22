@@ -32,11 +32,11 @@ class ParamsTorus : public Params
     
 
     /* General methods */
-    virtual void write_param_info();
-    virtual void secondary_params();
-    virtual void setup_process(Process &proc);
-    virtual void setup_elementblock(ElementBlock& elements, Process &proc);
-    virtual void set_initial_state(ElementBlock& elements, EqnSystem equations);
+    void write_param_info() override;
+    void secondary_params() override;
+    void setup_process(Process &proc) override;
+    void setup_elementblock(ElementBlock& elements, Process &proc) override;
+    void set_initial_state(ElementBlock& elements, Physics* physics) override;
 
     /* Constructor */
     ParamsTorus(EqnSystem equations,

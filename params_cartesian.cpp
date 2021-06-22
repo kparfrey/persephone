@@ -80,7 +80,7 @@ void ParamsCartesian::setup_process(Process &proc)
 
     setup_elementblock(proc.elements, proc);
     
-    set_initial_state(proc.elements, equations);
+    set_initial_state(proc.elements, proc.physics);
 
     write::variable<real_t>("CFL", proc.cfl);
     write::variable<real_t>("End time", proc.end_time);
@@ -148,9 +148,9 @@ void ParamsCartesian::setup_elementblock(ElementBlock &elements, Process &proc)
 }
 
 
-void ParamsCartesian::set_initial_state(ElementBlock &elements, EqnSystem equations)
+void ParamsCartesian::set_initial_state(ElementBlock &elements, Physics* physics)
 {
-    set_initial_state_cartesian(elements, equations);
+    set_initial_state_cartesian(elements, physics);
 
     return;
 }
