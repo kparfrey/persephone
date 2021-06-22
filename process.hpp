@@ -9,12 +9,16 @@
 
 class Params;
 class BasicTimeIntegrator;
+class Physics;
+class NumericalFlux;
+
+#if 0
 class SystemData;
 class ConservedToPrimitive;
 class WaveSpeedsFromPrimitive;
 class FluxesFromPrimitive;
-class NumericalFlux;
 class DiffusiveFluxes;
+#endif
 
 class Process
 {
@@ -63,15 +67,19 @@ class Process
     
     real_t tt_max_global;  // Global maximum of timestep transform, for finding c_h 
 
-    BasicTimeIntegrator*     time_integrator;
+    BasicTimeIntegrator* time_integrator;
 
-    EqnSystem                system;
+    EqnSystem      system;
+    Physics*       physics;
+    NumericalFlux* F_numerical;
+
+    /***
     SystemData*              system_data;
     ConservedToPrimitive*    U_to_P;
     WaveSpeedsFromPrimitive* c_from_P;
     FluxesFromPrimitive*     F_from_P;
-    NumericalFlux*           F_numerical;
     DiffusiveFluxes*         F_diff;
+    ***/
 
 
     /* Methods */

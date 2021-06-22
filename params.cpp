@@ -35,39 +35,44 @@ void Params::setup_process_generic(Process &proc)
     switch (equations)
     {
         case scalar_advection:
-            proc.system_data = new SystemData_scalar_advection;
-            proc.U_to_P   = new UtoP_scalar_advection;
-            proc.c_from_P = new WaveSpeeds_scalar_advection;
-            proc.F_from_P = new Fluxes_scalar_advection;
+            proc.physics = new ScalarAdvection;
+            //proc.system_data = new SystemData_scalar_advection;
+            //proc.U_to_P   = new UtoP_scalar_advection;
+            //proc.c_from_P = new WaveSpeeds_scalar_advection;
+            //proc.F_from_P = new Fluxes_scalar_advection;
             break;
         case navier_stokes:
-            proc.system_data = new SystemData_navstokes;
-            proc.U_to_P   = new UtoP_navstokes;
-            proc.c_from_P = new WaveSpeeds_navstokes;
-            proc.F_from_P = new Fluxes_navstokes;
-            proc.F_diff   = new DiffusiveFluxes_navstokes;
+            proc.physics = new NavierStokes;
+            //proc.system_data = new SystemData_navstokes;
+            //proc.U_to_P   = new UtoP_navstokes;
+            //proc.c_from_P = new WaveSpeeds_navstokes;
+            //proc.F_from_P = new Fluxes_navstokes;
+            //proc.F_diff   = new DiffusiveFluxes_navstokes;
             break;
         case mhd:
-            proc.system_data = new SystemData_mhd;
-            proc.U_to_P   = new UtoP_mhd;
-            proc.c_from_P = new WaveSpeeds_mhd;
-            proc.F_from_P = new Fluxes_mhd;
-            proc.F_diff   = new DiffusiveFluxes_mhd;
+            proc.physics = new MHD;
+            //proc.system_data = new SystemData_mhd;
+            //proc.U_to_P   = new UtoP_mhd;
+            //proc.c_from_P = new WaveSpeeds_mhd;
+            //proc.F_from_P = new Fluxes_mhd;
+            //proc.F_diff   = new DiffusiveFluxes_mhd;
             break;
         default:
             write::error("Equation system not recognised.");
     }
 
-    proc.system   = equations;
-    proc.Nfield   = proc.system_data->Nfield;
+    proc.system = equations;
+    proc.Nfield = proc.physics->Nfield;
 
     /* Move inside a switch once more flux choices are defined */
     proc.F_numerical = new HLL;
 
-    proc.F_numerical->Nfield   = proc.Nfield;
-    proc.F_numerical->U_to_P   = proc.U_to_P;   // Convenience pointers
-    proc.F_numerical->c_from_P = proc.c_from_P;
-    proc.F_numerical->F_from_P = proc.F_from_P;
+    proc.F_numerical->Nfield  = proc.Nfield;
+    proc.F_numerical->physics = proc.physics; // Convenience pointer
+
+    //proc.F_numerical->U_to_P   = proc.U_to_P;   
+    //proc.F_numerical->c_from_P = proc.c_from_P;
+    //proc.F_numerical->F_from_P = proc.F_from_P;
 
     return;
 }

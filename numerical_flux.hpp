@@ -12,9 +12,10 @@
 class NumericalFlux
 {
     public:
-    ConservedToPrimitive*    U_to_P;
-    WaveSpeedsFromPrimitive* c_from_P;
-    FluxesFromPrimitive*     F_from_P;
+    Physics* physics;
+    //ConservedToPrimitive*    U_to_P;
+    //WaveSpeedsFromPrimitive* c_from_P;
+    //FluxesFromPrimitive*     F_from_P;
 
     int Nfield;
 
@@ -52,17 +53,23 @@ class HLL : public NumericalFlux
         real_t Fstar;
         real_t F0; // Here (FL + FR)/2 for now
 
-        (*U_to_P)(UL, PL);
-        (*U_to_P)(UR, PR);
+        //(*U_to_P)(UL, PL);
+        //(*U_to_P)(UR, PR);
+        physics->ConservedToPrimitive(UL,PL);
+        physics->ConservedToPrimitive(UR,PR);
 
         for (int i: dirs)
         {
-            (*c_from_P)(PL, cL[i], i);
-            (*c_from_P)(PR, cR[i], i);
+            //(*c_from_P)(PL, cL[i], i);
+            //(*c_from_P)(PR, cR[i], i);
+            physics->WaveSpeeds(PL, cL[i], i);
+            physics->WaveSpeeds(PR, cR[i], i);
         }
 
-        (*F_from_P)(PL, FL);
-        (*F_from_P)(PR, FR);
+        //(*F_from_P)(PL, FL);
+        //(*F_from_P)(PR, FR);
+        physics->Fluxes(PL, FL);
+        physics->Fluxes(PR, FR);
 
         /* Signed max wavespeeds in each direction.
          * cpos is max speed parallel to the coord axis (L to R); ie Toro's S_R.
@@ -119,14 +126,20 @@ class HLL_straight : public NumericalFlux
         real_t FL[Nv][3], FR[Nv][3];
         real_t cL[2], cR[2];
 
+#if 0
         (*U_to_P)(UL, PL);
         (*U_to_P)(UR, PR);
-
         (*c_from_P)(PL, cL, dir);
         (*c_from_P)(PR, cR, dir);
-
         (*F_from_P)(PL, FL);
         (*F_from_P)(PR, FR);
+#endif
+        physics->ConservedToPrimitive(UL,PL);
+        physics->ConservedToPrimitive(UR,PR);
+        physics->WaveSpeeds(PL, cL, dir);
+        physics->WaveSpeeds(PR, cR, dir);
+        physics->Fluxes(PL, FL);
+        physics->Fluxes(PR, FR);
 
         /* Signed max wavespeeds in each direction.
          * cpos is max speed parallel to the coord axis (L to R); ie Toro's S_R.

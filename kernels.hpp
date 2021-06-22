@@ -2,13 +2,15 @@
 #include "tensor_field.hpp"
 #include "face_communicator.hpp"
 
+#if 0
 class ConservedToPrimitive;
 class FluxesFromPrimitive;
-class NumericalFlux;
 class DiffusiveFluxes;
-
 class WaveSpeedsFromPrimitive;
+#endif
 
+class Physics;
+class NumericalFlux;
 
 namespace kernels
 {
@@ -68,8 +70,9 @@ namespace kernels
     void bulk_fluxes(const real_t* const __restrict__ Uf,
                            real_t* const __restrict__ F ,
                      const VectorField                S ,
-                     const ConservedToPrimitive*  U_to_P,
-                     const FluxesFromPrimitive* F_from_P,
+                     const Physics* const __restrict__ physics,
+                     //const ConservedToPrimitive*  U_to_P,
+                     //const FluxesFromPrimitive* F_from_P,
                      const LengthBucket lb, const int dir);
 
     void flux_divergence(const VectorField                dF,
@@ -123,7 +126,8 @@ namespace kernels
     void diffusive_flux(const real_t* const __restrict__ Uf,
                         const VectorField                dUf,
                               real_t* const __restrict__ F,
-                        const DiffusiveFluxes*           F_diff,
+                        //const DiffusiveFluxes*           F_diff,
+                        const Physics* const __restrict__ physics,
                         const real_t* const __restrict__ args,
                         const VectorField                S,
                         const LengthBucket               lb,
@@ -132,7 +136,8 @@ namespace kernels
     /* Not a final "kernel", obviously */
     real_t local_timestep(const real_t* const __restrict__ Uf,
                       const VectorField timestep_transform,
-                      const ConservedToPrimitive*  U_to_P,
-                      const WaveSpeedsFromPrimitive* c_from_P,
+                      const Physics* const __restrict__ physics,
+                      //const ConservedToPrimitive*  U_to_P,
+                      //const WaveSpeedsFromPrimitive* c_from_P,
                       const LengthBucket lb, const int dir);
 }

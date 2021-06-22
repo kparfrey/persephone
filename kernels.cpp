@@ -330,8 +330,9 @@ namespace kernels
     void bulk_fluxes(const real_t* const __restrict__ Uf,
                            real_t* const __restrict__ F ,
                      const VectorField                S ,
-                     const ConservedToPrimitive*  U_to_P,
-                     const FluxesFromPrimitive* F_from_P,
+                     const Physics* const __restrict__ physics,
+                     //const ConservedToPrimitive*  U_to_P,
+                     //const FluxesFromPrimitive* F_from_P,
                      const LengthBucket lb, const int dir)
     {
         int id_elem;
@@ -370,11 +371,13 @@ namespace kernels
                 for (int field = 0; field < lb.Nfield; ++field)
                     Up[field] = Uf[mem + field * Nf_tot];
 
-                (*U_to_P)(Up, Pp); // conserved -> primitive variables
+                //(*U_to_P)(Up, Pp); // conserved -> primitive variables
+                physics->ConservedToPrimitive(Up, Pp);
 
                 /* Uf is the physical solution at flux points
                  * Calculate physical fluxes in all three dirs */
-                (*F_from_P)(Pp, Fp);
+                //(*F_from_P)(Pp, Fp);
+                physics->Fluxes(Pp, Fp);
 
                 /* Transform from physical to reference-space fluxes
                  * for all fields */
@@ -968,7 +971,8 @@ namespace kernels
     void diffusive_flux(const real_t* const __restrict__ Uf,
                         const VectorField                dUf,
                               real_t* const __restrict__ F,
-                        const DiffusiveFluxes*           F_diff,
+                        //const DiffusiveFluxes*           F_diff,
+                        const Physics* const __restrict__ physics,
                         const real_t* const __restrict__ args,
                         const VectorField                S,
                         const LengthBucket               lb,
@@ -995,7 +999,8 @@ namespace kernels
                     dUp[field][d] = dUf(d, i + field*N);
             }
 
-            (*F_diff)(Up, dUp, F_diff_p, args);
+            //(*F_diff)(Up, dUp, F_diff_p, args);
+            physics->DiffusiveFluxes(Up, dUp, F_diff_p, args);
 
             /* Transform from physical to reference-space fluxes
              * for all fields */
@@ -1039,8 +1044,9 @@ namespace kernels
     /* Returns the timestep restriction along this reference direction.       */
     real_t local_timestep(const real_t* const __restrict__ Uf,
                           const VectorField timestep_transform,
-                          const ConservedToPrimitive*  U_to_P,
-                          const WaveSpeedsFromPrimitive* c_from_P,
+                          const Physics* const __restrict__ physics,
+                          //const ConservedToPrimitive*  U_to_P,
+                          //const WaveSpeedsFromPrimitive* c_from_P,
                           const LengthBucket lb, const int dir)
     { 
         int id_elem;
@@ -1082,13 +1088,15 @@ namespace kernels
                 for (int field = 0; field < lb.Nfield; ++field)
                     Up[field] = Uf[mem + field * Nf_tot];
 
-                (*U_to_P)(Up, Pp); // conserved -> primitive variables
+                //(*U_to_P)(Up, Pp); // conserved -> primitive variables
+                physics->ConservedToPrimitive(Up, Pp);
 
                 /* Uf is the physical solution at flux points
                  * Calculate wavespeeds in all three physical dirs */
                 for (int d: dirs) // iterate over phys-space directions
                 {
-                    (*c_from_P)(Pp, cp[d], d);
+                    //(*c_from_P)(Pp, cp[d], d);
+                    physics->WaveSpeeds(Pp, cp[d], d);
                     cm[d] = MAX(cp[d][0], std::abs(cp[d][1]));
                 }
                 
