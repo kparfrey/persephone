@@ -68,7 +68,7 @@ void Geometry::setup_full(ElementBlock& eb)
     
     Matrix J; // dPHYS/dREF -- J.arr[phys][ref]
     real_t detJ;
-    real_t rdetg = 1.0; //Assume physical coords are flat-spacetime Cartesian
+    //real_t rdetg = 1.0; //Assume physical coords are flat-spacetime Cartesian
     int mem_loc;
 
     /* For finding the timestep_transform */
@@ -110,6 +110,11 @@ void Geometry::setup_full(ElementBlock& eb)
             real_t Jarr[3][3] = {}; 
             mem_loc = eb.ids(i,j,k) + mem_offset;
 
+            /* Fill in the spatial metric arrays */
+            for (int d: dirs)
+                rp[d] = eb.rs(d, mem_loc);
+            metric_s->fill(rp, mem_loc);
+
             xe[0] = eb.xs(0,i);
             xe[1] = eb.xs(1,j);
             xe[2] = eb.xs(2,k);
@@ -133,8 +138,7 @@ void Geometry::setup_full(ElementBlock& eb)
             J.find_determinant();
             detJ = std::abs(J.det);
 
-            Jrdetg(mem_loc) = detJ * rdetg;
-            //J(mem_loc)      = detJ;
+            Jrdetg(mem_loc) = detJ * metric_s->rdetg[mem_loc];
 
             /* Used to find grad(U) for diffusive terms */
             J.find_inverse();
@@ -143,11 +147,6 @@ void Geometry::setup_full(ElementBlock& eb)
             for (int dref: dirs)
                 for (int dphys: dirs)
                     dxdr[dref](dphys,mem_loc) = J.inv[dref][dphys];
-
-            /* Fill in the spatial metric arrays */
-            for (int d: dirs)
-                rp[d] = eb.rs(d, mem_loc);
-            metric_s->fill(rp, mem_loc);
         }
     }
 
@@ -216,6 +215,13 @@ void Geometry::setup_full(ElementBlock& eb)
                 xe[d1] = eb.xs(d1,n1);
                 xe[d2] = eb.xs(d2,n2);
 
+
+                /* Fill spatial metric --- need to interpolate to find r at flux
+                 * point first, since this hasn't been stored.                   */
+                polynomial_transfinite_map_3D(xe, elem_edges, elem_corners, rp);
+                metric_f[d]->fill(rp, mem_loc);
+
+
                 /*** 2D Method --- leave here for now
                 for (int dref: dirs)
                 {
@@ -238,15 +244,9 @@ void Geometry::setup_full(ElementBlock& eb)
 
                 /* Assume J.inv[ref][phys]... */
                 for (int dphys: dirs)
-                    S[d](dphys,mem_loc)  = detJ * rdetg * J.inv[d][dphys];
+                    S[d](dphys,mem_loc) = detJ * metric_f[d]->rdetg[mem_loc] * J.inv[d][dphys];
 
 
-                /* Fill spatial metric --- need to interpolate to find r at flux
-                 * point first, since this isn't being stored.                   */
-                polynomial_transfinite_map_3D(xe, elem_edges, elem_corners, rp);
-                metric_f[d]->fill(rp, mem_loc);
-
-                
                 /* Calculate helper array for finding timestep limit */
                 /* Double check that xf[0] = 0, xf[-1] = 1 */
                 if (n0 == 0)
@@ -292,8 +292,10 @@ void Geometry::setup_full(ElementBlock& eb)
                 for (int dphys: dirs)
                     s[dphys] = S[d](dphys,mem_loc);
                
-                /* Assume physical coord system is Cartesian */
-                smag = std::sqrt(s[0]*s[0] + s[1]*s[1] + s[2]*s[2]);
+                /* Was assuming physical coord system is Cartesian... */
+                metric_f[d]->mem = mem_loc;
+                smag = std::sqrt(metric_f[d]->square(s));
+                //smag = std::sqrt(s[0]*s[0] + s[1]*s[1] + s[2]*s[2]);
 
                 for (int dphys: dirs)
                     normal[d](dphys,mem_loc_normals) = s[dphys]/smag;
@@ -306,8 +308,10 @@ void Geometry::setup_full(ElementBlock& eb)
                     
                     for (int dphys: dirs)
                         s[dphys] = S[d](dphys,mem_loc);
-                   
-                    smag = std::sqrt(s[0]*s[0] + s[1]*s[1] + s[2]*s[2]);
+                    
+                    metric_f[d]->mem = mem_loc;
+                    smag = std::sqrt(metric_f[d]->square(s));
+                    //smag = std::sqrt(s[0]*s[0] + s[1]*s[1] + s[2]*s[2]);
 
                     for (int dphys: dirs)
                         normal[d](dphys,mem_loc_normals) = s[dphys]/smag;

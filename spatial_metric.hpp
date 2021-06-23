@@ -10,6 +10,10 @@ class SpatialMetric
 
     MetricCoords metric_coords;
 
+    real_t* rdetg;
+    real_t* rdetg_deriv[3]; // (1/rdetg) * d_j (rdetg) for each j
+                            // Only used in finding stress tensor for viscosity
+
     /* The active memory location when accessing the metric arrays.
      * Need to explicitly set this before using the metric at each location.
      * This method avoids having to copy into temporary pointwise arrays,
@@ -54,8 +58,13 @@ class DiagonalSpatialMetric : public SpatialMetric
     
     void allocate_on_host(const int N) override
     {
+        rdetg = new real_t [N]();
+
         for (int d: dirs)
-            g[d] = new real_t [N]();
+        {
+            g[d]           = new real_t [N]();
+            rdetg_deriv[d] = new real_t [N]();
+        }
 
         return;
     }
@@ -70,11 +79,19 @@ class DiagonalSpatialMetric : public SpatialMetric
                 g[0][i] = 1.0;
                 g[1][i] = 1.0;
                 g[2][i] = 1.0;
+                rdetg[i] = 1.0;
+                rdetg_deriv[0][i] = 0.0;
+                rdetg_deriv[1][i] = 0.0;
+                rdetg_deriv[2][i] = 0.0;
                 break;
             case cylindrical:
                 g[0][i] = 1.0;
                 g[1][i] = 1.0;
                 g[2][i] = r[0] * r[0]; // Phi direction
+                rdetg[i] = r[0];
+                rdetg_deriv[0][i] = 1.0 / r[0];
+                rdetg_deriv[1][i] = 0.0;
+                rdetg_deriv[2][i] = 0.0;
                 break;
         }
 
