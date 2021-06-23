@@ -32,6 +32,8 @@ void write_data(Process &proc)
 
     string groupstring = std::to_string(proc.group);
 
+    proc.physics->metric = proc.elements.geometry.metric_s;
+
 
     /* Create filename */
     std::stringstream filenum;
@@ -80,8 +82,9 @@ void write_data(Process &proc)
                 for (int field = 0; field < proc.Nfield; ++field)
                     Up[field] = eb.fields[n + field * eb.Ns_block];
 
-                //(*proc.U_to_P)(Up, Pp); 
+                proc.physics->metric->mem = n;
                 proc.physics->ConservedToPrimitive(Up, Pp);
+                //(*proc.U_to_P)(Up, Pp); 
 
                 for (int field = 0; field < proc.Nfield; ++field)
                     primitives[n + field * eb.Ns_block] = Pp[field];

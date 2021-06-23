@@ -132,6 +132,7 @@ inline void NavierStokes::DiffusiveFluxes(const real_t* const __restrict__ U,
     real_t tau[3][3];
     real_t dv[3][3]; // dv[component][deriv dir]
     real_t divv;
+    real_t rdetg_deriv[3]; // (1/rdetg)*d_j(rdetg) at a single point
 
     for (int d: dirs)
         v[d] = U[mom0+d] / U[Density];
@@ -140,8 +141,10 @@ inline void NavierStokes::DiffusiveFluxes(const real_t* const __restrict__ U,
         for (int deriv: dirs)
             dv[comp][deriv] = (dU[mom0+comp][deriv] - v[comp]*dU[Density][deriv])
                                                                          / U[Density];
-    /* Need to add contribution from v^j * (1/rdetg)*d_j(rdetg) */
-    divv = dv[0][0] + dv[1][1] + dv[2][2]; // Assuming Cartesian...
+
+    for (int d: dirs)
+        rdetg_deriv[d] = metric->rdetg_deriv[d][metric->mem];
+    divv = dv[0][0] + dv[1][1] + dv[2][2] + metric->dot(v, rdetg_deriv);
 
     for (int d: dirs)
         tau[d][d] = 2*mu*dv[d][d] + lambda*divv;
@@ -159,7 +162,7 @@ inline void NavierStokes::DiffusiveFluxes(const real_t* const __restrict__ U,
 
         /* Is this a dot product of v^i and tau^{i d} ? -- Yes 
          * dE/dt = ... - div( v.tau )  */
-        F[tot_energy][d] = - metric->dot(&v[0], &tau[d][0]);
+        F[tot_energy][d] = - metric->dot(v, tau[d]);
         //F[tot_energy][d] = - (v[0]*tau[0][d] + v[1]*tau[1][d] + v[2]*tau[2][d]);
     }
 

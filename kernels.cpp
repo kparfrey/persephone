@@ -365,6 +365,8 @@ namespace kernels
             {
                 /* Memory location for the index-0 field */
                 mem = mem_offset + (n2 * Ns1 + n1) * Nf0 + n0;
+                
+                physics->metric->mem = mem; // So functions know which point they're operating on
 
                 /* Load all field variables at this location into
                  * the Up array. */
@@ -999,6 +1001,8 @@ namespace kernels
                     dUp[field][d] = dUf(d, i + field*N);
             }
 
+            physics->metric->mem = i; // So functions know which point they're operating on
+
             //(*F_diff)(Up, dUp, F_diff_p, args);
             physics->DiffusiveFluxes(Up, dUp, F_diff_p, args);
 
@@ -1082,6 +1086,8 @@ namespace kernels
             {
                 /* Memory location for the index-0 field */
                 mem = mem_offset + (n2 * Ns1 + n1) * Nf0 + n0;
+
+                physics->metric->mem = mem;
 
                 /* Load all field variables at this location into
                  * the Up array. */
