@@ -9,7 +9,6 @@
 
 class Params;
 class BasicTimeIntegrator;
-class Physics;
 class NumericalFlux;
 
 #if 0
@@ -70,8 +69,8 @@ class Process
     BasicTimeIntegrator* time_integrator;
 
     EqnSystem      system;
-    Physics*       physics;
-    NumericalFlux* F_numerical;
+    NumericalFlux* F_numerical[3]; // One for each set of flux points. Only diff in
+                                   // which Physics object their physics pointer points to
 
     /***
     SystemData*              system_data;

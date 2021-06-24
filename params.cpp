@@ -35,14 +35,18 @@ void Params::setup_process_generic(Process &proc)
     switch (equations)
     {
         case scalar_advection:
-            proc.physics = new ScalarAdvection;
+            for (int d: dirs)
+                proc.elements.physics[d] = new ScalarAdvection;
+            proc.elements.physics_soln = new ScalarAdvection;
             //proc.system_data = new SystemData_scalar_advection;
             //proc.U_to_P   = new UtoP_scalar_advection;
             //proc.c_from_P = new WaveSpeeds_scalar_advection;
             //proc.F_from_P = new Fluxes_scalar_advection;
             break;
         case navier_stokes:
-            proc.physics = new NavierStokes;
+            for (int d: dirs)
+                proc.elements.physics[d] = new NavierStokes;
+            proc.elements.physics_soln = new NavierStokes;
             //proc.system_data = new SystemData_navstokes;
             //proc.U_to_P   = new UtoP_navstokes;
             //proc.c_from_P = new WaveSpeeds_navstokes;
@@ -50,7 +54,9 @@ void Params::setup_process_generic(Process &proc)
             //proc.F_diff   = new DiffusiveFluxes_navstokes;
             break;
         case mhd:
-            proc.physics = new MHD;
+            for (int d: dirs)
+                proc.elements.physics[d] = new MHD;
+            proc.elements.physics_soln = new MHD;
             //proc.system_data = new SystemData_mhd;
             //proc.U_to_P   = new UtoP_mhd;
             //proc.c_from_P = new WaveSpeeds_mhd;
@@ -62,13 +68,19 @@ void Params::setup_process_generic(Process &proc)
     }
 
     proc.system = equations;
-    proc.Nfield = proc.physics->Nfield;
+    proc.Nfield = proc.elements.physics_soln->Nfield;
 
-    /* Move inside a switch once more flux choices are defined */
-    proc.F_numerical = new HLL;
+    for (int d: dirs)
+    {
+        /* Move inside a switch once more flux choices are defined */
+        proc.F_numerical[d] = new HLL;
 
-    proc.F_numerical->Nfield  = proc.Nfield;
-    proc.F_numerical->physics = proc.physics; // Convenience pointer
+        proc.F_numerical[d]->Nfield  = proc.Nfield;
+        proc.F_numerical[d]->physics = proc.elements.physics[d]; // Convenience pointer
+
+        /* The above convenience pointer to proc.physics[d] is the only 
+         * difference between the three copies of NumericalFlux */
+    }
 
     //proc.F_numerical->U_to_P   = proc.U_to_P;   
     //proc.F_numerical->c_from_P = proc.c_from_P;

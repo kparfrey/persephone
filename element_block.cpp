@@ -62,8 +62,10 @@ void ElementBlock::setup()
         for (int j = 0; j < 12; ++j)
             edges[i][j].setup(j, Nf, xf); // Use Lobatto points
 
-    write::message("Setting up coords & metric");
+    write::message("Setting up coords and metric");
     set_physical_coords_full();
+
+    write::message("Setting up the grid geometry");
     geometry.setup_full(*this);
 
     fill_spectral_difference_matrices();
@@ -240,7 +242,8 @@ void ElementBlock::set_physical_coords_simple()
 
 
 /* Not currently using physical coordinates of flux points, rf.
- * Add code to fill this array if end up needing it. */
+ * Add code to fill this array if end up needing it. 
+ * This also fills the SpatialMetric on both solution and flux points */
 void ElementBlock::set_physical_coords_full()
 {
     int mem_offset;
@@ -340,8 +343,85 @@ void ElementBlock::set_physical_coords_full()
 
             for (int d: dirs)
                 rs(d,mem_loc) = rp[d];
+
+            /* Fill in the spatial metric arrays */
+            physics_soln->metric->fill(rp, mem_loc);
         }
     }
+
+
+    /* Flux points */
+    int id_elem_f, id_elem_s;
+    int mem_offset_f; 
+
+    for (int d: dirs)
+    {
+        int ne0, ne1, ne2; 
+        int* ie = nullptr;
+        int* je = nullptr;
+        int* ke = nullptr;
+
+        int d1 = dir_plus_one[d];
+        int d2 = dir_plus_two[d];
+        
+        
+        /* Identical to kernels::relative_to_fixed_indices(). Reproduced here so don't
+         * need to include kernels. Split off to a function if I end up needing it 
+         * somewhere else. --- Duplicated from Geometry::setup(), should put 
+         * somewhere else to avoid so much duplication */
+        switch(d)
+        {
+            case 0:
+                ie  = &ne0;
+                je  = &ne1;
+                ke  = &ne2;
+                break;
+            case 1:
+                ie  = &ne2;
+                je  = &ne0;
+                ke  = &ne1;
+                break;
+            case 2:
+                ie  = &ne1;
+                je  = &ne2;
+                ke  = &ne0;
+                break;
+        }
+
+        for (ne2 = 0; ne2 < eb.Nelem[d2]; ++ne2)
+        for (ne1 = 0; ne1 < eb.Nelem[d1]; ++ne1)
+        for (ne0 = 0; ne0 < eb.Nelem[d];  ++ne0)
+        {
+            id_elem_f    = (ne2*eb.Nelem[d1] + ne1)*eb.Nelem[d] + ne0;
+            mem_offset_f = id_elem_f * eb.Nf_dir[d];
+
+            id_elem_s    = ((*ke)*eb.Nelem[1] + *je)*eb.Nelem[0] + *ie;
+
+            elem_edges = eb.edges[id_elem_s];
+
+            for (int i: icorners)
+                for (int m: dirs)
+                    elem_corners[i][m] = elem_edges[i].endpoints[edge_to_corner[i]][m];
+
+            for (int n2 = 0; n2 < eb.Ns[d2]; ++n2)
+            for (int n1 = 0; n1 < eb.Ns[d1]; ++n1)
+            for (int n0 = 0; n0 < eb.Nf[d];  ++n0)
+            {
+                real_t Jarr[3][3] = {}; 
+                mem_loc = eb.idf(n0,n1,n2,d) + mem_offset_f;
+
+                xe[d]  = eb.xf(d, n0);
+                xe[d1] = eb.xs(d1,n1);
+                xe[d2] = eb.xs(d2,n2);
+
+                /* Fill spatial metric --- need to interpolate to find r at flux
+                 * point first, since this hasn't been stored.                   */
+                polynomial_transfinite_map_3D(xe, elem_edges, elem_corners, rp);
+                physics[d]->metric->fill(rp, mem_loc);
+            } // end loop over flux points
+        } // end loop over elements
+    } // end loop over direction of flux-point set
+
 
     return;
 }

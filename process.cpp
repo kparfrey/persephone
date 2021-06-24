@@ -73,11 +73,10 @@ void Process::time_advance()
 
     for (int d: dirs)
     {
-        physics->metric = eb.geometry.metric_f[d]; //physics needs to know which metric to use
         real_t* Uf = kernels::alloc_raw(Nfield*eb.Nf_dir_block[d]);
         kernels::soln_to_flux(eb.soln2flux(d), eb.fields, Uf, eb.lengths, d);
         dtmin_dir[d] = kernels::local_timestep(Uf, eb.geometry.timestep_transform[d],
-                                               physics, eb.lengths, d);                          
+                                               eb.physics[d], eb.lengths, d);                          
                                                //U_to_P, c_from_P, eb.lengths, d);                          
         delete Uf;
     }
@@ -160,11 +159,8 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
         kernels::soln_to_flux(eb.soln2flux(i), U, Uf(i), eb.lengths, i);
 
     for (int i: dirs)
-    {
-        physics->metric = eb.geometry.metric_f[i]; 
-        kernels::bulk_fluxes(Uf(i), F(i), eb.geometry.S[i], physics, eb.lengths, i);
+        kernels::bulk_fluxes(Uf(i), F(i), eb.geometry.S[i], eb.physics[i], eb.lengths, i);
                              //U_to_P, F_from_P, eb.lengths, i);
-    }
 
     for (int i: ifaces)
         kernels::fill_face_data(Uf(faces[i].normal_dir), faces[i], eb.lengths);
@@ -174,15 +170,13 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
     for (int i: ifaces)
     {
         int dir = faces[i].normal_dir;
-        physics->metric = eb.geometry.metric_f[dir]; // F_numerical has a pointer to physics 
-        kernels::external_numerical_flux(faces[i], F(dir), F_numerical,
+        kernels::external_numerical_flux(faces[i], F(dir), F_numerical[dir],
                                          eb.geometry.S[dir], eb.lengths);
     }
     
     for (int i: dirs)
     {
-        physics->metric = eb.geometry.metric_f[i]; // F_numerical has a pointer to physics 
-        kernels::internal_numerical_flux(Uf(i), F(i), F_numerical,
+        kernels::internal_numerical_flux(Uf(i), F(i), F_numerical[i],
                                          eb.geometry.S[i], eb.geometry.normal[i], eb.lengths, i);
     }
 
@@ -289,9 +283,7 @@ void Process::add_diffusive_flux(VectorField Uf, VectorField F)
 
     const real_t coeffs[2] = {physics->viscosity, physics->resistivity};
     for (int i: dirs) // flux-point direction
-    {
-        physics->metric = eb.geometry.metric_f[i];
-        kernels::diffusive_flux(Uf(i), dUf[i], Fd(i), physics, coeffs, eb.geometry.S[i], eb.lengths, i);
+        kernels::diffusive_flux(Uf(i), dUf[i], Fd(i), eb.physics[i], coeffs, eb.geometry.S[i], eb.lengths, i);
         //kernels::diffusive_flux(Uf(i), dUf[i], Fd(i), F_diff, coeffs, eb.geometry.S[i], eb.lengths, i);
     }
 

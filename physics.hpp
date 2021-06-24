@@ -14,8 +14,7 @@ class Physics
     int Nfield;
     string* variables;
 
-    /* Will need to be reset to the correct SpatialMetric pointer, 
-     * depending on which set of points is being operated on... */
+    /* The metric now lives here */
     SpatialMetric* metric;
 
     bool diffusive;

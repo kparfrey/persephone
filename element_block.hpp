@@ -7,6 +7,7 @@
 
 class DomainMap;
 class Edge;
+class Physics;
 
 class ElementBlock
 {
@@ -62,7 +63,10 @@ class ElementBlock
     VectorField fluxDeriv2soln; // Take derivative of values on flux points, interpolate
                                 // back to soln points
 
-    Geometry geometry;
+    Geometry geometry;     // Holds the computational geometry
+    Physics* physics[3];   // On flux points. These three and physics_soln only
+    Physics* physics_soln; // differ in their SpatialMetric objects
+
     real_t timestep_transform_max; // Max value for this ElementBlock
                                    // Use to calculate c_h at each timestep
 

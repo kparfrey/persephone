@@ -7,7 +7,6 @@
 #include "edge.hpp"
 #include "transfinite_map.hpp"
 #include "geometry_labels.hpp"
-#include "spatial_metric.hpp"
 
 
 void Geometry::allocate_on_host(const int Ns, const int Nf[3])
@@ -21,8 +20,6 @@ void Geometry::allocate_on_host(const int Ns, const int Nf[3])
         for(int dphys: dirs)
             dxdr[dref](dphys) = new real_t [Ns]();
 
-    metric_s->allocate_on_host(Ns);
-
 
     /* Flux points */
     for (int d: dirs)
@@ -32,8 +29,6 @@ void Geometry::allocate_on_host(const int Ns, const int Nf[3])
             S[d](j)  = new real_t [Nf[d]]();
             timestep_transform[d](j) = new real_t [Nf[d]]();
         }
-
-        metric_f[d]->allocate_on_host(Nf[d]);
     }
     
     return;
@@ -64,7 +59,6 @@ void Geometry::setup_full(ElementBlock& eb)
     real_t xe[3];
     real_t drdx[3][3]; 
     //real_t drdx[3]; // For 2D method, which is ref-dir by ref-dir
-    real_t rp[3]; // Phys coord --- use for setting spatial metric
     
     Matrix J; // dPHYS/dREF -- J.arr[phys][ref]
     real_t detJ;
@@ -109,11 +103,6 @@ void Geometry::setup_full(ElementBlock& eb)
         {
             real_t Jarr[3][3] = {}; 
             mem_loc = eb.ids(i,j,k) + mem_offset;
-
-            /* Fill in the spatial metric arrays */
-            for (int d: dirs)
-                rp[d] = eb.rs(d, mem_loc);
-            metric_s->fill(rp, mem_loc);
 
             xe[0] = eb.xs(0,i);
             xe[1] = eb.xs(1,j);
@@ -215,13 +204,6 @@ void Geometry::setup_full(ElementBlock& eb)
                 xe[d1] = eb.xs(d1,n1);
                 xe[d2] = eb.xs(d2,n2);
 
-
-                /* Fill spatial metric --- need to interpolate to find r at flux
-                 * point first, since this hasn't been stored.                   */
-                polynomial_transfinite_map_3D(xe, elem_edges, elem_corners, rp);
-                metric_f[d]->fill(rp, mem_loc);
-
-
                 /*** 2D Method --- leave here for now
                 for (int dref: dirs)
                 {
@@ -282,6 +264,8 @@ void Geometry::setup_full(ElementBlock& eb)
             real_t s[3];
             real_t smag;
             int id_elem_normals = (ne2*eb.Nelem[d1] + ne1)*(eb.Nelem[d]+1) + ne0;
+            SpatialMetric* metric = eb.physics[d]->metric;
+
             for (int n2 = 0; n2 < eb.Ns[d2]; ++n2)
             for (int n1 = 0; n1 < eb.Ns[d1]; ++n1)
             {
@@ -293,8 +277,8 @@ void Geometry::setup_full(ElementBlock& eb)
                     s[dphys] = S[d](dphys,mem_loc);
                
                 /* Was assuming physical coord system is Cartesian... */
-                metric_f[d]->mem = mem_loc;
-                smag = std::sqrt(metric_f[d]->square(s));
+                metric->mem = mem_loc;
+                smag = std::sqrt(metric->square(s));
                 //smag = std::sqrt(s[0]*s[0] + s[1]*s[1] + s[2]*s[2]);
 
                 for (int dphys: dirs)
@@ -309,8 +293,8 @@ void Geometry::setup_full(ElementBlock& eb)
                     for (int dphys: dirs)
                         s[dphys] = S[d](dphys,mem_loc);
                     
-                    metric_f[d]->mem = mem_loc;
-                    smag = std::sqrt(metric_f[d]->square(s));
+                    metric->mem = mem_loc;
+                    smag = std::sqrt(metric->square(s));
                     //smag = std::sqrt(s[0]*s[0] + s[1]*s[1] + s[2]*s[2]);
 
                     for (int dphys: dirs)
