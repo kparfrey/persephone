@@ -717,6 +717,12 @@ namespace kernels
                 /* Memory location for the zeroth field */
                 mem_face = mem_offset_face +  n2 * Ns1 + n1;
                 
+                /* Memory location in the full 3D flux array
+                 * For indexing the metric and saving the fluxes back into F */
+                mem = mem_offset + (n2 * Ns1 + n1) * Nf0 + face.n0;
+
+                F_numerical->physics->metric->mem = mem;
+
                 for (int field = 0; field < lb.Nfield; ++field)
                 {
                     UL[field] = UL_data[mem_face + field * face.Ntot];
@@ -729,9 +735,7 @@ namespace kernels
                 (*F_numerical)(UL, UR, np, F_num_phys, dir);
 
                 /* Transform from physical to reference-space fluxes.
-                 * Required memory location in the full 3D flux array */
-                mem = mem_offset + (n2 * Ns1 + n1) * Nf0 + face.n0;
-
+                 * Needs mem loc in the full 3D array */
                 fluxes_phys_to_ref(F_num_phys, F, S, mem, lb.Nfield, Nf_tot);
             }
         }
@@ -796,6 +800,8 @@ namespace kernels
                 mem_L = mem_offset_L + (n2 * Ns1 + n1) * Nf0 + Nf0 - 1;
                 mem_R = mem_offset_R + (n2 * Ns1 + n1) * Nf0 + 0;
                 mem_n = mem_offset_n +  n2 * Ns1 + n1;
+
+                F_numerical->physics->metric->mem = mem_L; // Arbitrarily choose mem_L
 
                 for (int field = 0; field < lb.Nfield; ++field)
                 {

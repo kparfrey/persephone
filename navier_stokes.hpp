@@ -72,7 +72,7 @@ inline void NavierStokes::ConservedToPrimitive(const real_t* const __restrict__ 
     P[v2] = U[mom2] / U[density];
 
     const real_t KE_density = 0.5 * P[density] * metric->square(&P[v0]);
-                               //* (P[v0]*P[v0] + P[v1]*P[v1] + P[v2]*P[v2]);
+    //const real_t KE_density = 0.5 * P[density] * (P[v0]*P[v0] + P[v1]*P[v1] + P[v2]*P[v2]);
 
     P[pressure] = gm1 * (U[tot_energy] - KE_density);
 
@@ -97,7 +97,8 @@ inline void NavierStokes::Fluxes(const real_t* const __restrict__ P,
                                        real_t (*__restrict__ F)[3]) const
 {
     const real_t KE_density = 0.5 * P[density] * metric->square(&P[v0]);
-                               // * (P[v0]*P[v0] + P[v1]*P[v1] + P[v2]*P[v2]);
+    //const real_t KE_density = 0.5 * P[density] * (P[v0]*P[v0] + P[v1]*P[v1] + P[v2]*P[v2]);
+    
     const real_t E = KE_density + P[pressure] / gm1;
 
     real_t v;
@@ -145,6 +146,7 @@ inline void NavierStokes::DiffusiveFluxes(const real_t* const __restrict__ U,
     for (int d: dirs)
         rdetg_deriv[d] = metric->rdetg_deriv[d][metric->mem];
     divv = dv[0][0] + dv[1][1] + dv[2][2] + metric->dot(v, rdetg_deriv);
+    //divv = dv[0][0] + dv[1][1] + dv[2][2];
 
     for (int d: dirs)
         tau[d][d] = 2*mu*dv[d][d] + lambda*divv;
