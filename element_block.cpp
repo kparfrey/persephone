@@ -8,6 +8,7 @@
 #include "domain_map_torus.hpp"
 #include "edge.hpp"
 #include "geometry_labels.hpp"
+#include "physics.hpp"
 
 
 void ElementBlock::setup()
@@ -89,7 +90,9 @@ void ElementBlock::allocate_on_host()
 
     fields = new real_t [Nfield * Ns_block];
 
-    if (Nfield == 9) // hacky way to test for mhd for now...
+    physics_soln->metric->allocate_on_host(Ns_block);
+
+    if (physics_soln->system == mhd)
         divB = new real_t [Ns_block];
 
     for (int i: dirs)
@@ -97,6 +100,8 @@ void ElementBlock::allocate_on_host()
         int matrix_size = Ns[i] * Nf[i]; 
         soln2flux(i)      = new real_t [matrix_size]; // Nf x Ns matrices
         fluxDeriv2soln(i) = new real_t [matrix_size]; // Ns x Nf matrices
+    
+        physics[i]->metric->allocate_on_host(Nf_dir_block[i]);
     }
 
     edges = new Edge* [Nelem_block];
@@ -262,6 +267,7 @@ void ElementBlock::set_physical_coords_full()
         (*map)(i, double(edge_to_corner[i]), group_corners[i]); 
     
     /* Elementwise constructs */
+    Edge* elem_edges; // Pointer to the first of this element's edges
     real_t elem_corners[8][3]; // r[3] coords of an element's 8 corners
 
     /* Point constructs */
@@ -279,7 +285,7 @@ void ElementBlock::set_physical_coords_full()
         mem_offset = elem_idx_1D * Ns_elem;
 
         /* Pointer to this element's edges */
-        Edge* elem_edges = edges[elem_idx_1D];
+        elem_edges = edges[elem_idx_1D];
 
         /* Use "analytic" transfinite interpolation to interpolate from
          * the group mapping to this element's edge. */
@@ -388,31 +394,30 @@ void ElementBlock::set_physical_coords_full()
                 break;
         }
 
-        for (ne2 = 0; ne2 < eb.Nelem[d2]; ++ne2)
-        for (ne1 = 0; ne1 < eb.Nelem[d1]; ++ne1)
-        for (ne0 = 0; ne0 < eb.Nelem[d];  ++ne0)
+        for (ne2 = 0; ne2 < Nelem[d2]; ++ne2)
+        for (ne1 = 0; ne1 < Nelem[d1]; ++ne1)
+        for (ne0 = 0; ne0 < Nelem[d];  ++ne0)
         {
-            id_elem_f    = (ne2*eb.Nelem[d1] + ne1)*eb.Nelem[d] + ne0;
-            mem_offset_f = id_elem_f * eb.Nf_dir[d];
+            id_elem_f    = (ne2*Nelem[d1] + ne1)*Nelem[d] + ne0;
+            mem_offset_f = id_elem_f * Nf_dir[d];
 
-            id_elem_s    = ((*ke)*eb.Nelem[1] + *je)*eb.Nelem[0] + *ie;
+            id_elem_s    = ((*ke)*Nelem[1] + *je)*Nelem[0] + *ie;
 
-            elem_edges = eb.edges[id_elem_s];
+            elem_edges = edges[id_elem_s];
 
             for (int i: icorners)
                 for (int m: dirs)
                     elem_corners[i][m] = elem_edges[i].endpoints[edge_to_corner[i]][m];
 
-            for (int n2 = 0; n2 < eb.Ns[d2]; ++n2)
-            for (int n1 = 0; n1 < eb.Ns[d1]; ++n1)
-            for (int n0 = 0; n0 < eb.Nf[d];  ++n0)
+            for (int n2 = 0; n2 < Ns[d2]; ++n2)
+            for (int n1 = 0; n1 < Ns[d1]; ++n1)
+            for (int n0 = 0; n0 < Nf[d];  ++n0)
             {
-                real_t Jarr[3][3] = {}; 
-                mem_loc = eb.idf(n0,n1,n2,d) + mem_offset_f;
+                mem_loc = idf(n0,n1,n2,d) + mem_offset_f;
 
-                xe[d]  = eb.xf(d, n0);
-                xe[d1] = eb.xs(d1,n1);
-                xe[d2] = eb.xs(d2,n2);
+                xe[d]  = xf(d, n0);
+                xe[d1] = xs(d1,n1);
+                xe[d2] = xs(d2,n2);
 
                 /* Fill spatial metric --- need to interpolate to find r at flux
                  * point first, since this hasn't been stored.                   */

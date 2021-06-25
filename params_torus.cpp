@@ -120,7 +120,7 @@ void ParamsTorus::setup_process(Process &proc)
 
     setup_elementblock(proc.elements, proc);
     
-    set_initial_state(proc.elements, proc.physics);
+    set_initial_state(proc.elements);
 
     write::variable<real_t>("CFL", proc.cfl);
     write::variable<real_t>("End time", proc.end_time);
@@ -390,9 +390,9 @@ void ParamsTorus::setup_elementblock(ElementBlock &elements, Process &proc)
 
     elements.map = new BasicSquareTorusMap(proc.group, boundary_modes);
 
-    elements.geometry.metric_s = new DiagonalSpatialMetric(cylindrical);
+    elements.physics_soln->metric = new DiagonalSpatialMetric(cylindrical);
     for (int d: dirs)
-        elements.geometry.metric_f[d] = new DiagonalSpatialMetric(cylindrical);
+        elements.physics[d]->metric = new DiagonalSpatialMetric(cylindrical);
 
     /* At this point all external information is present, and the internal
      * setup method can take over. */
@@ -403,12 +403,12 @@ void ParamsTorus::setup_elementblock(ElementBlock &elements, Process &proc)
 
 
 /* Should this be moved to initial_state_torus? */
-void ParamsTorus::set_initial_state(ElementBlock &elements, Physics* physics)
+void ParamsTorus::set_initial_state(ElementBlock &elements)
 {
-    switch (physics->system)
+    switch (elements.physics_soln->system)
     {
         case navier_stokes:
-            set_euler_torus(elements, physics);
+            set_euler_torus(elements);
             break;
         case mhd:
             write::error("MHD not implemented for torus", destroy);

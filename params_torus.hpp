@@ -36,7 +36,7 @@ class ParamsTorus : public Params
     void secondary_params() override;
     void setup_process(Process &proc) override;
     void setup_elementblock(ElementBlock& elements, Process &proc) override;
-    void set_initial_state(ElementBlock& elements, Physics* physics) override;
+    void set_initial_state(ElementBlock& elements) override;
 
     /* Constructor */
     ParamsTorus(EqnSystem equations,

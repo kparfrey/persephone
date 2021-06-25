@@ -9,6 +9,7 @@
 #include "domain_map.hpp"
 #include "geometry_labels.hpp"
 #include "spatial_metric.hpp"
+#include "physics.hpp"
 
 using std::cout;
 using std::endl;
@@ -80,7 +81,7 @@ void ParamsCartesian::setup_process(Process &proc)
 
     setup_elementblock(proc.elements, proc);
     
-    set_initial_state(proc.elements, proc.physics);
+    set_initial_state(proc.elements);
 
     write::variable<real_t>("CFL", proc.cfl);
     write::variable<real_t>("End time", proc.end_time);
@@ -148,9 +149,9 @@ void ParamsCartesian::setup_elementblock(ElementBlock &elements, Process &proc)
 }
 
 
-void ParamsCartesian::set_initial_state(ElementBlock &elements, Physics* physics)
+void ParamsCartesian::set_initial_state(ElementBlock &elements)
 {
-    set_initial_state_cartesian(elements, physics);
+    set_initial_state_cartesian(elements);
 
     return;
 }

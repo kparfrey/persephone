@@ -80,8 +80,8 @@ void write_data(Process &proc)
                 for (int field = 0; field < proc.Nfield; ++field)
                     Up[field] = eb.fields[n + field * eb.Ns_block];
 
-                proc.physics_soln->metric->mem = n;
-                proc.physics_soln->ConservedToPrimitive(Up, Pp);
+                eb.physics_soln->metric->mem = n;
+                eb.physics_soln->ConservedToPrimitive(Up, Pp);
                 //(*proc.U_to_P)(Up, Pp); 
 
                 for (int field = 0; field < proc.Nfield; ++field)
@@ -95,7 +95,7 @@ void write_data(Process &proc)
 
             for (int i = 0; i < proc.Nfield; ++i)
             {
-                string name = groupstring + "/" + proc.physics->variables[i];
+                string name = groupstring + "/" + eb.physics_soln->variables[i];
                 HighFive::DataSet dataset = datafile.createDataSet<real_t>(name, 
                                                      HighFive::DataSpace(global_dims));
 

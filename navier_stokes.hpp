@@ -57,8 +57,8 @@ class NavierStokes : public Physics
 
     void DiffusiveFluxes(const real_t* const __restrict__ U, 
                          const real_t (* const __restrict__ dU)[3],
-                               real_t (*__restrict__ F)[3],
-                         const real_t* const __restrict__ args) const override;
+                               real_t (*__restrict__ F)[3]) const override;
+                         //const real_t* const __restrict__ args) const override;
 };
 
 
@@ -123,10 +123,10 @@ inline void NavierStokes::Fluxes(const real_t* const __restrict__ P,
 
 inline void NavierStokes::DiffusiveFluxes(const real_t* const __restrict__ U, 
                                           const real_t (* const __restrict__ dU)[3],
-                                                real_t (*__restrict__ F)[3],
-                                          const real_t* const __restrict__ args) const 
+                                                real_t (*__restrict__ F)[3]) const
+                                          //const real_t* const __restrict__ args) const 
 {
-    const real_t mu = U[Density] * args[0]; // dynamic viscosity
+    const real_t mu = U[Density] * viscosity; // mu = dynamic viscosity
     const real_t lambda = - (2.0/3.0) * mu; // from Stokes hypothesis: zero bulk viscosity (ζ)
     
     real_t v[3];

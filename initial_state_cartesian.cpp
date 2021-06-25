@@ -121,7 +121,7 @@ static void alfven_wave(const real_t r[3],
 }
 
 
-void set_initial_state_cartesian(ElementBlock& eb, Physics* physics)
+void set_initial_state_cartesian(ElementBlock& eb)
 {
     int mem_offset;
     int loc0; // Memory location for the 0th field
@@ -141,16 +141,16 @@ void set_initial_state_cartesian(ElementBlock& eb, Physics* physics)
             for (int d: dirs)
                 r[d] = eb.rs(d,loc0);
 
-            switch(physics->system)
+            switch(eb.physics_soln->system)
             {
                 case scalar_advection:
                     eb.fields[loc0] = scalar_function(r);
                     break;
                 case navier_stokes:
-                    shu_vortex(r, eb.fields, loc0, eb.Ns_block, (NavierStokes*)physics);
+                    shu_vortex(r, eb.fields, loc0, eb.Ns_block, (NavierStokes*)eb.physics_soln);
                     break;
                 case mhd:
-                    alfven_wave(r, eb.fields, loc0, eb.Ns_block, (MHD*)physics);
+                    alfven_wave(r, eb.fields, loc0, eb.Ns_block, (MHD*)eb.physics_soln);
                     break;
             }
         }

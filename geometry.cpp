@@ -7,6 +7,7 @@
 #include "edge.hpp"
 #include "transfinite_map.hpp"
 #include "geometry_labels.hpp"
+#include "physics.hpp"
 
 
 void Geometry::allocate_on_host(const int Ns, const int Nf[3])
@@ -127,7 +128,7 @@ void Geometry::setup_full(ElementBlock& eb)
             J.find_determinant();
             detJ = std::abs(J.det);
 
-            Jrdetg(mem_loc) = detJ * metric_s->rdetg[mem_loc];
+            Jrdetg(mem_loc) = detJ * eb.physics_soln->metric->rdetg[mem_loc];
 
             /* Used to find grad(U) for diffusive terms */
             J.find_inverse();
@@ -226,7 +227,8 @@ void Geometry::setup_full(ElementBlock& eb)
 
                 /* Assume J.inv[ref][phys]... */
                 for (int dphys: dirs)
-                    S[d](dphys,mem_loc) = detJ * metric_f[d]->rdetg[mem_loc] * J.inv[d][dphys];
+                    S[d](dphys,mem_loc) = detJ * eb.physics[d]->metric->rdetg[mem_loc] 
+                                               * J.inv[d][dphys];
 
 
                 /* Calculate helper array for finding timestep limit */

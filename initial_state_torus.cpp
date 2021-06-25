@@ -43,7 +43,7 @@ static void implosion(const real_t r[3],
 }
 
 
-void set_euler_torus(ElementBlock& eb, Physics* physics)
+void set_euler_torus(ElementBlock& eb)
 {
     int mem_offset;
     int loc0; // Memory location for the 0th field
@@ -63,7 +63,7 @@ void set_euler_torus(ElementBlock& eb, Physics* physics)
             for (int d: dirs)
                 r[d] = eb.rs(d,loc0);
 
-            implosion(r, eb.fields, loc0, eb.Ns_block, (NavierStokes*)physics);
+            implosion(r, eb.fields, loc0, eb.Ns_block, (NavierStokes*)eb.physics_soln);
         }
     }
 

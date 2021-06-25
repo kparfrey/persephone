@@ -6,5 +6,5 @@
 class ElementBlock;
 class Physics;
 
-void set_initial_state_cartesian(ElementBlock&, Physics* physics);
+void set_initial_state_cartesian(ElementBlock&);
 #endif

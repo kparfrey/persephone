@@ -84,7 +84,7 @@ void Process::time_advance()
     MPI_Allreduce(MPI_IN_PLACE, &dtmin, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
     dtmin_advect = cfl * dtmin;
 
-    if (physics->diffusive)
+    if (Physics::diffusive)
     {
         // This factor of ~0.25 seems to be the stability limit -- 
         // 0.27 still works for the WaveRect (w/RK3) but 0.28 breaks [at 6th & 8th order]
@@ -92,7 +92,7 @@ void Process::time_advance()
         // Can use up to 0.33 for a rectilinear grid (w/RK2 - check for RK3)
         // Seems to be excessively restrictive when have an inhomogeneous grid?
         // Seems very problem dependent: can use 0.9 for the MHD Alfven wave problem
-        const real_t diffusion = MAX(physics->viscosity, physics->resistivity);
+        const real_t diffusion = MAX(Physics::viscosity, Physics::resistivity);
         dtmin_diff   = (0.9/diffusion) * (1./(tt_max_global*tt_max_global));
 
         dt = MIN(dtmin_advect, dtmin_diff); 
@@ -105,16 +105,16 @@ void Process::time_advance()
     /* Calculate maximum stable div-cleaning wavespeed */
     if (system == mhd)
     {
-        physics->c_h = 1.0 /(dt * tt_max_global); // Should be stable...could add factor of ~0.7?
-        physics->ch_sq = physics->c_h * physics->c_h;
+        const real_t ch_divClean = 1.0 /(dt * tt_max_global); //Should be stable...
+        Physics::ch_sq = ch_divClean * ch_divClean;
         //F_from_P->ch_sq = physics->c_h * physics->c_h;
 
-        physics->psi_damping_rate = physics->psi_damping_const / dt; 
+        Physics::psi_damping_rate = Physics::psi_damping_const / dt; 
         //physics->psi_damping_exp = std::exp(-cfl * physics->psi_damping_const);
     }
     /********************************************/
 
-    if (physics->diffusive)
+    if (Physics::diffusive)
         write::message("Starting time step " + std::to_string(step) + " --- t = " + std::to_string(time)
                                              + " --- dt = " + std::to_string(dt)
                                              + " --- dt ratio: " + std::to_string(dt_ratio));
@@ -182,7 +182,7 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
 
     /* For explicit diffusive terms, calculate the diffusive flux and add
      * to the advective fluxes before taking the flux deriv: F += F_diffusive */
-    if (physics->diffusive)
+    if (Physics::diffusive)
         add_diffusive_flux(Uf, F);
 
     for (int i: dirs)
@@ -199,12 +199,12 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
         if (is_output_step && (substep == 1))
         {
             /* Find divB from divF[psi] and save into elements.divB */
-            const real_t over_chsq = 1.0/(physics->c_h*physics->c_h);
+            const real_t over_chsq = 1.0/Physics::ch_sq;
             kernels::multiply_by_scalar(&divF[psi], over_chsq, eb.divB, eb.Ns_block);
         }
 
         kernels::add_scaled_vectors_inPlace(&divF[psi], &U[psi], 
-                                            physics->psi_damping_rate, eb.Ns_block);
+                                            Physics::psi_damping_rate, eb.Ns_block);
     }
 
     for (int i: dirs)
@@ -281,11 +281,11 @@ void Process::add_diffusive_flux(VectorField Uf, VectorField F)
         for (int dderiv: dirs)
             kernels::internal_interface_average(dUf[dflux](dderiv), eb.lengths, dflux);
 
-    const real_t coeffs[2] = {physics->viscosity, physics->resistivity};
+    //const real_t coeffs[2] = {physics->viscosity, physics->resistivity};
     for (int i: dirs) // flux-point direction
-        kernels::diffusive_flux(Uf(i), dUf[i], Fd(i), eb.physics[i], coeffs, eb.geometry.S[i], eb.lengths, i);
+        kernels::diffusive_flux(Uf(i), dUf[i], Fd(i), eb.physics[i], eb.geometry.S[i], eb.lengths, i);
+        //kernels::diffusive_flux(Uf(i), dUf[i], Fd(i), eb.physics[i], coeffs, eb.geometry.S[i], eb.lengths, i);
         //kernels::diffusive_flux(Uf(i), dUf[i], Fd(i), F_diff, coeffs, eb.geometry.S[i], eb.lengths, i);
-    }
 
     for (int i: dirs)
         kernels::add_vectors_inPlace(F(i), Fd(i), Nfield*eb.Nf_dir_block[i]);

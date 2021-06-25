@@ -74,8 +74,8 @@ class MHD : public Physics
 
     void DiffusiveFluxes(const real_t* const __restrict__ U, 
                          const real_t (* const __restrict__ dU)[3],
-                               real_t (*__restrict__ F)[3],
-                         const real_t* const __restrict__ args) const override;
+                               real_t (*__restrict__ F)[3]) const override;
+                         //const real_t* const __restrict__ args) const override;
 };
 
 
@@ -167,12 +167,12 @@ inline void MHD::Fluxes(const real_t* const __restrict__ P,
 
 inline void MHD::DiffusiveFluxes(const real_t* const __restrict__ U, 
                                  const real_t (* const __restrict__ dU)[3],
-                                       real_t (*__restrict__ F)[3],
-                                 const real_t* const __restrict__ args) const 
+                                       real_t (*__restrict__ F)[3]) const
+                                 //const real_t* const __restrict__ args) const 
 {
-    const real_t mu = U[Density] * args[0]; // dynamic viscosity
+    const real_t mu = U[Density] * viscosity; // mu = dynamic viscosity
     const real_t lambda = - (2.0/3.0) * mu; // from Stokes hypothesis
-    const real_t eta = args[1]; // magnetic diffusivity
+    //const real_t eta = args[1]; // magnetic diffusivity
     
     real_t v[3];
     real_t tau[3][3];
@@ -205,10 +205,10 @@ inline void MHD::DiffusiveFluxes(const real_t* const __restrict__ U,
 
         F[tot_energy][d] = - (v[0]*tau[0][d] + v[1]*tau[1][d] + v[2]*tau[2][d]);
 
-        /* Magnetic part */
-        F[B0][d] = - eta * (dU[B0][d] - dU[B0+d][0]); 
-        F[B1][d] = - eta * (dU[B1][d] - dU[B0+d][1]); 
-        F[B2][d] = - eta * (dU[B2][d] - dU[B0+d][2]); 
+        /* Magnetic part - resistivity is really a magnetic diffusivity */
+        F[B0][d] = - resistivity * (dU[B0][d] - dU[B0+d][0]); 
+        F[B1][d] = - resistivity * (dU[B1][d] - dU[B0+d][1]); 
+        F[B2][d] = - resistivity * (dU[B2][d] - dU[B0+d][2]); 
 
         F[B0+d][d] = 0.0; // Overwrite the above
 

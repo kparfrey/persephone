@@ -6,6 +6,6 @@
 class ElementBlock;
 class Physics;
 
-void set_euler_torus(ElementBlock&, Physics* physics);
+void set_euler_torus(ElementBlock&);
 
 #endif

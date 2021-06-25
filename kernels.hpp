@@ -128,7 +128,7 @@ namespace kernels
                               real_t* const __restrict__ F,
                         //const DiffusiveFluxes*           F_diff,
                         const Physics* const __restrict__ physics,
-                        const real_t* const __restrict__ args,
+                        //const real_t* const __restrict__ args,
                         const VectorField                S,
                         const LengthBucket               lb,
                         const int                        dir);
