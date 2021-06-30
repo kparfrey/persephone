@@ -32,7 +32,7 @@ class QuarterAnnulusMap : public DomainMap
     public:
     const real_t d2 = 0.5; // r2 = [-d2, d2]
 
-    virtual void operator()(const int n, const real_t x, real_t r[3])
+    void operator()(const int n, const real_t x, real_t r[3]) override
     {
         switch (n)
         {
@@ -114,7 +114,7 @@ class BasicRect2D : public DomainMap
     }
 
 
-    virtual void operator()(const int n, const real_t x, real_t r[3])
+    void operator()(const int n, const real_t x, real_t r[3]) override
     {
         for (int i = 0; i < 2; ++i)
         {
@@ -186,7 +186,7 @@ class ObliqueRect2D : public DomainMap
     }
 
 
-    virtual void operator()(const int n, const real_t x, real_t r[3])
+    void operator()(const int n, const real_t x, real_t r[3]) override
     {
         for (int i = 0; i < 2; ++i)
         {
@@ -279,7 +279,7 @@ class WaveRect2D : public DomainMap
     }
 
 
-    virtual void operator()(const int n, const real_t x, real_t r[3])
+    void operator()(const int n, const real_t x, real_t r[3]) override
     {
         for (int i = 0; i < 2; ++i)
         {

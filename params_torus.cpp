@@ -10,6 +10,7 @@
 #include "boundary_conditions.hpp"
 #include "spatial_metric.hpp"
 #include "physics_includes.hpp"
+#include "cerfon_freidberg.hpp"
 
 using std::cout;
 using std::endl;
@@ -388,7 +389,19 @@ void ParamsTorus::setup_elementblock(ElementBlock &elements, Process &proc)
 
     elements.Nfield   = proc.Nfield;
 
-    elements.map = new BasicSquareTorusMap(proc.group, boundary_modes);
+    switch (torus_problem_type)
+    {
+        case explicit_modes:
+        case input_config_file:
+            elements.map = new BasicSquareTorusMap(proc.group, boundary_modes);
+            break;
+        case cerfon_freidberg:
+            elements.map = new CerfonFreidbergMap(proc.group, cf_data);
+            break;
+        default:
+            write::error("Torus problem type not recognised", destroy);
+            break;
+    }
 
     elements.physics_soln->metric = new DiagonalSpatialMetric(cylindrical);
     for (int d: dirs)

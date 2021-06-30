@@ -145,7 +145,7 @@ class BasicSquareTorusMap : public DomainMap
     }
 
 
-    virtual void operator()(const int n, const real_t x, real_t r[3])
+    void operator()(const int n, const real_t x, real_t r[3]) override
     {
         real_t start = 0.0;
         real_t end   = 1.0;
@@ -218,7 +218,7 @@ class BasicSquareTorusMap : public DomainMap
     }
 
 
-    virtual void pointwise_transformation(real_t r[3])
+    void pointwise_transformation(real_t r[3]) override
     {
         unit_disc_to_physical_space(r, boundary_modes);
     };

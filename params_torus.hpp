@@ -2,8 +2,9 @@
 #define PARAMS_TORUS
 
 #include "params.hpp"
-#include "torus_mode_pack.hpp"
+//#include "torus_mode_pack.hpp"
 
+class TorusModePack;
 
 class ParamsTorus : public Params
 {
@@ -19,7 +20,9 @@ class ParamsTorus : public Params
     int Nelem[3];  // No. of elements in each direction, in each process
     int Ns[3];     // No. of solution points in each direction, in each element
 
-    TorusModePack boundary_modes;
+    TorusProblemType torus_problem_type;
+    TorusModePack boundary_modes; // Don't pass to constructor
+    CFData cf_data; // Holds parameters of a Cerfon Freidberg problem
 
     /* Secondary or derived quantities */
     int Ngroup_central;  // 1 for square
@@ -47,11 +50,12 @@ class ParamsTorus : public Params
                 real_t cfl = 0.8,
                 real_t end_time = 1.0,
                 real_t dt_write = 0.5,
-                TorusCentralPolygon central_polygon = square,
-                TorusModePack boundary_modes = boundary_modes_default)
+                TorusCentralPolygon central_polygon = square)
     : Params(equations, time_method, cfl, end_time, dt_write), 
-      central_polygon(central_polygon), boundary_modes(boundary_modes)
+      central_polygon(central_polygon)
     {
+        torus_problem_type = input_config_file; // Default choice
+
         for (int i=0; i<3; i++)
         {
             Nproc[i] = Nproc_[i];
