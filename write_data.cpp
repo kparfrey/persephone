@@ -80,8 +80,7 @@ void write_data(Process &proc)
                 for (int field = 0; field < proc.Nfield; ++field)
                     Up[field] = eb.fields[n + field * eb.Ns_block];
 
-                eb.physics_soln->metric->mem = n;
-                eb.physics_soln->ConservedToPrimitive(Up, Pp);
+                eb.physics_soln->ConservedToPrimitive(Up, Pp, n);
                 //(*proc.U_to_P)(Up, Pp); 
 
                 for (int field = 0; field < proc.Nfield; ++field)

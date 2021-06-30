@@ -23,11 +23,10 @@ class Physics
     inline static real_t resistivity; // really magnetic diffusivity...
 
     /* Only used by MHD */
-    //real_t c_h; 
     inline static real_t ch_sq; // Square of wave/transport speed for hyperbolic part of div cleaning
     inline static real_t psi_damping_const; // Mignone & Tzeferacos's alpha, 0 < const < 1
     inline static real_t psi_damping_rate;  // d psi/dt ... = - rate * psi
-                                     // p_d_rate = CFL * p_d_const / dt
+                                            // p_d_rate = CFL * p_d_const / dt
     inline static real_t psi_damping_exp;   // exp(-damping_rate * dt)
 
 
@@ -40,21 +39,26 @@ class Physics
     }
 
 
-    /* Methods */
+    /* Methods 
+     * These all take an int mem, which is passed to SpatialMetric
+     * and indicates the active memory location. */
     virtual void ConservedToPrimitive(const real_t* const __restrict__ U, 
-                                            real_t* const __restrict__ P) const = 0;
+                                            real_t* const __restrict__ P,
+                                      const int mem) const = 0;
 
     virtual void WaveSpeeds(const real_t* const __restrict__ P, 
                                   real_t* const __restrict__ c,
-                            const int dir) const = 0;
+                            const int dir,
+                            const int mem) const = 0;
 
     virtual void Fluxes(const real_t* const __restrict__ P, 
-                              real_t (*__restrict__ F)[3]) const = 0;
+                              real_t (*__restrict__ F)[3],
+                        const int mem) const = 0;
 
     virtual void DiffusiveFluxes(const real_t* const __restrict__ U, 
                                  const real_t (* const __restrict__ dU)[3],
-                                       real_t (*__restrict__ F)[3]) const = 0;
-                                 //const real_t* const __restrict__ args) const = 0;
+                                       real_t (*__restrict__ F)[3],
+                                 const int mem) const = 0;
 };
 
 

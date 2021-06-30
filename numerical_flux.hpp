@@ -24,7 +24,8 @@ class NumericalFlux
                                    const real_t* const __restrict__ UR,
                                    const real_t* const __restrict__ n,
                                          real_t (*Fnum)[3],
-                                   const int dir) const = 0;
+                                   const int dir,
+                                   const int mem) const = 0;
 };
 
 
@@ -36,11 +37,12 @@ class HLL : public NumericalFlux
 {
     public:
     ACCEL_DECORATOR
-    inline virtual void operator()(const real_t* const __restrict__ UL, 
-                                   const real_t* const __restrict__ UR,
-                                   const real_t* const __restrict__ n,
-                                         real_t (*Fnum)[3],
-                                   const int dir) const // dir not used
+    inline void operator()(const real_t* const __restrict__ UL, 
+                           const real_t* const __restrict__ UR,
+                           const real_t* const __restrict__ n,
+                                 real_t (*Fnum)[3],
+                           const int, // dir not used
+                           const int mem) const override
     {
         /* Temporary variables --- use a fixed size */
         constexpr int Nv = 10; // since Nfield isn't constexpr
@@ -55,21 +57,21 @@ class HLL : public NumericalFlux
 
         //(*U_to_P)(UL, PL);
         //(*U_to_P)(UR, PR);
-        physics->ConservedToPrimitive(UL,PL);
-        physics->ConservedToPrimitive(UR,PR);
+        physics->ConservedToPrimitive(UL, PL, mem);
+        physics->ConservedToPrimitive(UR, PR, mem);
 
-        for (int i: dirs)
+        for (int d: dirs)
         {
             //(*c_from_P)(PL, cL[i], i);
             //(*c_from_P)(PR, cR[i], i);
-            physics->WaveSpeeds(PL, cL[i], i);
-            physics->WaveSpeeds(PR, cR[i], i);
+            physics->WaveSpeeds(PL, cL[d], d, mem);
+            physics->WaveSpeeds(PR, cR[d], d, mem);
         }
 
         //(*F_from_P)(PL, FL);
         //(*F_from_P)(PR, FR);
-        physics->Fluxes(PL, FL);
-        physics->Fluxes(PR, FR);
+        physics->Fluxes(PL, FL, mem);
+        physics->Fluxes(PR, FR, mem);
 
         /* Signed max wavespeeds in each direction.
          * cpos is max speed parallel to the coord axis (L to R); ie Toro's S_R.
@@ -114,11 +116,12 @@ class HLL_straight : public NumericalFlux
 {
     public:
     ACCEL_DECORATOR
-    inline virtual void operator()(const real_t* const __restrict__ UL, 
-                                   const real_t* const __restrict__ UR,
-                                   const real_t* const __restrict__ n, // not used
-                                         real_t (*Fnum)[3],
-                                   const int dir) const
+    inline void operator()(const real_t* const __restrict__ UL, 
+                           const real_t* const __restrict__ UR,
+                           const real_t* const __restrict__ n, // not used
+                                 real_t (*Fnum)[3],
+                           const int dir,
+                           const int mem) const override
     {
         /* Temporary variables --- use a fixed size */
         constexpr int Nv = 10; // since Nfield isn't constexpr
@@ -134,12 +137,12 @@ class HLL_straight : public NumericalFlux
         (*F_from_P)(PL, FL);
         (*F_from_P)(PR, FR);
 #endif
-        physics->ConservedToPrimitive(UL,PL);
-        physics->ConservedToPrimitive(UR,PR);
-        physics->WaveSpeeds(PL, cL, dir);
-        physics->WaveSpeeds(PR, cR, dir);
-        physics->Fluxes(PL, FL);
-        physics->Fluxes(PR, FR);
+        physics->ConservedToPrimitive(UL, PL, mem);
+        physics->ConservedToPrimitive(UR, PR, mem);
+        physics->WaveSpeeds(PL, cL, dir, mem);
+        physics->WaveSpeeds(PR, cR, dir, mem);
+        physics->Fluxes(PL, FL, mem);
+        physics->Fluxes(PR, FR, mem);
 
         /* Signed max wavespeeds in each direction.
          * cpos is max speed parallel to the coord axis (L to R); ie Toro's S_R.

@@ -63,24 +63,29 @@ class MHD : public Physics
 
 
     void ConservedToPrimitive(const real_t* const __restrict__ U, 
-                                    real_t* const __restrict__ P) const override;
+                                    real_t* const __restrict__ P,
+                              const int mem) const override;
 
     void WaveSpeeds(const real_t* const __restrict__ P, 
                           real_t* const __restrict__ c,
-                    const int dir) const override;
+                    const int dir,
+                    const int mem) const override; 
 
     void Fluxes(const real_t* const __restrict__ P, 
-                      real_t (*__restrict__ F)[3]) const override;
+                      real_t (*__restrict__ F)[3],
+                const int mem) const override;
 
     void DiffusiveFluxes(const real_t* const __restrict__ U, 
                          const real_t (* const __restrict__ dU)[3],
-                               real_t (*__restrict__ F)[3]) const override;
-                         //const real_t* const __restrict__ args) const override;
+                               real_t (*__restrict__ F)[3],
+                         const int mem) const override;
+
 };
 
 
 inline void MHD::ConservedToPrimitive(const real_t* const __restrict__ U, 
-                                            real_t* const __restrict__ P) const
+                                            real_t* const __restrict__ P,
+                                      const int mem) const
 {
     P[density] = U[density]; 
 
@@ -106,7 +111,8 @@ inline void MHD::ConservedToPrimitive(const real_t* const __restrict__ U,
 
 inline void MHD::WaveSpeeds(const real_t* const __restrict__ P, 
                                   real_t* const __restrict__ c,
-                            const int dir) const 
+                            const int dir,
+                            const int mem) const 
 {
     /* asq = (sound speed)^2 */
     const real_t asq = gamma * P[pressure] / P[density];
@@ -125,7 +131,8 @@ inline void MHD::WaveSpeeds(const real_t* const __restrict__ P,
 
 
 inline void MHD::Fluxes(const real_t* const __restrict__ P, 
-                              real_t (*__restrict__ F)[3]) const
+                              real_t (*__restrict__ F)[3],
+                        const int mem) const
 {
     const real_t KE_density = 0.5 * P[density] 
                                * (P[v0]*P[v0] + P[v1]*P[v1] + P[v2]*P[v2]);
@@ -167,8 +174,8 @@ inline void MHD::Fluxes(const real_t* const __restrict__ P,
 
 inline void MHD::DiffusiveFluxes(const real_t* const __restrict__ U, 
                                  const real_t (* const __restrict__ dU)[3],
-                                       real_t (*__restrict__ F)[3]) const
-                                 //const real_t* const __restrict__ args) const 
+                                       real_t (*__restrict__ F)[3],
+                                 const int mem) const
 {
     const real_t mu = U[Density] * viscosity; // mu = dynamic viscosity
     const real_t lambda = - (2.0/3.0) * mu; // from Stokes hypothesis

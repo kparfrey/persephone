@@ -19,7 +19,7 @@ class SpatialMetric
      * This method avoids having to copy into temporary pointwise arrays,
      * and in particular having to know whether the metric is diagonal
      * or full. */
-    int mem;
+    //int mem;
     
     SpatialMetric(MetricCoords metric_coords) 
         : metric_coords(metric_coords) {}
@@ -29,15 +29,18 @@ class SpatialMetric
     //virtual void move_to_device();
 
     virtual void fill(const real_t* const __restrict__ r,
-                      const int i) = 0;
+                      const int mem) = 0;
 
     virtual void lower(const real_t* const __restrict__ Vu,
-                             real_t* const __restrict__ Vl) = 0;
+                             real_t* const __restrict__ Vl,
+                       const int mem) = 0;
 
     virtual real_t dot(const real_t* const __restrict__ Au,
-                       const real_t* const __restrict__ Bu) = 0;
+                       const real_t* const __restrict__ Bu,
+                       const int mem) = 0;
 
-    virtual real_t square(const real_t* const __restrict__ Vu) = 0;
+    virtual real_t square(const real_t* const __restrict__ Vu,
+                          const int mem) = 0;
 
     /* Convert from an orthonormal basis to contravariant
      * components in a coordinate basis. */
@@ -71,27 +74,27 @@ class DiagonalSpatialMetric : public SpatialMetric
 
         
     void fill(const real_t* const __restrict__ r,
-              const int i) override
+              const int mem) override
     {
         switch(metric_coords)
         {
             case cartesian:
-                g[0][i] = 1.0;
-                g[1][i] = 1.0;
-                g[2][i] = 1.0;
-                rdetg[i] = 1.0;
-                rdetg_deriv[0][i] = 0.0;
-                rdetg_deriv[1][i] = 0.0;
-                rdetg_deriv[2][i] = 0.0;
+                g[0][mem] = 1.0;
+                g[1][mem] = 1.0;
+                g[2][mem] = 1.0;
+                rdetg[mem] = 1.0;
+                rdetg_deriv[0][mem] = 0.0;
+                rdetg_deriv[1][mem] = 0.0;
+                rdetg_deriv[2][mem] = 0.0;
                 break;
             case cylindrical:
-                g[0][i] = 1.0;
-                g[1][i] = 1.0;
-                g[2][i] = r[0] * r[0]; // Phi direction
-                rdetg[i] = r[0];
-                rdetg_deriv[0][i] = 1.0 / r[0];
-                rdetg_deriv[1][i] = 0.0;
-                rdetg_deriv[2][i] = 0.0;
+                g[0][mem] = 1.0;
+                g[1][mem] = 1.0;
+                g[2][mem] = r[0] * r[0]; // Phi direction
+                rdetg[mem] = r[0];
+                rdetg_deriv[0][mem] = 1.0 / r[0];
+                rdetg_deriv[1][mem] = 0.0;
+                rdetg_deriv[2][mem] = 0.0;
                 break;
         }
 
@@ -101,7 +104,8 @@ class DiagonalSpatialMetric : public SpatialMetric
 
     /* Note mem must be explicitly set before using this */
     void lower(const real_t* const __restrict__ Vu,
-                     real_t* const __restrict__ Vl) override
+                     real_t* const __restrict__ Vl,
+               const int mem) override
     {
         Vl[0] = g[0][mem] * Vu[0];
         Vl[1] = g[1][mem] * Vu[1];
@@ -112,13 +116,15 @@ class DiagonalSpatialMetric : public SpatialMetric
 
 
     real_t dot(const real_t* const __restrict__ Au,
-               const real_t* const __restrict__ Bu) override
+               const real_t* const __restrict__ Bu,
+               const int mem) override
     {
         return g[0][mem]*Au[0]*Bu[0] + g[1][mem]*Au[1]*Bu[1] + g[2][mem]*Au[2]*Bu[2];
     }
 
 
-    real_t square(const real_t* const __restrict__ Vu) override
+    real_t square(const real_t* const __restrict__ Vu,
+                  const int mem) override
     {
         return g[0][mem]*Vu[0]*Vu[0] + g[1][mem]*Vu[1]*Vu[1] + g[2][mem]*Vu[2]*Vu[2];
     }

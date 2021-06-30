@@ -20,7 +20,8 @@ class ScalarAdvection : public Physics
 
 
     void ConservedToPrimitive(const real_t* const __restrict__ U, 
-                                    real_t* const __restrict__ P) const override
+                                    real_t* const __restrict__ P,
+                              const int) const override
     {
         P[0] = U[0];
         return;
@@ -28,7 +29,7 @@ class ScalarAdvection : public Physics
 
 
     void WaveSpeeds(const real_t* const P, real_t* const c,
-                    const int dir) const override
+                    const int dir, const int) const override
     {
         c[0] = MAX(0.0, wave_speed[dir]);
         c[1] = MIN(0.0, wave_speed[dir]);
@@ -37,7 +38,7 @@ class ScalarAdvection : public Physics
     }
 
 
-    void Fluxes(const real_t* const P, real_t (*F)[3]) const override
+    void Fluxes(const real_t* const P, real_t (*F)[3], const int) const override
     {
         for (int i: dirs)
             F[0][i] = wave_speed[i] * P[0];
@@ -48,8 +49,8 @@ class ScalarAdvection : public Physics
 
     void DiffusiveFluxes(const real_t* const __restrict__ U, 
                          const real_t (* const __restrict__ dU)[3],
-                               real_t (*__restrict__ F)[3]) const override
-                         //const real_t* const __restrict__ args) const override
+                               real_t (*__restrict__ F)[3],
+                         const int) const override
     {
         return;
     }

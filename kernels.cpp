@@ -366,20 +366,18 @@ namespace kernels
                 /* Memory location for the index-0 field */
                 mem = mem_offset + (n2 * Ns1 + n1) * Nf0 + n0;
                 
-                physics->metric->mem = mem; // So functions know which point they're operating on
-
                 /* Load all field variables at this location into
                  * the Up array. */
                 for (int field = 0; field < lb.Nfield; ++field)
                     Up[field] = Uf[mem + field * Nf_tot];
 
                 //(*U_to_P)(Up, Pp); // conserved -> primitive variables
-                physics->ConservedToPrimitive(Up, Pp);
+                physics->ConservedToPrimitive(Up, Pp, mem);
 
                 /* Uf is the physical solution at flux points
                  * Calculate physical fluxes in all three dirs */
                 //(*F_from_P)(Pp, Fp);
-                physics->Fluxes(Pp, Fp);
+                physics->Fluxes(Pp, Fp, mem);
 
                 /* Transform from physical to reference-space fluxes
                  * for all fields */
@@ -721,8 +719,6 @@ namespace kernels
                  * For indexing the metric and saving the fluxes back into F */
                 mem = mem_offset + (n2 * Ns1 + n1) * Nf0 + face.n0;
 
-                F_numerical->physics->metric->mem = mem;
-
                 for (int field = 0; field < lb.Nfield; ++field)
                 {
                     UL[field] = UL_data[mem_face + field * face.Ntot];
@@ -732,7 +728,7 @@ namespace kernels
                 for (int i: dirs)
                     np[i] = face.normal(i,mem_face);
 
-                (*F_numerical)(UL, UR, np, F_num_phys, dir);
+                (*F_numerical)(UL, UR, np, F_num_phys, dir, mem);
 
                 /* Transform from physical to reference-space fluxes.
                  * Needs mem loc in the full 3D array */
@@ -801,8 +797,6 @@ namespace kernels
                 mem_R = mem_offset_R + (n2 * Ns1 + n1) * Nf0 + 0;
                 mem_n = mem_offset_n +  n2 * Ns1 + n1;
 
-                F_numerical->physics->metric->mem = mem_L; // Arbitrarily choose mem_L
-
                 for (int field = 0; field < lb.Nfield; ++field)
                 {
                     UL[field] = Uf[mem_L + field * Nf_tot];
@@ -812,7 +806,7 @@ namespace kernels
                 for (int i: dirs)
                     np[i] = normal(i,mem_n);
 
-                (*F_numerical)(UL, UR, np, F_num_phys, dir);
+                (*F_numerical)(UL, UR, np, F_num_phys, dir, mem_L); // Arbitrarily choose mem_L
 
                 /* Calculate reference-space flux and save into the left element */
                 fluxes_phys_to_ref(F_num_phys, F, S, mem_L, lb.Nfield, Nf_tot);
@@ -1007,11 +1001,9 @@ namespace kernels
                     dUp[field][d] = dUf(d, i + field*N);
             }
 
-            physics->metric->mem = i; // So functions know which point they're operating on
-
             //(*F_diff)(Up, dUp, F_diff_p, args);
             //physics->DiffusiveFluxes(Up, dUp, F_diff_p, args);
-            physics->DiffusiveFluxes(Up, dUp, F_diff_p);
+            physics->DiffusiveFluxes(Up, dUp, F_diff_p, i);
 
             /* Transform from physical to reference-space fluxes
              * for all fields */
@@ -1094,22 +1086,20 @@ namespace kernels
                 /* Memory location for the index-0 field */
                 mem = mem_offset + (n2 * Ns1 + n1) * Nf0 + n0;
 
-                physics->metric->mem = mem;
-
                 /* Load all field variables at this location into
                  * the Up array. */
                 for (int field = 0; field < lb.Nfield; ++field)
                     Up[field] = Uf[mem + field * Nf_tot];
 
                 //(*U_to_P)(Up, Pp); // conserved -> primitive variables
-                physics->ConservedToPrimitive(Up, Pp);
+                physics->ConservedToPrimitive(Up, Pp, mem);
 
                 /* Uf is the physical solution at flux points
                  * Calculate wavespeeds in all three physical dirs */
                 for (int d: dirs) // iterate over phys-space directions
                 {
                     //(*c_from_P)(Pp, cp[d], d);
-                    physics->WaveSpeeds(Pp, cp[d], d);
+                    physics->WaveSpeeds(Pp, cp[d], d, mem);
                     cm[d] = MAX(cp[d][0], std::abs(cp[d][1]));
                 }
                 
