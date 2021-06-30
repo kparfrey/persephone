@@ -99,9 +99,10 @@ inline void MHD::ConservedToPrimitive(const real_t* const __restrict__ U,
 
     P[psi] = U[psi];
 
-    const real_t KE_density  = 0.5 * P[density] 
-                               * (P[v0]*P[v0] + P[v1]*P[v1] + P[v2]*P[v2]);
-    const real_t mag_density = 0.5 * (P[B0]*P[B0] + P[B1]*P[B1] + P[B2]*P[B2]);
+    const real_t KE_density  = 0.5 * P[density] * metric->square(&P[v0], mem);
+                               //* (P[v0]*P[v0] + P[v1]*P[v1] + P[v2]*P[v2]);
+    const real_t mag_density = 0.5 * metric->square(&P[B0], mem);
+                               //(P[B0]*P[B0] + P[B1]*P[B1] + P[B2]*P[B2]);
 
     P[pressure] = gm1 * (U[tot_energy] - KE_density - mag_density);
 
@@ -117,13 +118,17 @@ inline void MHD::WaveSpeeds(const real_t* const __restrict__ P,
     /* asq = (sound speed)^2 */
     const real_t asq = gamma * P[pressure] / P[density];
 
-    const real_t bsq    = (P[B0]*P[B0]+P[B1]*P[B1]+P[B2]*P[B2])/P[density]; 
-    const real_t bdirsq = P[B0+dir]*P[B0+dir]/P[density]; 
+    const real_t bsq    = metric->square(&P[B0], mem) / P[density]; 
+    //const real_t bsq  = (P[B0]*P[B0]+P[B1]*P[B1]+P[B2]*P[B2])/P[density]; 
+    
+    /* For diagonal metric only! Double check that this is correct... */
+    const real_t bdirsq = P[B0+dir]*P[B0+dir] / (((DiagonalSpatialMetric*)metric)->g[dir][mem] * P[density]); 
+    //const real_t bdirsq = P[B0+dir]*P[B0+dir]/P[density]; 
 
     const real_t factor = std::sqrt(std::pow(asq+bsq,2.0) - 4.0*asq*bdirsq);
     const real_t fast_speed = std::sqrt(0.5*(asq + bsq + factor));
 
-    c[0] = MAX(0.0, P[v0+dir] + fast_speed);
+    c[0] = MAX(0.0, P[v0+dir] + fast_speed); // Can this just be added to v in a general metric?
     c[1] = MIN(0.0, P[v0+dir] - fast_speed);
 
     return;
@@ -134,12 +139,14 @@ inline void MHD::Fluxes(const real_t* const __restrict__ P,
                               real_t (*__restrict__ F)[3],
                         const int mem) const
 {
-    const real_t KE_density = 0.5 * P[density] 
-                               * (P[v0]*P[v0] + P[v1]*P[v1] + P[v2]*P[v2]);
-    const real_t Bsq = P[B0]*P[B0] + P[B1]*P[B1] + P[B2]*P[B2];
+    const real_t KE_density = 0.5 * P[density] * metric->square(&P[v0], mem);
+                               //* (P[v0]*P[v0] + P[v1]*P[v1] + P[v2]*P[v2]);
+    const real_t Bsq = metric->square(&P[B0], mem);
+    //const real_t Bsq = P[B0]*P[B0] + P[B1]*P[B1] + P[B2]*P[B2];
     const real_t E = KE_density + 0.5*Bsq + P[pressure] / gm1;
     const real_t Ptot = P[pressure] + 0.5*Bsq;
-    const real_t Bdotv = P[B0]*P[v0] + P[B1]*P[v1] + P[B2]*P[v2];
+    const real_t Bdotv = metric->dot(&P[B0], &P[v0], mem);
+    //const real_t Bdotv = P[B0]*P[v0] + P[B1]*P[v1] + P[B2]*P[v2];
 
     real_t v;
     real_t B;
@@ -184,6 +191,7 @@ inline void MHD::DiffusiveFluxes(const real_t* const __restrict__ U,
     real_t v[3];
     real_t tau[3][3];
     real_t dv[3][3]; // dv[component][deriv dir]
+    real_t rdetg_deriv[3]; // (1/rdetg)*d_j(rdetg) at a single point
     real_t divv;
 
     for (int d: dirs)
@@ -193,7 +201,10 @@ inline void MHD::DiffusiveFluxes(const real_t* const __restrict__ U,
         for (int deriv: dirs)
             dv[comp][deriv] = (dU[mom0+comp][deriv] - v[comp]*dU[Density][deriv])
                                                                          / U[Density];
-    divv = dv[0][0] + dv[1][1] + dv[2][2]; // Assuming Cartesian...
+    for (int d: dirs)
+        rdetg_deriv[d] = metric->rdetg_deriv[d][mem];
+    divv = dv[0][0] + dv[1][1] + dv[2][2] + metric->dot(v, rdetg_deriv, mem);
+    //divv = dv[0][0] + dv[1][1] + dv[2][2]; // Assuming Cartesian...
 
     for (int d: dirs)
         tau[d][d] = 2*mu*dv[d][d] + lambda*divv;
@@ -210,7 +221,9 @@ inline void MHD::DiffusiveFluxes(const real_t* const __restrict__ U,
         for (int i: dirs)
             F[mom0+i][d] = - tau[d][i];
 
-        F[tot_energy][d] = - (v[0]*tau[0][d] + v[1]*tau[1][d] + v[2]*tau[2][d]);
+        /* Shouldn't this have a contribution from resistivity too? */
+        F[tot_energy][d] = - metric->dot(v, tau[d], mem);
+        //F[tot_energy][d] = - (v[0]*tau[0][d] + v[1]*tau[1][d] + v[2]*tau[2][d]);
 
         /* Magnetic part - resistivity is really a magnetic diffusivity */
         F[B0][d] = - resistivity * (dU[B0][d] - dU[B0+d][0]); 
