@@ -14,7 +14,7 @@ class CerfonFreidbergConfig
 
     const real_t A = 0.0;
     
-    real_t epsilon, kappa, delta;
+    real_t epsilon, kappa, delta, alpha;
 
     real_t c[13] = {}; // Coeffs in the potential expansion, initialised to zero
 

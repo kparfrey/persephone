@@ -31,6 +31,12 @@ class TorusModePack
         }
     }
 
+
+    TorusModePack()
+    {
+    }
+
+
     void setup();
 };
 
@@ -48,6 +54,7 @@ inline void TorusModePack::setup()
 
     return;
 }
+
 
 /* Modes for an axisymmetric torus, of cross-section radius = 1, 
  * centred at R,Z = 2,0. */

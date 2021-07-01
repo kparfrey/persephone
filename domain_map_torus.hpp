@@ -6,10 +6,11 @@
 #include "domain_map.hpp"
 #include "torus_mode_pack.hpp"
 #include "write_screen.hpp"
+#include "cerfon_freidberg.hpp"
 
 
 
-/* All versions of the torus map will use this transformation from the origin-centred
+/* The torus map will use this transformation from the origin-centred
  * unit disc to physical space, applying the Fourier modes stored in boundary_modes. */
 static void unit_disc_to_physical_space(real_t r[3], TorusModePack &modes)
 {
@@ -68,6 +69,47 @@ static void unit_disc_to_physical_space(real_t r[3], TorusModePack &modes)
 }
 
 
+/* Overload the function for use with Cerfon-Freidberg configurations */
+static void unit_disc_to_physical_space(real_t r[3], CerfonFreidbergConfig &cf_config)
+{
+    /* Unit disc coords were stored as Cartesian/cylindrical for ease of testing.
+     * Convert back to polar coords... Probably should just do all of the first
+     * division of the disc directly in polar coords... */
+    real_t r_uds = std::sqrt(r[0]*r[0] + r[1]*r[1]);
+    real_t t_uds = 0.0;
+
+    using std::atan;
+    using std::asin;
+    using std::cos;
+    using std::sin;
+
+    if (r_uds > TINY)
+    {
+        if (r[0] >= 0.0 )
+        {
+            if (r[1] >= 0.0)
+                t_uds = atan(r[0]/r[1]);
+            else
+                t_uds = pi_2 + atan(-r[1]/r[0]);
+        }
+        else
+        {
+            if (r[1] >= 0)
+                t_uds = 3.*pi_2 + atan(-r[1]/r[0]);
+            else
+                t_uds = pi + atan(r[0]/r[1]);
+        }
+    }
+
+
+    /* Apply transformation from CF 2010, Eqn 9 */
+    r[0] = r_uds * (1.0 + cf_config.epsilon * cos(t_uds + cf_config.alpha * sin(t_uds)));
+    r[1] = r_uds * cf_config.epsilon * cf_config.kappa * sin(t_uds);
+
+    return;
+}
+
+
 
 /* r[3] = (R, Z, phi) 
  * This map only goes into unit-disc space, but it holds the modes for the subsequent
@@ -93,11 +135,30 @@ class BasicSquareTorusMap : public DomainMap
     real_t lc[4][2];     // local corners: the 4 poloidal corners of this group's quad in the R-Z plane
     real_t theta_offset; // The starting "colatitude" angle for the outer curved edges (group > 0)
 
+    enum BoundaryType {fourier_modes, cf2010};
+    BoundaryType boundary;
     TorusModePack boundary_modes; // Used in the second, pointwise_transformation() to physical space
+    CerfonFreidbergConfig cf_config; // Alternative: set with CF 2010 boundary representation
+
 
     /* Set the domain_depth using the constructor */
     BasicSquareTorusMap(const int group, TorusModePack boundary_modes)
     : boundary_modes(boundary_modes)
+    {
+        boundary = fourier_modes;
+        common_constructor(group);
+    }
+
+
+    BasicSquareTorusMap(const int group, CerfonFreidbergConfig cf_config)
+    : cf_config(cf_config)
+    {
+        boundary = cf2010;
+        common_constructor(group);
+    }
+
+
+    void common_constructor(const int group)
     {
         this->group = group;
 
@@ -142,6 +203,8 @@ class BasicSquareTorusMap : public DomainMap
                     break;
             }
         }
+
+        return;
     }
 
 
@@ -220,7 +283,17 @@ class BasicSquareTorusMap : public DomainMap
 
     void pointwise_transformation(real_t r[3]) override
     {
-        unit_disc_to_physical_space(r, boundary_modes);
+        switch (boundary)
+        {
+            case fourier_modes:
+                unit_disc_to_physical_space(r, boundary_modes);
+                break;
+            case cf2010:
+                unit_disc_to_physical_space(r, cf_config);
+                break;
+        }
+
+        return;
     };
 };
 

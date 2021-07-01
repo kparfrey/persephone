@@ -2,9 +2,9 @@
 #define PARAMS_TORUS
 
 #include "params.hpp"
-//#include "torus_mode_pack.hpp"
+#include "torus_mode_pack.hpp"
+#include "cerfon_freidberg.hpp"
 
-class TorusModePack;
 
 class ParamsTorus : public Params
 {
@@ -21,8 +21,8 @@ class ParamsTorus : public Params
     int Ns[3];     // No. of solution points in each direction, in each element
 
     TorusProblemType torus_problem_type;
-    TorusModePack boundary_modes; // Don't pass to constructor
-    CFData cf_data; // Holds parameters of a Cerfon Freidberg problem
+    TorusModePack boundary_modes;    // Don't pass to constructor
+    CerfonFreidbergConfig cf_config; // Holds parameters of a Cerfon Freidberg problem
 
     /* Secondary or derived quantities */
     int Ngroup_central;  // 1 for square

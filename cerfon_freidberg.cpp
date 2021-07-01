@@ -28,5 +28,7 @@ CerfonFreidbergConfig::CerfonFreidbergConfig()
             break;
     }
 
+    alpha = std::asin(delta);
+
     return;
 }

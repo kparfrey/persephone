@@ -396,7 +396,7 @@ void ParamsTorus::setup_elementblock(ElementBlock &elements, Process &proc)
             elements.map = new BasicSquareTorusMap(proc.group, boundary_modes);
             break;
         case cerfon_freidberg:
-            elements.map = new CerfonFreidbergMap(proc.group, cf_data);
+            elements.map = new BasicSquareTorusMap(proc.group, cf_config);
             break;
         default:
             write::error("Torus problem type not recognised", destroy);
