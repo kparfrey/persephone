@@ -1,1 +1,1 @@
-active_params_cartesian_MHDTest.hpp
+active_params_CerfonFreidberg.hpp

@@ -16,7 +16,7 @@
  * guards.
  */
 
-static EqnSystem equations = mhd;
+static EqnSystem equations = navier_stokes;
 static BasicTimeMethod time_method = rk3_ssp;
 static TorusCentralPolygon central_polygon = square;
 

@@ -22,7 +22,7 @@ class ParamsTorus : public Params
 
     TorusProblemType torus_problem_type;
     TorusModePack boundary_modes;    // Don't pass to constructor
-    CerfonFreidbergConfig cf_config; // Holds parameters of a Cerfon Freidberg problem
+    CerfonFreidbergConfig* cf_config; // Holds parameters of a Cerfon Freidberg problem
 
     /* Secondary or derived quantities */
     int Ngroup_central;  // 1 for square
@@ -54,7 +54,8 @@ class ParamsTorus : public Params
     : Params(equations, time_method, cfl, end_time, dt_write), 
       central_polygon(central_polygon)
     {
-        torus_problem_type = input_config_file; // Default choice
+        //torus_problem_type = input_config_file; // Default choice
+        torus_problem_type = cerfon_freidberg;
 
         for (int i=0; i<3; i++)
         {

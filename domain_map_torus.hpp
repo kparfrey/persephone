@@ -70,7 +70,7 @@ static void unit_disc_to_physical_space(real_t r[3], TorusModePack &modes)
 
 
 /* Overload the function for use with Cerfon-Freidberg configurations */
-static void unit_disc_to_physical_space(real_t r[3], CerfonFreidbergConfig &cf_config)
+static void unit_disc_to_physical_space(real_t r[3], CerfonFreidbergConfig& cf_config)
 {
     /* Unit disc coords were stored as Cartesian/cylindrical for ease of testing.
      * Convert back to polar coords... Probably should just do all of the first
@@ -103,7 +103,7 @@ static void unit_disc_to_physical_space(real_t r[3], CerfonFreidbergConfig &cf_c
 
 
     /* Apply transformation from CF 2010, Eqn 9 */
-    r[0] = r_uds * (1.0 + cf_config.epsilon * cos(t_uds + cf_config.alpha * sin(t_uds)));
+    r[0] = 1.0 + r_uds * cf_config.epsilon * cos(t_uds + cf_config.alpha * sin(t_uds));
     r[1] = r_uds * cf_config.epsilon * cf_config.kappa * sin(t_uds);
 
     return;
@@ -138,7 +138,7 @@ class BasicSquareTorusMap : public DomainMap
     enum BoundaryType {fourier_modes, cf2010};
     BoundaryType boundary;
     TorusModePack boundary_modes; // Used in the second, pointwise_transformation() to physical space
-    CerfonFreidbergConfig cf_config; // Alternative: set with CF 2010 boundary representation
+    CerfonFreidbergConfig* cf_config; // Alternative: set with CF 2010 boundary representation
 
 
     /* Set the domain_depth using the constructor */
@@ -150,7 +150,7 @@ class BasicSquareTorusMap : public DomainMap
     }
 
 
-    BasicSquareTorusMap(const int group, CerfonFreidbergConfig cf_config)
+    BasicSquareTorusMap(const int group, CerfonFreidbergConfig* cf_config)
     : cf_config(cf_config)
     {
         boundary = cf2010;
@@ -289,7 +289,7 @@ class BasicSquareTorusMap : public DomainMap
                 unit_disc_to_physical_space(r, boundary_modes);
                 break;
             case cf2010:
-                unit_disc_to_physical_space(r, cf_config);
+                unit_disc_to_physical_space(r, *cf_config);
                 break;
         }
 
