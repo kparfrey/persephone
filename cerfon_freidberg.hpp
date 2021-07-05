@@ -8,9 +8,9 @@ class CerfonFreidbergConfig
 {
     public:
 
-    enum Machine {tftr, jet, iter, mast, nstx, frc, spheromak};
+    enum Machine {tftr, jet, iter, mast, nstx, spheromak, frc};
 
-    const Machine machine = tftr;
+    const Machine machine = frc;
 
     const real_t A = 0.0;
     

@@ -23,6 +23,21 @@ CerfonFreidbergConfig::CerfonFreidbergConfig()
             c[6] = -1.479830335643033e-03;
             c[7] = -4.613291591508187e-05;
             break;
+        case nstx:
+            epsilon = 0.78;
+            kappa   = 2.0;
+            delta   = 0.35;
+            break;
+        case spheromak:
+            epsilon = 0.95;
+            kappa   = 1.0;
+            delta   = 0.2;
+            break;
+        case frc:
+            epsilon = 0.99;
+            kappa   = 10.0;
+            delta   = 0.7;
+            break;
         default:
             write::error("Chosen machine not defined yet...", destroy);
             break;
