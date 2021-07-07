@@ -52,7 +52,7 @@ class NavierStokes : public Physics
     void WaveSpeeds(const real_t* const __restrict__ P, 
                           real_t* const __restrict__ c,
                     const int dir,
-                    const int) const override; /* Note: int mem not used */
+                    const int mem) const override;
 
     void Fluxes(const real_t* const __restrict__ P, 
                       real_t (*__restrict__ F)[3],
@@ -74,9 +74,9 @@ inline void NavierStokes::ConservedToPrimitive(const real_t* const __restrict__ 
     P[v0] = U[mom0] / U[density];
     P[v1] = U[mom1] / U[density];
     P[v2] = U[mom2] / U[density];
-
-    const real_t KE_density = 0.5 * P[density] * metric->square(&P[v0], mem);
-    //const real_t KE_density = 0.5 * P[density] * (P[v0]*P[v0] + P[v1]*P[v1] + P[v2]*P[v2]);
+    
+    /* Stored momenta, and hence v, are covariant components */
+    const real_t KE_density = 0.5 * P[density] * metric->square_cov(&P[v0], mem);
 
     P[pressure] = gm1 * (U[tot_energy] - KE_density);
 
@@ -84,15 +84,25 @@ inline void NavierStokes::ConservedToPrimitive(const real_t* const __restrict__ 
 }
 
 
+/* Returns the contravariant component of the max wave speed */
 inline void NavierStokes::WaveSpeeds(const real_t* const __restrict__ P, 
                                            real_t* const __restrict__ c,
                                      const int dir,
-                                     const int) const 
+                                     const int mem) const 
 {
-    const real_t sound_speed = std::sqrt(gamma * P[pressure] / P[density]);
+    //const real_t sound_speed = std::sqrt(gamma * P[pressure] / P[density]);
 
-    c[0] = MAX(0.0, P[v0+dir] + sound_speed);
-    c[1] = MIN(0.0, P[v0+dir] - sound_speed);
+    const real_t sound_speed_sq = gamma * P[pressure] / P[density];
+    
+    /* Assume diagonal metric for now... Tag:DIAGONAL */
+    /* This is the contravariant comp of the sound speed */
+    const real_t sound_speed = std::sqrt(sound_speed_sq / ((DiagonalSpatialMetric*)metric)->g[dir][mem]);
+
+    /* Raise index on this covariant component. Tag:DIAGONAL */
+    real_t vu = ((DiagonalSpatialMetric*)metric)->ginv[dir][mem] * P[v0+dir];
+
+    c[0] = MAX(0.0, vu + sound_speed);
+    c[1] = MIN(0.0, vu - sound_speed);
 
     return;
 }
@@ -102,8 +112,14 @@ inline void NavierStokes::Fluxes(const real_t* const __restrict__ P,
                                        real_t (*__restrict__ F)[3],
                                  const int mem) const
 {
-    const real_t KE_density = 0.5 * P[density] * metric->square(&P[v0], mem);
-    //const real_t KE_density = 0.5 * P[density] * (P[v0]*P[v0] + P[v1]*P[v1] + P[v2]*P[v2]);
+    /* Pointer directly to covariant velocity components */
+    const real_t* const vl = &P[v0];
+
+    /* Contravariant component of velocity */
+    real_t vu[3];
+    metric->raise(vl, vu, mem);
+
+    const real_t KE_density = 0.5 * P[density] * (vl[0]*vu[0] + vl[1]*vu[1] + vl[2]*vu[2]); 
     
     const real_t E = KE_density + P[pressure] / gm1;
 
@@ -111,14 +127,15 @@ inline void NavierStokes::Fluxes(const real_t* const __restrict__ P,
 
     for (int d: dirs)
     {
-        v = P[v0+d]; // velocity in this direction
+        //v = P[v0+d]; // velocity in this direction
+        v = vu[d]; // velocity in this "flux direction"
 
         F[density][d]    = v * P[density];
         F[tot_energy][d] = v * (E + P[pressure]);
 
-        F[mom0][d] = P[density] * v * P[v0];
-        F[mom1][d] = P[density] * v * P[v1];
-        F[mom2][d] = P[density] * v * P[v2];
+        F[mom0][d] = P[density] * v * vl[0];
+        F[mom1][d] = P[density] * v * vl[1];
+        F[mom2][d] = P[density] * v * vl[2];
 
         F[mom0+d][d] += P[pressure];
     }
@@ -127,6 +144,7 @@ inline void NavierStokes::Fluxes(const real_t* const __restrict__ P,
 }
 
 
+/* Still needs to be finished for general coords */
 inline void NavierStokes::DiffusiveFluxes(const real_t* const __restrict__ U, 
                                           const real_t (* const __restrict__ dU)[3],
                                                 real_t (*__restrict__ F)[3],

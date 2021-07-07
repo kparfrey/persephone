@@ -10,7 +10,7 @@ class CerfonFreidbergConfig
 
     enum Machine {tftr, jet, iter, mast, nstx, spheromak, frc};
 
-    const Machine machine = frc;
+    const Machine machine = tftr;
 
     const real_t A = 0.0;
     

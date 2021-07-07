@@ -35,12 +35,19 @@ class SpatialMetric
                              real_t* const __restrict__ Vl,
                        const int mem) = 0;
 
+    virtual void raise(const real_t* const __restrict__ Vl,
+                             real_t* const __restrict__ Vu,
+                       const int mem) = 0;
+
     virtual real_t dot(const real_t* const __restrict__ Au,
                        const real_t* const __restrict__ Bu,
                        const int mem) = 0;
 
     virtual real_t square(const real_t* const __restrict__ Vu,
                           const int mem) = 0;
+
+    virtual real_t square_cov(const real_t* const __restrict__ Vl,
+                              const int mem) = 0;
 
     /* Convert from an orthonormal basis to contravariant
      * components in a coordinate basis. */
@@ -54,7 +61,8 @@ class DiagonalSpatialMetric : public SpatialMetric
 {
     public:
 
-    real_t* g[3]; // g[i] == g_{ii}
+    real_t* g[3];    // g[i] == g_{ii}
+    real_t* ginv[3]; // ginv[i] == g^{ii}
 
     DiagonalSpatialMetric(MetricCoords metric_coords) 
         : SpatialMetric(metric_coords) {}
@@ -66,6 +74,7 @@ class DiagonalSpatialMetric : public SpatialMetric
         for (int d: dirs)
         {
             g[d]           = new real_t [N]();
+            ginv[d]        = new real_t [N]();
             rdetg_deriv[d] = new real_t [N]();
         }
 
@@ -78,6 +87,8 @@ class DiagonalSpatialMetric : public SpatialMetric
     {
         switch(metric_coords)
         {
+            /* Should I eventually make a separate Cartesian object
+             * that doesn't actually store or use the metric at all? */
             case cartesian:
                 g[0][mem] = 1.0;
                 g[1][mem] = 1.0;
@@ -98,11 +109,14 @@ class DiagonalSpatialMetric : public SpatialMetric
                 break;
         }
 
+        /* Since this is a diagonal metric... */
+        for (int d: dirs)
+            ginv[d][mem] = 1.0 / g[d][mem];
+
         return;
     }
 
 
-    /* Note mem must be explicitly set before using this */
     void lower(const real_t* const __restrict__ Vu,
                      real_t* const __restrict__ Vl,
                const int mem) override
@@ -110,6 +124,18 @@ class DiagonalSpatialMetric : public SpatialMetric
         Vl[0] = g[0][mem] * Vu[0];
         Vl[1] = g[1][mem] * Vu[1];
         Vl[2] = g[2][mem] * Vu[2];
+
+        return;
+    }
+
+
+    void raise(const real_t* const __restrict__ Vl,
+                     real_t* const __restrict__ Vu,
+               const int mem) override
+    {
+        Vu[0] = ginv[0][mem] * Vl[0];
+        Vu[1] = ginv[1][mem] * Vl[1];
+        Vu[2] = ginv[2][mem] * Vl[2];
 
         return;
     }
@@ -123,10 +149,19 @@ class DiagonalSpatialMetric : public SpatialMetric
     }
 
 
+    /* Takes contravariant/upper/vector components */
     real_t square(const real_t* const __restrict__ Vu,
                   const int mem) override
     {
         return g[0][mem]*Vu[0]*Vu[0] + g[1][mem]*Vu[1]*Vu[1] + g[2][mem]*Vu[2]*Vu[2];
+    }
+
+
+    /* Takes covariant/lower/dual components */
+    real_t square_cov(const real_t* const __restrict__ Vl,
+                      const int mem) override
+    {
+        return ginv[0][mem]*Vl[0]*Vl[0] + ginv[1][mem]*Vl[1]*Vl[1] + ginv[2][mem]*Vl[2]*Vl[2];
     }
 
 };
