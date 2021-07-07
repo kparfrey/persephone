@@ -79,6 +79,11 @@ namespace kernels
                          const real_t* const __restrict__ Jrdetg,
                                real_t* const __restrict__ divF,
                          const LengthBucket lb);
+    
+    void add_geometric_sources(      real_t* const __restrict__ divF, 
+                               const real_t* const __restrict__ U,
+                               const Physics* const __restrict__ physics,
+                               const int Nfield, const int Ns);
 
 #if 0
     void scalar_field_source(      real_t* const __restrict__ divF,

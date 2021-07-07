@@ -18,7 +18,7 @@
 
 enum EqnSystem {scalar_advection, navier_stokes, mhd};
 enum BasicTimeMethod {rk2_midpoint, rk3_ssp};
-enum MetricCoords {cartesian, cylindrical}; // Minkowski space unless noted
+enum PhysicalCoords {cartesian, cylindrical}; // Minkowski space unless noted
 
 enum WhoWrites {root_only, all_ranks, one_rank};
 enum Prognosis {destroy, survive};

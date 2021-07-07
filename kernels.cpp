@@ -430,6 +430,57 @@ namespace kernels
     }
 
 
+    void add_geometric_sources(      real_t* const __restrict__ divF, 
+                               const real_t* const __restrict__ U,
+                               const Physics* const __restrict__ physics,
+                               const int Nfield, const int Ns)
+    {
+        /* Conserved vars, primitive vars, and physical fluxes
+         * at a single point */
+        real_t* Up      = new real_t [Nfield];
+        real_t* Pp      = new real_t [Nfield];
+        real_t (*Fp)[3] = new real_t [Nfield][3]; // pointer to an array
+
+        real_t R; // HACK: cylindrical radius 
+
+        for (int mem = 0; mem < Ns; mem++)
+        {
+            /* Load all field variables at this location into the Up array. */
+            for (int field = 0; field < Nfield; ++field)
+                Up[field] = U[mem + field * Ns];
+
+            physics->ConservedToPrimitive(Up, Pp, mem);
+
+            /* U is the physical solution at solution points
+             * Calculate physical inviscid fluxes in all three dirs */
+            physics->Fluxes(Pp, Fp, mem);
+
+            /* HACK: directly implement just for cylindrical coords for now
+             * Note Cartesian coords don't call this function at all */
+            R = physics->metric->rdetg[mem];
+
+            switch (physics->system)
+            {
+                case navier_stokes:
+                // Only nonzero term is F^phi_{vphi} Gamm^phi_{r phi}
+                //                      = F^2_{3} * (1/R)
+                // This is added to the rho v_R equation
+                    divF[mem + 1*Ns] -= Fp[3][2] / R;
+                    break;
+                default:
+                    exit(99);
+                    break;
+            }
+        }
+        
+        delete[] Up;
+        delete[] Pp;
+        delete[] Fp;
+
+        return;
+    }
+
+
 #if 0
     /* If only adding the source, could replace with add_2_vectors() */
     void scalar_field_source(      real_t* const __restrict__ divF,

@@ -207,6 +207,15 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
                                             Physics::psi_damping_rate, eb.Ns_block);
     }
 
+
+    /* Add geometric source terms if not using Cartesian physical coordinates */
+    if (eb.physics_soln->metric->physical_coords != cartesian)
+    {
+        // Will need to pass in dU as well once diffusive fluxes are reintroduced
+        kernels::add_geometric_sources(divF, U, eb.physics_soln, Nfield, eb.Ns_block);
+    }
+
+
     for (int i: dirs)
     {
         kernels::free(Uf(i));

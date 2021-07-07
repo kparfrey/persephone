@@ -8,7 +8,7 @@ class SpatialMetric
 {
     public:
 
-    MetricCoords metric_coords;
+    PhysicalCoords physical_coords;
 
     real_t* rdetg;
     real_t* rdetg_deriv[3]; // (1/rdetg) * d_j (rdetg) for each j
@@ -21,8 +21,8 @@ class SpatialMetric
      * or full. */
     //int mem;
     
-    SpatialMetric(MetricCoords metric_coords) 
-        : metric_coords(metric_coords) {}
+    SpatialMetric(PhysicalCoords physical_coords) 
+        : physical_coords(physical_coords) {}
 
     virtual void allocate_on_host(const int N) = 0;
 
@@ -64,8 +64,8 @@ class DiagonalSpatialMetric : public SpatialMetric
     real_t* g[3];    // g[i] == g_{ii}
     real_t* ginv[3]; // ginv[i] == g^{ii}
 
-    DiagonalSpatialMetric(MetricCoords metric_coords) 
-        : SpatialMetric(metric_coords) {}
+    DiagonalSpatialMetric(PhysicalCoords physical_coords) 
+        : SpatialMetric(physical_coords) {}
     
     void allocate_on_host(const int N) override
     {
@@ -85,7 +85,7 @@ class DiagonalSpatialMetric : public SpatialMetric
     void fill(const real_t* const __restrict__ r,
               const int mem) override
     {
-        switch(metric_coords)
+        switch(physical_coords)
         {
             /* Should I eventually make a separate Cartesian object
              * that doesn't actually store or use the metric at all? */
