@@ -21,12 +21,12 @@ static real_t psi(const real_t x, const real_t y, const real_t A, const real_t* 
 
     psi[1] = 1.0;
     psi[2] = x2;
-    psi[3] = y2 - x2 * lnx;
+    psi[3] = y2 - x2 * lnx; // Antoine's code has the negative of this: might need to reverse coeff sign
     psi[4] = x4 - 4 * x2 * y2;
     psi[5] = 2 * y4 - 9 * y2 * x2 + 3 * x4 * lnx - 12 * x2 * y2 * lnx;
     psi[6] = x6 - 12 * x4 * y2 + 8 * x2 * y4;
-    psi[7] = 8 * y6 - 140 * y4 * x2 + 75 * y2 * x4 - 15 * x6 * lnx + 
-             180 * x4 * y2 * lnx - 120 * x2 * y4 * lnx;
+    psi[7] = 8 * y6 - 140 * y4 * x2 + 75 * y2 * x4 - 15 * x6 * lnx  
+             + 180 * x4 * y2 * lnx - 120 * x2 * y4 * lnx;
 
     real_t psi_h = 0.0;
     for (int i = 1; i < 8; ++i)
@@ -37,6 +37,74 @@ static real_t psi(const real_t x, const real_t y, const real_t A, const real_t* 
     return psi_tot;
 }
 
+
+static real_t dpsi_dx(const real_t x, const real_t y, const real_t A, const real_t* const c)
+{
+    const real_t x2 = x * x;
+    const real_t x3 = x * x2;
+    const real_t x5 = x2 * x3;
+
+    const real_t y2 = y * y;
+    const real_t y4 = y2 * y2;
+
+    const real_t lnx = std::log(x);
+
+    /* psi_p = d(psi_p)/dx */
+    const real_t psi_p = A * x * lnx + 0.5 * A * x  + 0.5 * (1-A) * x3;
+
+    /* psi[i] = d(psi_i)/dx */
+    real_t psi[8] = {}; 
+
+    psi[2] = 2 * x;
+    psi[3] = - 2 * x * lnx - x; 
+    psi[4] = 3 * x3 - 8 * x * y2;
+    psi[5] = - 18 * y2 * x + 12 * x3 * lnx + 3 * x3 - 24 * x * y2 * lnx - 12 * x * y2;
+    psi[6] = 6 * x5 - 48 * x3 * y2 + 16 * x * y4;
+    psi[7] = - 280 * y4 * x + 300 * y2 * x3 - 90 * x5 * lnx - 15 * x5 
+             + 720 * x3 * y2 * lnx + 180 * x3 * y2 - 240 * x * y4 * lnx - 120 * x * y4;
+
+    real_t psi_h = 0.0;
+    for (int i = 2; i < 8; ++i)
+        psi_h += c[i] * psi[i];
+
+    real_t psi_tot = psi_p + psi_h;
+
+    return psi_tot;
+}
+
+
+static real_t dpsi_dy(const real_t x, const real_t y, const real_t A, const real_t* const c)
+{
+    const real_t x2 = x * x;
+    const real_t x4 = x2 * x2;
+
+    const real_t y2 = y * y;
+    const real_t y3 = y * y2;
+    const real_t y5 = y2 * y3;
+
+    const real_t lnx = std::log(x);
+
+    /* psi_p = d(psi_p)/dy */
+    const real_t psi_p = 0.0;
+
+    /* psi[i] = d(psi_i)/dy */
+    real_t psi[8] = {}; 
+
+    psi[3] = 2 * y;
+    psi[4] = - 8 * x2 * y;
+    psi[5] = 8 * y3 - 18 * y * x2 - 24 * x2 * y * lnx;
+    psi[6] = - 24 * x4 * y + 32 * x2 * y3;
+    psi[7] = 48 * y5 - 560 * y3 * x2 + 150 * y * x4  
+             + 360 * x4 * y * lnx - 480 * x2 * y3 * lnx;
+
+    real_t psi_h = 0.0;
+    for (int i = 3; i < 8; ++i)
+        psi_h += c[i] * psi[i];
+
+    real_t psi_tot = psi_p + psi_h;
+
+    return psi_tot;
+}
 
 
 CerfonFreidbergConfig::CerfonFreidbergConfig()
