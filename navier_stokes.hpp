@@ -71,12 +71,17 @@ inline void NavierStokes::ConservedToPrimitive(const real_t* const __restrict__ 
 {
     P[density] = U[density]; 
 
-    P[v0] = U[mom0] / U[density];
-    P[v1] = U[mom1] / U[density];
-    P[v2] = U[mom2] / U[density];
+    real_t vl[3]; // Covariant velocity components
+
+    vl[0] = U[mom0] / U[density];
+    vl[1] = U[mom1] / U[density];
+    vl[2] = U[mom2] / U[density];
+
+    /* Store the contravariant components into P */
+    metric->raise(vl, &P[v0], mem);
     
-    /* Stored momenta, and hence these velocities, are covariant components */
-    const real_t KE_density = 0.5 * P[density] * metric->square_cov(&P[v0], mem);
+    const real_t KE_density = 0.5 * P[density] * 
+                              (vl[0]*P[v0] + vl[1]*P[v1] + vl[2]*P[v2]);
 
     P[pressure] = gm1 * (U[tot_energy] - KE_density);
 
@@ -90,19 +95,14 @@ inline void NavierStokes::WaveSpeeds(const real_t* const __restrict__ P,
                                      const int dir,
                                      const int mem) const 
 {
-    //const real_t sound_speed = std::sqrt(gamma * P[pressure] / P[density]);
-
     const real_t sound_speed_sq = gamma * P[pressure] / P[density];
     
     /* Assume diagonal metric for now... Tag:DIAGONAL */
     /* This is the contravariant comp of the sound speed */
     const real_t sound_speed = std::sqrt(sound_speed_sq / ((DiagonalSpatialMetric*)metric)->g[dir][mem]);
 
-    /* Raise index on this covariant component. Tag:DIAGONAL */
-    real_t vu = ((DiagonalSpatialMetric*)metric)->ginv[dir][mem] * P[v0+dir];
-
-    c[0] = MAX(0.0, vu + sound_speed);
-    c[1] = MIN(0.0, vu - sound_speed);
+    c[0] = MAX(0.0, P[v0+dir] + sound_speed);
+    c[1] = MIN(0.0, P[v0+dir] - sound_speed);
 
     return;
 }
@@ -112,12 +112,12 @@ inline void NavierStokes::Fluxes(const real_t* const __restrict__ P,
                                        real_t (*__restrict__ F)[3],
                                  const int mem) const
 {
-    /* Pointer directly to covariant velocity components */
-    const real_t* const vl = &P[v0];
+    /* Pointer directly to contravariant velocity components */
+    const real_t* const vu = &P[v0];
 
-    /* Contravariant component of velocity */
-    real_t vu[3];
-    metric->raise(vl, vu, mem);
+    /* Covariant component of velocity */
+    real_t vl[3];
+    metric->lower(vu, vl, mem);
 
     const real_t KE_density = 0.5 * P[density] * (vl[0]*vu[0] + vl[1]*vu[1] + vl[2]*vu[2]); 
     
@@ -127,7 +127,6 @@ inline void NavierStokes::Fluxes(const real_t* const __restrict__ P,
 
     for (int d: dirs)
     {
-        //v = P[v0+d]; // velocity in this direction
         v = vu[d]; // velocity in this "flux direction"
 
         F[density][d]    = v * P[density];

@@ -89,11 +89,15 @@ inline void MHD::ConservedToPrimitive(const real_t* const __restrict__ U,
 {
     P[density] = U[density]; 
 
-    /* Velocities are covariant components */
-    P[v0] = U[mom0] / U[density];
-    P[v1] = U[mom1] / U[density];
-    P[v2] = U[mom2] / U[density];
+    real_t vl[3]; // Covariant velocity components
 
+    vl[0] = U[mom0] / U[density]; // Momenta are covariant components
+    vl[1] = U[mom1] / U[density];
+    vl[2] = U[mom2] / U[density];
+
+    /* Store the contravariant components into P */
+    metric->raise(vl, &P[v0], mem);
+    
     /* Magnetic fields are contravariant components */
     P[B0] = U[B0];
     P[B1] = U[B1];
@@ -101,8 +105,8 @@ inline void MHD::ConservedToPrimitive(const real_t* const __restrict__ U,
 
     P[psi] = U[psi];
 
-    /* Stored momenta, and hence these velocities, are covariant components */
-    const real_t KE_density  = 0.5 * P[density] * metric->square_cov(&P[v0], mem);
+    const real_t KE_density = 0.5 * P[density] * 
+                              (vl[0]*P[v0] + vl[1]*P[v1] + vl[2]*P[v2]);
 
     const real_t mag_density = 0.5 * metric->square(&P[B0], mem);
 
@@ -149,11 +153,8 @@ inline void MHD::WaveSpeeds(const real_t* const __restrict__ P,
     /* This is the contra component. Assume diagonal metric for now... Tag:DIAGONAL */
     const real_t fast_speed = std::sqrt(usq / ((DiagonalSpatialMetric*)metric)->g[dir][mem]);
 
-    /* Raise index on this covariant component. Tag:DIAGONAL */
-    const real_t vu = ((DiagonalSpatialMetric*)metric)->ginv[dir][mem] * P[v0+dir];
-
-    c[0] = MAX(0.0, vu + fast_speed); // Can this just be added to v in a general metric?
-    c[1] = MIN(0.0, vu - fast_speed);
+    c[0] = MAX(0.0, P[v0+dir] + fast_speed); // P stores the contra velocity components
+    c[1] = MIN(0.0, P[v0+dir] - fast_speed);
 
     return;
 }
