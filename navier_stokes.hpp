@@ -75,7 +75,7 @@ inline void NavierStokes::ConservedToPrimitive(const real_t* const __restrict__ 
     P[v1] = U[mom1] / U[density];
     P[v2] = U[mom2] / U[density];
     
-    /* Stored momenta, and hence v, are covariant components */
+    /* Stored momenta, and hence these velocities, are covariant components */
     const real_t KE_density = 0.5 * P[density] * metric->square_cov(&P[v0], mem);
 
     P[pressure] = gm1 * (U[tot_energy] - KE_density);

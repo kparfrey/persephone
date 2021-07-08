@@ -53,7 +53,7 @@ class MHD : public Physics
         variables[7] = "B2";
         variables[8] = "psi";
 
-        diffusive   = true;
+        diffusive   = false;
         viscosity   = 3e-3;
         resistivity = 1e-3;
 
@@ -89,20 +89,22 @@ inline void MHD::ConservedToPrimitive(const real_t* const __restrict__ U,
 {
     P[density] = U[density]; 
 
+    /* Velocities are covariant components */
     P[v0] = U[mom0] / U[density];
     P[v1] = U[mom1] / U[density];
     P[v2] = U[mom2] / U[density];
 
+    /* Magnetic fields are contravariant components */
     P[B0] = U[B0];
     P[B1] = U[B1];
     P[B2] = U[B2];
 
     P[psi] = U[psi];
 
-    const real_t KE_density  = 0.5 * P[density] * metric->square(&P[v0], mem);
-                               //* (P[v0]*P[v0] + P[v1]*P[v1] + P[v2]*P[v2]);
+    /* Stored momenta, and hence these velocities, are covariant components */
+    const real_t KE_density  = 0.5 * P[density] * metric->square_cov(&P[v0], mem);
+
     const real_t mag_density = 0.5 * metric->square(&P[B0], mem);
-                               //(P[B0]*P[B0] + P[B1]*P[B1] + P[B2]*P[B2]);
 
     P[pressure] = gm1 * (U[tot_energy] - KE_density - mag_density);
 
@@ -115,21 +117,43 @@ inline void MHD::WaveSpeeds(const real_t* const __restrict__ P,
                             const int dir,
                             const int mem) const 
 {
-    /* asq = (sound speed)^2 */
-    const real_t asq = gamma * P[pressure] / P[density];
+    /* cs_sq = (sound speed)^2 */
+    const real_t cs_sq = gamma * P[pressure] / P[density];
 
-    const real_t bsq    = metric->square(&P[B0], mem) / P[density]; 
-    //const real_t bsq  = (P[B0]*P[B0]+P[B1]*P[B1]+P[B2]*P[B2])/P[density]; 
+    /* va_sq = (alfven speed)^2 */
+    const real_t* const Bu = &P[B0];
+    const real_t Bsq   = metric->square(Bu, mem);
+    const real_t va_sq =  Bsq / P[density]; 
     
-    /* For diagonal metric only! Double check that this is correct... */
-    const real_t bdirsq = P[B0+dir]*P[B0+dir] / (((DiagonalSpatialMetric*)metric)->g[dir][mem] * P[density]); 
-    //const real_t bdirsq = P[B0+dir]*P[B0+dir]/P[density]; 
+    /* This version from e.g. Stone+ 2008, Appendix A, Eqn A10 */
+#if 0
+    const real_t va_dir_sq = P[B0+dir]*P[B0+dir]/P[density]; 
+    const real_t factor = std::sqrt(std::pow(cs_sq+va_sq,2.0) - 4.0*cs_sq*va_dir_sq);
+    const real_t fast_speed = std::sqrt(0.5*(cs_sq + va_sq + factor));
+#endif
 
-    const real_t factor = std::sqrt(std::pow(asq+bsq,2.0) - 4.0*asq*bdirsq);
-    const real_t fast_speed = std::sqrt(0.5*(asq + bsq + factor));
+    /* From Spuit, Essential MHD for Astrophysics, https://arxiv.org/pdf/1301.5572.pdf */
+    real_t ku[3] = {}; // Contravariant components of wavevector
+    real_t kl[3] = {};
+    ku[dir] = 1.0; // Note the normalisation here is taken care of at the end
+    metric->lower(ku, kl, mem);
+    const real_t kdotB = kl[0]*Bu[0] + kl[1]*Bu[1] + kl[2]*Bu[2];
+    const real_t ksq   = kl[0]*ku[0] + kl[1]*ku[1] + kl[2]*ku[2];
+    const real_t cost  = kdotB / std::sqrt(ksq * Bsq);
 
-    c[0] = MAX(0.0, P[v0+dir] + fast_speed); // Can this just be added to v in a general metric?
-    c[1] = MIN(0.0, P[v0+dir] - fast_speed);
+    const real_t b = std::sqrt(cs_sq/va_sq) + std::sqrt(va_sq/cs_sq);
+
+    /* The square of the fast speed */
+    const real_t usq = 0.5 * (cs_sq + va_sq)*(1 + std::sqrt(1 - 4*cost*cost/(b*b)));
+
+    /* This is the contra component. Assume diagonal metric for now... Tag:DIAGONAL */
+    const real_t fast_speed = std::sqrt(usq / ((DiagonalSpatialMetric*)metric)->g[dir][mem]);
+
+    /* Raise index on this covariant component. Tag:DIAGONAL */
+    const real_t vu = ((DiagonalSpatialMetric*)metric)->ginv[dir][mem] * P[v0+dir];
+
+    c[0] = MAX(0.0, vu + fast_speed); // Can this just be added to v in a general metric?
+    c[1] = MIN(0.0, vu - fast_speed);
 
     return;
 }
