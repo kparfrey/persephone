@@ -3,6 +3,41 @@
 #include <cmath>
 #include "write_screen.hpp"
 
+static real_t psi(const real_t x, const real_t y, const real_t A, const real_t* const c)
+{
+    const real_t x2 = x * x;
+    const real_t x4 = x2 * x2;
+    const real_t x6 = x2 * x4;
+
+    const real_t y2 = y * y;
+    const real_t y4 = y2 * y2;
+    const real_t y6 = y2 * y4;
+
+    const real_t lnx = std::log(x);
+
+    const real_t psi_p = 0.5 * A * x2 * lnx  + 0.125 * (1-A) * x4;
+
+    real_t psi[8] = {}; // the psi_i
+
+    psi[1] = 1.0;
+    psi[2] = x2;
+    psi[3] = y2 - x2 * lnx;
+    psi[4] = x4 - 4 * x2 * y2;
+    psi[5] = 2 * y4 - 9 * y2 * x2 + 3 * x4 * lnx - 12 * x2 * y2 * lnx;
+    psi[6] = x6 - 12 * x4 * y2 + 8 * x2 * y4;
+    psi[7] = 8 * y6 - 140 * y4 * x2 + 75 * y2 * x4 - 15 * x6 * lnx + 
+             180 * x4 * y2 * lnx - 120 * x2 * y4 * lnx;
+
+    real_t psi_h = 0.0;
+    for (int i = 1; i < 8; ++i)
+        psi_h += c[i] * psi[i];
+
+    real_t psi_tot = psi_p + psi_h;
+
+    return psi_tot;
+}
+
+
 
 CerfonFreidbergConfig::CerfonFreidbergConfig()
 {
