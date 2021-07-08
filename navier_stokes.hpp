@@ -120,8 +120,7 @@ inline void NavierStokes::Fluxes(const real_t* const __restrict__ P,
     metric->lower(vu, vl, mem);
 
     const real_t KE_density = 0.5 * P[density] * (vl[0]*vu[0] + vl[1]*vu[1] + vl[2]*vu[2]); 
-    
-    const real_t E = KE_density + P[pressure] / gm1;
+    const real_t E          = KE_density + P[pressure] / gm1;
 
     real_t v;
 

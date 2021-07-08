@@ -164,36 +164,43 @@ inline void MHD::Fluxes(const real_t* const __restrict__ P,
                               real_t (*__restrict__ F)[3],
                         const int mem) const
 {
-    const real_t KE_density = 0.5 * P[density] * metric->square(&P[v0], mem);
-                               //* (P[v0]*P[v0] + P[v1]*P[v1] + P[v2]*P[v2]);
-    const real_t Bsq = metric->square(&P[B0], mem);
-    //const real_t Bsq = P[B0]*P[B0] + P[B1]*P[B1] + P[B2]*P[B2];
-    const real_t E = KE_density + 0.5*Bsq + P[pressure] / gm1;
-    const real_t Ptot = P[pressure] + 0.5*Bsq;
-    const real_t Bdotv = metric->dot(&P[B0], &P[v0], mem);
-    //const real_t Bdotv = P[B0]*P[v0] + P[B1]*P[v1] + P[B2]*P[v2];
+    /* Pointers directly to contravariant components */
+    const real_t* const vu = &P[v0];
+    const real_t* const Bu = &P[B0];
+
+    /* Covariant components */
+    real_t vl[3];
+    real_t Bl[3];
+    metric->lower(vu, vl, mem);
+    metric->lower(Bu, Bl, mem);
+
+    const real_t KE_density = 0.5 * P[density] * (vl[0]*vu[0] + vl[1]*vu[1] + vl[2]*vu[2]); 
+    const real_t Bsq   = Bl[0]*Bu[0] + Bl[1]*Bu[1] + Bl[2]*Bu[2];
+    const real_t E     = KE_density + 0.5*Bsq + P[pressure] / gm1;
+    const real_t Ptot  = P[pressure] + 0.5*Bsq;
+    const real_t Bdotv = Bl[0]*vu[0] + Bl[1]*vu[1] + Bl[2]*vu[2];
 
     real_t v;
     real_t B;
 
     for (int d: dirs)
     {
-        v = P[v0+d]; // velocity in this direction
-        B = P[B0+d]; // B in this direction
+        v = vu[d]; // velocity in this direction
+        B = Bu[d]; // B in this direction
 
         F[density][d]    = v * P[density];
         F[tot_energy][d] = v * (E + Ptot) - Bdotv*B;
 
-        F[mom0][d] = P[density] * v * P[v0] - B*P[B0];
-        F[mom1][d] = P[density] * v * P[v1] - B*P[B1];
-        F[mom2][d] = P[density] * v * P[v2] - B*P[B2];
+        F[mom0][d] = P[density] * v * vl[0] - B*Bl[0];
+        F[mom1][d] = P[density] * v * vl[1] - B*Bl[1];
+        F[mom2][d] = P[density] * v * vl[2] - B*Bl[2];
 
         F[mom0+d][d] += Ptot;
 
         /* This can be tidied; the mom'm one too */
-        F[B0][d] = P[B0]*v - B*P[v0]; 
-        F[B1][d] = P[B1]*v - B*P[v1]; 
-        F[B2][d] = P[B2]*v - B*P[v2]; 
+        F[B0][d] = Bu[0]*v - B*vu[0]; 
+        F[B1][d] = Bu[1]*v - B*vu[1]; 
+        F[B2][d] = Bu[2]*v - B*vu[2]; 
 
         F[B0+d][d] = P[psi]; // Overwrite the above
 
