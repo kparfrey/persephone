@@ -4,8 +4,9 @@
 #include "common.hpp"
 
 class ElementBlock;
-class Physics;
+class CerfonFreidbergConfig;
 
-void set_euler_torus(ElementBlock&);
+void set_euler_torus(ElementBlock& eb);
+void set_CerfonFreidberg(ElementBlock& eb, CerfonFreidbergConfig& cf_config);
 
 #endif

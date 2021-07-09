@@ -55,7 +55,7 @@ class ParamsTorus : public Params
       central_polygon(central_polygon)
     {
         //torus_problem_type = input_config_file; // Default choice
-        torus_problem_type = cerfon_freidberg;
+        torus_problem_type = cerfon_freidberg; // Should pass this in
 
         for (int i=0; i<3; i++)
         {
