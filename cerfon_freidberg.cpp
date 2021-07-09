@@ -3,7 +3,7 @@
 #include <cmath>
 #include "write_screen.hpp"
 
-static real_t psi(const real_t x, const real_t y, const real_t A, const real_t* const c)
+static real_t psi_fn(const real_t x, const real_t y, const real_t A, const real_t* const c)
 {
     const real_t x2 = x * x;
     const real_t x4 = x2 * x2;
@@ -104,6 +104,42 @@ static real_t dpsi_dy(const real_t x, const real_t y, const real_t A, const real
     real_t psi_tot = psi_p + psi_h;
 
     return psi_tot;
+}
+
+
+void CerfonFreidbergConfig::construct_equilibrium(const real_t r[3],
+                                                        real_t U[9],
+                                                  const real_t gamma)
+{
+    enum conserved {Density, mom0, mom1, mom2, tot_energy, B0, B1, B2, div_scalar};
+    
+    const real_t R = r[0]; // equiv to x
+    const real_t Z = r[1]; // equiv to y
+
+    const real_t psi = psi_fn(R, Z, A, c);
+
+    const real_t BR   = - dpsi_dy(R, Z, A, c) / R; // orthonormal components
+    const real_t BZ   =   dpsi_dx(R, Z, A, c) / R;
+    const real_t Bphi = (B0*B0 - 2 * A * psi) / (R*R);
+
+    const real_t p = (A - 1) * psi;
+
+    const real_t Bsq = BR*BR + BZ*BZ + Bphi*Bphi;
+
+    U[Density] = 1.0; // Uniform density seems reasonable?
+    U[mom0]    = 0.0; // Since it's an equilibrium
+    U[mom1]    = 0.0;
+    U[mom2]    = 0.0;
+
+    U[tot_energy] = 0.5 * Bsq + p/(gamma - 1.0);
+
+    U[B0] = BR;
+    U[B1] = BZ;
+    U[B2] = Bphi / R; // U[B2] is the contravariant component
+
+    U[div_scalar] = 0.0;
+
+    return;
 }
 
 
