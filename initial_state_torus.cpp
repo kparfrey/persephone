@@ -89,7 +89,7 @@ void set_CerfonFreidberg(ElementBlock& eb, CerfonFreidbergConfig& cf_config)
 
         cf_config.construct_equilibrium(r, U, gamma);
     
-        for(int i = 0; i < eb.Nfield; ++i)
+        for (int i = 0; i < eb.Nfield; ++i)
             eb.fields[loc0 + i*eb.Ns_block] = U[i];
     }
 

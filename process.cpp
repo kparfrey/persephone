@@ -106,7 +106,7 @@ void Process::time_advance()
     if (system == mhd)
     {
         const real_t ch_divClean = 1.0 /(dt * tt_max_global); //Should be stable...
-        Physics::ch_sq = ch_divClean * ch_divClean;
+        Physics::ch_sq = 1e-15 * ch_divClean * ch_divClean;
         //F_from_P->ch_sq = physics->c_h * physics->c_h;
 
         Physics::psi_damping_rate = Physics::psi_damping_const / dt; 

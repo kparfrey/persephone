@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 
     while(proc.time < proc.end_time)
     {
-        if ((proc.time - proc.time_last_write) > proc.dt_write)
+        //if ((proc.time - proc.time_last_write) > proc.dt_write)
             proc.is_output_step = true;
 
         proc.time_advance();

@@ -113,16 +113,23 @@ void CerfonFreidbergConfig::construct_equilibrium(const real_t r[3],
 {
     enum conserved {Density, mom0, mom1, mom2, tot_energy, B0, B1, B2, div_scalar};
     
-    const real_t R = r[0]; // equiv to x
-    const real_t Z = r[1]; // equiv to y
+    const real_t R = r[0]; 
+    const real_t Z = r[1];
+    const real_t x = R/R0;
+    const real_t y = Z/R0;
 
-    const real_t psi = psi_fn(R, Z, A, c);
+    const real_t R0sq = R0 * R0;
+    const real_t R04  = R0sq * R0sq;
 
-    const real_t BR   = - dpsi_dy(R, Z, A, c) / R; // orthonormal components
-    const real_t BZ   =   dpsi_dx(R, Z, A, c) / R;
-    const real_t Bphi = (B0*B0 - 2 * A * psi) / (R*R);
+    const real_t psi = psi_fn(x, y, A, c);
 
-    const real_t p = (A - 1) * psi;
+    const real_t q = 1.0;
+
+    const real_t BR   = - q * dpsi_dy(x, y, A, c) / (R0*R); // orthonormal components
+    const real_t BZ   =   q * dpsi_dx(x, y, A, c) / (R0*R);
+    const real_t Bphi = q * (R0/R) * std::sqrt(B0*B0 - 2 * A * psi/R04);
+
+    const real_t p = (A - 1) * psi / R04;
 
     const real_t Bsq = BR*BR + BZ*BZ + Bphi*Bphi;
 
@@ -137,7 +144,7 @@ void CerfonFreidbergConfig::construct_equilibrium(const real_t r[3],
     U[B1] = BZ;
     U[B2] = Bphi / R; // U[B2] is the contravariant component
 
-    U[div_scalar] = 0.0;
+    U[div_scalar] = 0.0; //psi;
 
     return;
 }
@@ -146,7 +153,9 @@ void CerfonFreidbergConfig::construct_equilibrium(const real_t r[3],
 CerfonFreidbergConfig::CerfonFreidbergConfig()
 {
     /* Set all the coefficients, found using Antoine's matlab script
-     * Using c[1] for c_1 etc. */
+     * Using c[1] for c_1 etc. 
+     * Need to take the negative of his script's c[3], since in the script
+     * he defined psi_3 with the opposite sign to the paper. */
 
     switch(machine)
     {
@@ -156,7 +165,7 @@ CerfonFreidbergConfig::CerfonFreidbergConfig()
             delta   = 0.0;
             c[1] =  3.363214222958483e-02;
             c[2] = -1.288496594601578e-01;
-            c[3] = -5.920909679287922e-02;
+            c[3] =  5.920909679287922e-02;
             c[4] = -5.823137092324818e-02;
             c[5] =  6.696122694686874e-03;
             c[6] = -1.479830335643033e-03;
@@ -171,6 +180,13 @@ CerfonFreidbergConfig::CerfonFreidbergConfig()
             epsilon = 0.95;
             kappa   = 1.0;
             delta   = 0.2;
+            c[1] =  5.877704044228160e-04;
+            c[2] = -2.560362608900638e-01;
+            c[3] =  6.979227356204132e-03;
+            c[4] = -6.078983140122448e-02;
+            c[5] =  6.243471441125277e-03;
+            c[6] = -3.066243397601454e-03;
+            c[7] = -9.081518541524376e-05;
             break;
         case frc:
             epsilon = 0.99;

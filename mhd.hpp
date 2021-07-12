@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include "physics.hpp"
+//#include <iostream>
 
 /* U --- conserved
  * 0 rho
@@ -30,8 +31,8 @@
 class MHD : public Physics
 {
     private:
-    enum conserved {Density, mom0, mom1, mom2, tot_energy};
-    enum primitive {density, v0  , v1  , v2,   pressure, B0, B1, B2, psi};
+    enum conserved {Density, mom0, mom1, mom2, tot_energy, B0, B1, B2, psi};
+    enum primitive {density, v0  , v1  , v2,   pressure};
 
     public:
     const real_t gamma = 5.0/3.0;
@@ -58,7 +59,7 @@ class MHD : public Physics
         resistivity = 1e-3;
 
         /* Divergence-cleaning parameters */
-        psi_damping_const = 0.01; // 0 < p_d_const < 1
+        psi_damping_const = 0.0; //0.01; // 0 < p_d_const < 1
     }
 
 
@@ -110,7 +111,10 @@ inline void MHD::ConservedToPrimitive(const real_t* const __restrict__ U,
 
     const real_t mag_density = 0.5 * metric->square(&P[B0], mem);
 
-    P[pressure] = gm1 * (U[tot_energy] - KE_density - mag_density);
+    if (KE_density + mag_density > U[tot_energy])
+        P[pressure] = 1e-6; 
+    else
+        P[pressure] = gm1 * (U[tot_energy] - KE_density - mag_density);
 
     return;
 }
@@ -202,7 +206,7 @@ inline void MHD::Fluxes(const real_t* const __restrict__ P,
         F[B1][d] = Bu[1]*v - B*vu[1]; 
         F[B2][d] = Bu[2]*v - B*vu[2]; 
 
-        F[B0+d][d] = P[psi]; // Overwrite the above
+        F[B0+d][d] = P[psi] * ((DiagonalSpatialMetric*)metric)->ginv[d][mem]; // Overwrite the above
 
         F[psi][d] = ch_sq * B; 
     }

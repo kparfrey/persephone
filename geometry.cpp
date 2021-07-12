@@ -279,7 +279,8 @@ void Geometry::setup_full(ElementBlock& eb)
                     s[dphys] = S[d](dphys,mem_loc);
                
                 /* Was assuming physical coord system is Cartesian... */
-                smag = std::sqrt(metric->square(s, mem_loc));
+                smag = std::sqrt(metric->square_cov(s, mem_loc)); // s is phys-space dual vector
+                //smag = std::sqrt(metric->square(s, mem_loc));
                 //smag = std::sqrt(s[0]*s[0] + s[1]*s[1] + s[2]*s[2]);
 
                 for (int dphys: dirs)
@@ -294,7 +295,8 @@ void Geometry::setup_full(ElementBlock& eb)
                     for (int dphys: dirs)
                         s[dphys] = S[d](dphys,mem_loc);
                     
-                    smag = std::sqrt(metric->square(s, mem_loc));
+                    smag = std::sqrt(metric->square_cov(s, mem_loc));
+                    //smag = std::sqrt(metric->square(s, mem_loc));
                     //smag = std::sqrt(s[0]*s[0] + s[1]*s[1] + s[2]*s[2]);
 
                     for (int dphys: dirs)

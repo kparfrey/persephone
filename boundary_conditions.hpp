@@ -58,8 +58,8 @@ class ImplosionTestBC : public BoundaryConditions
     }
 
     
-    virtual real_t operator()(const int field, const int i,
-                              const real_t* const __restrict__ my_data)
+    real_t operator()(const int field, const int i,
+                      const real_t* const __restrict__ my_data) override
     {
         switch(field)
         {
@@ -93,6 +93,54 @@ class ImplosionTestBC : public BoundaryConditions
         return;
     }
      ***/
+};
+
+
+class TorusWallBC : public BoundaryConditions
+{
+    enum conserved {density, mom0, mom1, mom2, tot_energy, B0, B1, B2, psi};
+    const EqnSystem equations = mhd;
+
+    public:
+
+    TorusWallBC(const int Ntot, const int Nfield, const EqnSystem evolved_system)
+        : BoundaryConditions(Ntot, Nfield) 
+    {
+        if (evolved_system != equations)
+            write::error("Chosen boundary conditions not applicable for this equation system", destroy);
+    }
+
+    
+    real_t operator()(const int field, const int i,
+                      const real_t* const __restrict__ my_data) override
+    {
+        return - my_data[field*Ntot + i]; // Set all fluxes to zero 
+
+#if 0
+        switch(field)
+        {
+            case density:
+                return stored_data[density*Ntot + i]; // ??
+            case mom0:
+                return - my_data[mom0*Ntot + i]; // Radial wall
+            case mom1:
+            case mom2:
+                return 0.0;
+            case tot_energy:
+                return stored_data[tot_energy*Ntot + i];
+            case B0:
+                return stored_data[B0*Ntot + i];
+            case B1:
+                return stored_data[B1*Ntot + i];
+            case B2:
+                return stored_data[B2*Ntot + i];
+            case psi:
+                return stored_data[psi*Ntot + i];
+        }
+
+        return 0.0;
+#endif
+    }
 };
 
 #endif

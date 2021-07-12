@@ -462,13 +462,14 @@ namespace kernels
             switch (physics->system)
             {
                 case navier_stokes:
+                case mhd:
                 // Only nonzero term is F^phi_{vphi} Gamm^phi_{r phi}
                 //                      = F^2_{3} * (1/R)
                 // This is added to the rho v_R equation
                     divF[mem + 1*Ns] -= Fp[3][2] / R;
                     break;
                 default:
-                    exit(99);
+                    exit(123);
                     break;
             }
         }
@@ -706,6 +707,51 @@ namespace kernels
     }
 
 
+    /* Maybe a WallBC function belongs in each Physics derived class? */
+    static void torus_BC(      real_t* const __restrict__ UL, 
+                               real_t* const __restrict__ UR,
+                         const real_t* const __restrict__ nl,
+                         const Physics* const __restrict__ physics,
+                         const int mem)
+    {
+        enum conserved {Density, mom0, mom1, mom2, tot_energy, B0, B1, B2, psi};
+        enum primitive {density, v0  , v1  , v2,   pressure};
+        
+        real_t P[9];  // Primitives from incoming conserved variables
+
+        real_t nu[3]; // contravariant components of normal vector
+        physics->metric->raise(nl, nu, mem);
+
+        /* UL and UR should be identical, so just choose L arbitrarily */
+        physics->ConservedToPrimitive(UL, P, mem);
+        
+        const real_t vdotn = nl[0]*P[v0] + nl[1]*P[v1] + nl[2]*P[v2];
+        const real_t Bdotn = nl[0]*P[B0] + nl[1]*P[B1] + nl[2]*P[B2];
+        real_t vm[3];
+        real_t Bm[3];
+
+        /* Remove the normal velocity and magnetic field */
+        for (int d: dirs)
+        {
+            vm[d] = P[v0+d] - vdotn * nu[d];
+            Bm[d] = P[B0+d] - Bdotn * nu[d];
+        }
+
+        /* The density, tot_energy, and psi conserved vars are unchanged.
+         * Only need to overwrite the momentum and magnetic field */
+        real_t vl[3];
+        physics->metric->lower(vm, vl, mem);
+
+        for (int d: dirs)
+        {
+            UL[mom0+d] = UR[mom0+d] = P[Density] * vl[d];
+            UL[  B0+d] = UR[  B0+d] = Bm[d];
+        }
+
+        return;
+    }
+
+
     void external_numerical_flux(const FaceCommunicator           face,
                                        real_t* const __restrict__ F,
                                  const NumericalFlux*             F_numerical,
@@ -726,13 +772,29 @@ namespace kernels
         const real_t* __restrict__ UL_data;
         const real_t* __restrict__ UR_data;
 
+
         /* To apply external boundary conditions, set the incoming neighbour data on
          * external faces such that the fluxes are as desired. */
+#if 0
         if (face.external_face)
-            for (int field = 0; field < lb.Nfield; ++field)
-                for (int i = 0; i < face.Ntot; ++i)
-                    face.neighbour_data[field*face.Ntot + i] = (*face.BC)(field, i, face.my_data);
+        {
+            real_t npu[3]; // contravariant components of normal vector
+            for (int i = 0; i < face.Ntot; ++i)
+            {
+                for (int d: dirs)
+                    np[d] = face.normal(d,i);
+                    F_numerical->physics->metric->raise(np, npu, mem);
 
+                for (int field = 0; field < lb.Nfield; ++field)
+                        face.neighbour_data[field*face.Ntot + i] = (*face.BC)(field, i, face.my_data, np);
+            }
+        }
+#endif
+
+        if (face.external_face)
+            for (int i = 0; i < face.Ntot * lb.Nfield; ++i)
+                face.neighbour_data[i] = face.my_data[i];
+        
         if (face.orientation > 0)
         {
             UL_data = face.my_data;
@@ -748,8 +810,8 @@ namespace kernels
         real_t* UL = new real_t [lb.Nfield];
         real_t* UR = new real_t [lb.Nfield];
         real_t (*F_num_phys)[3] = new real_t [lb.Nfield][3]; // pointer to an array
-
         real_t np[3]; // The face's normal vector at a single point
+
         
         for (int ne2 = 0; ne2 < face.Nelem[1]; ++ne2)
         for (int ne1 = 0; ne1 < face.Nelem[0]; ++ne1)
@@ -778,6 +840,9 @@ namespace kernels
 
                 for (int i: dirs)
                     np[i] = face.normal(i,mem_face);
+
+                if (face.external_face)
+                    torus_BC(UL, UR, np, F_numerical->physics, mem);
 
                 (*F_numerical)(UL, UR, np, F_num_phys, dir, mem);
 

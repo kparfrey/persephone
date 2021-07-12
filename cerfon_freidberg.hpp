@@ -10,12 +10,14 @@ class CerfonFreidbergConfig
 
     enum Machine {tftr, jet, iter, mast, nstx, spheromak, frc};
 
-    const Machine machine = tftr;
+    const Machine machine = spheromak;
 
     const real_t A  = 0.0;
-    const real_t B0 = 1.0; // Set directly for now...
+    const real_t B0 = 0.5; // Set directly for now...
                            // Should set q ~ B0 / B_poloidal?
     
+    const real_t R0 = 1.0;
+
     real_t epsilon, kappa, delta, alpha;
 
     real_t c[8] = {}; // Coeffs in the potential expansion, initialised to zero
