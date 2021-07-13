@@ -5,7 +5,7 @@
 #include "numerical_flux.hpp"
 #include "boundary_conditions.hpp"
 
-//#include<stdio.h>
+#include <iostream>
 
 namespace kernels
 {
@@ -470,7 +470,7 @@ namespace kernels
                 case mhd:
                     divF[mem + 1*Ns] -= Fp[3][2] / R; // As for Navier-Stokes
                     // d_t (B^r) + ... = psi / R
-                    divF[mem + 5*Ns] -= U[8] / R;
+                    divF[mem + 5*Ns] -= Up[8] / R;
                     break;
                 default:
                     exit(123);
@@ -737,8 +737,9 @@ namespace kernels
         /* Remove the normal velocity and magnetic field */
         for (int d: dirs)
         {
-            vm[d] = P[v0+d] - vdotn * nu[d];
-            Bm[d] = P[B0+d] - Bdotn * nu[d];
+            vm[d] = P[v0+d] - vdotn * nu[d]; // Impenetrable
+            //vm[d] = 0.0;                   // Impenetrable + no-slip
+            Bm[d] = P[B0+d] - Bdotn * nu[d]; // Zero normal flux
         }
 
         /* The density, tot_energy, and psi conserved vars are unchanged.
@@ -751,6 +752,19 @@ namespace kernels
             UL[mom0+d] = UR[mom0+d] = P[Density] * vl[d];
             UL[  B0+d] = UR[  B0+d] = Bm[d];
         }
+
+        /* Set scalars ? */
+        //UL[density] = UR[density] = P[density];
+        
+        const real_t mag_density = 0.5 * physics->metric->square(Bm, mem);
+        const real_t KE_density  = 0.5 * P[density] * physics->metric->square(vm, mem);
+
+        UL[tot_energy] = UR[tot_energy] = KE_density + mag_density + P[pressure]/((MHD*)physics)->gm1;
+
+
+        /* Basic BC for psi - for some reason this causes sudden pressure errors? */
+        /* For torus external BCs, face.orientation > 0 and so neighbour data is UR */
+        //UL[psi] = UR[psi] = 0.0;
 
         return;
     }

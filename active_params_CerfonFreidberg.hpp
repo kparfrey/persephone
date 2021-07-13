@@ -20,13 +20,13 @@ static EqnSystem equations = mhd;
 static BasicTimeMethod time_method = rk3_ssp;
 static TorusCentralPolygon central_polygon = square;
 
-static int Nproc[3] = {1,1,1};
+static int Nproc[3] = {2,2,1};
 static int Nelem[3] = {4,4,1};
-static int Ns[3]    = {6,6,1};
+static int Ns[3]    = {8,8,1};
 
-static real_t cfl      = 0.2;
-static real_t end_time = 0.100;
-static real_t dt_write = 0.0000001;
+static real_t cfl      = 0.4;
+static real_t end_time = 1.00;
+static real_t dt_write = 0.05;
 
 static ParamsTorus active_parameters(equations, time_method, 
                                      Nproc, Nelem, Ns, 

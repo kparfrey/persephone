@@ -59,7 +59,7 @@ class MHD : public Physics
         resistivity = 1e-3;
 
         /* Divergence-cleaning parameters */
-        psi_damping_const = 0.0; // 0 < p_d_const < 1
+        psi_damping_const = 0.1; // 0 < p_d_const < 1
     }
 
 
@@ -144,8 +144,8 @@ inline void MHD::WaveSpeeds(const real_t* const __restrict__ P,
 #endif
 
     /* From Spuit, Essential MHD for Astrophysics, https://arxiv.org/pdf/1301.5572.pdf */
-    real_t ku[3] = {}; // Contravariant components of wavevector
-    real_t kl[3] = {};
+    real_t ku[3] = {0.0,0.0,0.0}; // Contravariant components of wavevector
+    real_t kl[3];
     ku[dir] = 1.0; // Note the normalisation here is taken care of at the end
     metric->lower(ku, kl, mem);
     const real_t kdotB = kl[0]*Bu[0] + kl[1]*Bu[1] + kl[2]*Bu[2];

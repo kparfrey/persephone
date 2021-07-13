@@ -23,8 +23,8 @@ static void startMPI(int argc, char *argv[], Process &proc)
     if (proc.rank == 0)
         if (proc.Nproc != proc.params.Nproc_domain)
         {
-            write::basic("Error: number of running processes different \
-                          from number expected from params.");
+            write::basic("Error: number of running processes different from number expected from params.");
+            write::basic("Expected: " + write::str(proc.params.Nproc_domain) + " processes");
             exit(1);
         }
 
@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 
     while(proc.time < proc.end_time)
     {
-        //if ((proc.time - proc.time_last_write) > proc.dt_write)
+        if ((proc.time - proc.time_last_write) > proc.dt_write)
             proc.is_output_step = true;
 
         proc.time_advance();
