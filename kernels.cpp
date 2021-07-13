@@ -462,11 +462,15 @@ namespace kernels
             switch (physics->system)
             {
                 case navier_stokes:
-                case mhd:
                 // Only nonzero term is F^phi_{vphi} Gamm^phi_{r phi}
                 //                      = F^2_{3} * (1/R)
                 // This is added to the rho v_R equation
                     divF[mem + 1*Ns] -= Fp[3][2] / R;
+                    break;
+                case mhd:
+                    divF[mem + 1*Ns] -= Fp[3][2] / R; // As for Navier-Stokes
+                    // d_t (B^r) + ... = psi / R
+                    divF[mem + 5*Ns] -= U[8] / R;
                     break;
                 default:
                     exit(123);
