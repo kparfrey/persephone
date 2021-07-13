@@ -13,7 +13,7 @@ class CerfonFreidbergConfig
     const Machine machine = spheromak;
 
     const real_t A  = 0.0;
-    const real_t B0 = 0.5; // Set directly for now...
+    const real_t B0 = 0.0; // Set directly for now...
                            // Should set q ~ B0 / B_poloidal?
     
     const real_t R0 = 1.0;

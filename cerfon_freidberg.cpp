@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include "write_screen.hpp"
+#include <iostream>
 
 static real_t psi_fn(const real_t x, const real_t y, const real_t A, const real_t* const c)
 {
@@ -111,7 +112,8 @@ void CerfonFreidbergConfig::construct_equilibrium(const real_t r[3],
                                                         real_t U[9],
                                                   const real_t gamma)
 {
-    enum conserved {Density, mom0, mom1, mom2, tot_energy, B0, B1, B2, div_scalar};
+    /* Note using b0 etc. so don't hide the B0 parameter in this object */
+    enum conserved {density, mom0, mom1, mom2, tot_energy, b0, b1, b2, div_scalar};
     
     const real_t R = r[0]; 
     const real_t Z = r[1];
@@ -129,22 +131,24 @@ void CerfonFreidbergConfig::construct_equilibrium(const real_t r[3],
     const real_t BZ   =   q * dpsi_dx(x, y, A, c) / (R0*R);
     const real_t Bphi = q * (R0/R) * std::sqrt(B0*B0 - 2 * A * psi/R04);
 
-    const real_t p = (A - 1) * psi / R04;
+    const real_t p = (A - 1) * psi / R04 + 0.05;
 
     const real_t Bsq = BR*BR + BZ*BZ + Bphi*Bphi;
 
-    U[Density] = 1.0; // Uniform density seems reasonable?
+    U[density] = 1.0; // Uniform density seems reasonable?
     U[mom0]    = 0.0; // Since it's an equilibrium
     U[mom1]    = 0.0;
     U[mom2]    = 0.0;
 
     U[tot_energy] = 0.5 * Bsq + p/(gamma - 1.0);
 
-    U[B0] = BR;
-    U[B1] = BZ;
-    U[B2] = Bphi / R; // U[B2] is the contravariant component
+    U[b0] = BR;
+    U[b1] = BZ;
+    U[b2] = Bphi / R; // U[B2] is the contravariant component
 
     U[div_scalar] = 0.0; //psi;
+
+    //std::cout << "R: " << R << "  Z: " << Z << "  Bphi: " << Bphi << "  A: " << A << "  B0: " << B0 << std::endl;
 
     return;
 }

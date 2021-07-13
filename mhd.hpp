@@ -3,7 +3,7 @@
 
 #include <cmath>
 #include "physics.hpp"
-//#include <iostream>
+#include <iostream>
 
 /* U --- conserved
  * 0 rho
@@ -112,7 +112,10 @@ inline void MHD::ConservedToPrimitive(const real_t* const __restrict__ U,
     const real_t mag_density = 0.5 * metric->square(&P[B0], mem);
 
     if (KE_density + mag_density > U[tot_energy])
-        P[pressure] = 1e-6; 
+    {
+        std::cout << "Inversion error:  R = " << metric->rdetg[mem] << "  Mag = " << mag_density << "  Energy = " << U[tot_energy] << "  KE = " << KE_density << std::endl;
+        exit(45);
+    }
     else
         P[pressure] = gm1 * (U[tot_energy] - KE_density - mag_density);
 

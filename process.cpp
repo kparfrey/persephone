@@ -106,7 +106,7 @@ void Process::time_advance()
     if (system == mhd)
     {
         const real_t ch_divClean = 1.0 /(dt * tt_max_global); //Should be stable...
-        Physics::ch_sq = 1e-15 * ch_divClean * ch_divClean;
+        Physics::ch_sq = 0.0 * ch_divClean * ch_divClean;
         //F_from_P->ch_sq = physics->c_h * physics->c_h;
 
         Physics::psi_damping_rate = Physics::psi_damping_const / dt; 
@@ -199,7 +199,7 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
         if (is_output_step && (substep == 1))
         {
             /* Find divB from divF[psi] and save into elements.divB */
-            const real_t over_chsq = 1.0/Physics::ch_sq;
+            const real_t over_chsq = 1.0; // 1.0/Physics::ch_sq;
             kernels::multiply_by_scalar(&divF[psi], over_chsq, eb.divB, eb.Ns_block);
         }
 

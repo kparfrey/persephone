@@ -329,7 +329,8 @@ void ParamsTorus::setup_process(Process &proc)
         f.neighbour_rank = groupwise_to_global_offset + neighbour_rank_groupwise;
 
 
-        /* Set up external boundary conditions */
+        /* Set up external boundary conditions 
+         * Not actually using this object --- should remove or correct */
         if (f.external_face == true)
             f.BC = new TorusWallBC(f.Ntot, proc.Nfield, equations);
             //f.BC = new ImplosionTestBC(f.Ntot, proc.Nfield, equations);

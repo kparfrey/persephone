@@ -186,7 +186,7 @@ class Snapshot(object):
 
 
     # Assume 0-1 plane
-    def contour_plot(self, var='rho', width=0.7, levels=[None,]):
+    def contour_plot(self, var='rho', width=0.7, levels=[None,], mag=False):
         for ig in range(self.Ngroup):
             sg = str(ig)
             r0 = self.m.g[ig].r0
@@ -195,7 +195,11 @@ class Snapshot(object):
             if levels[0] == None:
                 levels = np.linspace(0.0, 0.99, 20)
             
-            plt.contour(r0[:,:,0], r1[:,:,0], self.dfile[sg][var][:,:,0], levels=levels,
+            if mag:
+                plt.contour(r0[:,:,0], r1[:,:,0], np.abs(self.dfile[sg][var][:,:,0]), levels=levels,
+                                                             linewidths=width, zorder=5)
+            else:
+                plt.contour(r0[:,:,0], r1[:,:,0], self.dfile[sg][var][:,:,0], levels=levels,
                                                              linewidths=width, zorder=5)
 
         plt.title('t = %.4lf' % self.time)
