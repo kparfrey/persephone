@@ -81,6 +81,7 @@ void write_data(Process &proc)
                     Up[field] = eb.fields[n + field * eb.Ns_block];
 
                 eb.physics_soln->ConservedToPrimitive(Up, Pp, n);
+                eb.physics_soln->OrthonormaliseVectors(Pp, n);
 
                 for (int field = 0; field < proc.Nfield; ++field)
                     primitives[n + field * eb.Ns_block] = Pp[field];

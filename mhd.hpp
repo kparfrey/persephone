@@ -59,7 +59,7 @@ class MHD : public Physics
         resistivity = 1e-3;
 
         /* Divergence-cleaning parameters */
-        psi_damping_const = 0.1; // 0 < p_d_const < 1
+        psi_damping_const = 0.03; // 0 < p_d_const < 1
     }
 
 
@@ -81,6 +81,7 @@ class MHD : public Physics
                                real_t (*__restrict__ F)[3],
                          const int mem) const override;
 
+    void OrthonormaliseVectors(real_t* const P, const int mem) const override;
 };
 
 
@@ -144,6 +145,9 @@ inline void MHD::WaveSpeeds(const real_t* const __restrict__ P,
 #endif
 
     /* From Spuit, Essential MHD for Astrophysics, https://arxiv.org/pdf/1301.5572.pdf */
+    real_t fast_speed;
+    if (va_sq > 1e-12)
+    {
     real_t ku[3] = {0.0,0.0,0.0}; // Contravariant components of wavevector
     real_t kl[3];
     ku[dir] = 1.0; // Note the normalisation here is taken care of at the end
@@ -158,7 +162,11 @@ inline void MHD::WaveSpeeds(const real_t* const __restrict__ P,
     const real_t usq = 0.5 * (cs_sq + va_sq)*(1 + std::sqrt(1 - 4*cost*cost/(b*b)));
 
     /* This is the contra component. Assume diagonal metric for now... Tag:DIAGONAL */
-    const real_t fast_speed = std::sqrt(usq / ((DiagonalSpatialMetric*)metric)->g[dir][mem]);
+    fast_speed = std::sqrt(usq / ((DiagonalSpatialMetric*)metric)->g[dir][mem]);
+    }
+    else
+        fast_speed = std::sqrt(cs_sq);
+
 
     c[0] = MAX(0.0, P[v0+dir] + fast_speed); // P stores the contra velocity components
     c[1] = MIN(0.0, P[v0+dir] - fast_speed);
@@ -277,6 +285,14 @@ inline void MHD::DiffusiveFluxes(const real_t* const __restrict__ U,
     return;
 }
 
+
+inline void MHD::OrthonormaliseVectors(real_t* const P, const int mem) const
+{
+    metric->orthonormals(&P[v0], mem);
+    metric->orthonormals(&P[B0], mem);
+
+    return;
+}
 
 /****************************************************************/
 

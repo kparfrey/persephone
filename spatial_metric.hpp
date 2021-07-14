@@ -2,6 +2,7 @@
 #define SPATIAL_METRIC_HPP
 
 #include "common.hpp"
+#include <cmath>
 
 /* ABC, to be specified to diagonal or full metrics */
 class SpatialMetric
@@ -47,6 +48,9 @@ class SpatialMetric
                           const int mem) = 0;
 
     virtual real_t square_cov(const real_t* const __restrict__ Vl,
+                              const int mem) = 0;
+
+    virtual void orthonormals(      real_t* const Vu,
                               const int mem) = 0;
 
     /* Convert from an orthonormal basis to contravariant
@@ -162,6 +166,18 @@ class DiagonalSpatialMetric : public SpatialMetric
                       const int mem) override
     {
         return ginv[0][mem]*Vl[0]*Vl[0] + ginv[1][mem]*Vl[1]*Vl[1] + ginv[2][mem]*Vl[2]*Vl[2];
+    }
+
+
+    /* For writing orthonormal components to disk 
+     * Save o.n. components back into input array */
+    void orthonormals(      real_t* const Vu,
+                      const int mem) override
+    {
+        for (int d: dirs)
+            Vu[d] *= std::sqrt(g[d][mem]);
+
+        return;
     }
 
 };

@@ -54,6 +54,12 @@ class ScalarAdvection : public Physics
     {
         return;
     }
+    
+
+    void OrthonormaliseVectors(real_t* const P, const int mem) const override
+    {
+        return;
+    }
 };
 
 

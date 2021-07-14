@@ -59,6 +59,8 @@ class Physics
                                  const real_t (* const __restrict__ dU)[3],
                                        real_t (*__restrict__ F)[3],
                                  const int mem) const = 0;
+   
+    virtual void OrthonormaliseVectors(real_t* const P, const int mem) const = 0;
 };
 
 

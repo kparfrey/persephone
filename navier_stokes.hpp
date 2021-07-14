@@ -62,6 +62,8 @@ class NavierStokes : public Physics
                          const real_t (* const __restrict__ dU)[3],
                                real_t (*__restrict__ F)[3],
                          const int mem) const override;
+
+    void OrthonormaliseVectors(real_t* const P, const int mem) const override;
 };
 
 
@@ -193,6 +195,13 @@ inline void NavierStokes::DiffusiveFluxes(const real_t* const __restrict__ U,
     return;
 }
 
+
+inline void NavierStokes::OrthonormaliseVectors(real_t* const P, const int mem) const
+{
+    metric->orthonormals(&P[v0], mem);
+
+    return;
+}
 
 /****************************************************************/
 
