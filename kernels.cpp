@@ -756,15 +756,15 @@ namespace kernels
         /* Set scalars ? */
         //UL[density] = UR[density] = P[density];
         
-        const real_t mag_density = 0.5 * physics->metric->square(Bm, mem);
-        const real_t KE_density  = 0.5 * P[density] * physics->metric->square(vm, mem);
-
-        UL[tot_energy] = UR[tot_energy] = KE_density + mag_density + P[pressure]/((MHD*)physics)->gm1;
+        //const real_t mag_density = 0.5 * physics->metric->square(Bm, mem);
+        //const real_t KE_density  = 0.5 * P[density] * physics->metric->square(vm, mem);
+        //UL[tot_energy] = UR[tot_energy] = KE_density + mag_density + P[pressure]/((MHD*)physics)->gm1;
 
 
         /* Basic BC for psi - for some reason this causes sudden pressure errors? */
         /* For torus external BCs, face.orientation > 0 and so neighbour data is UR */
-        //UL[psi] = UR[psi] = 0.0;
+        const real_t c_h = std::sqrt(physics->ch_sq);
+        UL[psi] = UR[psi] = P[psi] + c_h * Bdotn;
 
         return;
     }

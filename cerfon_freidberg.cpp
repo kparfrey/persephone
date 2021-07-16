@@ -58,11 +58,11 @@ static real_t dpsi_dx(const real_t x, const real_t y, const real_t A, const real
 
     psi[2] = 2 * x;
     psi[3] = - 2 * x * lnx - x; 
-    psi[4] = 3 * x3 - 8 * x * y2;
-    psi[5] = - 18 * y2 * x + 12 * x3 * lnx + 3 * x3 - 24 * x * y2 * lnx - 12 * x * y2;
+    psi[4] = 4 * x3 - 8 * x * y2;
+    psi[5] = - 30 * y2 * x + 12 * x3 * lnx + 3 * x3 - 24 * x * y2 * lnx;
     psi[6] = 6 * x5 - 48 * x3 * y2 + 16 * x * y4;
-    psi[7] = - 280 * y4 * x + 300 * y2 * x3 - 90 * x5 * lnx - 15 * x5 
-             + 720 * x3 * y2 * lnx + 180 * x3 * y2 - 240 * x * y4 * lnx - 120 * x * y4;
+    psi[7] = - 400 * y4 * x + 480 * y2 * x3 - 90 * x5 * lnx - 15 * x5 
+             + 720 * x3 * y2 * lnx - 240 * x * y4 * lnx;
 
     real_t psi_h = 0.0;
     for (int i = 2; i < 8; ++i)
@@ -131,7 +131,7 @@ void CerfonFreidbergConfig::construct_equilibrium(const real_t r[3],
     const real_t BZ   =   q * dpsi_dx(x, y, A, c) / (R0*R);
     const real_t Bphi = q * (R0/R) * std::sqrt(B0*B0 - 2 * A * psi/R04);
 
-    const real_t p = (A - 1) * psi / R04 + 0.5;
+    const real_t p = (A - 1) * psi / R04 + 0.05;
     //const real_t p = 1.0;
 
     const real_t Bsq = BR*BR + BZ*BZ + Bphi*Bphi;
