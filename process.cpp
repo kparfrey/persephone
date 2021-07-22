@@ -253,7 +253,7 @@ void Process::add_diffusive_flux(VectorField Uf, VectorField F)
     /* Average Uf on process-external faces. 
      * Data already in FaceCommunicators from the earlier exchange */
     for (int i: ifaces)
-        kernels::external_interface_average(faces[i], Uf(faces[i].normal_dir), eb.lengths);
+        kernels::external_interface_average(faces[i], Uf(faces[i].normal_dir), eb.lengths, false);
 
     /* Average Uf on process-internal faces. */
     for (int i: dirs)
@@ -283,7 +283,7 @@ void Process::add_diffusive_flux(VectorField Uf, VectorField F)
         exchange_boundary_data(); // So have to do 3 separate MPI calls...
 
         for (int i: ifaces)
-            kernels::external_interface_average(faces[i], dUf[faces[i].normal_dir](dderiv), eb.lengths);
+            kernels::external_interface_average(faces[i], dUf[faces[i].normal_dir](dderiv), eb.lengths, true);
     }
         
     for (int dflux: dirs)

@@ -125,14 +125,11 @@ void CerfonFreidbergConfig::construct_equilibrium(const real_t r[3],
 
     const real_t psi = psi_fn(x, y, A, c);
 
-    const real_t q = 1.0;
+    const real_t BR   = - dpsi_dy(x, y, A, c) / (R0*R); // orthonormal components
+    const real_t BZ   =   dpsi_dx(x, y, A, c) / (R0*R);
+    const real_t Bphi = (R0/R) * std::sqrt(B0*B0 - 2 * A * psi/R04);
 
-    const real_t BR   = - q * dpsi_dy(x, y, A, c) / (R0*R); // orthonormal components
-    const real_t BZ   =   q * dpsi_dx(x, y, A, c) / (R0*R);
-    const real_t Bphi = q * (R0/R) * std::sqrt(B0*B0 - 2 * A * psi/R04);
-
-    const real_t p = (A - 1) * psi / R04 + 0.05;
-    //const real_t p = 1.0;
+    const real_t p = (A - 1) * psi / R04 + 1e-3;
 
     const real_t Bsq = BR*BR + BZ*BZ + Bphi*Bphi;
 
@@ -147,9 +144,7 @@ void CerfonFreidbergConfig::construct_equilibrium(const real_t r[3],
     U[b1] = BZ;
     U[b2] = Bphi / R; // U[B2] is the contravariant component
 
-    U[div_scalar] = 0.0; //psi;
-
-    //std::cout << "R: " << R << "  Z: " << Z << "  Bphi: " << Bphi << "  A: " << A << "  B0: " << B0 << std::endl;
+    U[div_scalar] = 0.0;
 
     return;
 }

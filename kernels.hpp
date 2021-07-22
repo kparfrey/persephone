@@ -117,7 +117,8 @@ namespace kernels
 
     void external_interface_average(const FaceCommunicator           face,
                                           real_t* const __restrict__ Uf,
-                                    const LengthBucket               lb);
+                                    const LengthBucket               lb,
+                                    const bool                       averaging_derivs);
 
     void internal_interface_average(      real_t* const __restrict__ Uf,
                                     const LengthBucket               lb,

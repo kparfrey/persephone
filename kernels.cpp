@@ -738,7 +738,7 @@ namespace kernels
         for (int d: dirs)
         {
             vm[d] = P[v0+d] - vdotn * nu[d]; // Impenetrable
-            //vm[d] = 0.0;                   // Impenetrable + no-slip
+            //vm[d] = 0.0; // No slip
             Bm[d] = P[B0+d] - Bdotn * nu[d]; // Zero normal flux
         }
 
@@ -753,16 +753,17 @@ namespace kernels
             UL[  B0+d] = UR[  B0+d] = Bm[d];
         }
 
-        /* Set scalars ? */
-        //UL[density] = UR[density] = P[density];
-        
-        //const real_t mag_density = 0.5 * physics->metric->square(Bm, mem);
-        //const real_t KE_density  = 0.5 * P[density] * physics->metric->square(vm, mem);
-        //UL[tot_energy] = UR[tot_energy] = KE_density + mag_density + P[pressure]/((MHD*)physics)->gm1;
+        /* Reset total energy, since you've removed some kinetic and magnetic energy by 
+         * chopping off the normal velocity and magnetic field. Not clear if this is 
+         * necessary and/or a good idea ... */
+        const real_t mag_density = 0.5 * physics->metric->square(Bm, mem);
+        const real_t KE_density  = 0.5 * P[density] * physics->metric->square(vm, mem);
+        UL[tot_energy] = UR[tot_energy] = KE_density + mag_density + P[pressure]/((MHD*)physics)->gm1;
 
 
-        /* Basic BC for psi - for some reason this causes sudden pressure errors? */
-        /* For torus external BCs, face.orientation > 0 and so neighbour data is UR */
+        /* Characteristic-variable-based outflow boundary condition for psi/
+         * Not yet clear if this is better than just leaving psi alone at
+         * its extrapolated value */
         const real_t c_h = std::sqrt(physics->ch_sq);
         UL[psi] = UR[psi] = P[psi] + c_h * Bdotn;
 
@@ -860,7 +861,17 @@ namespace kernels
                     np[i] = face.normal(i,mem_face);
 
                 if (face.external_face)
+                {
+                    /* Sets UL=UR to give desired exact fluxes */
                     torus_BC(UL, UR, np, F_numerical->physics, mem);
+
+                    /* Save UL=UR back into the face's main arrays,
+                     * to set the BCs for the diffusive fluxes */
+                    if (F_numerical->physics->diffusive)
+                        for (int field = 0; field < lb.Nfield; ++field)
+                            face.my_data[mem_face + field * face.Ntot] = 
+                            face.neighbour_data[mem_face + field * face.Ntot] = UL[field]; 
+                }
 
                 (*F_numerical)(UL, UR, np, F_num_phys, dir, mem);
 
@@ -963,7 +974,8 @@ namespace kernels
      * Only required when have diffusive terms. */
     void external_interface_average(const FaceCommunicator           face,
                                           real_t* const __restrict__ Uf,
-                                    const LengthBucket               lb)
+                                    const LengthBucket               lb,
+                                    const bool                       averaging_derivs)
     {
         const int dir  = face.normal_dir;
         const int dir1 = dir_plus_one[dir]; 
@@ -976,16 +988,23 @@ namespace kernels
         const int Ns1 = lb.Ns[dir1];
         const int Nf_tot = lb.Nf_dir_block[dir]; //Total # of this-dir flux points in the block
 
-        /* To apply external boundary conditions, set the incoming neighbour data on
-         * external faces such that the fluxes are as desired. */
-        /** Will need to take account of this ... 
-        if (face.external_face)
-            for (int field = 0; field < lb.Nfield; ++field)
-                for (int i = 0; i < face.Ntot; ++i)
-                    face.neighbour_data[field*face.Ntot + i] = (*face.BC)(field, i, face.my_data);
-         **/
+        /* The BC for derivatives */
+        if (face.external_face && averaging_derivs)
+        {
+            /* Set all derivatives to zero on the boundary */
+            for (int i = 0; i < face.Ntot_all; ++i)
+                face.my_data[i] = face.neighbour_data[i] = 0.0;
 
-        
+            /*
+            for (int field = 5; field < 8; field++) // B only
+                for (int j = 0; j < face.Ntot; ++j)
+                {
+                    int i = j + field*face.Ntot;
+                    face.my_data[i] = face.neighbour_data[i] = 0.0;
+                }
+             */
+        }
+
         for (int ne2 = 0; ne2 < face.Nelem[1]; ++ne2)
         for (int ne1 = 0; ne1 < face.Nelem[0]; ++ne1)
         {

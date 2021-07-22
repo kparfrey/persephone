@@ -54,8 +54,8 @@ class MHD : public Physics
         variables[7] = "B2";
         variables[8] = "psi";
 
-        diffusive   = false;
-        viscosity   = 3e-3;
+        diffusive   = true;
+        viscosity   = 0.0;
         resistivity = 1e-3;
 
         /* Divergence-cleaning parameters */
@@ -148,21 +148,21 @@ inline void MHD::WaveSpeeds(const real_t* const __restrict__ P,
     real_t fast_speed;
     if (va_sq > 1e-12)
     {
-    real_t ku[3] = {0.0,0.0,0.0}; // Contravariant components of wavevector
-    real_t kl[3];
-    ku[dir] = 1.0; // Note the normalisation here is taken care of at the end
-    metric->lower(ku, kl, mem);
-    const real_t kdotB = kl[0]*Bu[0] + kl[1]*Bu[1] + kl[2]*Bu[2];
-    const real_t ksq   = kl[0]*ku[0] + kl[1]*ku[1] + kl[2]*ku[2];
-    const real_t cost  = kdotB / std::sqrt(ksq * Bsq);
+        real_t ku[3] = {0.0,0.0,0.0}; // Contravariant components of wavevector
+        real_t kl[3];
+        ku[dir] = 1.0; // Note the normalisation here is taken care of at the end
+        metric->lower(ku, kl, mem);
+        const real_t kdotB = kl[0]*Bu[0] + kl[1]*Bu[1] + kl[2]*Bu[2];
+        const real_t ksq   = kl[0]*ku[0] + kl[1]*ku[1] + kl[2]*ku[2];
+        const real_t cost  = kdotB / std::sqrt(ksq * Bsq);
 
-    const real_t b = std::sqrt(cs_sq/va_sq) + std::sqrt(va_sq/cs_sq);
+        const real_t b = std::sqrt(cs_sq/va_sq) + std::sqrt(va_sq/cs_sq);
 
-    /* The square of the fast speed */
-    const real_t usq = 0.5 * (cs_sq + va_sq)*(1 + std::sqrt(1 - 4*cost*cost/(b*b)));
+        /* The square of the fast speed */
+        const real_t usq = 0.5 * (cs_sq + va_sq)*(1 + std::sqrt(1 - 4*cost*cost/(b*b)));
 
-    /* This is the contra component. Assume diagonal metric for now... Tag:DIAGONAL */
-    fast_speed = std::sqrt(usq / ((DiagonalSpatialMetric*)metric)->g[dir][mem]);
+        /* This is the contra component. Assume diagonal metric for now... Tag:DIAGONAL */
+        fast_speed = std::sqrt(usq / ((DiagonalSpatialMetric*)metric)->g[dir][mem]);
     }
     else
         fast_speed = std::sqrt(cs_sq);
@@ -232,7 +232,7 @@ inline void MHD::DiffusiveFluxes(const real_t* const __restrict__ U,
                                  const int mem) const
 {
     const real_t mu = U[Density] * viscosity; // mu = dynamic viscosity
-    const real_t lambda = - (2.0/3.0) * mu; // from Stokes hypothesis
+    const real_t lambda = - (2.0/3.0) * mu;   // from Stokes hypothesis
     //const real_t eta = args[1]; // magnetic diffusivity
     
     real_t v[3];
