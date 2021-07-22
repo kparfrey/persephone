@@ -56,7 +56,7 @@ class MHD : public Physics
 
         diffusive   = true;
         viscosity   = 0.0;
-        resistivity = 1e-3;
+        resistivity = 5e-3;
 
         /* Divergence-cleaning parameters */
         psi_damping_const = 0.03; // 0 < p_d_const < 1

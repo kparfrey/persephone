@@ -117,6 +117,7 @@ void CerfonFreidbergConfig::construct_equilibrium(const real_t r[3],
     
     const real_t R = r[0]; 
     const real_t Z = r[1];
+    const real_t R0 = 1.0; // Always --- maybe remove all R0 factors?
     const real_t x = R/R0;
     const real_t y = Z/R0;
 
@@ -172,9 +173,16 @@ CerfonFreidbergConfig::CerfonFreidbergConfig()
             c[7] = -4.613291591508187e-05;
             break;
         case nstx:
-            epsilon = 0.78;
+            epsilon = 0.67/0.86;
             kappa   = 2.0;
             delta   = 0.35;
+            c[1] =  1.515626015086087e-02;
+            c[2] = -3.219112995316729e-01;
+            c[3] =  4.304434935073897e-03;
+            c[4] = -2.337438273912475e-02;
+            c[5] =  2.790357839469228e-04;
+            c[6] = -3.833470165175256e-04;
+            c[7] = -3.029439496605592e-06;
             break;
         case spheromak:
             epsilon = 0.95;
@@ -192,6 +200,49 @@ CerfonFreidbergConfig::CerfonFreidbergConfig()
             epsilon = 0.99;
             kappa   = 10.0;
             delta   = 0.7;
+            c[1] =  4.874020982193714e-05;
+            c[2] = -4.874223413173798e-01;
+            c[3] =  1.722686095823331e-06;
+            c[4] = -1.904450361046603e-03;
+            c[5] = -2.002800367444697e-07;
+            c[6] = -3.681071366340895e-06;
+            c[7] =  6.291815809141939e-10;
+            break;
+        case iter:
+            epsilon = 2.0/6.2;
+            kappa   = 1.7;
+            delta   = 0.33;
+            c[1] =  8.235805781421381e-02;
+            c[2] = -1.932149717154881e-01;
+            c[3] = -4.791944197513237e-02;
+            c[4] = -4.666382427999496e-02;
+            c[5] =  4.741712757718168e-03;
+            c[6] = -4.119698821529545e-03;
+            c[7] = -1.056698610272738e-04;
+            break;
+        case jet:
+            epsilon = 1.0/3.0;
+            kappa   = 1.7;
+            delta   = 0.25;
+            c[1] =  7.650174912175325e-02;
+            c[2] = -2.027143233944073e-01;
+            c[3] = -1.847588959046809e-02;
+            c[4] = -3.658675468981453e-02;
+            c[5] =  1.522777623705320e-03;
+            c[6] = -1.782489256943540e-03;
+            c[7] = -3.555779071815003e-05;
+            break;
+        case mast:
+            epsilon = 0.65/0.85;
+            kappa   = 2.45;
+            delta   = 0.5;
+            c[1] =  1.805778616813774e-02;
+            c[2] = -3.309464564355566e-01;
+            c[3] = -7.082532551454974e-04;
+            c[4] = -1.972741308898579e-02;
+            c[5] =  1.017045415679966e-04;
+            c[6] = -3.903514551270571e-04;
+            c[7] = -1.853186423352871e-06;
             break;
         default:
             write::error("Chosen machine not defined yet...", destroy);

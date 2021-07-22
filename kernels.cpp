@@ -991,7 +991,9 @@ namespace kernels
         /* The BC for derivatives */
         if (face.external_face && averaging_derivs)
         {
-            /* Set all derivatives to zero on the boundary */
+            /* Set all derivatives to zero on the boundary 
+             * Sending zero velocity & B gradients into the diffusive flux function
+             * is equivalent to setting viscosity = resistivity = 0 at the boundary */
             for (int i = 0; i < face.Ntot_all; ++i)
                 face.my_data[i] = face.neighbour_data[i] = 0.0;
 
