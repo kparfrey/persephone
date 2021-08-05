@@ -54,7 +54,7 @@ class MHD : public Physics
         variables[7] = "B2";
         variables[8] = "psi";
 
-        diffusive   = true;
+        diffusive   = false;
         viscosity   = 0.0;
         resistivity = 5e-3;
 

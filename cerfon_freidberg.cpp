@@ -130,7 +130,7 @@ void CerfonFreidbergConfig::construct_equilibrium(const real_t r[3],
     const real_t BZ   =   dpsi_dx(x, y, A, c) / (R0*R);
     const real_t Bphi = (R0/R) * std::sqrt(B0*B0 - 2 * A * psi/R04);
 
-    const real_t p = (A - 1) * psi / R04 + 1e-3;
+    const real_t p = (A - 1) * psi / R04 + 1e-2;
 
     const real_t Bsq = BR*BR + BZ*BZ + Bphi*Bphi;
 

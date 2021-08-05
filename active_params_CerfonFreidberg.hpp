@@ -25,8 +25,8 @@ static int Nelem[3] = {4,4,1};
 static int Ns[3]    = {6,6,1};
 
 static real_t cfl      = 0.5; // Seems stable to 1.0 for ideal MHD
-static real_t end_time = 5.00;
-static real_t dt_write = 0.1;
+static real_t end_time = 10.0;
+static real_t dt_write = 0.05;
 
 static ParamsTorus active_parameters(equations, time_method, 
                                      Nproc, Nelem, Ns, 

@@ -10,10 +10,10 @@ class CerfonFreidbergConfig
 
     enum Machine {tftr, jet, iter, mast, nstx, spheromak, frc};
 
-    const Machine machine = mast;
+    const Machine machine = frc;
 
     const real_t A  = 0.0;
-    const real_t B0 = 1e-3; //1e-2; // Entirely determines B_phi if A = 0
+    const real_t B0 = 1e-4; //1e-2; // Entirely determines B_phi if A = 0
                             
     real_t epsilon, kappa, delta, alpha;
 

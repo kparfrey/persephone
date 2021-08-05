@@ -15,8 +15,8 @@ for i in range(Nfiles):
     s.load_data(i)
     plt.clf()
     
-    s.draw_edges(0.2)
-    s.contour_plot(var='rho', width=1.5)
+    s.m.draw_edges(0.05)
+    s.contour_plot(var='p', width=1.0)
 
     plt.savefig(movie_dir+'%04d.png' % i, dpi=150)
 
