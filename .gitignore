@@ -1,10 +1,12 @@
 persephone
+highfivetest/loadtest
 *.o
 *.swp
 *.d
 *.h5
 *.pyc
 .DS_Store
+*.dSYM
 gmon.out
 data/
 data/*
