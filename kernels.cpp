@@ -430,8 +430,9 @@ namespace kernels
     }
 
 
-    void add_geometric_sources(      real_t* const __restrict__ divF, 
-                               const real_t* const __restrict__ U,
+    void add_geometric_sources(      real_t* const __restrict__  divF, 
+                               const real_t* const __restrict__  U,
+                               const VectorField                 dU,
                                const Physics* const __restrict__ physics,
                                const int Nfield, const int Ns)
     {
@@ -440,6 +441,10 @@ namespace kernels
         real_t* Up      = new real_t [Nfield];
         real_t* Pp      = new real_t [Nfield];
         real_t (*Fp)[3] = new real_t [Nfield][3]; // pointer to an array
+        
+        /* Only used when have diffusive terms */
+        real_t (*dUp)[3] = new real_t [Nfield][3]; 
+        real_t (*F_diff_p)[3] = new real_t [Nfield][3];
 
         real_t R; // HACK: cylindrical radius 
 
@@ -454,6 +459,21 @@ namespace kernels
             /* U is the physical solution at solution points
              * Calculate physical inviscid fluxes in all three dirs */
             physics->Fluxes(Pp, Fp, mem);
+            
+            if (Physics::diffusive)
+            {
+                for (int field = 0; field < Nfield; ++field)
+                    for (int d: dirs)
+                        dUp[field][d] = dU(d, mem + field*Ns);
+                
+                /* Physical diffusive fluxes in all directions */
+                physics->DiffusiveFluxes(Up, dUp, F_diff_p, mem);
+
+                /* Add the diffusive flux to the inviscid flux to form the total flux */
+                for (int field = 0; field < Nfield; ++field)
+                    for (int d: dirs)
+                        Fp[field][d] += F_diff_p[field][d];
+            }
 
             /* HACK: directly implement just for cylindrical coords for now
              * Note Cartesian coords don't call this function at all */
@@ -480,7 +500,10 @@ namespace kernels
         
         delete[] Up;
         delete[] Pp;
-        delete[] Fp;
+        delete[] Fp;  // Do these need something further to avoid memory leak?
+        
+        delete[] dUp;
+        delete[] F_diff_p;
 
         return;
     }

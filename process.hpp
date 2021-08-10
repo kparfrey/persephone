@@ -87,7 +87,7 @@ class Process
     void setup();
     void time_advance();
     void find_divF(const real_t* const U, const real_t t, real_t* const divF);
-    void add_diffusive_flux(VectorField Uf, VectorField F);
+    void add_diffusive_flux(VectorField Uf, VectorField dU, VectorField F);
     void move_to_device();
     void fill_external_boundary_data();
     void exchange_boundary_data();
