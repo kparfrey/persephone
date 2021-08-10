@@ -236,7 +236,7 @@ inline void MHD::DiffusiveFluxes(const real_t* const __restrict__   P,
     
     real_t v[3];
     real_t tau[3][3];
-    real_t dv[3][3]; // dv[component][deriv dir]
+    real_t dv[3][3]; // dv[component][deriv dir] = d_deriv v^component
     real_t rdetg_deriv[3]; // (1/rdetg)*d_j(rdetg) at a single point
     real_t divv;
 

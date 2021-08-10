@@ -150,7 +150,7 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
     
     /* Only used by diffusive terms. Needs to be here, rather than in add_diffusive_flux(), 
      * so can be passed to geometric sources */
-    VectorField dU;     // Physical-space derivatives of U at the solution points
+    VectorField dP; // Physical-space derivatives of primitives at the solution points
     
     for (int i: dirs)
     {
@@ -159,7 +159,7 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
         dF(i) = kernels::alloc_raw(Nfield * eb.Ns_block);
         
         if (Physics::diffusive)
-            dU(i) = kernels::alloc_raw(Nfield * eb.Ns_block);
+            dP(i) = kernels::alloc_raw(Nfield * eb.Ns_block);
     }
 
     
@@ -191,7 +191,7 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
     /* For explicit diffusive terms, calculate the diffusive flux and add
      * to the advective fluxes before taking the flux deriv: F += F_diffusive */
     if (Physics::diffusive)
-        add_diffusive_flux(Uf, dU, F);
+        add_diffusive_flux(Uf, dP, F);
 
     for (int i: dirs)
         kernels::fluxDeriv_to_soln(eb.fluxDeriv2soln(i), F(i), dF(i), eb.lengths, i);
@@ -218,7 +218,7 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
 
     /* Add geometric source terms if not using Cartesian physical coordinates */
     if (eb.physics_soln->metric->physical_coords != cartesian)
-        kernels::add_geometric_sources(divF, U, dU, eb.physics_soln, Nfield, eb.Ns_block);
+        kernels::add_geometric_sources(divF, U, dP, eb.physics_soln, Nfield, eb.Ns_block);
 
 
     for (int i: dirs)
@@ -228,7 +228,7 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
         kernels::free(dF(i));
         
         if (Physics::diffusive)
-            kernels::free(dU(i));
+            kernels::free(dP(i));
     }
 
     return;
@@ -236,13 +236,12 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
 
 
 /* Finds the diffusive flux, adds in place to the advective flux in F */
-void Process::add_diffusive_flux(VectorField Uf, VectorField dU, VectorField F)
+void Process::add_diffusive_flux(VectorField Uf, VectorField dP, VectorField F)
 {
     VectorField Fd;     // Diffusive fluxes for all fields
-    VectorField dU_ref; // Ref-space derivatives of U at the solution points
-    //VectorField dU;     // Physical-space derivatives of U at the solution points
-    VectorField dUf[3]; // Physical-space derivatives of U at the flux points
-                        // Note: dUf[flux-point dir](deriv dir, ...)
+    VectorField dP_ref; // Ref-space derivatives of P at the solution points
+    VectorField dPf[3]; // Physical-space derivatives of P at the flux points
+                        // Note: dPf[flux-point dir](deriv dir, ...)
 
     ElementBlock& eb = elements;
 
@@ -252,10 +251,10 @@ void Process::add_diffusive_flux(VectorField Uf, VectorField dU, VectorField F)
          * a component in the DiffusiveFluxes functor. Doesn't seem to work?? */
         Fd(i) = kernels::alloc(Nfield * eb.Nf_dir_block[i]);
         //dU(i) = kernels::alloc_raw(Nfield * eb.Ns_block);
-        dU_ref(i) = kernels::alloc_raw(Nfield * eb.Ns_block);
+        dP_ref(i) = kernels::alloc_raw(Nfield * eb.Ns_block);
 
         for (int j: dirs)
-            dUf[i](j) = kernels::alloc_raw(Nfield * eb.Nf_dir_block[i]);
+            dPf[i](j) = kernels::alloc_raw(Nfield * eb.Nf_dir_block[i]);
     }
 
     /* Average Uf on process-external faces. 
@@ -271,36 +270,36 @@ void Process::add_diffusive_flux(VectorField Uf, VectorField dU, VectorField F)
     {
         // Uf(i): the U at the i-direction's flux points
         // dU_ref(i): gradients of the U in the i direction, at the solution points
-        kernels::fluxDeriv_to_soln(eb.fluxDeriv2soln(i), Uf(i), dU_ref(i), eb.lengths, i);
+        kernels::fluxDeriv_to_soln(eb.fluxDeriv2soln(i), Uf(i), dP_ref(i), eb.lengths, i);
     }
 
     /* Transform to physical-space gradient */
-    kernels::gradient_ref_to_phys(dU_ref, dU, eb.geometry.dxdr, eb.lengths);
+    kernels::gradient_ref_to_phys(dP_ref, dP, eb.geometry.dxdr, eb.lengths);
 
     for (int dderiv: dirs)
         for (int dflux: dirs) // for each flux-point direction...
-            kernels::soln_to_flux(eb.soln2flux(dflux), dU(dderiv), dUf[dflux](dderiv), 
+            kernels::soln_to_flux(eb.soln2flux(dflux), dP(dderiv), dPf[dflux](dderiv), 
                                                                      eb.lengths, dflux);
     
     /* For now, do the interface averaging separately for each physical derivative direction */
     for (int dderiv: dirs)
     {
         for (int i: ifaces)
-            kernels::fill_face_data(dUf[faces[i].normal_dir](dderiv), faces[i], eb.lengths);
+            kernels::fill_face_data(dPf[faces[i].normal_dir](dderiv), faces[i], eb.lengths);
 
         exchange_boundary_data(); // So have to do 3 separate MPI calls...
 
         for (int i: ifaces)
-            kernels::external_interface_average(faces[i], dUf[faces[i].normal_dir](dderiv), eb.lengths, true);
+            kernels::external_interface_average(faces[i], dPf[faces[i].normal_dir](dderiv), eb.lengths, true);
     }
         
     for (int dflux: dirs)
         for (int dderiv: dirs)
-            kernels::internal_interface_average(dUf[dflux](dderiv), eb.lengths, dflux);
+            kernels::internal_interface_average(dPf[dflux](dderiv), eb.lengths, dflux);
 
     //const real_t coeffs[2] = {physics->viscosity, physics->resistivity};
     for (int i: dirs) // flux-point direction
-        kernels::diffusive_flux(Uf(i), dUf[i], Fd(i), eb.physics[i], eb.geometry.S[i], eb.lengths, i);
+        kernels::diffusive_flux(Uf(i), dPf[i], Fd(i), eb.physics[i], eb.geometry.S[i], eb.lengths, i);
         //kernels::diffusive_flux(Uf(i), dUf[i], Fd(i), eb.physics[i], coeffs, eb.geometry.S[i], eb.lengths, i);
         //kernels::diffusive_flux(Uf(i), dUf[i], Fd(i), F_diff, coeffs, eb.geometry.S[i], eb.lengths, i);
 
@@ -310,11 +309,10 @@ void Process::add_diffusive_flux(VectorField Uf, VectorField dU, VectorField F)
     for (int i: dirs)
     {
         kernels::free(Fd(i));
-        //kernels::free(dU(i));
-        kernels::free(dU_ref(i));
+        kernels::free(dP_ref(i));
 
         for (int j: dirs)
-            kernels::free(dUf[i](j));
+            kernels::free(dPf[i](j));
     }
 
     return;
