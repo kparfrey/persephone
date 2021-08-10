@@ -82,7 +82,7 @@ namespace kernels
     
     void add_geometric_sources(      real_t* const __restrict__  divF, 
                                const real_t* const __restrict__  U,
-                               const VectorField                 dU,
+                               const VectorField                 dP,
                                const Physics* const __restrict__ physics,
                                const int Nfield, const int Ns);
 
@@ -131,7 +131,7 @@ namespace kernels
                               const LengthBucket lb);
 
     void diffusive_flux(const real_t* const __restrict__ Uf,
-                        const VectorField                dUf,
+                        const VectorField                dPf,
                               real_t* const __restrict__ F,
                         //const DiffusiveFluxes*           F_diff,
                         const Physics* const __restrict__ physics,

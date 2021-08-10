@@ -13,9 +13,9 @@
  *
  * P --- primitive
  * 0 rho
- * 1 v_0
- * 2 v_1
- * 3 v_2
+ * 1 v^0
+ * 2 v^1
+ * 3 v^2
  * 4 p  ---  pressure
  */
 

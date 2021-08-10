@@ -432,7 +432,7 @@ namespace kernels
 
     void add_geometric_sources(      real_t* const __restrict__  divF, 
                                const real_t* const __restrict__  U,
-                               const VectorField                 dU,
+                               const VectorField                 dP,
                                const Physics* const __restrict__ physics,
                                const int Nfield, const int Ns)
     {
@@ -443,7 +443,7 @@ namespace kernels
         real_t (*Fp)[3] = new real_t [Nfield][3]; // pointer to an array
         
         /* Only used when have diffusive terms */
-        real_t (*dUp)[3] = new real_t [Nfield][3]; 
+        real_t (*dPp)[3] = new real_t [Nfield][3]; 
         real_t (*F_diff_p)[3] = new real_t [Nfield][3];
 
         real_t R; // HACK: cylindrical radius 
@@ -464,10 +464,10 @@ namespace kernels
             {
                 for (int field = 0; field < Nfield; ++field)
                     for (int d: dirs)
-                        dUp[field][d] = dU(d, mem + field*Ns);
+                        dPp[field][d] = dP(d, mem + field*Ns);
                 
                 /* Physical diffusive fluxes in all directions */
-                physics->DiffusiveFluxes(Up, dUp, F_diff_p, mem);
+                physics->DiffusiveFluxes(Pp, dPp, F_diff_p, mem);
 
                 /* Add the diffusive flux to the inviscid flux to form the total flux */
                 for (int field = 0; field < Nfield; ++field)
@@ -502,7 +502,7 @@ namespace kernels
         delete[] Pp;
         delete[] Fp;  // Do these need something further to avoid memory leak?
         
-        delete[] dUp;
+        delete[] dPp;
         delete[] F_diff_p;
 
         return;
@@ -1149,7 +1149,7 @@ namespace kernels
 
     
     void diffusive_flux(const real_t* const __restrict__ Uf,
-                        const VectorField                dUf,
+                        const VectorField                dPf,
                               real_t* const __restrict__ F,
                         //const DiffusiveFluxes*           F_diff,
                         const Physics* const __restrict__ physics,
@@ -1163,7 +1163,8 @@ namespace kernels
         /* Conserved vars, primitive vars, and physical-direction fluxes
          * at a single point */
         real_t* Up       = new real_t [lb.Nfield];
-        real_t (*dUp)[3] = new real_t [lb.Nfield][3]; 
+        real_t* Pp       = new real_t [lb.Nfield];
+        real_t (*dPp)[3] = new real_t [lb.Nfield][3]; 
         real_t (*F_diff_p)[3] = new real_t [lb.Nfield][3]; // pointer to an array
 
 
@@ -1176,12 +1177,14 @@ namespace kernels
                 Up[field] = Uf[i + field * N];
                 
                 for (int d: dirs)
-                    dUp[field][d] = dUf(d, i + field*N);
+                    dPp[field][d] = dPf(d, i + field*N);
             }
+
+            physics->ConservedToPrimitive(Up, Pp, i);
 
             //(*F_diff)(Up, dUp, F_diff_p, args);
             //physics->DiffusiveFluxes(Up, dUp, F_diff_p, args);
-            physics->DiffusiveFluxes(Up, dUp, F_diff_p, i);
+            physics->DiffusiveFluxes(Pp, dPp, F_diff_p, i);
 
             /* Transform from physical to reference-space fluxes
              * for all fields */
@@ -1189,7 +1192,8 @@ namespace kernels
         }
 
         delete[] Up;
-        delete[] dUp;
+        delete[] Pp;
+        delete[] dPp;
         delete[] F_diff_p;
 
         return;

@@ -11,20 +11,20 @@
  * 2 rho v_1
  * 3 rho v_2
  * 4 E  ---  total energy density
- * 5 B_0
- * 6 B_1
- * 7 B_2
+ * 5 B^0
+ * 6 B^1
+ * 7 B^2
  * 8 psi --- div-cleaning scalar field
  *
  * P --- primitive
  * 0 rho
- * 1 v_0
- * 2 v_1
- * 3 v_2
+ * 1 v^0
+ * 2 v^1
+ * 3 v^2
  * 4 p  ---  pressure
- * 5 B_0
- * 6 B_1
- * 7 B_2
+ * 5 B^0
+ * 6 B^1
+ * 7 B^2
  * 8 psi
  */
 
@@ -226,14 +226,13 @@ inline void MHD::Fluxes(const real_t* const __restrict__ P,
 }
 
 
-inline void MHD::DiffusiveFluxes(const real_t* const __restrict__ U, 
-                                 const real_t (* const __restrict__ dU)[3],
+inline void MHD::DiffusiveFluxes(const real_t* const __restrict__   P, 
+                                 const real_t (* const __restrict__ dP)[3],
                                        real_t (*__restrict__ F)[3],
                                  const int mem) const
 {
-    const real_t mu = U[Density] * viscosity; // mu = dynamic viscosity
+    const real_t mu = P[density] * viscosity; // mu = dynamic viscosity
     const real_t lambda = - (2.0/3.0) * mu;   // from Stokes hypothesis
-    //const real_t eta = args[1]; // magnetic diffusivity
     
     real_t v[3];
     real_t tau[3][3];
@@ -242,16 +241,18 @@ inline void MHD::DiffusiveFluxes(const real_t* const __restrict__ U,
     real_t divv;
 
     for (int d: dirs)
-        v[d] = U[mom0+d] / U[Density];
+        v[d] = P[v0+d];
 
     for (int comp: dirs)
         for (int deriv: dirs)
-            dv[comp][deriv] = (dU[mom0+comp][deriv] - v[comp]*dU[Density][deriv])
-                                                                         / U[Density];
+            dv[comp][deriv] = dP[v0+comp][deriv]; // dv[i][j] = d_j v^i
+            
     for (int d: dirs)
         rdetg_deriv[d] = metric->rdetg_deriv[d][mem];
-    divv = dv[0][0] + dv[1][1] + dv[2][2] + metric->dot(v, rdetg_deriv, mem);
-    //divv = dv[0][0] + dv[1][1] + dv[2][2]; // Assuming Cartesian...
+
+    /* div(v) = d_i v^i + v^j d_j(rdetg) / rdetg */
+    divv = dv[0][0] + dv[1][1] + dv[2][2] + 
+           v[0] * rdetg_deriv[0] + v[1] * rdetg_deriv[1] + v[2] * rdetg_deriv[2];
 
     for (int d: dirs)
         tau[d][d] = 2*mu*dv[d][d] + lambda*divv;
@@ -268,14 +269,17 @@ inline void MHD::DiffusiveFluxes(const real_t* const __restrict__ U,
         for (int i: dirs)
             F[mom0+i][d] = - tau[d][i];
 
-        /* Shouldn't this have a contribution from resistivity too? */
-        F[tot_energy][d] = - metric->dot(v, tau[d], mem);
-        //F[tot_energy][d] = - (v[0]*tau[0][d] + v[1]*tau[1][d] + v[2]*tau[2][d]);
+        /* Shouldn't this have a contribution from resistivity too? 
+         * Yes, should have an eta*JxB contribution from the resistive part 
+         * of the electric field */
+        /* F(tot E)^d = - v^i tau_i^d
+         * Contracting on tau's lower index, so don't need any metric terms */
+        F[tot_energy][d] = - (v[0]*tau[0][d] + v[1]*tau[1][d] + v[2]*tau[2][d]);
 
         /* Magnetic part - resistivity is really a magnetic diffusivity */
-        F[B0][d] = - resistivity * (dU[B0][d] - dU[B0+d][0]); 
-        F[B1][d] = - resistivity * (dU[B1][d] - dU[B0+d][1]); 
-        F[B2][d] = - resistivity * (dU[B2][d] - dU[B0+d][2]); 
+        F[B0][d] = - resistivity * (dP[B0][d] - dP[B0+d][0]); 
+        F[B1][d] = - resistivity * (dP[B1][d] - dP[B0+d][1]); 
+        F[B2][d] = - resistivity * (dP[B2][d] - dP[B0+d][2]); 
 
         F[B0+d][d] = 0.0; // Overwrite the above
 
