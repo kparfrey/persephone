@@ -54,9 +54,9 @@ class MHD : public Physics
         variables[7] = "B2";
         variables[8] = "psi";
 
-        diffusive   = false;
+        diffusive   = true;
         viscosity   = 0.0;
-        resistivity = 5e-3;
+        resistivity = 1e-2;
 
         /* Divergence-cleaning parameters */
         psi_damping_const = 0.03; // 0 < p_d_const < 1
@@ -239,6 +239,12 @@ inline void MHD::DiffusiveFluxes(const real_t* const __restrict__   P,
     real_t dv[3][3]; // dv[component][deriv dir] = d_deriv v^component
     real_t rdetg_deriv[3]; // (1/rdetg)*d_j(rdetg) at a single point
     real_t divv;
+    real_t duB[3][3]; // duB[j][i] = d^i B^j -- 1st index raised, for Etot flux
+    real_t Bl[3];     // need B_i for Etot flux
+    real_t JxB;       // for Etot flux
+
+    int dp1, dp2; // cyclic addition d+1, d+2 -- used in Etot flux
+    
 
     for (int d: dirs)
         v[d] = P[v0+d];
@@ -261,6 +267,12 @@ inline void MHD::DiffusiveFluxes(const real_t* const __restrict__   P,
     tau[0][2] = tau[2][0] = mu * (dv[0][2] + dv[2][0]);
     tau[1][2] = tau[2][1] = mu * (dv[1][2] + dv[2][1]);
 
+    /* Raise index on the derivative operator to form duB[j][i] = d^i B^j */
+    for (int d: dirs)
+        metric->raise(dP[B0+d], duB[d], mem);
+    
+    metric->lower(&P[B0], Bl, mem); // P[Bi] = B^i 
+
     for (int d: dirs) // flux direction
     {
         /* Hydro part */
@@ -272,9 +284,16 @@ inline void MHD::DiffusiveFluxes(const real_t* const __restrict__   P,
         /* Shouldn't this have a contribution from resistivity too? 
          * Yes, should have an eta*JxB contribution from the resistive part 
          * of the electric field */
-        /* F(tot E)^d = - v^i tau_i^d
+        /* F(tot E)^d = - v^i tau_i^d + eta (J x B)^d
          * Contracting on tau's lower index, so don't need any metric terms */
-        F[tot_energy][d] = - (v[0]*tau[0][d] + v[1]*tau[1][d] + v[2]*tau[2][d]);
+        dp1 = dir_plus_one[d];
+        dp2 = dir_plus_two[d];
+
+        /* This should be (j x B)^d */
+        JxB = Bl[dp2]*(duB[d][dp2] - duB[dp2][d]) - Bl[dp1]*(duB[dp1][d] - duB[d][dp1]);
+
+        F[tot_energy][d] = - (v[0]*tau[0][d] + v[1]*tau[1][d] + v[2]*tau[2][d]) 
+                           + resistivity * JxB;
 
         /* Magnetic part - resistivity is really a magnetic diffusivity */
         F[B0][d] = - resistivity * (dP[B0][d] - dP[B0+d][0]); 

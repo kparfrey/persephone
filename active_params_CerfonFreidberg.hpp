@@ -24,7 +24,7 @@ static int Nproc[3] = {1,1,1};
 static int Nelem[3] = {4,4,1};
 static int Ns[3]    = {6,6,1};
 
-static real_t cfl      = 0.5; // Seems stable to 1.0 for ideal MHD
+static real_t cfl      = 0.3; // Seems stable to 1.0 for ideal MHD
 static real_t end_time = 10.0;
 static real_t dt_write = 0.05;
 
