@@ -117,20 +117,20 @@ namespace kernels
                                  const int                        dir);    
 
     void external_interface_average(const FaceCommunicator           face,
-                                          real_t* const __restrict__ Uf,
+                                          real_t* const __restrict__ Pf,
                                     const LengthBucket               lb,
                                     const bool                       averaging_derivs);
 
-    void internal_interface_average(      real_t* const __restrict__ Uf,
+    void internal_interface_average(      real_t* const __restrict__ Pf,
                                     const LengthBucket               lb,
                                     const int                        dir);    
      
-    void gradient_ref_to_phys(const VectorField dU_ref,
-                                    VectorField dU_phys,
+    void gradient_ref_to_phys(const VectorField dP_ref,
+                                    VectorField dP_phys,
                               const VectorField dxdr[3],
                               const LengthBucket lb);
 
-    void diffusive_flux(const real_t* const __restrict__ Uf,
+    void diffusive_flux(const real_t* const __restrict__ Pf,
                         const VectorField                dPf,
                               real_t* const __restrict__ F,
                         //const DiffusiveFluxes*           F_diff,
@@ -139,6 +139,15 @@ namespace kernels
                         const VectorField                S,
                         const LengthBucket               lb,
                         const int                        dir);
+
+    void conserved_to_primitive_fluxpoints(      real_t* const __restrict__  UPf,
+                                           const Physics* const __restrict__ physics,
+                                           const LengthBucket               lb,
+                                           const int                        dir);
+
+    void conserved_to_primitive_faces(      FaceCommunicator face,
+                                      const Physics* const __restrict__ physics,
+                                      const LengthBucket               lb);
 
     /* Not a final "kernel", obviously */
     real_t local_timestep(const real_t* const __restrict__ Uf,

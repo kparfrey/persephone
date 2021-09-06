@@ -243,6 +243,7 @@ void Process::add_diffusive_flux(VectorField Uf, VectorField dP, VectorField F)
     VectorField dPf[3]; // Physical-space derivatives of P at the flux points
                         // Note: dPf[flux-point dir](deriv dir, ...)
 
+
     ElementBlock& eb = elements;
 
     for (int i: dirs)
@@ -257,20 +258,28 @@ void Process::add_diffusive_flux(VectorField Uf, VectorField dP, VectorField F)
             dPf[i](j) = kernels::alloc_raw(Nfield * eb.Nf_dir_block[i]);
     }
 
-    /* Average Uf on process-external faces. 
-     * Data already in FaceCommunicators from the earlier exchange */
+    /* Convert all conserved variables to primitive variables, and save back in the same memory */
+    for (int i: dirs)
+        kernels::conserved_to_primitive_fluxpoints(Uf(i), eb.physics[i], eb.lengths, i);
+    VectorField& Pf = Uf; // Reference, so don't forget arrays now contain primitives
+
+    /* conserved -> primitive for data already exchanged & stored in faces */
     for (int i: ifaces)
-        kernels::external_interface_average(faces[i], Uf(faces[i].normal_dir), eb.lengths, false);
+        kernels::conserved_to_primitive_faces(faces[i], eb.physics[faces[i].normal_dir], eb.lengths);
+
+    /* Average Pf on process-external faces. */
+    for (int i: ifaces)
+        kernels::external_interface_average(faces[i], Pf(faces[i].normal_dir), eb.lengths, false);
 
     /* Average Uf on process-internal faces. */
     for (int i: dirs)
-        kernels::internal_interface_average(Uf(i), eb.lengths, i);
+        kernels::internal_interface_average(Pf(i), eb.lengths, i);
 
     for (int i: dirs) // i = derivative direction
     {
-        // Uf(i): the U at the i-direction's flux points
-        // dU_ref(i): gradients of the U in the i direction, at the solution points
-        kernels::fluxDeriv_to_soln(eb.fluxDeriv2soln(i), Uf(i), dP_ref(i), eb.lengths, i);
+        // Pf(i): the P at the i-direction's flux points
+        // dP_ref(i): gradients of the P in the i direction, at the solution points
+        kernels::fluxDeriv_to_soln(eb.fluxDeriv2soln(i), Pf(i), dP_ref(i), eb.lengths, i);
     }
 
     /* Transform to physical-space gradient */
@@ -299,7 +308,8 @@ void Process::add_diffusive_flux(VectorField Uf, VectorField dP, VectorField F)
 
     //const real_t coeffs[2] = {physics->viscosity, physics->resistivity};
     for (int i: dirs) // flux-point direction
-        kernels::diffusive_flux(Uf(i), dPf[i], Fd(i), eb.physics[i], eb.geometry.S[i], eb.lengths, i);
+        kernels::diffusive_flux(Pf(i), dPf[i], Fd(i), eb.physics[i], eb.geometry.S[i], eb.lengths, i);
+        //kernels::diffusive_flux(Uf(i), dPf[i], Fd(i), eb.physics[i], eb.geometry.S[i], eb.lengths, i);
         //kernels::diffusive_flux(Uf(i), dUf[i], Fd(i), eb.physics[i], coeffs, eb.geometry.S[i], eb.lengths, i);
         //kernels::diffusive_flux(Uf(i), dUf[i], Fd(i), F_diff, coeffs, eb.geometry.S[i], eb.lengths, i);
 

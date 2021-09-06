@@ -993,10 +993,10 @@ namespace kernels
     }
 
 
-    /* Average the conserved variables or their derivatives on process-external interfaces.
+    /* Average the primitive variables or their derivatives on process-external interfaces.
      * Only required when have diffusive terms. */
     void external_interface_average(const FaceCommunicator           face,
-                                          real_t* const __restrict__ Uf,
+                                          real_t* const __restrict__ Pf,
                                     const LengthBucket               lb,
                                     const bool                       averaging_derivs)
     {
@@ -1050,7 +1050,7 @@ namespace kernels
                 for (int field = 0; field < lb.Nfield; ++field)
                 {
                     mem_face_field = mem_face + field * face.Ntot;
-                    Uf[mem + field * Nf_tot] = 0.5 * (face.my_data[mem_face_field] +
+                    Pf[mem + field * Nf_tot] = 0.5 * (face.my_data[mem_face_field] +
                                                       face.neighbour_data[mem_face_field]);
                 }
             }
@@ -1060,9 +1060,9 @@ namespace kernels
     }
 
 
-    /* Average the conserved variables or their derivatives on process-internal interfaces.
+    /* Average the primitive variables or their derivatives on process-internal interfaces.
      * Only required when have diffusive terms. */
-    void internal_interface_average(      real_t* const __restrict__ Uf,
+    void internal_interface_average(      real_t* const __restrict__ Pf,
                                     const LengthBucket               lb,
                                     const int                        dir)
     {
@@ -1106,8 +1106,8 @@ namespace kernels
                     mem_L = mem_L0 + field * Nf_tot;
                     mem_R = mem_R0 + field * Nf_tot;
 
-                    Uf[mem_L] = 0.5 * (Uf[mem_L] + Uf[mem_R]);
-                    Uf[mem_R] = Uf[mem_L];
+                    Pf[mem_L] = 0.5 * (Pf[mem_L] + Pf[mem_R]);
+                    Pf[mem_R] = Pf[mem_L];
                 }
             }
         }
@@ -1116,8 +1116,8 @@ namespace kernels
     }
 
     
-    void gradient_ref_to_phys(const VectorField dU_ref,
-                                    VectorField dU_phys,
+    void gradient_ref_to_phys(const VectorField dP_ref,
+                                    VectorField dP_phys,
                               const VectorField dxdr[3],
                               const LengthBucket lb)
     {
@@ -1137,9 +1137,9 @@ namespace kernels
                 {
                     lsum = 0.0;
                     for (int ref: dirs)
-                        lsum += dxdr[ref](phys, i) * dU_ref(ref, mem);
+                        lsum += dxdr[ref](phys, i) * dP_ref(ref, mem);
 
-                    dU_phys(phys, mem) = lsum;
+                    dP_phys(phys, mem) = lsum;
                 }
             }
         }
@@ -1148,7 +1148,7 @@ namespace kernels
     }
 
     
-    void diffusive_flux(const real_t* const __restrict__ Uf,
+    void diffusive_flux(const real_t* const __restrict__ Pf,
                         const VectorField                dPf,
                               real_t* const __restrict__ F,
                         //const DiffusiveFluxes*           F_diff,
@@ -1162,7 +1162,7 @@ namespace kernels
 
         /* Conserved vars, primitive vars, and physical-direction fluxes
          * at a single point */
-        real_t* Up       = new real_t [lb.Nfield];
+        //real_t* Up       = new real_t [lb.Nfield];
         real_t* Pp       = new real_t [lb.Nfield];
         real_t (*dPp)[3] = new real_t [lb.Nfield][3]; 
         real_t (*F_diff_p)[3] = new real_t [lb.Nfield][3]; // pointer to an array
@@ -1171,16 +1171,17 @@ namespace kernels
         for (int i = 0; i < N; ++i) // i = mem loc for zeroth field
         {
             /* Load all field variables at this location into
-             * the Up array. */
+             * the Pp array. */
             for (int field = 0; field < lb.Nfield; ++field)
             {
-                Up[field] = Uf[i + field * N];
+                //Up[field] = Uf[i + field * N];
+                Pp[field] = Pf[i + field * N];
                 
                 for (int d: dirs)
                     dPp[field][d] = dPf(d, i + field*N);
             }
 
-            physics->ConservedToPrimitive(Up, Pp, i);
+            //physics->ConservedToPrimitive(Up, Pp, i);
 
             //(*F_diff)(Up, dUp, F_diff_p, args);
             //physics->DiffusiveFluxes(Up, dUp, F_diff_p, args);
@@ -1191,7 +1192,7 @@ namespace kernels
             fluxes_phys_to_ref(F_diff_p, F, S, i, lb.Nfield, N);
         }
 
-        delete[] Up;
+        //delete[] Up;
         delete[] Pp;
         delete[] dPp;
         delete[] F_diff_p;
@@ -1199,6 +1200,107 @@ namespace kernels
         return;
     }
 
+
+    /* Transform from conserved to primitive variables on flux points, and save back
+     * into the same arrays */
+    void conserved_to_primitive_fluxpoints(      real_t* const __restrict__  UPf,
+                                           const Physics* const __restrict__ physics,
+                                           const LengthBucket               lb,
+                                           const int                        dir)
+    {
+        int N = lb.Nf_dir_block[dir]; //Total # of this-dir flux points in the block
+
+        /* Conserved vars and primitive vars at a single point */
+        real_t* Up       = new real_t [lb.Nfield];
+        real_t* Pp       = new real_t [lb.Nfield];
+
+        for (int i = 0; i < N; ++i) // i = mem loc for zeroth field
+        {
+            /* Load all field variables at this location into
+             * the Up array. */
+            for (int field = 0; field < lb.Nfield; ++field)
+                Up[field] = UPf[i + field * N];
+
+            physics->ConservedToPrimitive(Up, Pp, i);
+
+            for (int field = 0; field < lb.Nfield; ++field)
+               UPf[i + field * N] = Pp[field];
+
+        }
+
+        delete[] Up;
+        delete[] Pp;
+
+        return;
+    }
+
+
+    /* Transform from conserved to primitive variables on faces, and save back
+     * into the same arrays */
+    void conserved_to_primitive_faces(      FaceCommunicator face,
+                                      const Physics* const __restrict__ physics,
+                                      const LengthBucket               lb)
+    {
+        int id_elem_face, id_elem;
+        int mem_offset_face, mem_offset;
+        int mem_face, mem;
+
+        const int dir  = face.normal_dir;
+        const int dir1 = dir_plus_one[dir]; 
+        const int dir2 = dir_plus_two[dir];
+
+        const int Nf0 = lb.Nf[dir];
+        const int Ns1 = lb.Ns[dir1];
+
+        /* Conserved vars and primitive vars at a single point */
+        real_t* Up_my = new real_t [lb.Nfield];
+        real_t* Up_nb = new real_t [lb.Nfield];
+        real_t* Pp_my = new real_t [lb.Nfield];
+        real_t* Pp_nb = new real_t [lb.Nfield];
+
+        for (int ne2 = 0; ne2 < face.Nelem[1]; ++ne2)
+        for (int ne1 = 0; ne1 < face.Nelem[0]; ++ne1)
+        {
+            id_elem_face    = (ne2 * lb.Nelem[dir1]) + ne1;
+            mem_offset_face = id_elem_face * lb.Ns[dir2] * lb.Ns[dir1];
+
+            id_elem    = (ne2*lb.Nelem[dir1] + ne1)*lb.Nelem[dir] + face.ne0;
+            mem_offset = id_elem * lb.Nf_dir[dir];
+
+            for (int n2 = 0; n2 < face.N[1]; ++n2)
+            for (int n1 = 0; n1 < face.N[0]; ++n1)
+            {
+                /* Memory location for the zeroth field */
+                mem_face = mem_offset_face +  n2 * Ns1 + n1;
+                
+                /* Memory location in the full 3D flux array
+                 * For indexing the metric */
+                mem = mem_offset + (n2 * Ns1 + n1) * Nf0 + face.n0;
+
+                for (int field = 0; field < lb.Nfield; ++field)
+                {
+                    Up_my[field] = face.my_data[mem_face + field * face.Ntot];
+                    Up_nb[field] = face.neighbour_data[mem_face + field * face.Ntot];
+                }
+
+                physics->ConservedToPrimitive(Up_my, Pp_my, mem);
+                physics->ConservedToPrimitive(Up_nb, Pp_nb, mem);
+
+                for (int field = 0; field < lb.Nfield; ++field)
+                {
+                    face.my_data[mem_face + field * face.Ntot] = Pp_my[field];
+                    face.neighbour_data[mem_face + field * face.Ntot] = Pp_nb[field];
+                }
+            }
+        }
+
+        delete[] Up_my;
+        delete[] Up_nb;
+        delete[] Pp_my;
+        delete[] Pp_nb;
+
+        return;
+    }
 
 
 #if 0
