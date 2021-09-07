@@ -41,7 +41,7 @@ class NavierStokes : public Physics
         variables[4] = "p";
 
         diffusive = true;
-        viscosity = 5e-2;
+        viscosity = 1e-2;
     }
 
 
@@ -145,12 +145,12 @@ inline void NavierStokes::Fluxes(const real_t* const __restrict__ P,
 
 
 /* Still needs to be finished for general coords */
-inline void NavierStokes::DiffusiveFluxes(const real_t* const __restrict__ U, 
-                                          const real_t (* const __restrict__ dU)[3],
+inline void NavierStokes::DiffusiveFluxes(const real_t* const __restrict__    P, 
+                                          const real_t (* const __restrict__ dP)[3],
                                                 real_t (*__restrict__ F)[3],
                                           const int mem) const
 {
-    const real_t mu = U[Density] * viscosity; // mu = dynamic viscosity
+    const real_t mu = P[density] * viscosity; // mu = dynamic viscosity
     const real_t lambda = - (2.0/3.0) * mu; // from Stokes hypothesis: zero bulk viscosity (ζ)
     
     real_t v[3];
@@ -160,17 +160,18 @@ inline void NavierStokes::DiffusiveFluxes(const real_t* const __restrict__ U,
     real_t rdetg_deriv[3]; // (1/rdetg)*d_j(rdetg) at a single point
 
     for (int d: dirs)
-        v[d] = U[mom0+d] / U[Density];
+        v[d] = P[v0+d]; // v[d] = v^d -- P stores the contravariant components
 
     for (int comp: dirs)
         for (int deriv: dirs)
-            dv[comp][deriv] = (dU[mom0+comp][deriv] - v[comp]*dU[Density][deriv])
-                                                                         / U[Density];
-
+            dv[comp][deriv] = dP[v0+comp][deriv]; // dv[i][j] = d_j v^i
+            
     for (int d: dirs)
         rdetg_deriv[d] = metric->rdetg_deriv[d][mem];
-    divv = dv[0][0] + dv[1][1] + dv[2][2] + metric->dot(v, rdetg_deriv, mem);
-    //divv = dv[0][0] + dv[1][1] + dv[2][2];
+
+    /* div(v) = d_i v^i + v^j d_j(rdetg) / rdetg */
+    divv = dv[0][0] + dv[1][1] + dv[2][2] + 
+           v[0] * rdetg_deriv[0] + v[1] * rdetg_deriv[1] + v[2] * rdetg_deriv[2];
 
     for (int d: dirs)
         tau[d][d] = 2*mu*dv[d][d] + lambda*divv;
@@ -186,10 +187,10 @@ inline void NavierStokes::DiffusiveFluxes(const real_t* const __restrict__ U,
         for (int i: dirs)
             F[mom0+i][d] = - tau[d][i];
 
-        /* Is this a dot product of v^i and tau^{i d} ? -- Yes 
-         * dE/dt = ... - div( v.tau )  */
-        F[tot_energy][d] = - metric->dot(v, tau[d], mem);
-        //F[tot_energy][d] = - (v[0]*tau[0][d] + v[1]*tau[1][d] + v[2]*tau[2][d]);
+        /* F(tot E)^d = - v^i tau_i^d
+         * i.e. dE/dt = ... - div( v.tau 
+         * Contracting on tau's lower index, so don't need any metric terms */
+        F[tot_energy][d] = - (v[0]*tau[0][d] + v[1]*tau[1][d] + v[2]*tau[2][d]); 
     }
 
     return;
