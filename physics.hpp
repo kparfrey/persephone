@@ -21,6 +21,7 @@ class Physics
     inline static bool diffusive;
     inline static real_t viscosity;   // kinematic viscosity ("nu")
     inline static real_t resistivity; // really magnetic diffusivity...
+    inline static real_t diffusive_timestep_const; // effective "CFL for diffusion"
 
     /* Only used by MHD */
     inline static real_t ch_sq; // Square of wave/transport speed for hyperbolic part of div cleaning
@@ -36,6 +37,7 @@ class Physics
         diffusive = false;
         viscosity = 0.0;
         resistivity = 0.0;
+        diffusive_timestep_const = 1.0/3.0; // Appears safe even for WaveRect
     }
 
 

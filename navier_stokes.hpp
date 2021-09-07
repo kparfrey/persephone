@@ -41,7 +41,7 @@ class NavierStokes : public Physics
         variables[4] = "p";
 
         diffusive = true;
-        viscosity = 1e-2;
+        viscosity = 5e-2;
     }
 
 

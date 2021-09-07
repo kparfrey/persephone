@@ -14,11 +14,11 @@ static BasicTimeMethod time_method = rk3_ssp;
 
 static int Nproc[3] = {2,2,1};
 static int Nelem[3] = {5,5,1};
-static int Ns[3]    = {8,8,1};
+static int Ns[3]    = {4,4,1};
 
 // 0.6 stable for Euler, ~0.5 for NS? RK3_SSP more stable.
 static real_t cfl      = 0.5; 
-static real_t end_time = 5.0;
+static real_t end_time = 30.0;
 static real_t dt_write = 0.5;
 
 static ParamsCartesian active_parameters(equations, time_method, 

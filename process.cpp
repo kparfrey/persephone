@@ -86,14 +86,13 @@ void Process::time_advance()
 
     if (Physics::diffusive)
     {
-        // This factor of ~0.25 seems to be the stability limit -- 
-        // 0.27 still works for the WaveRect (w/RK3) but 0.28 breaks [at 6th & 8th order]
-        // At 10th order +, 0.33 still stable but 0.4 break for nu = 0.01 (though stable for 0.02..)
-        // Can use up to 0.33 for a rectilinear grid (w/RK2 - check for RK3)
+        // For constant diffusive coefficients this can be moved to the setup phase 
+        // --- same for all time steps
+        // d_t_c = 1/3 stable for WaveRect at high viscosity, but 0.4 breaks sometimes...?
         // Seems to be excessively restrictive when have an inhomogeneous grid?
-        // Seems very problem dependent: can use 0.9 for the MHD Alfven wave problem
+        // Very problem dependent: can use d_t_c = 0.9 for the MHD Alfven wave problem
         const real_t diffusion = MAX(Physics::viscosity, Physics::resistivity);
-        dtmin_diff   = (0.9/diffusion) * (1./(tt_max_global*tt_max_global));
+        dtmin_diff   = (Physics::diffusive_timestep_const/diffusion) * (1./(tt_max_global*tt_max_global));
 
         dt = MIN(dtmin_advect, dtmin_diff); 
         dt_ratio = dtmin_diff/dtmin_advect;
