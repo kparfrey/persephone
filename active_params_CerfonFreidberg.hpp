@@ -18,6 +18,7 @@
 
 static EqnSystem equations = mhd;
 static BasicTimeMethod time_method = rk3_ssp;
+static TorusProblemType problem_type = cerfon_freidberg;
 static TorusCentralPolygon central_polygon = square;
 
 static int Nproc[3] = {1,1,1};
@@ -31,4 +32,4 @@ static real_t dt_write = 0.25;
 static ParamsTorus active_parameters(equations, time_method, 
                                      Nproc, Nelem, Ns, 
                                      cfl, end_time, dt_write,
-                                     central_polygon);
+                                     problem_type, central_polygon);

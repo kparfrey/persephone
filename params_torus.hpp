@@ -10,6 +10,7 @@ class ParamsTorus : public Params
 {
     public:
 
+    TorusProblemType problem_type;
     TorusCentralPolygon central_polygon; // Use a square for now
 
     /* For these, interpret as N*[3] = N*[central, outer, phi]
@@ -20,8 +21,7 @@ class ParamsTorus : public Params
     int Nelem[3];  // No. of elements in each direction, in each process
     int Ns[3];     // No. of solution points in each direction, in each element
 
-    TorusProblemType torus_problem_type;
-    TorusModePack boundary_modes;    // Don't pass to constructor
+    TorusModePack boundary_modes;     // Don't pass to constructor -- should be a pointer??
     CerfonFreidbergConfig* cf_config; // Holds parameters of a Cerfon Freidberg problem
 
     /* Secondary or derived quantities */
@@ -50,12 +50,11 @@ class ParamsTorus : public Params
                 real_t cfl = 0.8,
                 real_t end_time = 1.0,
                 real_t dt_write = 0.5,
+                TorusProblemType problem_type = cerfon_freidberg,
                 TorusCentralPolygon central_polygon = square)
-    : Params(equations, time_method, cfl, end_time, dt_write), 
-      central_polygon(central_polygon)
+    : Params(equations, time_method, cfl, end_time, dt_write),
+      problem_type(problem_type), central_polygon(central_polygon)
     {
-        //torus_problem_type = input_config_file; // Default choice
-        torus_problem_type = cerfon_freidberg; // Should pass this in
 
         for (int i=0; i<3; i++)
         {

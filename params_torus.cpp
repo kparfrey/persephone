@@ -391,7 +391,7 @@ void ParamsTorus::setup_elementblock(ElementBlock &elements, Process &proc)
 
     elements.Nfield   = proc.Nfield;
 
-    switch (torus_problem_type)
+    switch (problem_type)
     {
         case explicit_modes:
             boundary_modes = boundary_modes_default; // Or replace with modes of choice
