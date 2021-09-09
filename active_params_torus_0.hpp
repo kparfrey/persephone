@@ -19,7 +19,6 @@
 
 static EqnSystem equations = navier_stokes;
 static BasicTimeMethod time_method = rk2_midpoint;
-static TorusCentralPolygon central_polygon = square;
 
 static int Nproc[3] = {1,1,1};
 static int Nelem[3] = {5,5,1};
@@ -45,4 +44,4 @@ static TorusModePack boundary_modes(Rmk, Zmk);
 static ParamsTorus active_parameters(equations, time_method, 
                                      Nproc, Nelem, Ns, 
                                      cfl, end_time, dt_write,
-                                     central_polygon, boundary_modes);
+                                     boundary_modes);

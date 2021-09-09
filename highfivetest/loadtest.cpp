@@ -34,5 +34,27 @@ int main()
     for (int i = 0; i < n0; ++i)
         cout << "Coeff " << i << " :  " << R_modes[i][0] << " " << R_modes[i][1] << " " <<  R_modes[i][2] << endl;
 
+
+
+    /* Count the number of existing equilibria in the file */
+    int n = 0;
+    bool found = false;
+    while(!found)
+    {
+        try
+        {
+            H5Easy::load<int>(dfile,"/_equilibria/"+std::to_string(n)+"/_L");
+        }
+        catch(...)
+        {
+            break;
+        }
+        n++;
+    }
+
+    cout << "Max index of equilibria: " << n-1 << endl;
+
+
+
     return 1;
 }

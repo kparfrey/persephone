@@ -2,7 +2,7 @@
 
 #include <cmath>
 #include "write_screen.hpp"
-#include <iostream>
+
 
 static real_t psi_fn(const real_t x, const real_t y, const real_t A, const real_t* const c)
 {

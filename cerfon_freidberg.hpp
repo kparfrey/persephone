@@ -2,7 +2,6 @@
 #define CERFON_FREIDBERG_HPP
 
 #include "common.hpp"
-#include "domain_map.hpp"
 
 class CerfonFreidbergConfig
 {

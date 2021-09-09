@@ -18,7 +18,7 @@
 
 static EqnSystem equations = mhd;
 static BasicTimeMethod time_method = rk3_ssp;
-static TorusProblemType problem_type = cerfon_freidberg;
+static TorusProblemType problem_type = desc_input;
 
 static int Nproc[3] = {1,1,1};
 static int Nelem[3] = {4,4,1};
@@ -31,4 +31,5 @@ static real_t dt_write = 0.25;
 static ParamsTorus active_parameters(equations, time_method, 
                                      Nproc, Nelem, Ns, 
                                      cfl, end_time, dt_write,
-                                     problem_type);
+                                     problem_type,
+                                     "AXISYM_output.h5", 20);

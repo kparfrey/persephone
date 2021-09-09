@@ -397,8 +397,8 @@ void ParamsTorus::setup_elementblock(ElementBlock &elements, Process &proc)
             boundary_modes = boundary_modes_default; // Or replace with modes of choice
             elements.map   = new BasicSquareTorusMap(proc.group, boundary_modes);
             break;
-        case input_config_file:
-            write::error("Input from config file not implemented yet", destroy);
+        case desc_input:
+            desc_config  = new DescConfig(input_file, desc_iteration);
             elements.map = new BasicSquareTorusMap(proc.group, boundary_modes);
             break;
         case cerfon_freidberg:
