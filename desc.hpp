@@ -15,6 +15,7 @@ class DescConfig
     std::vector<double>           iota, pressure;            // Profiles of rotational transform and pressure
 
     int N_L, N_R, N_Z; // Total number of modes for lambda and surface polynomials
+    int N_iota, N_pressure; // Number of modes in the rot. transform and pressure polynomials
 
     DescConfig(std::string input_file, const int iteration);
 

@@ -28,9 +28,15 @@ DescConfig::DescConfig(std::string input_file, const int iteration)
     R_modes = H5Easy::load<vector<vector<int>>>(data, base + "_R_basis/_modes");
     Z_modes = H5Easy::load<vector<vector<int>>>(data, base + "_Z_basis/_modes");
 
+    iota     = H5Easy::load<vector<double>>(data, base + "_pressure/_params");
+    pressure = H5Easy::load<vector<double>>(data, base + "_iota/_params");
+
     N_L = L_lmn.size();
     N_R = R_lmn.size();
     N_Z = Z_lmn.size();
+
+    N_iota     = iota.size();
+    N_pressure = pressure.size();
 
     write::variable<int>("Radial (lambda) polynomial resolution    - L ", L);
     write::variable<int>("Surface polynomials, poloidal resolution - M ", M);
@@ -39,6 +45,9 @@ DescConfig::DescConfig(std::string input_file, const int iteration)
     write::variable<int>("No. of modes in lambda polynomial ", N_L);
     write::variable<int>("No. of modes in R polynomial      ", N_R);
     write::variable<int>("No. of modes in Z polynomial      ", N_Z);
+    
+    write::variable<int>("No. of modes in iota polynomial   ", N_iota);
+    write::variable<int>("No. of modes in pressure poly.    ", N_pressure);
 
     write::message("Finished loading input data");
     exit(99);
