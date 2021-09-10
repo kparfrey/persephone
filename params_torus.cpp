@@ -399,7 +399,7 @@ void ParamsTorus::setup_elementblock(ElementBlock &elements, Process &proc)
             break;
         case desc_input:
             desc_config  = new DescConfig(input_file, desc_iteration);
-            elements.map = new BasicSquareTorusMap(proc.group, boundary_modes);
+            elements.map = new BasicSquareTorusMap(proc.group, desc_config);
             break;
         case cerfon_freidberg:
             cf_config    = new CerfonFreidbergConfig();
@@ -409,6 +409,8 @@ void ParamsTorus::setup_elementblock(ElementBlock &elements, Process &proc)
             write::error("Torus problem type not recognised", destroy);
             break;
     }
+
+    //exit(54);
 
     elements.physics_soln->metric = new DiagonalSpatialMetric(cylindrical);
     for (int d: dirs)

@@ -7,39 +7,50 @@
 #include "torus_mode_pack.hpp"
 #include "write_screen.hpp"
 #include "cerfon_freidberg.hpp"
+#include "desc.hpp"
 
+
+/* Transform from Cartesian coords in the plane (x) to polar coords */
+inline static void cartesian_to_polar(const real_t x[2], real_t& r_polar, real_t& theta_polar)
+{
+    using std::atan;
+    
+    real_t X = x[0];
+    real_t Y = x[1];
+
+    r_polar     = std::sqrt(X*X + Y*Y);
+    theta_polar = 0.0;
+
+    if (r_polar > TINY)
+    {
+        if (X >= 0.0 )
+        {
+            if (Y >= 0.0)
+                theta_polar = atan(X/Y);
+            else
+                theta_polar = pi_2 + atan(-Y/X);
+        }
+        else
+        {
+            if (Y >= 0)
+                theta_polar = 3.*pi_2 + atan(-Y/X);
+            else
+                theta_polar = pi + atan(X/Y);
+        }
+    }
+
+    return;
+}
 
 
 /* The torus map will use this transformation from the origin-centred
  * unit disc to physical space, applying the Fourier modes stored in boundary_modes. */
 static void unit_disc_to_physical_space(real_t r[3], TorusModePack &modes)
 {
-    /* Unit disc coords were stored as Cartesian/cylindrical for ease of testing.
-     * Convert back to polar coords... Probably should just do all of the first
-     * division of the disc directly in polar coords... */
-    real_t r_uds = std::sqrt(r[0]*r[0] + r[1]*r[1]);
-    real_t t_uds = 0.0;
-
-    using std::atan;
-
-    if (r_uds > TINY)
-    {
-        if (r[0] >= 0.0 )
-        {
-            if (r[1] >= 0.0)
-                t_uds = atan(r[0]/r[1]);
-            else
-                t_uds = pi_2 + atan(-r[1]/r[0]);
-        }
-        else
-        {
-            if (r[1] >= 0)
-                t_uds = 3.*pi_2 + atan(-r[1]/r[0]);
-            else
-                t_uds = pi + atan(r[0]/r[1]);
-        }
-    }
-
+    /* Unit disc coords were stored as Cartesian to enable the analytic transfinite
+     * map to find the element edges. Transform back now to polar coords in UDS */
+    real_t r_uds, t_uds;
+    cartesian_to_polar(r, r_uds, t_uds);
 
     /* Apply transformation with Fourier modes */
     /* NB: for this choice (R -> sin, Z -> cos) the unit-disc and physical spaces
@@ -72,39 +83,14 @@ static void unit_disc_to_physical_space(real_t r[3], TorusModePack &modes)
 /* Overload the function for use with Cerfon-Freidberg configurations */
 static void unit_disc_to_physical_space(real_t r[3], CerfonFreidbergConfig& cf_config)
 {
-    /* Unit disc coords were stored as Cartesian/cylindrical for ease of testing.
-     * Convert back to polar coords... Probably should just do all of the first
-     * division of the disc directly in polar coords... */
-    real_t r_uds = std::sqrt(r[0]*r[0] + r[1]*r[1]);
-    real_t t_uds = 0.0;
-
-    using std::atan;
-    using std::asin;
-    using std::cos;
-    using std::sin;
-
-    if (r_uds > TINY)
-    {
-        if (r[0] >= 0.0 )
-        {
-            if (r[1] >= 0.0)
-                t_uds = atan(r[0]/r[1]);
-            else
-                t_uds = pi_2 + atan(-r[1]/r[0]);
-        }
-        else
-        {
-            if (r[1] >= 0)
-                t_uds = 3.*pi_2 + atan(-r[1]/r[0]);
-            else
-                t_uds = pi + atan(r[0]/r[1]);
-        }
-    }
-
+    /* Unit disc coords were stored as Cartesian to enable the analytic transfinite
+     * map to find the element edges. Transform back now to polar coords in UDS */
+    real_t r_uds, t_uds;
+    cartesian_to_polar(r, r_uds, t_uds);
 
     /* Apply transformation from CF 2010, Eqn 9 */
-    r[0] = 1.0 + r_uds * cf_config.epsilon * cos(t_uds + cf_config.alpha * sin(t_uds));
-    r[1] = r_uds * cf_config.epsilon * cf_config.kappa * sin(t_uds);
+    r[0] = 1.0 + r_uds * cf_config.epsilon * std::cos(t_uds + cf_config.alpha * std::sin(t_uds));
+    r[1] = r_uds * cf_config.epsilon * cf_config.kappa * std::sin(t_uds);
 
     return;
 }
@@ -135,10 +121,11 @@ class BasicSquareTorusMap : public DomainMap
     real_t lc[4][2];     // local corners: the 4 poloidal corners of this group's quad in the R-Z plane
     real_t theta_offset; // The starting "colatitude" angle for the outer curved edges (group > 0)
 
-    enum BoundaryType {fourier_modes, cf2010};
+    enum BoundaryType {fourier_modes, cf2010, desc};
     BoundaryType boundary;
     TorusModePack boundary_modes; // Used in the second, pointwise_transformation() to physical space
     CerfonFreidbergConfig* cf_config; // Alternative: set with CF 2010 boundary representation
+    DescConfig* desc_config;
 
 
     /* Set the domain_depth using the constructor */
@@ -149,11 +136,17 @@ class BasicSquareTorusMap : public DomainMap
         common_constructor(group);
     }
 
-
     BasicSquareTorusMap(const int group, CerfonFreidbergConfig* cf_config)
     : cf_config(cf_config)
     {
         boundary = cf2010;
+        common_constructor(group);
+    }
+
+    BasicSquareTorusMap(const int group, DescConfig* desc_config)
+    : desc_config(desc_config)
+    {
+        boundary = desc;
         common_constructor(group);
     }
 
@@ -208,6 +201,7 @@ class BasicSquareTorusMap : public DomainMap
     }
 
 
+    /* Goes from reference space (x) to unit disc space expressed in Cartesian coords (r) */
     void operator()(const int n, const real_t x, real_t r[3]) override
     {
         real_t start = 0.0;
@@ -257,7 +251,7 @@ class BasicSquareTorusMap : public DomainMap
 
             r[i] = start * (1.0 - x) + end * x;
         }
-
+        
         /* Overwrite for the curved outer edges (always edge 1) */
         if ((group > 0) && ((n == 1) || (n == 5)))
         {
@@ -281,6 +275,8 @@ class BasicSquareTorusMap : public DomainMap
     }
 
 
+    /* Transforms from unit disc space in Cartesian coords to physical space
+     * in cylindrical coords, saving back into the same array. */
     void pointwise_transformation(real_t r[3]) override
     {
         switch (boundary)
@@ -290,6 +286,9 @@ class BasicSquareTorusMap : public DomainMap
                 break;
             case cf2010:
                 unit_disc_to_physical_space(r, *cf_config);
+                break;
+            case desc:
+                //unit_disc_to_physical_space(r, *desc_config);
                 break;
         }
 
