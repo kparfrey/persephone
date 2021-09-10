@@ -410,8 +410,6 @@ void ParamsTorus::setup_elementblock(ElementBlock &elements, Process &proc)
             break;
     }
 
-    //exit(54);
-
     elements.physics_soln->metric = new DiagonalSpatialMetric(cylindrical);
     for (int d: dirs)
         elements.physics[d]->metric = new DiagonalSpatialMetric(cylindrical);
@@ -433,7 +431,10 @@ void ParamsTorus::set_initial_state(ElementBlock &elements)
             set_euler_torus(elements);
             break;
         case mhd:
-            set_CerfonFreidberg(elements, *cf_config);
+            if (problem_type == cerfon_freidberg)
+                set_CerfonFreidberg(elements, *cf_config);
+            else 
+                set_uniform(elements);
             break;
         case scalar_advection:
             write::error("Scalar advection not implemented for torus", destroy);

@@ -8,5 +8,6 @@ class CerfonFreidbergConfig;
 
 void set_euler_torus(ElementBlock& eb);
 void set_CerfonFreidberg(ElementBlock& eb, CerfonFreidbergConfig& cf_config);
+void set_uniform(ElementBlock& eb);
 
 #endif

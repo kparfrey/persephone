@@ -95,3 +95,16 @@ void set_CerfonFreidberg(ElementBlock& eb, CerfonFreidbergConfig& cf_config)
 
     return;
 }
+
+
+/* Just a placeholder, used when testing grid construction */
+void set_uniform(ElementBlock& eb)
+{
+    for (int loc0 = 0; loc0 < eb.Ns_block; ++loc0)
+    {
+        for (int i = 0; i < eb.Nfield; ++i)
+            eb.fields[loc0 + i*eb.Ns_block] = 1.0;
+    }
+
+    return;
+}

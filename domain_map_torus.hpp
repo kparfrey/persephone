@@ -89,8 +89,26 @@ static void unit_disc_to_physical_space(real_t r[3], CerfonFreidbergConfig& cf_c
     cartesian_to_polar(r, r_uds, t_uds);
 
     /* Apply transformation from CF 2010, Eqn 9 */
+    /* Move this to CerfonFreidbergConfig itself */
     r[0] = 1.0 + r_uds * cf_config.epsilon * std::cos(t_uds + cf_config.alpha * std::sin(t_uds));
     r[1] = r_uds * cf_config.epsilon * cf_config.kappa * std::sin(t_uds);
+
+    return;
+}
+
+
+/* Overload the function for use with DESC configurations */
+static void unit_disc_to_physical_space(real_t r[3], DescConfig& desc_config)
+{
+    /* Unit disc coords were stored as Cartesian to enable the analytic transfinite
+     * map to find the element edges. Transform back now to polar coords in UDS */
+    real_t r_uds, t_uds;
+    cartesian_to_polar(r, r_uds, t_uds);
+
+    r[0] = r_uds;
+    r[1] = t_uds;
+
+    desc_config.unit_disc_to_physical_space(r);
 
     return;
 }
@@ -288,7 +306,7 @@ class BasicSquareTorusMap : public DomainMap
                 unit_disc_to_physical_space(r, *cf_config);
                 break;
             case desc:
-                //unit_disc_to_physical_space(r, *desc_config);
+                unit_disc_to_physical_space(r, *desc_config);
                 break;
         }
 
