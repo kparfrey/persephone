@@ -10,7 +10,7 @@ DescConfig::DescConfig(std::string input_file, const int iteration)
 {
     using std::vector;
 
-    write::message("Reading DESC data from " + input_file + ", iteration " + std::to_string(iteration));
+    write::message("\nReading DESC data from " + input_file + ", iteration " + std::to_string(iteration));
 
     H5Easy::File data(input_file, H5Easy::File::ReadOnly);
 
@@ -49,7 +49,7 @@ DescConfig::DescConfig(std::string input_file, const int iteration)
     write::variable<int>("No. of modes in iota polynomial   ", N_iota);
     write::variable<int>("No. of modes in pressure poly.    ", N_pressure);
 
-    write::message("Finished loading input data");
+    write::message("Finished loading input data\n");
     exit(99);
 
     return;

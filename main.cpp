@@ -29,8 +29,8 @@ static void startMPI(int argc, char *argv[], Process &proc)
         }
 
     write::store_rank(proc.rank);
-    write::message("MPI_started");
-    write::variable<int>("number of active processes", proc.Nproc);
+    write::message("MPI started");
+    write::variable<int>("Active processes", proc.Nproc);
 
     MPI_Barrier(MPI_COMM_WORLD);
  

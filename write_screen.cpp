@@ -100,7 +100,8 @@ namespace write
 
 
         if ((who_writes == root_only) && am_root)
-            cout << "Data on root: " << message << ": " << variable << endl;
+            cout << message << ": " << variable << endl;
+            //cout << "Data on root: " << message << ": " << variable << endl;
 
         if (who_writes == all_ranks)
             cout << "Data on rank " << rank << ": " << message << ": " << variable << endl;
@@ -125,15 +126,14 @@ namespace write
 
     void store_rank(int rank)
     {
-        write::message("Setting root process in write::message()", "Progress: ",
-                                                                      true, rank);
-        write::error("Progress: Setting process rank in write::error()", survive, true, rank);
+        write::message("Setting root process in write::message()", "", true, rank);
+        write::error("Setting process rank in write::error()", survive, true, rank);
 
         real_t dummy_real = 0.0;
         int    dummy_int  = 0;
-        write::variable<real_t>("Progress: Setting rank for real data in write::variable()", 
+        write::variable<real_t>("Setting rank for real data in write::variable()", 
                                                             dummy_real,root_only, true, rank);
-        write::variable<int>("Progress: Setting rank for int data in write::variable()", 
+        write::variable<int>("Setting rank for int data in write::variable()", 
                                                             dummy_int, root_only, true, rank);
 
         return;

@@ -12,7 +12,7 @@ namespace write
 {
     using std::string;
 
-    void message(string message, string prefix="Progress: ", 
+    void message(string message, string prefix="", 
                                         bool set_root=false, int rank=-1);
 
     void error(string error, Prognosis prognosis=destroy, 
