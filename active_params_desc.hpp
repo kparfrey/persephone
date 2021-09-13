@@ -32,4 +32,6 @@ static ParamsTorus active_parameters(equations, time_method,
                                      Nproc, Nelem, Ns, 
                                      cfl, end_time, dt_write,
                                      problem_type,
-                                     "AXISYM_output.h5", 20);
+                                     //"NCSX_output.h5", 7);
+                                     "DSHAPE_output.h5", 2);
+                                     //"AXISYM_output.h5", 20);

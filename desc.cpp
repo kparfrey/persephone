@@ -3,6 +3,7 @@
 #include <highfive/H5Easy.hpp>
 #include <cmath>
 #include <iostream>
+#include <boost/math/special_functions/jacobi.hpp>
 #include "write_screen.hpp"
 
 inline static long int factorial(const int n)
@@ -17,7 +18,8 @@ inline static long int factorial(const int n)
 }
 
 
-static long double zernike(const real_t rho, const real_t theta, const int l, const int m)
+#if 0
+static long double zernike_DIY(const real_t rho, const real_t theta, const int l, const int m)
 {
     using std::pow;
 
@@ -29,6 +31,10 @@ static long double zernike(const real_t rho, const real_t theta, const int l, co
 
     if ( (l-mabs)%2 != 0 )
         exit(31);
+
+    /* Works with this, but blows up whenever l is allowed to exceed 20, even for M < 20 */
+    if (l > 20)
+        return 0.0;
 
     int sign;
     long int top, bot;
@@ -71,12 +77,34 @@ static long double zernike(const real_t rho, const real_t theta, const int l, co
     else
         Z = R * std::sin(-m * theta);
 
-    //if (l > 34)
-    //std::cout << rho << " " << theta << " " << l << " " << m << " " << R << " " << Z << std::endl;
+    return Z;
+}
+#endif
 
-    /* Works for this, but blows up whenever l is allowed to exceed 20... */
-    if (l > 20)
-        Z = 0.0;
+
+/* Use the Jacobi polynomial from Boost to find the radial function:
+ * https://mathworld.wolfram.com/ZernikePolynomial.html
+ * https://www.boost.org/doc/libs/1_77_0/libs/math/doc/html/math_toolkit/sf_poly/jacobi.html */
+static double zernike(const real_t rho, const real_t theta, const int l, const int m)
+{
+    double Z; // Zernike polynomial Z_l^m(rho,theta) --- don't confuse with cylindrical Z
+
+    /* Radial function */
+    using boost::math::jacobi;
+    const unsigned int mabs = std::abs(m);
+    const unsigned int lm2  = (l - mabs) / 2;
+    
+    double sign = 1.0;
+    if (lm2 % 2)
+        sign = -1.0;
+
+    double R = sign * std::pow(rho, mabs) * jacobi(lm2, (double)mabs, 0.0, 1.0 - 2.0*rho*rho);
+
+    /* Add poloidal function */
+    if (m >= 0)
+        Z = R * std::cos( m * theta);
+    else
+        Z = R * std::sin(-m * theta);
 
     return Z;
 }
@@ -94,7 +122,7 @@ void DescConfig::surface_polynomial_expansion(real_t& f, const real_t r[3], cons
 
     int N = f_lmn.size(); // Total number of modes
 
-    long double lsum = 0.0;
+    double lsum = 0.0;
 
     for (int i = 0; i < N; ++i)
     {
@@ -107,10 +135,10 @@ void DescConfig::surface_polynomial_expansion(real_t& f, const real_t r[3], cons
         else
             F_toroidal = std::sin(-n * Nfp * zeta);
 
-        lsum += (long double)f_lmn[i] * zernike(rho, theta, l, m) * (long double)F_toroidal;
+        lsum += f_lmn[i] * zernike(rho, theta, l, m) * F_toroidal;
     }
 
-    f = (real_t)lsum;
+    f = (real_t) lsum;
 
     return;
 }
