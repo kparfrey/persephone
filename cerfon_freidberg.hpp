@@ -2,8 +2,9 @@
 #define CERFON_FREIDBERG_HPP
 
 #include "common.hpp"
+#include "torus_config.hpp"
 
-class CerfonFreidbergConfig
+class CerfonFreidbergConfig : public TorusConfig
 {
     public:
 
@@ -13,6 +14,7 @@ class CerfonFreidbergConfig
 
     const real_t A  = 0.0;
     const real_t B0 = 1e-3; // Entirely determines B_phi if A = 0
+    real_t gamma; // Filled in from MHD object
                             
     real_t epsilon, kappa, delta, alpha;
 
@@ -21,7 +23,8 @@ class CerfonFreidbergConfig
 
     CerfonFreidbergConfig();
 
-    void construct_equilibrium(const real_t r[3], real_t U[9], const real_t gamma);
+    void unit_disc_to_physical_space(real_t r[3]) const override;
+    void construct_equilibrium(const real_t r[3], real_t U[9]) const override;
 };
 
 #endif

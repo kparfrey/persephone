@@ -111,7 +111,7 @@ static double zernike(const real_t rho, const real_t theta, const int l, const i
 
 
 void DescConfig::surface_polynomial_expansion(real_t& f, const real_t r[3], const std::vector<double>& f_lmn, 
-                                              const std::vector<std::vector<int>>& f_modes)
+                                              const std::vector<std::vector<int>>& f_modes) const
 {
     real_t rho   = r[0]; // i.e. r_uds = sqrt(toroidal flux function)
     real_t theta = r[1]; // The "curly theta" from https://desc-docs.readthedocs.io/en/latest/output.html
@@ -148,7 +148,7 @@ void DescConfig::surface_polynomial_expansion(real_t& f, const real_t r[3], cons
  * will be the shape of the last flux surface, not the input target boundary shape. 
  * Assuming that r_uds = rho = sqrt(psi/psi_a) --- the UDS radial coord is identified
  * with the square root of the toroidal flux function */
-void DescConfig::unit_disc_to_physical_space(real_t r[3])
+void DescConfig::unit_disc_to_physical_space(real_t r[3]) const
 {
     real_t R = 0.0; // Cylindrical coords in physical space
     real_t Z = 0.0;
@@ -158,6 +158,16 @@ void DescConfig::unit_disc_to_physical_space(real_t r[3])
 
     r[0] = R;
     r[1] = Z;
+
+    return;
+}
+
+
+/* Dummy */
+void DescConfig::construct_equilibrium(const real_t r[3], real_t U[9]) const
+{
+    for (int i = 0; i < 9; ++i)
+        U[i] = r[0]+r[1]+r[2]+i;
 
     return;
 }

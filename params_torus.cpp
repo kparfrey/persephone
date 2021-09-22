@@ -393,22 +393,24 @@ void ParamsTorus::setup_elementblock(ElementBlock &elements, Process &proc)
 
     switch (problem_type)
     {
-        case explicit_modes:
-            boundary_modes = boundary_modes_default; // Or replace with modes of choice
-            elements.map   = new BasicSquareTorusMap(proc.group, boundary_modes);
-            break;
+        //case explicit_modes:
+        //    boundary_modes = boundary_modes_default; // Or replace with modes of choice
+        //    elements.map   = new BasicSquareTorusMap(proc.group, boundary_modes);
+        //    break;
         case desc_input:
-            desc_config  = new DescConfig(input_file, desc_iteration);
-            elements.map = new BasicSquareTorusMap(proc.group, desc_config);
+            torus_config = new DescConfig(input_file, desc_iteration);
             break;
         case cerfon_freidberg:
-            cf_config    = new CerfonFreidbergConfig();
-            elements.map = new BasicSquareTorusMap(proc.group, cf_config);
+            torus_config = new CerfonFreidbergConfig();
             break;
         default:
             write::error("Torus problem type not recognised", destroy);
             break;
     }
+    
+    elements.map = new BasicSquareTorusMap(proc.group, torus_config);
+
+
 
     elements.physics_soln->metric = new DiagonalSpatialMetric(cylindrical);
     for (int d: dirs)
@@ -432,7 +434,7 @@ void ParamsTorus::set_initial_state(ElementBlock &elements)
             break;
         case mhd:
             if (problem_type == cerfon_freidberg)
-                set_CerfonFreidberg(elements, *cf_config);
+                set_CerfonFreidberg(elements, *((CerfonFreidbergConfig*)torus_config));
             else 
                 set_uniform(elements);
             break;

@@ -2,15 +2,16 @@
 #define DESC_HPP
 
 #include "common.hpp"
+#include "torus_config.hpp"
 #include <string>
 #include <vector>
 
-class DescConfig
+class DescConfig : public TorusConfig
 {
     private:
 
     void surface_polynomial_expansion(real_t& f, const real_t r[3], const std::vector<double>& f_lmn, 
-                                      const std::vector<std::vector<int>>& f_modes);
+                                      const std::vector<std::vector<int>>& f_modes) const;
 
     public:
     
@@ -27,9 +28,8 @@ class DescConfig
 
     DescConfig(std::string input_file, const int iteration);
     
-    void unit_disc_to_physical_space(real_t r[3]);
-
-    //void construct_equilibrium(const real_t r[3], real_t U[9]);
+    void unit_disc_to_physical_space(real_t r[3]) const override;
+    void construct_equilibrium(const real_t r[3], real_t U[9]) const override;
 };
 
 #endif

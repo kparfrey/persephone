@@ -108,9 +108,24 @@ static real_t dpsi_dy(const real_t x, const real_t y, const real_t A, const real
 }
 
 
+/* Note: accepts UDS coords in a polar, rather than Cartesian, system */
+void CerfonFreidbergConfig::unit_disc_to_physical_space(real_t r[3]) const
+{
+    /* Unit disc coords were stored as Cartesian to enable the analytic transfinite
+     * map to find the element edges. Transform back now to polar coords in UDS */
+    const real_t r_uds = r[0];
+    const real_t t_uds = r[1];
+
+    /* Apply transformation from CF 2010, Eqn 9 */
+    r[0] = 1.0 + r_uds * epsilon * std::cos(t_uds + alpha * std::sin(t_uds));
+    r[1] = r_uds * epsilon * kappa * std::sin(t_uds);
+
+    return;
+}
+
+
 void CerfonFreidbergConfig::construct_equilibrium(const real_t r[3],
-                                                        real_t U[9],
-                                                  const real_t gamma)
+                                                        real_t U[9]) const
 {
     /* Note using b0 etc. so don't hide the B0 parameter in this object */
     enum conserved {density, mom0, mom1, mom2, tot_energy, b0, b1, b2, div_scalar};

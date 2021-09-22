@@ -26,10 +26,13 @@ class ParamsTorus : public Params
     int Ns[3];     // No. of solution points in each direction, in each element
 
     TorusCentralPolygon central_polygon; 
-    TorusModePack boundary_modes;     // Don't pass to constructor -- should be a pointer??
-    CerfonFreidbergConfig* cf_config; // Holds parameters of a Cerfon Freidberg problem
-    DescConfig* desc_config;          // .... or of a DESC problem
+
+    //TorusModePack boundary_modes;     // Don't pass to constructor -- should be a pointer??
+    //CerfonFreidbergConfig* cf_config; // Holds parameters of a Cerfon Freidberg problem
+    //DescConfig* desc_config;          // .... or of a DESC problem
     int desc_iteration;               // The iteration number you want to start from
+
+    TorusConfig* torus_config;
 
     /* Secondary or derived quantities */
     int Ngroup_central;  // 1 for square

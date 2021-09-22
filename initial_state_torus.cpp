@@ -78,7 +78,7 @@ void set_CerfonFreidberg(ElementBlock& eb, CerfonFreidbergConfig& cf_config)
     real_t r[3];
     real_t U[9]; // Conserved variables at a point
 
-    const real_t gamma = ((MHD*)eb.physics_soln)->gamma;
+    cf_config.gamma = ((MHD*)eb.physics_soln)->gamma;
 
 
     /* loc0 is memory location for the 0th field */
@@ -87,7 +87,7 @@ void set_CerfonFreidberg(ElementBlock& eb, CerfonFreidbergConfig& cf_config)
         for (int d: dirs)
             r[d] = eb.rs(d,loc0);
 
-        cf_config.construct_equilibrium(r, U, gamma);
+        cf_config.construct_equilibrium(r, U);
     
         for (int i = 0; i < eb.Nfield; ++i)
             eb.fields[loc0 + i*eb.Ns_block] = U[i];

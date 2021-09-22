@@ -11,15 +11,15 @@
 
 
 /* Transform from Cartesian coords in the plane (x) to polar coords */
-inline static void cartesian_to_polar(const real_t x[2], real_t& r_polar, real_t& theta_polar)
+inline static void cartesian_to_polar(real_t x[2])
 {
     using std::atan;
     
-    real_t X = x[0];
-    real_t Y = x[1];
+    const real_t X = x[0];
+    const real_t Y = x[1];
 
-    r_polar     = std::sqrt(X*X + Y*Y);
-    theta_polar = 0.0;
+    const real_t r_polar = std::sqrt(X*X + Y*Y);
+    real_t theta_polar   = 0.0;
 
     if (r_polar > TINY)
     {
@@ -39,18 +39,22 @@ inline static void cartesian_to_polar(const real_t x[2], real_t& r_polar, real_t
         }
     }
 
+    x[0] = r_polar;
+    x[1] = theta_polar;
+
     return;
 }
 
 
 /* The torus map will use this transformation from the origin-centred
- * unit disc to physical space, applying the Fourier modes stored in boundary_modes. */
+ * unit disc to physical space, applying the Fourier modes stored in boundary_modes.
+ * Need to pass the UDS coords already in a polar coordinate system.
+ * If this is to be used, it should be moved to the TorusModePack object */
+#if 0
 static void unit_disc_to_physical_space(real_t r[3], TorusModePack &modes)
 {
-    /* Unit disc coords were stored as Cartesian to enable the analytic transfinite
-     * map to find the element edges. Transform back now to polar coords in UDS */
-    real_t r_uds, t_uds;
-    cartesian_to_polar(r, r_uds, t_uds);
+    const real_t r_uds = r[0];
+    const real_t t_uds = r[1];
 
     /* Apply transformation with Fourier modes */
     /* NB: for this choice (R -> sin, Z -> cos) the unit-disc and physical spaces
@@ -78,9 +82,11 @@ static void unit_disc_to_physical_space(real_t r[3], TorusModePack &modes)
 
     return;
 }
+#endif
 
 
 /* Overload the function for use with Cerfon-Freidberg configurations */
+#if 0
 static void unit_disc_to_physical_space(real_t r[3], CerfonFreidbergConfig& cf_config)
 {
     /* Unit disc coords were stored as Cartesian to enable the analytic transfinite
@@ -95,9 +101,11 @@ static void unit_disc_to_physical_space(real_t r[3], CerfonFreidbergConfig& cf_c
 
     return;
 }
+#endif
 
 
 /* Overload the function for use with DESC configurations */
+#if 0
 static void unit_disc_to_physical_space(real_t r[3], DescConfig& desc_config)
 {
     /* Unit disc coords were stored as Cartesian to enable the analytic transfinite
@@ -112,7 +120,7 @@ static void unit_disc_to_physical_space(real_t r[3], DescConfig& desc_config)
 
     return;
 }
-
+#endif
 
 
 /* r[3] = (R, Z, phi) 
@@ -139,14 +147,20 @@ class BasicSquareTorusMap : public DomainMap
     real_t lc[4][2];     // local corners: the 4 poloidal corners of this group's quad in the R-Z plane
     real_t theta_offset; // The starting "colatitude" angle for the outer curved edges (group > 0)
 
-    enum BoundaryType {fourier_modes, cf2010, desc};
-    BoundaryType boundary;
+    //enum BoundaryType {fourier_modes, cf2010, desc};
+    //BoundaryType boundary;
+
+    /*
     TorusModePack boundary_modes; // Used in the second, pointwise_transformation() to physical space
     CerfonFreidbergConfig* cf_config; // Alternative: set with CF 2010 boundary representation
     DescConfig* desc_config;
+    */
+    
+    TorusConfig* torus_config;
 
 
     /* Set the domain_depth using the constructor */
+    /*
     BasicSquareTorusMap(const int group, TorusModePack boundary_modes)
     : boundary_modes(boundary_modes)
     {
@@ -167,9 +181,12 @@ class BasicSquareTorusMap : public DomainMap
         boundary = desc;
         common_constructor(group);
     }
+    */
 
 
-    void common_constructor(const int group)
+    //void common_constructor(const int group)
+    BasicSquareTorusMap(const int group, TorusConfig* torus_config)
+    : torus_config(torus_config)
     {
         this->group = group;
 
@@ -297,6 +314,7 @@ class BasicSquareTorusMap : public DomainMap
      * in cylindrical coords, saving back into the same array. */
     void pointwise_transformation(real_t r[3]) override
     {
+        /*
         switch (boundary)
         {
             case fourier_modes:
@@ -309,6 +327,14 @@ class BasicSquareTorusMap : public DomainMap
                 unit_disc_to_physical_space(r, *desc_config);
                 break;
         }
+        */
+
+        /* Unit disc coords were stored as Cartesian to enable the analytic transfinite
+         * map to find the element edges. Transform back now to polar coords in UDS */
+        cartesian_to_polar(r);
+
+        /* The function in TorusConfig transforms from UDS-polar to physical-space-cylindrical */
+        torus_config->unit_disc_to_physical_space(r);
 
         return;
     };

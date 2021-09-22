@@ -4,7 +4,8 @@
 #include "common.hpp"
 
 /* Stores the R and Z mode coefficients for doing the  
- * transformation fromunit-disc space to physical space */    
+ * transformation from unit-disc space to physical space.
+ * If this is ever used, it should become a derived class of TorusConfig */
 class TorusModePack
 {
     public:
