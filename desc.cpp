@@ -3,9 +3,11 @@
 #include <highfive/H5Easy.hpp>
 #include <cmath>
 #include <iostream>
-#include <boost/math/special_functions/jacobi.hpp>
+//#include <boost/math/special_functions/jacobi.hpp>
+#include "jacobi.hpp"
 #include "write_screen.hpp"
 
+/*
 inline static long int factorial(const int n)
 {
     long int fac = 1;
@@ -16,6 +18,7 @@ inline static long int factorial(const int n)
 
     return fac;
 }
+*/
 
 
 #if 0
@@ -90,7 +93,7 @@ static double zernike(const real_t rho, const real_t theta, const int l, const i
     double Z; // Zernike polynomial Z_l^m(rho,theta) --- don't confuse with cylindrical Z
 
     /* Radial function */
-    using boost::math::jacobi;
+    //using boost::math::jacobi;
     const unsigned int mabs = std::abs(m);
     const unsigned int lm2  = (l - mabs) / 2;
     
