@@ -169,8 +169,42 @@ void DescConfig::unit_disc_to_physical_space(real_t r[3]) const
 /* Dummy */
 void DescConfig::construct_equilibrium(const real_t r[3], real_t U[9]) const
 {
-    for (int i = 0; i < 9; ++i)
-        U[i] = r[0]+r[1]+r[2]+i;
+    enum conserved {density, mom0, mom1, mom2, tot_energy, B0, B1, B2, div_scalar};
+
+    const real_t R = r[0]; 
+    //const real_t Z = r[1];
+
+    const real_t rho = 1.0; // Should be the UDS radial coord --- need to fix this
+
+    real_t Bsq, BR, BZ, Bphi;
+    real_t gamma = 5.0/3.0; // Want to pipe in from MHD object
+
+    real_t p = 0.0;
+    for (int i = 0; i < N_pressure; ++i)
+        p += pressure[i] * std::pow(rho, i);
+
+    real_t rot_trans = 0.0;
+    for (int i = 0; i < N_iota; ++i)
+        rot_trans += iota[i] * std::pow(rho, i);
+
+    U[density] = 1.0; // Uniform density seems reasonable?
+    U[mom0]    = 0.0; // Since it's an equilibrium
+    U[mom1]    = 0.0;
+    U[mom2]    = 0.0;
+
+    Bsq = 0.0;
+
+    U[tot_energy] = 0.5 * Bsq + p/(gamma - 1.0);
+
+    BR = 0.0; // To stop warnings
+    BZ = 0.0;
+    Bphi = 0.0;
+
+    U[B0] = BR;
+    U[B1] = BZ;
+    U[B2] = Bphi / R; // U[B2] is the contravariant component
+
+    U[div_scalar] = 0.0;
 
     return;
 }

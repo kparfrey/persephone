@@ -47,8 +47,10 @@ class ElementBlock
 
     /* Physical/real space: need the whole 3D grid for each r^i, i in [0,1,2] */
     VectorField rs;    // Soln points, stored as a 1D block for each vector component
-    VectorField rf[3]; // Flux points: need separate VectorField for each transform dir
-                       // i.e. rf[transform-dir](coord component, 3D space in 1D block)
+    VectorField rs_pre_transform; // Sometimes need the original "physical" coord, before the
+                                  // pointwise transform, for setup. Free at end of setup phase.
+    //VectorField rf[3]; // Flux points: need separate VectorField for each transform dir
+    //                   // i.e. rf[transform-dir](coord component, 3D space in 1D block)
 
     /* Will need on device. Leave as is since it's just one pointer, or replace
      * with ScalarField (or its alias) to make clear it's headed for device? */

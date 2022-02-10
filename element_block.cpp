@@ -82,11 +82,13 @@ void ElementBlock::allocate_on_host()
         xs(i) = new real_t [Ns[i]];
         xf(i) = new real_t [Nf[i]];
         rs(i) = new real_t [Ns_block];
+        
+        rs_pre_transform(i) = new real_t [Ns_block];
     }
 
-    for (int itrans: dirs)
-        for (int d: dirs)
-            rf[itrans](d) = new real_t [Nelem_block * Nf_dir[itrans]];
+    //for (int itrans: dirs)
+    //    for (int d: dirs)
+    //        rf[itrans](d) = new real_t [Nelem_block * Nf_dir[itrans]];
 
     fields = new real_t [Nfield * Ns_block];
 
@@ -123,6 +125,10 @@ void ElementBlock::free_setup_memory()
     }
 
     delete[] edges;
+
+
+    for (int i: dirs)
+        delete[] rs_pre_transform(i);
 
     return;
 }
@@ -352,6 +358,32 @@ void ElementBlock::set_physical_coords_full()
 
             /* Fill in the spatial metric arrays */
             physics_soln->metric->fill(rp, mem_loc);
+        }
+
+
+        /* Additionally, do an analytic map to the "pre-transform" "physical" coords,
+         * since these are sometimes needed for setup. For the torus, this is equivalent
+         * to storing the unit-disc-space coords of each solution point */
+        for (int k = 0; k < Ns[2]; ++k)
+        for (int j = 0; j < Ns[1]; ++j)
+        for (int i = 0; i < Ns[0]; ++i)
+        {
+            mem_loc = ids(i,j,k) + mem_offset;
+            
+            /* Elementwise computational-space coords */
+            xe[0] = xs(0,i);
+            xe[1] = xs(1,j);
+            xe[2] = xs(2,k);
+
+            /* Groupwise computational-space coords */
+            xg[0] = (group_idx[0]*Nelem[0] + ie + xe[0]) / group_width[0];
+            xg[1] = (group_idx[1]*Nelem[1] + je + xe[1]) / group_width[1];
+            xg[2] = (group_idx[2]*Nelem[2] + ke + xe[2]) / group_width[2];
+
+            analytic_transfinite_map_3D(xg, map, group_corners, rp);
+
+            for (int d: dirs)
+                rs_pre_transform(d,mem_loc) = rp[d];
         }
     }
 
