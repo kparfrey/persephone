@@ -57,7 +57,7 @@ class MHD : public Physics
         diffusive   = true;
         viscosity   = 1e-3;
         resistivity = 1e-3;
-        diffusive_timestep_const = 1.0; // Default: 1/3, but larger can be more stable?!
+        diffusive_timestep_const = 0.5; //1.0; // Default: 1/3, but larger can be more stable?!
 
         /* Divergence-cleaning parameters */
         psi_damping_const = 0.03; // 0 < p_d_const < 1

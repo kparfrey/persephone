@@ -21,12 +21,12 @@ static BasicTimeMethod time_method = rk3_ssp;
 static TorusProblemType problem_type = desc_input;
 
 static int Nproc[3] = {1,1,1};
-static int Nelem[3] = {4,4,1};
-static int Ns[3]    = {6,6,1};
+static int Nelem[3] = {8,8,1};
+static int Ns[3]    = {8,8,1};
 
-static real_t cfl      = 0.85; // Seems stable to 1.0 for ideal MHD
+static real_t cfl      = 0.2; // Seems stable to 1.0 for ideal MHD
 static real_t end_time = 10.0;
-static real_t dt_write = 0.25;
+static real_t dt_write = 0.001;
 
 static ParamsTorus active_parameters(equations, time_method, 
                                      Nproc, Nelem, Ns, 

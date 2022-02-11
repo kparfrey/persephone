@@ -163,7 +163,14 @@ class Snapshot(object):
         self.v1  = [0] * self.Ngroup 
         self.v2  = [0] * self.Ngroup 
         self.v   = [0] * self.Ngroup
-        
+        self.B0  = [0] * self.Ngroup 
+        self.B1  = [0] * self.Ngroup 
+        self.B2  = [0] * self.Ngroup 
+        self.B   = [0] * self.Ngroup
+        self.Bsq = [0] * self.Ngroup
+        self.psi = [0] * self.Ngroup
+        self.divB = [0] * self.Ngroup
+
         for ig in range(self.Ngroup):
             sg = str(ig)
             self.rho[ig] = self.dfile[sg]['rho']
@@ -172,6 +179,16 @@ class Snapshot(object):
             self.v1[ig]  = self.dfile[sg]['v1']
             self.v2[ig]  = self.dfile[sg]['v2']
             self.v[ig]   = [self.v0, self.v1, self.v2]
+            self.B0[ig]  = self.dfile[sg]['B0']
+            self.B1[ig]  = self.dfile[sg]['B1']
+            self.B2[ig]  = self.dfile[sg]['B2']
+            self.B[ig]   = [self.B0, self.B1, self.B2]
+            self.psi[ig] = self.dfile[sg]['psi']
+            self.divB[ig] = self.dfile[sg]['psi']
+
+            # This actually loads data into memory - might want to reorganise
+            self.Bsq[ig] = self.B0[ig][...]**2 + self.B1[ig][...]**2 + self.B2[ig][...]**2
+
 
         # Can't make "global" v array, since the groups can have
         # different numbers of points, elements etc.
@@ -186,7 +203,8 @@ class Snapshot(object):
 
 
     # Assume 0-1 plane
-    def contour_plot(self, var='rho', width=0.7, levels=[None,], mag=False):
+    #def contour_plot(self, var='rho', width=0.7, levels=[None,], mag=False):
+    def contour_plot(self, variable, width=0.7, levels=[None,], mag=False):
         for ig in range(self.Ngroup):
             sg = str(ig)
             r0 = self.m.g[ig].r0
@@ -194,13 +212,22 @@ class Snapshot(object):
             
             if levels[0] == None:
                 levels = np.linspace(0.0, 0.99, 20)
+
+            f = variable[ig]
+
+            if mag:
+                f = np.abs(f)
             
+            plt.contour(r0[:,:,0], r1[:,:,0], f[:,:,0], levels=levels, linewidths=width, zorder=5)
+            
+            '''
             if mag:
                 plt.contour(r0[:,:,0], r1[:,:,0], np.abs(self.dfile[sg][var][:,:,0]), levels=levels,
                                                              linewidths=width, zorder=5)
             else:
                 plt.contour(r0[:,:,0], r1[:,:,0], self.dfile[sg][var][:,:,0], levels=levels,
                                                              linewidths=width, zorder=5)
+            '''
 
         plt.title('t = %.4lf' % self.time)
 
