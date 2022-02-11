@@ -72,14 +72,13 @@ void set_euler_torus(ElementBlock& eb)
     return;
 }
 
-
+#if 0
 void set_CerfonFreidberg(ElementBlock& eb, CerfonFreidbergConfig& cf_config)
 {
     real_t r[3];
     real_t U[9]; // Conserved variables at a point
 
     cf_config.gamma = ((MHD*)eb.physics_soln)->gamma;
-
 
     /* loc0 is memory location for the 0th field */
     for (int loc0 = 0; loc0 < eb.Ns_block; ++loc0)
@@ -88,6 +87,34 @@ void set_CerfonFreidberg(ElementBlock& eb, CerfonFreidbergConfig& cf_config)
             r[d] = eb.rs(d,loc0);
 
         cf_config.construct_equilibrium(r, U);
+    
+        for (int i = 0; i < eb.Nfield; ++i)
+            eb.fields[loc0 + i*eb.Ns_block] = U[i];
+    }
+
+    return;
+}
+#endif
+
+
+void set_torus_initial_state(ElementBlock& eb, TorusConfig& config)
+{
+    real_t r_uds[3];
+    real_t r_phys[3];
+    real_t U[9]; // Conserved variables at a point
+
+    config.gamma = ((MHD*)eb.physics_soln)->gamma;
+
+    /* loc0 is memory location for the 0th field */
+    for (int loc0 = 0; loc0 < eb.Ns_block; ++loc0)
+    {
+        for (int d: dirs)
+        {
+            r_uds[d]  = eb.rs_pre_transform(d,loc0);
+            r_phys[d] = eb.rs(d,loc0);
+        }
+
+        config.construct_equilibrium(r_uds, r_phys, U);
     
         for (int i = 0; i < eb.Nfield; ++i)
             eb.fields[loc0 + i*eb.Ns_block] = U[i];

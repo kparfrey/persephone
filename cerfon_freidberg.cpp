@@ -124,14 +124,15 @@ void CerfonFreidbergConfig::unit_disc_to_physical_space(real_t r[3]) const
 }
 
 
-void CerfonFreidbergConfig::construct_equilibrium(const real_t r[3],
+void CerfonFreidbergConfig::construct_equilibrium(const real_t r_uds[3],
+                                                  const real_t r_phys[3],
                                                         real_t U[9]) const
 {
     /* Note using b0 etc. so don't hide the B0 parameter in this object */
     enum conserved {density, mom0, mom1, mom2, tot_energy, b0, b1, b2, div_scalar};
     
-    const real_t R = r[0]; 
-    const real_t Z = r[1];
+    const real_t R = r_phys[0]; 
+    const real_t Z = r_phys[1];
     const real_t R0 = 1.0; // Always --- maybe remove all R0 factors?
     const real_t x = R/R0;
     const real_t y = Z/R0;

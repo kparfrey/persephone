@@ -199,13 +199,14 @@ void DescConfig::unit_disc_to_physical_space(real_t r[3]) const
 
 
 /* Need to pass in "unit disc space" coords. These are stored as (rho, theta, phi). */
-void DescConfig::construct_equilibrium(const real_t r[3], real_t U[9]) const
+void DescConfig::construct_equilibrium(const real_t r_uds[3],
+                                       const real_t r_phys[3],
+                                             real_t U[9]) const
 {
     enum conserved {density, mom0, mom1, mom2, tot_energy, B0, B1, B2, div_scalar};
 
-    const real_t rho = r[0]; // UDS radial coord, rho = sqrt(psi/psi_a) -- sqrt of flux
-
-    real_t gamma = 5.0/3.0; // Want to pipe in from MHD object
+    const real_t rho = r_uds[0]; // UDS radial coord, rho = sqrt(psi/psi_a) -- sqrt of flux
+    const real_t R   = r_phys[0]; // physical cylindrical radial coordinate
 
     real_t p = 0.0;
     for (int i = 0; i < N_pressure; ++i)
@@ -223,17 +224,15 @@ void DescConfig::construct_equilibrium(const real_t r[3], real_t U[9]) const
     /* Construct the magnetic field */
     real_t Btheta, Bzeta; // B in straight-field-line coords, contra. components; B_rho = 0
     real_t BR, BZ; // B in cylindrical coords, contravariant & orthonormal are identical
-    real_t R;                            // R surface function --- recalculate
     real_t dR_drho, dR_dtheta, dR_dzeta; // derivatives of surface functions wrt SFL coords
     real_t dZ_drho, dZ_dtheta, dZ_dzeta;
 
-    surface_polynomial_expansion(R, r, R_lmn, R_modes, none);
-    surface_polynomial_expansion(dR_drho,   r, R_lmn, R_modes, rho_d);
-    surface_polynomial_expansion(dR_dtheta, r, R_lmn, R_modes, theta_d);
-    surface_polynomial_expansion(dR_dzeta,  r, R_lmn, R_modes, zeta_d);
-    surface_polynomial_expansion(dZ_drho,   r, Z_lmn, Z_modes, rho_d);
-    surface_polynomial_expansion(dZ_dtheta, r, Z_lmn, Z_modes, theta_d);
-    surface_polynomial_expansion(dZ_dzeta,  r, Z_lmn, Z_modes, zeta_d);
+    surface_polynomial_expansion(dR_drho,   r_uds, R_lmn, R_modes, rho_d);
+    surface_polynomial_expansion(dR_dtheta, r_uds, R_lmn, R_modes, theta_d);
+    surface_polynomial_expansion(dR_dzeta,  r_uds, R_lmn, R_modes, zeta_d);
+    surface_polynomial_expansion(dZ_drho,   r_uds, Z_lmn, Z_modes, rho_d);
+    surface_polynomial_expansion(dZ_dtheta, r_uds, Z_lmn, Z_modes, theta_d);
+    surface_polynomial_expansion(dZ_dzeta,  r_uds, Z_lmn, Z_modes, zeta_d);
 
     const real_t rdetg = (dZ_drho * dR_dtheta - dZ_dtheta * dR_drho) * R;
     const real_t prefactor = psi_a * rho / (pi * rdetg);

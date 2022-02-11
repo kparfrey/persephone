@@ -32,7 +32,7 @@ class DescConfig : public TorusConfig
     DescConfig(std::string input_file, const int iteration);
     
     void unit_disc_to_physical_space(real_t r[3]) const override;
-    void construct_equilibrium(const real_t r[3], real_t U[9]) const override;
+    void construct_equilibrium(const real_t r_uds[3], const real_t r_phys[3], real_t U[9]) const override;
 };
 
 #endif

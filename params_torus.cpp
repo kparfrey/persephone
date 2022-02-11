@@ -424,24 +424,24 @@ void ParamsTorus::setup_elementblock(ElementBlock &elements, Process &proc)
 }
 
 
-/* Should this be moved to initial_state_torus? */
 void ParamsTorus::set_initial_state(ElementBlock &elements)
 {
+    set_torus_initial_state(elements, *torus_config);
+
+#if 0
     switch (elements.physics_soln->system)
     {
         case navier_stokes:
             set_euler_torus(elements);
             break;
         case mhd:
-            if (problem_type == cerfon_freidberg)
-                set_CerfonFreidberg(elements, *((CerfonFreidbergConfig*)torus_config));
-            else 
-                set_uniform(elements);
+            set_torus_initial_state(elements, *torus_config);
             break;
         case scalar_advection:
             write::error("Scalar advection not implemented for torus", destroy);
             break;
     }
+#endif
 
     return;
 }
