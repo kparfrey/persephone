@@ -382,6 +382,8 @@ void ElementBlock::set_physical_coords_full()
 
             analytic_transfinite_map_3D(xg, map, group_corners, rp);
 
+            cartesian_to_polar(rp); // Store (rho, theta, phi) into rs_pre_transform
+
             for (int d: dirs)
                 rs_pre_transform(d,mem_loc) = rp[d];
         }

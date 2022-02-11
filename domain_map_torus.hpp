@@ -11,7 +11,7 @@
 
 
 /* Transform from Cartesian coords in the plane (x) to polar coords */
-inline static void cartesian_to_polar(real_t x[2])
+inline void cartesian_to_polar(real_t x[2])
 {
     using std::atan;
     

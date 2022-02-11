@@ -88,7 +88,7 @@ static long double zernike_DIY(const real_t rho, const real_t theta, const int l
 /* Use the Jacobi polynomial from Boost to find the radial function:
  * https://mathworld.wolfram.com/ZernikePolynomial.html
  * https://www.boost.org/doc/libs/1_77_0/libs/math/doc/html/math_toolkit/sf_poly/jacobi.html */
-static double zernike(const real_t rho, const real_t theta, const int l, const int m)
+double DescConfig::zernike(const real_t rho, const real_t theta, const int l, const int m, deriv_dir deriv) const
 {
     double Z; // Zernike polynomial Z_l^m(rho,theta) --- don't confuse with cylindrical Z
 
@@ -114,7 +114,8 @@ static double zernike(const real_t rho, const real_t theta, const int l, const i
 
 
 void DescConfig::surface_polynomial_expansion(real_t& f, const real_t r[3], const std::vector<double>& f_lmn, 
-                                              const std::vector<std::vector<int>>& f_modes) const
+                                              const std::vector<std::vector<int>>& f_modes,
+                                              deriv_dir deriv) const
 {
     real_t rho   = r[0]; // i.e. r_uds = sqrt(toroidal flux function)
     real_t theta = r[1]; // The "curly theta" from https://desc-docs.readthedocs.io/en/latest/output.html
@@ -138,7 +139,7 @@ void DescConfig::surface_polynomial_expansion(real_t& f, const real_t r[3], cons
         else
             F_toroidal = std::sin(-n * Nfp * zeta);
 
-        lsum += f_lmn[i] * zernike(rho, theta, l, m) * F_toroidal;
+        lsum += f_lmn[i] * zernike(rho, theta, l, m, deriv) * F_toroidal;
     }
 
     f = (real_t) lsum;
@@ -156,8 +157,10 @@ void DescConfig::unit_disc_to_physical_space(real_t r[3]) const
     real_t R = 0.0; // Cylindrical coords in physical space
     real_t Z = 0.0;
 
-    surface_polynomial_expansion(R, r, R_lmn, R_modes);
-    surface_polynomial_expansion(Z, r, Z_lmn, Z_modes);
+    deriv_dir deriv = none;
+
+    surface_polynomial_expansion(R, r, R_lmn, R_modes, deriv);
+    surface_polynomial_expansion(Z, r, Z_lmn, Z_modes, deriv);
 
     r[0] = R;
     r[1] = Z;
@@ -166,15 +169,15 @@ void DescConfig::unit_disc_to_physical_space(real_t r[3]) const
 }
 
 
-/* Dummy */
+/* Need to pass in "unit disc space" coords. These are stored as (rho, theta, phi).
+ * Do I also need physical coords? */
 void DescConfig::construct_equilibrium(const real_t r[3], real_t U[9]) const
 {
     enum conserved {density, mom0, mom1, mom2, tot_energy, B0, B1, B2, div_scalar};
 
-    const real_t R = r[0]; 
-    //const real_t Z = r[1];
-
-    const real_t rho = 1.0; // Should be the UDS radial coord --- need to fix this
+    const real_t rho   = r[0]; // UDS radial coord, rho = sqrt(psi/psi_a) -- sqrt of flux
+    //const real_t theta = r[1]; // "Curly theta" - straight field line poloidal angle
+    //const real_t phi   = r[2];
 
     real_t Bsq, BR, BZ, Bphi;
     real_t gamma = 5.0/3.0; // Want to pipe in from MHD object
@@ -192,17 +195,17 @@ void DescConfig::construct_equilibrium(const real_t r[3], real_t U[9]) const
     U[mom1]    = 0.0;
     U[mom2]    = 0.0;
 
-    Bsq = 0.0;
-
-    U[tot_energy] = 0.5 * Bsq + p/(gamma - 1.0);
-
     BR = 0.0; // To stop warnings
     BZ = 0.0;
     Bphi = 0.0;
 
     U[B0] = BR;
     U[B1] = BZ;
-    U[B2] = Bphi / R; // U[B2] is the contravariant component
+    U[B2] = Bphi; // / R; // U[B2] is the contravariant component
+
+    Bsq = 0.0;
+
+    U[tot_energy] = 0.5 * Bsq + p/(gamma - 1.0);
 
     U[div_scalar] = 0.0;
 

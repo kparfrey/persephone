@@ -9,9 +9,11 @@
 class DescConfig : public TorusConfig
 {
     private:
+    enum deriv_dir {none, rho, theta, zeta}; // Derivative direction for surface poly expansions
 
+    double zernike(const real_t rho, const real_t theta, const int l, const int m, deriv_dir deriv) const;
     void surface_polynomial_expansion(real_t& f, const real_t r[3], const std::vector<double>& f_lmn, 
-                                      const std::vector<std::vector<int>>& f_modes) const;
+                                      const std::vector<std::vector<int>>& f_modes, deriv_dir deriv) const;
 
     public:
     
