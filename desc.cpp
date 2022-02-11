@@ -116,16 +116,16 @@ double DescConfig::zernike(const real_t rho, const real_t theta, const int l, co
     if (deriv == theta_d)
     {
         if (m >= 0)
-            Z = - R * mabs * std::sin( mabs * theta);
+            Z = - R * mabs * std::sin(mabs * theta);
         else
-            Z =   R * mabs * std::cos( mabs * theta);
+            Z =   R * mabs * std::cos(mabs * theta);
     }
     else // don't differentiate - standard Zernike
     {
         if (m >= 0)
-            Z = R * std::cos( mabs * theta);
+            Z = R * std::cos(mabs * theta);
         else
-            Z = R * std::sin( mabs * theta);
+            Z = R * std::sin(mabs * theta);
     }
 
     return Z;
@@ -243,6 +243,7 @@ void DescConfig::construct_equilibrium(const real_t r_uds[3],
     BR = Btheta * dR_dtheta + Bzeta * dR_dzeta;
     BZ = Btheta * dZ_dtheta + Bzeta * dZ_dzeta;
 
+    /* Need to take account of units: DESC uses SI units */
     U[B0] = BR;
     U[B1] = BZ;
     U[B2] = Bzeta; // U[B2] is the contravariant component = Bphi/R
@@ -279,8 +280,8 @@ DescConfig::DescConfig(std::string input_file, const int iteration)
     R_modes = H5Easy::load<vector<vector<int>>>(data, base + "_R_basis/_modes");
     Z_modes = H5Easy::load<vector<vector<int>>>(data, base + "_Z_basis/_modes");
 
-    iota     = H5Easy::load<vector<double>>(data, base + "_pressure/_params");
-    pressure = H5Easy::load<vector<double>>(data, base + "_iota/_params");
+    iota     = H5Easy::load<vector<double>>(data, base + "_iota/_params");
+    pressure = H5Easy::load<vector<double>>(data, base + "_pressure/_params");
 
     Nfp   = H5Easy::load<double>(data, base + "_NFP");
     psi_a = H5Easy::load<double>(data, base + "_Psi");
