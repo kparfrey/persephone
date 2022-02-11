@@ -90,6 +90,7 @@ static long double zernike_DIY(const real_t rho, const real_t theta, const int l
  * https://www.boost.org/doc/libs/1_77_0/libs/math/doc/html/math_toolkit/sf_poly/jacobi.html */
 double DescConfig::zernike(const real_t rho, const real_t theta, const int l, const int m, deriv_dir deriv) const
 {
+    double R; // Radial function for Zernike polynomial --- don't confuse with cylindrical R
     double Z; // Zernike polynomial Z_l^m(rho,theta) --- don't confuse with cylindrical Z
 
     /* Radial function */
@@ -101,13 +102,31 @@ double DescConfig::zernike(const real_t rho, const real_t theta, const int l, co
     if (lm2 % 2)
         sign = -1.0;
 
-    double R = sign * std::pow(rho, mabs) * jacobi(lm2, (double)mabs, 0.0, 1.0 - 2.0*rho*rho);
+    const double J = jacobi(lm2, (double)mabs, 0.0, 1.0 - 2.0*rho*rho);
+
+    if (deriv == rho_d) 
+    {
+        const double Jp = jacobi_prime(lm2, (double)mabs, 0.0, 1.0 - 2.0*rho*rho);
+        R = sign * std::pow(rho, mabs) * (mabs * J / rho - 4.0 * rho * Jp);
+    }
+    else // don't differentiate the radial function - standard Z polynomial
+        R = sign * std::pow(rho, mabs) * J;
 
     /* Add poloidal function */
-    if (m >= 0)
-        Z = R * std::cos( m * theta);
-    else
-        Z = R * std::sin(-m * theta);
+    if (deriv == theta_d)
+    {
+        if (m >= 0)
+            Z = - R * mabs * std::sin( mabs * theta);
+        else
+            Z =   R * mabs * std::cos( mabs * theta);
+    }
+    else // don't differentiate - standard Zernike
+    {
+        if (m >= 0)
+            Z = R * std::cos( mabs * theta);
+        else
+            Z = R * std::sin( mabs * theta);
+    }
 
     return Z;
 }
@@ -134,10 +153,20 @@ void DescConfig::surface_polynomial_expansion(real_t& f, const real_t r[3], cons
         m = f_modes[i][1];
         n = f_modes[i][2];
 
-        if (n >= 0)
-            F_toroidal = std::cos( n * Nfp * zeta);
-        else
-            F_toroidal = std::sin(-n * Nfp * zeta);
+        if (deriv == zeta_d)
+        {
+            if (n >= 0)
+                F_toroidal = - n * Nfp * std::sin( n * Nfp * zeta);
+            else
+                F_toroidal = - n * Nfp * std::cos(-n * Nfp * zeta);
+        }
+        else // don't differentiate in zeta
+        {
+            if (n >= 0)
+                F_toroidal = std::cos( n * Nfp * zeta);
+            else
+                F_toroidal = std::sin(-n * Nfp * zeta);
+        }
 
         lsum += f_lmn[i] * zernike(rho, theta, l, m, deriv) * F_toroidal;
     }
@@ -169,17 +198,13 @@ void DescConfig::unit_disc_to_physical_space(real_t r[3]) const
 }
 
 
-/* Need to pass in "unit disc space" coords. These are stored as (rho, theta, phi).
- * Do I also need physical coords? */
+/* Need to pass in "unit disc space" coords. These are stored as (rho, theta, phi). */
 void DescConfig::construct_equilibrium(const real_t r[3], real_t U[9]) const
 {
     enum conserved {density, mom0, mom1, mom2, tot_energy, B0, B1, B2, div_scalar};
 
-    const real_t rho   = r[0]; // UDS radial coord, rho = sqrt(psi/psi_a) -- sqrt of flux
-    //const real_t theta = r[1]; // "Curly theta" - straight field line poloidal angle
-    //const real_t phi   = r[2];
+    const real_t rho = r[0]; // UDS radial coord, rho = sqrt(psi/psi_a) -- sqrt of flux
 
-    real_t Bsq, BR, BZ, Bphi;
     real_t gamma = 5.0/3.0; // Want to pipe in from MHD object
 
     real_t p = 0.0;
@@ -195,15 +220,35 @@ void DescConfig::construct_equilibrium(const real_t r[3], real_t U[9]) const
     U[mom1]    = 0.0;
     U[mom2]    = 0.0;
 
-    BR = 0.0; // To stop warnings
-    BZ = 0.0;
-    Bphi = 0.0;
+    /* Construct the magnetic field */
+    real_t Btheta, Bzeta; // B in straight-field-line coords, contra. components; B_rho = 0
+    real_t BR, BZ; // B in cylindrical coords, contravariant & orthonormal are identical
+    real_t R;                            // R surface function --- recalculate
+    real_t dR_drho, dR_dtheta, dR_dzeta; // derivatives of surface functions wrt SFL coords
+    real_t dZ_drho, dZ_dtheta, dZ_dzeta;
+
+    surface_polynomial_expansion(R, r, R_lmn, R_modes, none);
+    surface_polynomial_expansion(dR_drho,   r, R_lmn, R_modes, rho_d);
+    surface_polynomial_expansion(dR_dtheta, r, R_lmn, R_modes, theta_d);
+    surface_polynomial_expansion(dR_dzeta,  r, R_lmn, R_modes, zeta_d);
+    surface_polynomial_expansion(dZ_drho,   r, Z_lmn, Z_modes, rho_d);
+    surface_polynomial_expansion(dZ_dtheta, r, Z_lmn, Z_modes, theta_d);
+    surface_polynomial_expansion(dZ_dzeta,  r, Z_lmn, Z_modes, zeta_d);
+
+    const real_t rdetg = (dZ_drho * dR_dtheta - dZ_dtheta * dR_drho) * R;
+    const real_t prefactor = psi_a * rho / (pi * rdetg);
+
+    Btheta = prefactor * rot_trans;
+    Bzeta  = prefactor;
+
+    BR = Btheta * dR_dtheta + Bzeta * dR_dzeta;
+    BZ = Btheta * dZ_dtheta + Bzeta * dZ_dzeta;
 
     U[B0] = BR;
     U[B1] = BZ;
-    U[B2] = Bphi; // / R; // U[B2] is the contravariant component
+    U[B2] = Bzeta; // U[B2] is the contravariant component = Bphi/R
 
-    Bsq = 0.0;
+    const real_t Bsq = BR*BR + BZ*BZ + R*R*Bzeta*Bzeta;
 
     U[tot_energy] = 0.5 * Bsq + p/(gamma - 1.0);
 
@@ -238,7 +283,8 @@ DescConfig::DescConfig(std::string input_file, const int iteration)
     iota     = H5Easy::load<vector<double>>(data, base + "_pressure/_params");
     pressure = H5Easy::load<vector<double>>(data, base + "_iota/_params");
 
-    Nfp = H5Easy::load<double>(data, base + "_NFP");
+    Nfp   = H5Easy::load<double>(data, base + "_NFP");
+    psi_a = H5Easy::load<double>(data, base + "_Psi");
 
     N_L = L_lmn.size();
     N_R = R_lmn.size();
