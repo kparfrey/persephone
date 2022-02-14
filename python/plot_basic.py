@@ -170,6 +170,10 @@ class Snapshot(object):
         self.Bsq = [0] * self.Ngroup
         self.psi = [0] * self.Ngroup
         self.divB = [0] * self.Ngroup
+        
+        self.R   = [0] * self.Ngroup
+        self.Z   = [0] * self.Ngroup
+        self.Phi = [0] * self.Ngroup
 
         for ig in range(self.Ngroup):
             sg = str(ig)
@@ -185,6 +189,10 @@ class Snapshot(object):
             #self.B[ig]   = [self.B0, self.B1, self.B2]
             self.psi[ig] = self.dfile[sg]['psi']
             self.divB[ig] = self.dfile[sg]['psi']
+
+            self.R[ig] = self.m.g[ig].r0
+            self.Z[ig] = self.m.g[ig].r1
+            self.Phi[ig] = self.m.g[ig].r2
 
             # This actually loads data into memory - might want to reorganise
             self.Bsq[ig] = self.B0[ig][...]**2 + self.B1[ig][...]**2 + self.B2[ig][...]**2
@@ -202,35 +210,75 @@ class Snapshot(object):
         return
 
 
-    # Assume 0-1 plane
-    #def contour_plot(self, var='rho', width=0.7, levels=[None,], mag=False):
-    def contour_plot(self, variable, width=0.7, levels=[None,], mag=False):
-        for ig in range(self.Ngroup):
-            sg = str(ig)
-            r0 = self.m.g[ig].r0
-            r1 = self.m.g[ig].r1
-            
-            if levels[0] == None:
-                levels = np.linspace(0.0, 0.99, 20)
-
-            f = variable[ig]
-
+    # k is the grid index in the azimuthal direction 
+    def contour_plot(self, variable, width=0.7, levels=[None,], k=0, mag=False):
+        if levels[0] == None:
             if mag:
-                f = np.abs(f)
-            
-            plt.contour(r0[:,:,0], r1[:,:,0], f[:,:,0], levels=levels, linewidths=width, zorder=5)
-            
-            '''
-            if mag:
-                plt.contour(r0[:,:,0], r1[:,:,0], np.abs(self.dfile[sg][var][:,:,0]), levels=levels,
-                                                             linewidths=width, zorder=5)
+                fmax = np.amax(np.abs(variable))
+                fmin = np.amin(np.abs(variable))
             else:
-                plt.contour(r0[:,:,0], r1[:,:,0], self.dfile[sg][var][:,:,0], levels=levels,
-                                                             linewidths=width, zorder=5)
-            '''
+                fmax = np.amax(variable)
+                fmin = np.amin(variable)
+            levels = np.linspace(fmin, fmax, 30)
+
+        R = [0] * self.Ngroup
+        Z = [0] * self.Ngroup
+        f = [0] * self.Ngroup
+
+        for ig in range(self.Ngroup):
+            R[ig] = self.R[ig][:,:,k]
+            Z[ig] = self.Z[ig][:,:,k]
+            f[ig] = variable[ig][:,:,k]
+            if mag:
+                f[ig] = np.abs(f[ig])
+
+        R = self.connect_groups(R)
+        Z = self.connect_groups(Z)
+        f = self.connect_groups(f)
+            
+        for ig in range(self.Ngroup):
+            plt.contour(R[ig], Z[ig], f[ig], levels=levels, linewidths=width, zorder=5)
 
         plt.title('t = %.4lf' % self.time)
 
         ax = plt.gca()
         ax.set_aspect('equal')
         return
+
+
+    # Add extra lines of fake solution points along the group boundaries, to avoid
+    # white lines in the composite plot.
+    def connect_groups(self, f):
+        (N0cen, N1cen) = f[0].shape
+        (N0out, N1out) = f[1].shape
+
+        F = [0] * self.Ngroup
+        F[0] = np.ndarray((N0cen+2, N1cen+2))
+        for i in [1,2,3,4]:
+            F[i] = np.ndarray((N0out+1, N1out+2))
+
+        F[0][1:-1,1:-1] = f[0]
+        for i in [1,2,3,4]:
+            F[i][1:,1:-1] = f[i] 
+
+        # Radial lines between outer groups
+        F[1][1:,0] = F[4][1:,-1] = 0.5 * (f[1][:,0] + f[4][:,-1])
+        F[2][1:,0] = F[1][1:,-1] = 0.5 * (f[2][:,0] + f[1][:,-1])
+        F[3][1:,0] = F[2][1:,-1] = 0.5 * (f[3][:,0] + f[2][:,-1])
+        F[4][1:,0] = F[3][1:,-1] = 0.5 * (f[4][:,0] + f[3][:,-1])
+
+        # Lines between the central group and an outer group
+        F[0][1:-1,0]  = F[1][0,1:-1]    = 0.5 * (f[0][:,0] + f[1][0,:])
+        F[0][1:-1,-1] = F[3][0,1:-1][::-1] = 0.5 * (f[0][:,-1] + f[3][0,::-1])
+        F[0][0,1:-1]  = F[4][0,1:-1][::-1] = 0.5 * (f[0][0,:]  + f[4][0,::-1])
+        F[0][-1,1:-1] = F[2][0,1:-1]    = 0.5 * (f[0][-1,:] + f[2][0,:])
+
+        # The four corner at which the central group meets two outer groups
+        third = 1.0/3.0
+        F[0][0,0] = F[1][0,0] = F[4][0,-1] = third * (f[0][0,0] + f[1][0,0] + f[4][0,-1])
+        F[0][-1,0] = F[1][0,-1] = F[2][0,0] = third * (f[0][-1,0] + f[1][0,-1] + f[2][0,0])
+        F[0][-1,-1] = F[2][0,-1] = F[3][0,0] = third * (f[0][-1,-1] + f[2][0,-1] + f[3][0,0])
+        F[0][0,-1] = F[3][0,-1] = F[4][0,0] = third * (f[0][0,-1] + f[3][0,-1] + f[4][0,0])
+
+        return F
+
