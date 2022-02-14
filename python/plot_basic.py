@@ -162,11 +162,11 @@ class Snapshot(object):
         self.v0  = [0] * self.Ngroup 
         self.v1  = [0] * self.Ngroup 
         self.v2  = [0] * self.Ngroup 
-        self.v   = [0] * self.Ngroup
+        #self.v   = [0] * self.Ngroup
         self.B0  = [0] * self.Ngroup 
         self.B1  = [0] * self.Ngroup 
         self.B2  = [0] * self.Ngroup 
-        self.B   = [0] * self.Ngroup
+        #self.B   = [0] * self.Ngroup
         self.Bsq = [0] * self.Ngroup
         self.psi = [0] * self.Ngroup
         self.divB = [0] * self.Ngroup
@@ -178,11 +178,11 @@ class Snapshot(object):
             self.v0[ig]  = self.dfile[sg]['v0']
             self.v1[ig]  = self.dfile[sg]['v1']
             self.v2[ig]  = self.dfile[sg]['v2']
-            self.v[ig]   = [self.v0, self.v1, self.v2]
+            #self.v[ig]   = [self.v0, self.v1, self.v2]
             self.B0[ig]  = self.dfile[sg]['B0']
             self.B1[ig]  = self.dfile[sg]['B1']
             self.B2[ig]  = self.dfile[sg]['B2']
-            self.B[ig]   = [self.B0, self.B1, self.B2]
+            #self.B[ig]   = [self.B0, self.B1, self.B2]
             self.psi[ig] = self.dfile[sg]['psi']
             self.divB[ig] = self.dfile[sg]['psi']
 

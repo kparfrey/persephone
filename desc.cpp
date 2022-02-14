@@ -205,7 +205,7 @@ void DescConfig::construct_equilibrium(const real_t r_uds[3],
 {
     enum conserved {density, mom0, mom1, mom2, tot_energy, B0, B1, B2, div_scalar};
 
-    const real_t rho = r_uds[0]; // UDS radial coord, rho = sqrt(psi/psi_a) -- sqrt of flux
+    const real_t rho = r_uds[0];  // UDS radial coord, rho = sqrt(psi/psi_a) -- sqrt of flux
     const real_t R   = r_phys[0]; // physical cylindrical radial coordinate
 
     real_t p = 0.0;
@@ -235,10 +235,10 @@ void DescConfig::construct_equilibrium(const real_t r_uds[3],
     surface_polynomial_expansion(dZ_dzeta,  r_uds, Z_lmn, Z_modes, zeta_d);
 
     const real_t rdetg = (dZ_drho * dR_dtheta - dZ_dtheta * dR_drho) * R;
-    const real_t prefactor = psi_a * rho / (pi * rdetg);
+    const real_t B0 = psi_a * rho / (pi * rdetg);
 
-    Btheta = prefactor * rot_trans;
-    Bzeta  = prefactor;
+    Btheta = B0 * rot_trans;
+    Bzeta  = B0;
 
     BR = Btheta * dR_dtheta + Bzeta * dR_dzeta;
     BZ = Btheta * dZ_dtheta + Bzeta * dZ_dzeta;
