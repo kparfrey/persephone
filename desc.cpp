@@ -137,7 +137,7 @@ void DescConfig::surface_polynomial_expansion(real_t& f, const real_t r[3], cons
                                               deriv_dir deriv) const
 {
     real_t rho   = r[0]; // i.e. r_uds = sqrt(toroidal flux function)
-    real_t theta = r[1]; // The "curly theta" from https://desc-docs.readthedocs.io/en/latest/output.html
+    real_t theta = r[1]; // The standard, not "curly"/straight-field-line, poloidal angle
     real_t zeta  = r[2]; // toroidal angle
 
     int l, m, n; // 3D modes indices for each separate mode
@@ -204,17 +204,20 @@ void DescConfig::construct_equilibrium(const real_t r_uds[3],
                                              real_t U[9]) const
 {
     enum conserved {density, mom0, mom1, mom2, tot_energy, B0, B1, B2, div_scalar};
+    const real_t sqrt_mu0 = std::sqrt(4.0 * pi * 1e-7); // DESC outputs in SI units
 
     const real_t rho = r_uds[0];  // UDS radial coord, rho = sqrt(psi/psi_a) -- sqrt of flux
     const real_t R   = r_phys[0]; // physical cylindrical radial coordinate
 
-    real_t p = 0.0;
+    const real_t p_floor = 10.0;
+
+    real_t p = p_floor;
     for (int i = 0; i < N_pressure; ++i)
         p += pressure[i] * std::pow(rho, i);
 
-    real_t rot_trans = 0.0;
+    real_t iota = 0.0;
     for (int i = 0; i < N_iota; ++i)
-        rot_trans += iota[i] * std::pow(rho, i);
+        iota += rotational_transform[i] * std::pow(rho, i);
 
     U[density] = 1.0; // Uniform density seems reasonable?
     U[mom0]    = 0.0; // Since it's an equilibrium
@@ -224,8 +227,9 @@ void DescConfig::construct_equilibrium(const real_t r_uds[3],
     /* Construct the magnetic field */
     real_t Btheta, Bzeta; // B in straight-field-line coords, contra. components; B_rho = 0
     real_t BR, BZ; // B in cylindrical coords, contravariant & orthonormal are identical
-    real_t dR_drho, dR_dtheta, dR_dzeta; // derivatives of surface functions wrt SFL coords
+    real_t dR_drho, dR_dtheta, dR_dzeta; // derivatives of surface functions wrt UDS coords
     real_t dZ_drho, dZ_dtheta, dZ_dzeta;
+    real_t dlambda_dtheta, dlambda_dzeta;
 
     surface_polynomial_expansion(dR_drho,   r_uds, R_lmn, R_modes, rho_d);
     surface_polynomial_expansion(dR_dtheta, r_uds, R_lmn, R_modes, theta_d);
@@ -233,17 +237,24 @@ void DescConfig::construct_equilibrium(const real_t r_uds[3],
     surface_polynomial_expansion(dZ_drho,   r_uds, Z_lmn, Z_modes, rho_d);
     surface_polynomial_expansion(dZ_dtheta, r_uds, Z_lmn, Z_modes, theta_d);
     surface_polynomial_expansion(dZ_dzeta,  r_uds, Z_lmn, Z_modes, zeta_d);
+    surface_polynomial_expansion(dlambda_dtheta, r_uds, L_lmn, L_modes, theta_d);
+    surface_polynomial_expansion(dlambda_dzeta,  r_uds, L_lmn, L_modes, zeta_d);
 
     const real_t rdetg = (dZ_drho * dR_dtheta - dZ_dtheta * dR_drho) * R;
-    const real_t B0 = psi_a * rho / (pi * rdetg);
+    const real_t Ba = psi_a * rho / (pi * rdetg); // d(psi)/d(rho) = 2 rho psi_a
 
-    Btheta = B0 * rot_trans;
-    Bzeta  = B0;
+    Btheta = Ba * (iota - dlambda_dzeta);
+    Bzeta  = Ba * (1.0 + dlambda_dtheta);
 
     BR = Btheta * dR_dtheta + Bzeta * dR_dzeta;
     BZ = Btheta * dZ_dtheta + Bzeta * dZ_dzeta;
 
-    /* Need to take account of units: DESC uses SI units */
+    /* Need to take account of units: DESC uses SI units, we effectively
+     * use B^SI / sqrt(mu0) */
+    BR /= sqrt_mu0;
+    BZ /= sqrt_mu0;
+    Bzeta /= sqrt_mu0;
+
     U[B0] = BR;
     U[B1] = BZ;
     U[B2] = Bzeta; // U[B2] is the contravariant component = Bphi/R
@@ -280,7 +291,7 @@ DescConfig::DescConfig(std::string input_file, const int iteration)
     R_modes = H5Easy::load<vector<vector<int>>>(data, base + "_R_basis/_modes");
     Z_modes = H5Easy::load<vector<vector<int>>>(data, base + "_Z_basis/_modes");
 
-    iota     = H5Easy::load<vector<double>>(data, base + "_iota/_params");
+    rotational_transform = H5Easy::load<vector<double>>(data, base + "_iota/_params");
     pressure = H5Easy::load<vector<double>>(data, base + "_pressure/_params");
 
     Nfp   = H5Easy::load<double>(data, base + "_NFP");
@@ -290,7 +301,7 @@ DescConfig::DescConfig(std::string input_file, const int iteration)
     N_R = R_lmn.size();
     N_Z = Z_lmn.size();
 
-    N_iota     = iota.size();
+    N_iota     = rotational_transform.size();
     N_pressure = pressure.size();
 
     write::variable<int>("Radial (lambda) polynomial resolution    - L ", L);

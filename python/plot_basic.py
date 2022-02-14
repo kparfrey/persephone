@@ -163,7 +163,7 @@ class Snapshot(object):
         self.v1  = [0] * self.Ngroup 
         self.v2  = [0] * self.Ngroup 
         #self.v   = [0] * self.Ngroup
-        self.B0  = [0] * self.Ngroup 
+        self.B0  = [0] * self.Ngroup
         self.B1  = [0] * self.Ngroup 
         self.B2  = [0] * self.Ngroup 
         #self.B   = [0] * self.Ngroup

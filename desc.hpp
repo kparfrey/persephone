@@ -20,7 +20,7 @@ class DescConfig : public TorusConfig
     int                           L,       M,       N;       // Resolution of lambda, and R & Z polynomials
     std::vector<double>           L_lmn,   R_lmn,   Z_lmn;   // Store mode coefficients as flattened 1D vectors
     std::vector<std::vector<int>> L_modes, R_modes, Z_modes; // 2D vector relating 1D to 3D mode indices
-    std::vector<double>           iota, pressure;            // Profiles of rotational transform and pressure
+    std::vector<double>           rotational_transform, pressure; // Coefficients for profiles of p and iota
 
     double Nfp;   // Number of field periods --- stored as a double
     double psi_a; // Total toroidal flux
