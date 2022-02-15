@@ -494,5 +494,7 @@ void ElementBlock::fill_spectral_difference_matrices()
         delete[] flux2soln;
     }
 
+    write::message("Finished filling spectral-difference matrices");
+
     return;
 }

@@ -204,16 +204,19 @@ void DescConfig::construct_equilibrium(const real_t r_uds[3],
                                              real_t U[9]) const
 {
     enum conserved {density, mom0, mom1, mom2, tot_energy, B0, B1, B2, div_scalar};
-    const real_t sqrt_mu0 = std::sqrt(4.0 * pi * 1e-7); // DESC outputs in SI units
+    //const real_t sqrt_mu0 = std::sqrt(4.0 * pi * 1e-7); // DESC outputs in SI units
 
     const real_t rho = r_uds[0];  // UDS radial coord, rho = sqrt(psi/psi_a) -- sqrt of flux
     const real_t R   = r_phys[0]; // physical cylindrical radial coordinate
 
-    const real_t p_floor = 10.0;
+    const real_t p_floor = 100.0;
 
     real_t p = p_floor;
     for (int i = 0; i < N_pressure; ++i)
         p += pressure[i] * std::pow(rho, i);
+
+    if (p < 0.0)
+        std::cout << "Negative pressure: " << p << "   R = " << R << "  rho = " << rho << std::endl;
 
     real_t iota = 0.0;
     for (int i = 0; i < N_iota; ++i)
@@ -250,7 +253,7 @@ void DescConfig::construct_equilibrium(const real_t r_uds[3],
     BZ = Btheta * dZ_dtheta + Bzeta * dZ_dzeta;
 
     /* Need to take account of units: DESC uses SI units, we effectively
-     * use B^SI / sqrt(mu0) */
+     * use B^SI / sqrt(mu0). sqrt_mu0 lives in TorusConfig, copied from MHD */
     BR /= sqrt_mu0;
     BZ /= sqrt_mu0;
     Bzeta /= sqrt_mu0;

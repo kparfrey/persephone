@@ -170,6 +170,7 @@ class Snapshot(object):
         self.Bsq = [0] * self.Ngroup
         self.psi = [0] * self.Ngroup
         self.divB = [0] * self.Ngroup
+        self.divB_B = [0] * self.Ngroup # |divB/B|
         
         self.R   = [0] * self.Ngroup
         self.Z   = [0] * self.Ngroup
@@ -188,14 +189,15 @@ class Snapshot(object):
             self.B2[ig]  = self.dfile[sg]['B2']
             #self.B[ig]   = [self.B0, self.B1, self.B2]
             self.psi[ig] = self.dfile[sg]['psi']
-            self.divB[ig] = self.dfile[sg]['psi']
+            self.divB[ig] = self.dfile[sg]['divB']
 
             self.R[ig] = self.m.g[ig].r0
             self.Z[ig] = self.m.g[ig].r1
             self.Phi[ig] = self.m.g[ig].r2
 
-            # This actually loads data into memory - might want to reorganise
+            # These actually load data into memory - might want to reorganise
             self.Bsq[ig] = self.B0[ig][...]**2 + self.B1[ig][...]**2 + self.B2[ig][...]**2
+            self.divB_B[ig] = np.abs(self.divB[ig][...])/np.sqrt(self.Bsq[ig])
 
 
         # Can't make "global" v array, since the groups can have

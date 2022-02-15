@@ -6,7 +6,8 @@
 class TorusConfig
 {
     public:
-    real_t gamma; // Adiabatic index - will be copied in from MHD object
+    real_t gamma;    // Adiabatic index - will be copied in from MHD object
+    real_t sqrt_mu0; // Copied in from MHD object
 
     virtual void unit_disc_to_physical_space(real_t r[3]) const = 0;
 

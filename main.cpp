@@ -58,6 +58,8 @@ int main(int argc, char *argv[])
 
     write_data(proc); // Data generally lives on device
 
+    
+    write::message("\nFinished setup, starting time advancement \n");
 
     while(proc.time < proc.end_time)
     {

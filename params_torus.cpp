@@ -407,6 +407,9 @@ void ParamsTorus::setup_elementblock(ElementBlock &elements, Process &proc)
             write::error("Torus problem type not recognised", destroy);
             break;
     }
+
+    if (proc.system == mhd)
+        torus_config->sqrt_mu0 = ((MHD*)elements.physics_soln)->sqrt_mu0;
     
     elements.map = new BasicSquareTorusMap(proc.group, torus_config);
 
@@ -426,7 +429,11 @@ void ParamsTorus::setup_elementblock(ElementBlock &elements, Process &proc)
 
 void ParamsTorus::set_initial_state(ElementBlock &elements)
 {
+    write::message("Setting initial state of torus configuration");
+
     set_torus_initial_state(elements, *torus_config);
+
+    write::message("Finished setting initial state");
 
 #if 0
     switch (elements.physics_soln->system)

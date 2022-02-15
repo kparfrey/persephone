@@ -85,6 +85,11 @@ void write_data(Process &proc)
 
                 for (int field = 0; field < proc.Nfield; ++field)
                     primitives[n + field * eb.Ns_block] = Pp[field];
+
+                /* Convert B units, e.g. to Teslas */
+                if (proc.system == mhd)
+                    for (int field = 5; field <= 8; ++field)
+                        primitives[n + field * eb.Ns_block] *= ((MHD*)(proc.elements.physics_soln))->sqrt_mu0;
             }
             delete[] Up;
             delete[] Pp;
@@ -102,7 +107,7 @@ void write_data(Process &proc)
                 repack(&primitives[i*eb.Ns_block], data, eb);
 
                 /* Pass the repacked 1D array cast as a triple pointer */
-                write::message("Writing " + name);
+                // write::message("Writing " + name);
                 dataset.select(offset, local_dims).write((real_t***)data);
             }
             
@@ -119,7 +124,7 @@ void write_data(Process &proc)
                 repack(eb.divB, data, eb);
 
                 /* Pass the repacked 1D array cast as a triple pointer */
-                write::message("Writing " + name);
+                // write::message("Writing " + name);
                 dataset.select(offset, local_dims).write((real_t***)data);
             }
 
@@ -135,7 +140,7 @@ void write_data(Process &proc)
     /* Move to top... */
     if (proc.rank == 0)
     {
-        write::message("Writing time etc.");
+        //write::message("Writing time etc.");
 
         /* Reopen the mesh file in single-processor mode */
         H5Easy::File datafile(filename, H5Easy::File::ReadWrite);

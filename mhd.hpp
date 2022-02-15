@@ -38,6 +38,11 @@ class MHD : public Physics
     const real_t gamma = 5.0/3.0;
     const real_t gm1 = gamma - 1.0;
 
+    /* The code uses Heaviside-Lorentz units internally: E_tot = 0.5 * B^2 + p/(gamma - 1) */
+    const real_t sqrt_mu0 = std::sqrt(4*pi*1e-7); // B input & output in Teslas
+    //const real_t sqrt_mu0 = 1.0; // Input & output in Heaviside-Lorentz: E_mag = 0.5 * B^2
+    
+    const real_t p_floor = 10.0; // pressure floor, for recovering from inversion errors...
 
     MHD()
     {
@@ -115,7 +120,8 @@ inline void MHD::ConservedToPrimitive(const real_t* const __restrict__ U,
 
     if (KE_density + mag_density > U[tot_energy])
     {
-        std::cout << "Inversion error:  R = " << metric->rdetg[mem] << "  Mag = " << mag_density << "  Energy = " << U[tot_energy] << "  KE = " << KE_density << std::endl;
+        std::cout << "Inversion error:  R = " << metric->rdetg[mem] << "  Mag = " << mag_density << "  Energy = " << U[tot_energy] << "  KE = " << KE_density << "   p = " << U[tot_energy] - KE_density - mag_density << std::endl;
+        //P[pressure] = p_floor;
         exit(45);
     }
     else

@@ -101,7 +101,7 @@ void write_mesh(Process &proc)
                 repack(datalist[i], data, eb);
 
                 /* Pass the repacked 1D array cast as a triple pointer */
-                write::message("Writing " + names[i]);
+                // write::message("Writing " + names[i]);
                 dataset.select(offset, local_dims).write((real_t***)data);
             }
 
@@ -147,7 +147,7 @@ void write_mesh(Process &proc)
                             edge_data[mem] = eb.edges[nelem][i].r(d,j);
                         }
 
-                write::message("Writing " + name);
+                // write::message("Writing " + name);
 
                 HighFive::DataSet dataset = meshfile.createDataSet<real_t>(name, 
                                                    HighFive::DataSpace(global_dims));
@@ -168,7 +168,7 @@ void write_mesh(Process &proc)
     {
         if ((proc.group_rank == 0) && (ig == proc.group))
         {
-            write::message("Writing properties for group " + groupstring);
+            // write::message("Writing properties for group " + groupstring);
 
             /* Reopen the mesh file in single-processor mode */
             HighFive::File meshfile(filename, HighFive::File::ReadWrite);
