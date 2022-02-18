@@ -136,6 +136,8 @@ class Snapshot(object):
 
     Ngroup  = None
 
+    mu0     = 4 * np.pi * 1e-7
+    sqrt_mu0 = np.sqrt(mu0) 
 
     def __init__(self, filenum = 0):
         self.m = Mesh()
@@ -166,11 +168,16 @@ class Snapshot(object):
         self.B0  = [0] * self.Ngroup
         self.B1  = [0] * self.Ngroup 
         self.B2  = [0] * self.Ngroup 
-        #self.B   = [0] * self.Ngroup
-        self.Bsq = [0] * self.Ngroup
         self.psi = [0] * self.Ngroup
         self.divB = [0] * self.Ngroup
+        #self.B   = [0] * self.Ngroup
+
+        self.vsq = [0] * self.Ngroup
+        self.Bsq = [0] * self.Ngroup
         self.divB_B = [0] * self.Ngroup # |divB/B|
+        self.beta = [0] * self.Ngroup
+        self.over_beta = [0] * self.Ngroup
+        self.ptot = [0] * self.Ngroup
         
         self.R   = [0] * self.Ngroup
         self.Z   = [0] * self.Ngroup
@@ -196,8 +203,12 @@ class Snapshot(object):
             self.Phi[ig] = self.m.g[ig].r2
 
             # These actually load data into memory - might want to reorganise
+            self.vsq[ig] = self.v0[ig][...]**2 + self.v1[ig][...]**2 + self.v2[ig][...]**2
             self.Bsq[ig] = self.B0[ig][...]**2 + self.B1[ig][...]**2 + self.B2[ig][...]**2
             self.divB_B[ig] = np.abs(self.divB[ig][...])/np.sqrt(self.Bsq[ig])
+            self.beta[ig] = np.abs(self.p[ig]) / (0.5 * self.Bsq[ig][...]/self.mu0)
+            self.over_beta[ig] = 1.0 / self.beta[ig][...]
+            self.ptot[ig] = self.p[ig] + 0.5*self.Bsq[ig]/self.mu0
 
 
         # Can't make "global" v array, since the groups can have

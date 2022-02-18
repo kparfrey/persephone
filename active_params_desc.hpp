@@ -21,17 +21,19 @@ static BasicTimeMethod time_method = rk3_ssp;
 static TorusProblemType problem_type = desc_input;
 
 static int Nproc[3] = {1,1,1};
-static int Nelem[3] = {4,4,4};
+static int Nelem[3] = {4,4,6};
 static int Ns[3]    = {6,6,6};
 
 static real_t cfl      = 0.9; // Seems stable to 1.0 for ideal MHD
 static real_t end_time = 10.0;
-static real_t dt_write = 0.01;
+static real_t dt_write = 0.00002;
 
 static ParamsTorus active_parameters(equations, time_method, 
                                      Nproc, Nelem, Ns, 
                                      cfl, end_time, dt_write,
                                      problem_type,
+                                     //"DESC_example_stellarator.h5",0);
+                                     //"WISTELL-A_output.h5", 4);
                                      "NCSX_output.h5", 7);
                                      //"DSHAPE_output.h5", 2);
                                      //"AXISYM_output.h5", 20);

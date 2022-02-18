@@ -42,7 +42,7 @@ class MHD : public Physics
     const real_t sqrt_mu0 = std::sqrt(4*pi*1e-7); // B input & output in Teslas
     //const real_t sqrt_mu0 = 1.0; // Input & output in Heaviside-Lorentz: E_mag = 0.5 * B^2
     
-    const real_t p_floor = 10.0; // pressure floor, for recovering from inversion errors...
+    const real_t p_floor = 1e-3; // pressure floor, for recovering from inversion errors...
 
     MHD()
     {
@@ -59,9 +59,9 @@ class MHD : public Physics
         variables[7] = "B2";
         variables[8] = "psi";
 
-        diffusive   = true;
-        viscosity   = 1e-4;
-        resistivity = 1e-4;
+        diffusive   = false;
+        viscosity   = 3e-3;
+        resistivity = 3e-3;
         diffusive_timestep_const = 1.0; // Default: 1/3, but larger can be more stable?!
 
         /* Divergence-cleaning parameters */
@@ -97,6 +97,9 @@ inline void MHD::ConservedToPrimitive(const real_t* const __restrict__ U,
 {
     P[density] = U[density]; 
 
+    if (P[density] < 0)
+        exit(99);
+
     real_t vl[3]; // Covariant velocity components
 
     vl[0] = U[mom0] / U[density]; // Momenta are covariant components
@@ -118,6 +121,7 @@ inline void MHD::ConservedToPrimitive(const real_t* const __restrict__ U,
 
     const real_t mag_density = 0.5 * metric->square(&P[B0], mem);
 
+    /*
     if (KE_density + mag_density > U[tot_energy])
     {
         std::cout << "Inversion error:  R = " << metric->rdetg[mem] << "  Mag = " << mag_density << "  Energy = " << U[tot_energy] << "  KE = " << KE_density << "   p = " << U[tot_energy] - KE_density - mag_density << std::endl;
@@ -125,6 +129,7 @@ inline void MHD::ConservedToPrimitive(const real_t* const __restrict__ U,
         exit(45);
     }
     else
+    */
         P[pressure] = gm1 * (U[tot_energy] - KE_density - mag_density);
 
     return;
@@ -136,8 +141,10 @@ inline void MHD::WaveSpeeds(const real_t* const __restrict__ P,
                             const int dir,
                             const int mem) const 
 {
+    const real_t p = MAX(P[pressure], p_floor); // Apply pressure floor
+
     /* cs_sq = (sound speed)^2 */
-    const real_t cs_sq = gamma * P[pressure] / P[density];
+    const real_t cs_sq = gamma * p / P[density];
 
     /* va_sq = (alfven speed)^2 */
     const real_t* const Bu = &P[B0];
