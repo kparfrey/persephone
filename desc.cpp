@@ -209,7 +209,8 @@ void DescConfig::construct_equilibrium(const real_t r_uds[3],
     const real_t rho = r_uds[0];  // UDS radial coord, rho = sqrt(psi/psi_a) -- sqrt of flux
     const real_t R   = r_phys[0]; // physical cylindrical radial coordinate
 
-    const real_t p_floor = 0.01 * pressure[0];
+    // const real_t p_floor = 0.01 * pressure[0];
+    const real_t p_floor = 10.0;
 
     real_t p = p_floor;
     for (int i = 0; i < N_pressure; ++i)
@@ -278,10 +279,10 @@ DescConfig::DescConfig(std::string input_file, const int iteration)
     H5Easy::File data(input_file, H5Easy::File::ReadOnly);
 
     /* When loading as usual from a computed family of equilibria */
-    std::string base = "/_equilibria/" + std::to_string(iteration) + "/";
+    //std::string base = "/_equilibria/" + std::to_string(iteration) + "/";
     
     /* When loading from a single stored equilibrium, created interactively */
-    //std::string base = "/";
+    std::string base = "/";
 
     L = H5Easy::load<int>(data, base + "_L");
     M = H5Easy::load<int>(data, base + "_M");

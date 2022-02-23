@@ -1,10 +1,23 @@
-CXX = mpic++
+### Laptop ###
+# CXX = mpic++
+# CPPFLAGS = -I../HighFive/include
+# CXXFLAGS = -std=c++17 -Wall -Werror -DHIGHFIVE_PARALLEL_HDF5=ON -g -Og # -O3 -pg 
+# LDFLAGS  = #-pg
+# LDLIBS   = -lmpi -lm -lhdf5
 
-TARGET_ARCH =
-CPPFLAGS = -I../HighFive/include #-I/usr/include/hdf5/openmpi
-CXXFLAGS = -std=c++17 -Wall -Werror -DHIGHFIVE_PARALLEL_HDF5=ON -g -Og # -O3 -pg 
-LDFLAGS  = #-L/usr/lib/x86_64-linux-gnu/hdf5/openmpi #-pg
-LDLIBS   = -lmpi -lm -lhdf5
+### Workstation ###
+# CXX = mpic++
+# CPPFLAGS = -I../HighFive/include -I/usr/include/hdf5/openmpi
+# CXXFLAGS = -std=c++17 -Wall -Werror -DHIGHFIVE_PARALLEL_HDF5=ON -g -Og # -O3 -pg 
+# LDFLAGS  = -L/usr/lib/x86_64-linux-gnu/hdf5/openmpi #-pg
+# LDLIBS   = -lmpi -lm -lhdf5
+
+### Pleiades - Intel compiler & HPE MPI ###
+CXX = icpc
+CPPFLAGS = -I../HighFive/include 
+CXXFLAGS = -std=c++17 -Wall -Werror -DHIGHFIVE_PARALLEL_HDF5=ON -O3 -xAVX
+LDFLAGS  =
+LDLIBS   = -lstdc++fs -lmpi++ -lmpi -lm -lhdf5 
 
 SRC = main.cpp kernels.cpp process.cpp element_block.cpp params.cpp  \
 	  write_mesh.cpp geometry.cpp matrix.cpp write_screen.cpp  \
