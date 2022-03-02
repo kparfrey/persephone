@@ -212,7 +212,7 @@ void DescConfig::construct_equilibrium(const real_t r_uds[3],
     const real_t R   = r_phys[0]; // physical cylindrical radial coordinate
 
     //const real_t p_floor = 0.01 * pressure[0];
-    const real_t p_floor = 25.0;
+    const real_t p_floor = 5.0;
 
     real_t p = p_floor;
     for (int i = 0; i < N_pressure; ++i)

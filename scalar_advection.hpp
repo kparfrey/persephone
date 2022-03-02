@@ -60,6 +60,11 @@ class ScalarAdvection : public Physics
     {
         return;
     }
+
+    void Floors(real_t* const __restrict__ U, const int mem) const override
+    {
+        return;
+    }
 };
 
 

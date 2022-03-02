@@ -66,6 +66,8 @@ class MHD : public Physics
 
         /* Divergence-cleaning parameters */
         psi_damping_const = 0.03; // 0 < p_d_const < 1
+
+        apply_floors = true;
     }
 
 
@@ -88,6 +90,8 @@ class MHD : public Physics
                          const int mem) const override;
 
     void OrthonormaliseVectors(real_t* const P, const int mem) const override;
+    
+    void Floors(real_t* const __restrict__ U, const int mem) const override;
 };
 
 
@@ -98,13 +102,18 @@ inline void MHD::ConservedToPrimitive(const real_t* const __restrict__ U,
     P[density] = U[density]; 
 
     if (P[density] < 0)
-        exit(99);
+    {
+        if (apply_floors)
+            P[density] = 1e-3;
+        else
+            exit(99);
+    }
 
     real_t vl[3]; // Covariant velocity components
 
-    vl[0] = U[mom0] / U[density]; // Momenta are covariant components
-    vl[1] = U[mom1] / U[density];
-    vl[2] = U[mom2] / U[density];
+    vl[0] = U[mom0] / P[density]; // Momenta are covariant components
+    vl[1] = U[mom1] / P[density];
+    vl[2] = U[mom2] / P[density];
 
     /* Store the contravariant components into P */
     metric->raise(vl, &P[v0], mem);
@@ -120,7 +129,19 @@ inline void MHD::ConservedToPrimitive(const real_t* const __restrict__ U,
                               (vl[0]*P[v0] + vl[1]*P[v1] + vl[2]*P[v2]);
 
     const real_t mag_density = 0.5 * metric->square(&P[B0], mem);
+    
+    P[pressure] = gm1 * (U[tot_energy] - KE_density - mag_density);
 
+    if (apply_floors)
+    {
+        const real_t beta = P[pressure] / mag_density;
+        const real_t beta_min = 1e-4;
+
+        if (beta < beta_min)
+            P[pressure] = beta_min * mag_density;
+    }
+
+    /**
     if (KE_density + mag_density > U[tot_energy])
     {
         std::cout << "Inversion error:  R = " << metric->rdetg[mem] << "  Mag = " << mag_density << "  Energy = " << U[tot_energy] << "  KE = " << KE_density << "   p = " << U[tot_energy] - KE_density - mag_density << std::endl;
@@ -129,7 +150,29 @@ inline void MHD::ConservedToPrimitive(const real_t* const __restrict__ U,
     }
     else
         P[pressure] = gm1 * (U[tot_energy] - KE_density - mag_density);
+     **/
 
+    return;
+}
+
+
+/* Floors just calls cons-to-prim -- put the actual flooring mechanism there,
+ * since you'll want to use it also on flux points, at the boundary etc. */
+inline void MHD::Floors(real_t* const __restrict__ U, const int mem) const
+{
+    real_t* P = new real_t [9];
+
+    MHD::ConservedToPrimitive(U, P, mem);
+
+    U[Density] = P[density];
+
+    /* Having to recalculate vsq and Bsq here -- can probably do better */
+    const real_t KE_density  = 0.5 * P[density] * metric->square(&P[v0], mem);
+    const real_t mag_density = 0.5 * metric->square(&P[B0], mem);
+
+    U[tot_energy] = mag_density + KE_density + P[pressure]/gm1;
+
+    delete[] P;
     return;
 }
 

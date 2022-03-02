@@ -22,6 +22,7 @@ class Physics
     inline static real_t viscosity;   // kinematic viscosity ("nu")
     inline static real_t resistivity; // really magnetic diffusivity...
     inline static real_t diffusive_timestep_const; // effective "CFL for diffusion"
+    inline static bool apply_floors; // Whether to use a flooring procedure
 
     /* Only used by MHD */
     inline static real_t ch_sq; // Square of wave/transport speed for hyperbolic part of div cleaning
@@ -38,6 +39,7 @@ class Physics
         viscosity = 0.0;
         resistivity = 0.0;
         diffusive_timestep_const = 1.0/3.0; // Appears safe even for WaveRect
+        apply_floors = false;
     }
 
 
@@ -63,6 +65,8 @@ class Physics
                                  const int mem) const = 0;
    
     virtual void OrthonormaliseVectors(real_t* const P, const int mem) const = 0;
+
+    virtual void Floors(real_t* const __restrict__ U, const int mem) const = 0;
 };
 
 

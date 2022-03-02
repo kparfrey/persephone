@@ -140,6 +140,10 @@ namespace kernels
                         const LengthBucket               lb,
                         const int                        dir);
 
+    void floors(      real_t* const __restrict__  U,
+                const Physics* const __restrict__ physics,
+                const LengthBucket               lb);
+
     void conserved_to_primitive_fluxpoints(      real_t* const __restrict__  UPf,
                                            const Physics* const __restrict__ physics,
                                            const LengthBucket               lb,

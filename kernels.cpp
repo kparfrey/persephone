@@ -752,27 +752,28 @@ namespace kernels
         /* UL and UR should be identical, so just choose L arbitrarily */
         physics->ConservedToPrimitive(UL, P, mem);
         
-        const real_t vdotn = nl[0]*P[v0] + nl[1]*P[v1] + nl[2]*P[v2];
+        //const real_t vdotn = nl[0]*P[v0] + nl[1]*P[v1] + nl[2]*P[v2];
         const real_t Bdotn = nl[0]*P[B0] + nl[1]*P[B1] + nl[2]*P[B2];
-        real_t vm[3];
+        //real_t vm[3];
         real_t Bm[3];
 
         /* Remove the normal velocity and magnetic field */
         for (int d: dirs)
         {
             //vm[d] = P[v0+d] - vdotn * nu[d]; // Impenetrable
-            vm[d] = 0.0; // No slip
+            //vm[d] = 0.0; // No slip
             Bm[d] = P[B0+d] - Bdotn * nu[d]; // Zero normal flux
         }
 
         /* The density, tot_energy, and psi conserved vars are unchanged.
          * Only need to overwrite the momentum and magnetic field */
-        real_t vl[3];
-        physics->metric->lower(vm, vl, mem);
+        //real_t vl[3];
+        //physics->metric->lower(vm, vl, mem);
 
         for (int d: dirs)
         {
-            UL[mom0+d] = UR[mom0+d] = P[Density] * vl[d];
+            // UL[mom0+d] = UR[mom0+d] = P[Density] * vl[d]; // for impermeable BC
+            UL[mom0+d] = UR[mom0+d] = 0.0; // No slip
             UL[  B0+d] = UR[  B0+d] = Bm[d];
         }
 
@@ -787,7 +788,7 @@ namespace kernels
 
         /* Set a minimum gas pressure floor on the external boundary. 
          * Seems to help delay p < 0 a short while. */
-        const real_t p_floor = 25.0;
+        const real_t p_floor = 5.0;
         if (P[pressure] < p_floor)
         {
             const real_t add_internal_e = (p_floor - P[pressure])/((MHD*)physics)->gm1;
@@ -1210,6 +1211,34 @@ namespace kernels
         delete[] dPp;
         delete[] F_diff_p;
 
+        return;
+    }
+
+
+    /* Apply flooring procedure to the conserved variables on the solution points */
+    void floors(      real_t* const __restrict__  U,
+                const Physics* const __restrict__ physics,
+                const LengthBucket                lb)
+    {
+        if (!physics->apply_floors)
+            return;
+
+        const int N = lb.Ns_block;
+        real_t* Up = new real_t [lb.Nfield];
+
+        for (int i=0; i < N; ++i)
+        {
+            for (int field = 0; field < lb.Nfield; ++field)
+                Up[field] = U[i + field * N];
+
+            physics->Floors(Up, i);
+
+            for (int field = 0; field < lb.Nfield; ++field)
+               U[i + field * N] = Up[field];
+        }
+
+        delete[] Up;
+    
         return;
     }
 

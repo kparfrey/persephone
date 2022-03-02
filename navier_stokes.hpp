@@ -64,6 +64,11 @@ class NavierStokes : public Physics
                          const int mem) const override;
 
     void OrthonormaliseVectors(real_t* const P, const int mem) const override;
+    
+    void Floors(real_t* const __restrict__ U, const int mem) const override
+    {
+        return;
+    }
 };
 
 
