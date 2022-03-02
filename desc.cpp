@@ -7,6 +7,8 @@
 #include "jacobi.hpp"
 #include "write_screen.hpp"
 
+#define SHRINK 1.0
+
 /*
 inline static long int factorial(const int n)
 {
@@ -136,7 +138,7 @@ void DescConfig::surface_polynomial_expansion(real_t& f, const real_t r[3], cons
                                               const std::vector<std::vector<int>>& f_modes,
                                               deriv_dir deriv) const
 {
-    real_t rho   = r[0]; // i.e. r_uds = sqrt(toroidal flux function)
+    real_t rho   = SHRINK * r[0]; // i.e. r_uds = sqrt(toroidal flux function)
     real_t theta = r[1]; // The standard, not "curly"/straight-field-line, poloidal angle
     real_t zeta  = r[2]; // toroidal angle
 
@@ -206,11 +208,11 @@ void DescConfig::construct_equilibrium(const real_t r_uds[3],
     enum conserved {density, mom0, mom1, mom2, tot_energy, B0, B1, B2, div_scalar};
     //const real_t sqrt_mu0 = std::sqrt(4.0 * pi * 1e-7); // DESC outputs in SI units
 
-    const real_t rho = r_uds[0];  // UDS radial coord, rho = sqrt(psi/psi_a) -- sqrt of flux
+    const real_t rho = SHRINK * r_uds[0];  // UDS radial coord, rho = sqrt(psi/psi_a) -- sqrt of flux
     const real_t R   = r_phys[0]; // physical cylindrical radial coordinate
 
-    // const real_t p_floor = 0.01 * pressure[0];
-    const real_t p_floor = 10.0;
+    //const real_t p_floor = 0.01 * pressure[0];
+    const real_t p_floor = 25.0;
 
     real_t p = p_floor;
     for (int i = 0; i < N_pressure; ++i)
@@ -279,10 +281,10 @@ DescConfig::DescConfig(std::string input_file, const int iteration)
     H5Easy::File data(input_file, H5Easy::File::ReadOnly);
 
     /* When loading as usual from a computed family of equilibria */
-    //std::string base = "/_equilibria/" + std::to_string(iteration) + "/";
+    std::string base = "/_equilibria/" + std::to_string(iteration) + "/";
     
     /* When loading from a single stored equilibrium, created interactively */
-    std::string base = "/";
+    //std::string base = "/";
 
     L = H5Easy::load<int>(data, base + "_L");
     M = H5Easy::load<int>(data, base + "_M");

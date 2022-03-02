@@ -60,8 +60,8 @@ class MHD : public Physics
         variables[8] = "psi";
 
         diffusive   = false;
-        viscosity   = 3e-3;
-        resistivity = 3e-3;
+        viscosity   = 1e-3;
+        resistivity = 1e-3;
         diffusive_timestep_const = 1.0; // Default: 1/3, but larger can be more stable?!
 
         /* Divergence-cleaning parameters */
@@ -121,7 +121,6 @@ inline void MHD::ConservedToPrimitive(const real_t* const __restrict__ U,
 
     const real_t mag_density = 0.5 * metric->square(&P[B0], mem);
 
-    /*
     if (KE_density + mag_density > U[tot_energy])
     {
         std::cout << "Inversion error:  R = " << metric->rdetg[mem] << "  Mag = " << mag_density << "  Energy = " << U[tot_energy] << "  KE = " << KE_density << "   p = " << U[tot_energy] - KE_density - mag_density << std::endl;
@@ -129,7 +128,6 @@ inline void MHD::ConservedToPrimitive(const real_t* const __restrict__ U,
         exit(45);
     }
     else
-    */
         P[pressure] = gm1 * (U[tot_energy] - KE_density - mag_density);
 
     return;
@@ -141,7 +139,8 @@ inline void MHD::WaveSpeeds(const real_t* const __restrict__ P,
                             const int dir,
                             const int mem) const 
 {
-    const real_t p = MAX(P[pressure], p_floor); // Apply pressure floor
+    const real_t p = P[pressure];
+    //const real_t p = MAX(P[pressure], p_floor); // Apply pressure floor
 
     /* cs_sq = (sound speed)^2 */
     const real_t cs_sq = gamma * p / P[density];

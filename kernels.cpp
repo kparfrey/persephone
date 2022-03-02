@@ -760,8 +760,8 @@ namespace kernels
         /* Remove the normal velocity and magnetic field */
         for (int d: dirs)
         {
-            vm[d] = P[v0+d] - vdotn * nu[d]; // Impenetrable
-            //vm[d] = 0.0; // No slip
+            //vm[d] = P[v0+d] - vdotn * nu[d]; // Impenetrable
+            vm[d] = 0.0; // No slip
             Bm[d] = P[B0+d] - Bdotn * nu[d]; // Zero normal flux
         }
 
@@ -779,10 +779,22 @@ namespace kernels
         /* Reset total energy, since you've removed some kinetic and magnetic energy by 
          * chopping off the normal velocity and magnetic field. Not clear if this is 
          * necessary and/or a good idea ... */
+        /***
         const real_t mag_density = 0.5 * physics->metric->square(Bm, mem);
         const real_t KE_density  = 0.5 * P[density] * physics->metric->square(vm, mem);
         UL[tot_energy] = UR[tot_energy] = KE_density + mag_density + P[pressure]/((MHD*)physics)->gm1;
+         ***/
 
+        /* Set a minimum gas pressure floor on the external boundary. 
+         * Seems to help delay p < 0 a short while. */
+        const real_t p_floor = 25.0;
+        if (P[pressure] < p_floor)
+        {
+            const real_t add_internal_e = (p_floor - P[pressure])/((MHD*)physics)->gm1;
+            // UR is the neighbour face's data for the torus's external faces,
+            // which are face 5 having positive orientation.
+            UR[tot_energy] += add_internal_e;
+        }
 
         /* Characteristic-variable-based outflow boundary condition for psi/
          * Not yet clear if this is better than just leaving psi alone at
@@ -1018,7 +1030,8 @@ namespace kernels
              * Sending zero velocity & B gradients into the diffusive flux function
              * is equivalent to setting viscosity = resistivity = 0 at the boundary */
             for (int i = 0; i < face.Ntot_all; ++i)
-                face.my_data[i] = face.neighbour_data[i] = 0.0;
+                face.neighbour_data[i] = face.my_data[i];
+                //face.my_data[i] = face.neighbour_data[i] = 0.0;
 
             /*
             for (int field = 5; field < 8; field++) // B only
