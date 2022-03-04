@@ -109,7 +109,8 @@ void Process::time_advance()
         Physics::ch_sq = ch_divClean * ch_divClean;
         //F_from_P->ch_sq = physics->c_h * physics->c_h;
 
-        Physics::psi_damping_rate = Physics::psi_damping_const / dt; 
+        Physics::psi_damping_rate = ch_divClean / Physics::psi_damping_const; //p_d_c = c_r from Dedner
+        //Physics::psi_damping_rate = Physics::psi_damping_const / dt; 
         //physics->psi_damping_exp = std::exp(-cfl * physics->psi_damping_const);
     }
     /********************************************/

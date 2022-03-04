@@ -751,6 +751,9 @@ namespace kernels
 
         /* UL and UR should be identical, so just choose L arbitrarily */
         physics->ConservedToPrimitive(UL, P, mem);
+
+        if (physics->apply_floors)
+            UL[Density] = UR[Density] = P[density];
         
         //const real_t vdotn = nl[0]*P[v0] + nl[1]*P[v1] + nl[2]*P[v2];
         const real_t Bdotn = nl[0]*P[B0] + nl[1]*P[B1] + nl[2]*P[B2];
@@ -775,6 +778,10 @@ namespace kernels
             // UL[mom0+d] = UR[mom0+d] = P[Density] * vl[d]; // for impermeable BC
             UL[mom0+d] = UR[mom0+d] = 0.0; // No slip
             UL[  B0+d] = UR[  B0+d] = Bm[d];
+
+            /* Right face only */
+            //UR[mom0+d] = 0.0; // No slip
+            //UR[  B0+d] = Bm[d];
         }
 
         /* Reset total energy, since you've removed some kinetic and magnetic energy by 
@@ -786,8 +793,20 @@ namespace kernels
         UL[tot_energy] = UR[tot_energy] = KE_density + mag_density + P[pressure]/((MHD*)physics)->gm1;
          ***/
 
+        if (physics->apply_floors)
+        {
+            /* Since pressure might have been increased inside cons-to-prim
+             * Might want to use kinetic and magnetic energy from before the BC adjustments were applied?
+             * Or is it better for the total energy to be consistent? */
+            const real_t mag_density = 0.5 * physics->metric->square(Bm, mem);
+            //const real_t KE_density  = 0.5 * P[density] * physics->metric->square(vm, mem);
+            const real_t KE_density  = 0.0; // Zero for no-slip
+            UL[tot_energy] = UR[tot_energy] = KE_density + mag_density + P[pressure]/((MHD*)physics)->gm1;
+        }
+
         /* Set a minimum gas pressure floor on the external boundary. 
          * Seems to help delay p < 0 a short while. */
+        /***
         const real_t p_floor = 5.0;
         if (P[pressure] < p_floor)
         {
@@ -796,12 +815,16 @@ namespace kernels
             // which are face 5 having positive orientation.
             UR[tot_energy] += add_internal_e;
         }
+         ***/
 
         /* Characteristic-variable-based outflow boundary condition for psi/
          * Not yet clear if this is better than just leaving psi alone at
-         * its extrapolated value */
-        const real_t c_h = std::sqrt(physics->ch_sq);
-        UL[psi] = UR[psi] = P[psi] + c_h * Bdotn;
+         * its extrapolated value.
+         * Update for DESC equilibria: seems better to not impose a BC on psi at all... */
+        //const real_t c_h = std::sqrt(physics->ch_sq);
+        //UL[psi] = UR[psi] = P[psi] + c_h * Bdotn;
+        /* Seems better to just apply as the external data? */
+        //UR[psi] = P[psi] + c_h * Bdotn;
 
         return;
     }

@@ -42,7 +42,7 @@ class MHD : public Physics
     const real_t sqrt_mu0 = std::sqrt(4*pi*1e-7); // B input & output in Teslas
     //const real_t sqrt_mu0 = 1.0; // Input & output in Heaviside-Lorentz: E_mag = 0.5 * B^2
     
-    const real_t p_floor = 1e-3; // pressure floor, for recovering from inversion errors...
+    //const real_t p_floor = 1e-3; // pressure floor, for recovering from inversion errors...
 
     MHD()
     {
@@ -65,7 +65,8 @@ class MHD : public Physics
         diffusive_timestep_const = 1.0; // Default: 1/3, but larger can be more stable?!
 
         /* Divergence-cleaning parameters */
-        psi_damping_const = 0.03; // 0 < p_d_const < 1
+        psi_damping_const = 1.0; // c_r --- Dedner suggests 0.18
+        //psi_damping_const = 0.03; // 0 < p_d_const < 1
 
         apply_floors = true;
     }
