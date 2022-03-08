@@ -105,7 +105,10 @@ void Process::time_advance()
     /* Calculate maximum stable div-cleaning wavespeed */
     if (system == mhd)
     {
-        const real_t ch_divClean = 1.0 /(dt * tt_max_global); //Should be stable with 1/()
+        const real_t ch_divClean = 0.8 * 1.0 /(dt * tt_max_global); //Should be stable with 1/()
+        //std::cout << ch_divClean << std::endl;
+        //const real_t ch_divClean = 2.5;
+
         Physics::ch_sq = ch_divClean * ch_divClean;
         //F_from_P->ch_sq = physics->c_h * physics->c_h;
 
@@ -213,6 +216,7 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
             kernels::multiply_by_scalar(&divF[psi], over_chsq, eb.divB, eb.Ns_block);
         }
 
+        /* Add the damping source term for the div-cleaning scalar field */
         kernels::add_scaled_vectors_inPlace(&divF[psi], &U[psi], 
                                             Physics::psi_damping_rate, eb.Ns_block);
     }

@@ -57,6 +57,7 @@ class ElementBlock
     real_t* fields; // Field data on solution points
     real_t* divB;   // divB diagnostic field for output. Replace with general
                     // array of diagnostic fields at some point.
+    //real_t* divB_init;
 
     /* Matrices interpolating between soln and flux points, and taking derivatives.
      * Need one matrix for each transform direction, stored in flattened blocks.

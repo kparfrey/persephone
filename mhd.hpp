@@ -102,11 +102,11 @@ inline void MHD::ConservedToPrimitive(const real_t* const __restrict__ U,
 {
     P[density] = U[density]; 
 
-    if (P[density] < 0)
+    if (P[density] < 1e-3)
     {
         if (apply_floors)
             P[density] = 1e-3;
-        else
+        else if (P[density] < 0)
             exit(99);
     }
 
@@ -360,6 +360,7 @@ inline void MHD::DiffusiveFluxes(const real_t* const __restrict__   P,
         F[B0+d][d] = 0.0; // Overwrite the above
 
         F[psi][d] = 0.0;
+        //F[psi][d] = - 0.1 * dP[psi][d];
     }
 
     return;

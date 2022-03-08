@@ -775,7 +775,7 @@ namespace kernels
 
         for (int d: dirs)
         {
-            // UL[mom0+d] = UR[mom0+d] = P[Density] * vl[d]; // for impermeable BC
+            //UL[mom0+d] = UR[mom0+d] = P[Density] * vl[d]; // for impermeable BC
             UL[mom0+d] = UR[mom0+d] = 0.0; // No slip
             UL[  B0+d] = UR[  B0+d] = Bm[d];
 
@@ -825,6 +825,7 @@ namespace kernels
         //UL[psi] = UR[psi] = P[psi] + c_h * Bdotn;
         /* Seems better to just apply as the external data? */
         //UR[psi] = P[psi] + c_h * Bdotn;
+        //UL[psi] = UR[psi] = 0.0;
 
         return;
     }

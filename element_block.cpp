@@ -95,7 +95,10 @@ void ElementBlock::allocate_on_host()
     physics_soln->metric->allocate_on_host(Ns_block);
 
     if (physics_soln->system == mhd)
+    {
         divB = new real_t [Ns_block];
+        //divB_init = new real_t [Ns_block];
+    }
 
     for (int i: dirs)
     {

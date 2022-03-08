@@ -10,7 +10,7 @@ class CerfonFreidbergConfig : public TorusConfig
 
     enum Machine {tftr, jet, iter, mast, nstx, spheromak, frc};
 
-    const Machine machine = nstx;
+    const Machine machine = jet;
 
     const real_t A  = 0.0;
     const real_t B0 = 1e-3; // Entirely determines B_phi if A = 0
