@@ -136,6 +136,8 @@ class Snapshot(object):
 
     Ngroup  = None
 
+    # Use these to convert B to e.g. Teslas
+    # The code writes B / sqrt{mu_0}
     mu0     = 4 * np.pi * 1e-7
     sqrt_mu0 = np.sqrt(mu0) 
 
@@ -206,9 +208,9 @@ class Snapshot(object):
             self.vsq[ig] = self.v0[ig][...]**2 + self.v1[ig][...]**2 + self.v2[ig][...]**2
             self.Bsq[ig] = self.B0[ig][...]**2 + self.B1[ig][...]**2 + self.B2[ig][...]**2
             self.divB_B[ig] = np.abs(self.divB[ig][...])/np.sqrt(self.Bsq[ig])
-            self.beta[ig] = np.abs(self.p[ig]) / (0.5 * self.Bsq[ig][...]/self.mu0)
+            self.beta[ig] = np.abs(self.p[ig]) / (0.5 * self.Bsq[ig][...])
             self.over_beta[ig] = 1.0 / self.beta[ig][...]
-            self.ptot[ig] = self.p[ig] + 0.5*self.Bsq[ig]/self.mu0
+            self.ptot[ig] = self.p[ig] + 0.5*self.Bsq[ig]
 
 
         # Can't make "global" v array, since the groups can have

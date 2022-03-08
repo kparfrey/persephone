@@ -87,9 +87,9 @@ void write_data(Process &proc)
                     primitives[n + field * eb.Ns_block] = Pp[field];
 
                 /* Convert B units, e.g. to Teslas */
-                if (proc.system == mhd)
-                    for (int field = 5; field <= 8; ++field)
-                        primitives[n + field * eb.Ns_block] *= ((MHD*)(proc.elements.physics_soln))->sqrt_mu0;
+                //if (proc.system == mhd)
+                //    for (int field = 5; field <= 8; ++field)
+                //        primitives[n + field * eb.Ns_block] *= ((MHD*)(proc.elements.physics_soln))->sqrt_mu0;
             }
             delete[] Up;
             delete[] Pp;

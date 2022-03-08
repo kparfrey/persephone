@@ -210,9 +210,8 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
 
         if (is_output_step && (substep == 1))
         {
-            /* Find divB from divF[psi] and save into elements.divB 
-             * Include the conversion back to B's output units, e.g. Teslas */
-            const real_t over_chsq = ((MHD*)(eb.physics_soln))->sqrt_mu0 * 1.0/Physics::ch_sq;
+            /* Find divB from divF[psi] and save into elements.divB */
+            const real_t over_chsq = 1.0/Physics::ch_sq;
             kernels::multiply_by_scalar(&divF[psi], over_chsq, eb.divB, eb.Ns_block);
         }
 
