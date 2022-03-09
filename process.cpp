@@ -105,7 +105,7 @@ void Process::time_advance()
     /* Calculate maximum stable div-cleaning wavespeed */
     if (system == mhd)
     {
-        const real_t ch_divClean = 0.8 * 1.0 /(dt * tt_max_global); //Should be stable with 1/()
+        const real_t ch_divClean = 1.0 /(dt * tt_max_global); //Should be stable with 1/()
         //std::cout << ch_divClean << std::endl;
         //const real_t ch_divClean = 2.5;
 
@@ -121,10 +121,12 @@ void Process::time_advance()
     if (Physics::diffusive)
         write::message("Starting time step " + std::to_string(step) + " --- t = " + std::to_string(time)
                                              + " --- dt = " + std::to_string(dt)
-                                             + " --- dt ratio: " + std::to_string(dt_ratio));
+                                             + " --- dt ratio: " + std::to_string(dt_ratio)
+                                             + " --- last output no.: " + std::to_string(data_output_counter-1));
     else
         write::message("Starting time step " + std::to_string(step) + " --- t = " + std::to_string(time)
-                                             + " --- dt = " + std::to_string(dt));
+                                             + " --- dt = " + std::to_string(dt)
+                                             + " --- last output no.: " + std::to_string(data_output_counter-1));
 
     /* Call the fundamental time step method we're using */
     (*time_integrator)(*this); //Since storing a pointer to a BasicTimeIntegrator
@@ -136,6 +138,36 @@ void Process::time_advance()
 }
 
 
+/* Temporary hacky implementation!!! */
+#if 0
+void Process::divB_subsystem_iterations(const real_t Niter, const bool initial_cleaning)
+{
+    /* Midpoint method for now */
+    for (int iter = 0; iter < Niter; ++iter)
+    {
+        ElementBlock& eb = proc.elements;
+        const int Ntot = eb.Nfield * eb.Ns_block;
+
+        real_t* fields_mid = kernels::alloc_raw(Ntot);
+        real_t* divF       = kernels::alloc_raw(Ntot);
+
+        /* dU/dt = - divF */
+        proc.substep = 1;
+        proc.find_divF(eb.fields, proc.time, divF);
+        kernels::add_2_vectors(eb.fields, divF, 1.0, -0.5*proc.dt, fields_mid, Ntot);
+
+        proc.substep = 2;
+        proc.find_divF(fields_mid, proc.time + 0.5*proc.dt, divF);
+        kernels::add_2_vectors(eb.fields, divF, 1.0,     -proc.dt,  eb.fields, Ntot);
+
+        kernels::free(fields_mid);
+        kernels::free(divF);
+
+    }
+
+    return;
+}
+#endif
 
 
 /* The fundamental function of the spectral difference method */
