@@ -8,6 +8,8 @@
 #include "basic_time_integrator.hpp"
 #include "boundary_conditions.hpp"
 #include "physics_includes.hpp"
+#include "kernels.hpp"
+#include "divclean.hpp"
 
 //#include <stdio.h>
 
@@ -139,36 +141,72 @@ void Process::time_advance()
 }
 
 
-/* Temporary hacky implementation!!! */
-#if 0
-void Process::divB_subsystem_iterations(const real_t Niter, const bool initial_cleaning)
+void Process::divB_subsystem_iterations(const int Niter, const bool initial_cleaning)
 {
-    /* Midpoint method for now */
+    ElementBlock& eb = elements;
+
+    /* ch is the only wavespeed in the divB subsystem, so can choose it to be anything.
+     * Choose ch = 1.0 */
+    //Physics::ch    = 1.0;
+    //Physics::ch_sq = 1.0;
+    //Physics::psi_damping_rate = 1.0 / Physics::psi_damping_const; //p_d_c = c_r from Dedner
+
+    //const real_t dt_divB = 0.9 / tt_max_global; 
+
+    const int Nstart  = 5 * eb.Ns_block; // Beginning of B0 data
+    const int Nsubsys = 4 * eb.Ns_block; // 3 B componenents + Psi
+    const int Ntot    = Nfield * eb.Ns_block; 
+    const int psi     = 8 * eb.Ns_block; // mem location at which the psi field begins
+    const real_t one_third  = 1.0/3.0;
+    const real_t two_thirds = 2.0/3.0;
+
+    real_t* fields_inter = kernels::alloc(Ntot);
+    real_t* divF         = kernels::alloc(Ntot);
+
+    /* Set Psi to 0 at beginning and end --- decouples timescales between here and main loop */
+    //kernels::multiply_by_scalar_inPlace(&eb.fields[psi], 0.0, eb.Ns_block);
+
+    if (initial_cleaning)
+        write::message("Starting initial-field divergence cleaning, " + std::to_string(Niter) + " iterations");
+
     for (int iter = 0; iter < Niter; ++iter)
     {
-        ElementBlock& eb = proc.elements;
-        const int Ntot = eb.Nfield * eb.Ns_block;
+        find_divF_divB_subsystem(eb.fields, divF);
+        kernels::add_2_vectors(&eb.fields[Nstart], &divF[Nstart], 
+                               1.0      , -dt, 
+                               &fields_inter[Nstart], Nsubsys);
 
-        real_t* fields_mid = kernels::alloc_raw(Ntot);
-        real_t* divF       = kernels::alloc_raw(Ntot);
+        find_divF_divB_subsystem(fields_inter, divF);
+        kernels::add_3_vectors(&eb.fields[Nstart], &fields_inter[Nstart], &divF[Nstart], 
+                               0.75     , 0.25        , -0.25*dt,  
+                               &fields_inter[Nstart], Nsubsys);
 
-        /* dU/dt = - divF */
-        proc.substep = 1;
-        proc.find_divF(eb.fields, proc.time, divF);
-        kernels::add_2_vectors(eb.fields, divF, 1.0, -0.5*proc.dt, fields_mid, Ntot);
+        find_divF_divB_subsystem(fields_inter, divF);
+        kernels::add_3_vectors(&eb.fields[Nstart], &fields_inter[Nstart], &divF[Nstart], 
+                               one_third, two_thirds  , -two_thirds*dt,  
+                               &eb.fields[Nstart], Nsubsys);
 
-        proc.substep = 2;
-        proc.find_divF(fields_mid, proc.time + 0.5*proc.dt, divF);
-        kernels::add_2_vectors(eb.fields, divF, 1.0,     -proc.dt,  eb.fields, Ntot);
-
-        kernels::free(fields_mid);
-        kernels::free(divF);
-
+        if (initial_cleaning && (iter % 10 == 0))
+            std::cout << iter << "... ";
     }
+
+
+    if (is_output_step || initial_cleaning)
+    {
+        find_divF_divB_subsystem(eb.fields, divF);
+        kernels::multiply_by_scalar(&divF[psi], 1.0/Physics::ch_sq, eb.divB, eb.Ns_block);
+    }
+
+    //kernels::multiply_by_scalar_inPlace(&eb.fields[psi], 0.0, eb.Ns_block);
+
+    kernels::free(fields_inter);
+    kernels::free(divF);
+
+    if (initial_cleaning)
+        write::message("\nFinished initial-field divergence cleaning");
 
     return;
 }
-#endif
 
 
 /* The fundamental function of the spectral difference method */
@@ -267,6 +305,76 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
         
         if (Physics::diffusive)
             kernels::free(dP(i));
+    }
+
+    return;
+}
+
+
+/* For iterating the divergence-cleaning subsystem on its own */
+void Process::find_divF_divB_subsystem(const real_t* const U, real_t* const divF)
+{
+    ElementBlock& eb = elements;
+    const int psi = 8 * eb.Ns_block; // mem location at which the psi field begins
+
+    /* These vectors are in "transform direction" space
+     * dF is the only one that "needs" to be a VectorField, in
+     * that the whole object is passed to a kernel */
+    VectorField Uf; // Solution interpolated to flux points
+    VectorField  F; // Fluxes
+    VectorField dF; // Store d_j ( root_det_g * F(i)^j )
+    
+    for (int i: dirs)
+    {
+        Uf(i) = kernels::alloc_raw(Nfield * eb.Nf_dir_block[i]);
+         F(i) = kernels::alloc_raw(Nfield * eb.Nf_dir_block[i]);
+        dF(i) = kernels::alloc_raw(Nfield * eb.Ns_block);
+    }
+
+    
+    for (int i: dirs)
+        divClean::soln_to_flux(eb.soln2flux(i), U, Uf(i), eb.lengths, i);
+
+    for (int i: dirs)
+        divClean::bulk_fluxes(Uf(i), F(i), eb.geometry.S[i], eb.physics[i], eb.lengths, i);
+
+    for (int i: ifaces)
+        divClean::fill_face_data(Uf(faces[i].normal_dir), faces[i], eb.lengths);
+
+    exchange_boundary_data();
+
+    for (int i: ifaces)
+    {
+        int dir = faces[i].normal_dir;
+        divClean::external_numerical_flux(faces[i], F(dir), F_numerical_divB_subsystem[dir],
+                                             eb.geometry.S[dir], eb.lengths);
+    }
+    
+    for (int i: dirs)
+    {
+        divClean::internal_numerical_flux(Uf(i), F(i), F_numerical_divB_subsystem[i],
+                                         eb.geometry.S[i], eb.geometry.normal[i], eb.lengths, i);
+    }
+
+    for (int i: dirs)
+        divClean::fluxDeriv_to_soln(eb.fluxDeriv2soln(i), F(i), dF(i), eb.lengths, i);
+
+    divClean::flux_divergence(dF, eb.geometry.Jrdetg(), divF, eb.lengths);
+
+    /* Add the damping source term for the div-cleaning scalar field */
+    kernels::add_scaled_vectors_inPlace(&divF[psi], &U[psi], 
+                                        Physics::psi_damping_rate, eb.Ns_block);
+
+    /* Add geometric source terms if not using Cartesian physical coordinates */
+    if (eb.physics_soln->metric->physical_coords != cartesian)
+        divClean::add_geometric_sources(divF, U, eb.physics_soln, eb.Ns_block);
+
+
+    for (int i: dirs)
+    {
+        kernels::free(Uf(i));
+        kernels::free( F(i));
+        kernels::free(dF(i));
     }
 
     return;

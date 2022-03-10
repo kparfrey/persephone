@@ -10,10 +10,7 @@
  *
  * It might easier to just define START_SUBSYS and END_SUBSYS as global variables,
  * and change them at the beginning and end of the subsystem loops... This would
- * take care of most of the adjustments...
- *
- * Need to make sure a different numerical flux function is used, that only operates
- * on B and Psi.
+ * take care of most of the adjustments...?
  */
 
 namespace divClean
@@ -325,6 +322,7 @@ namespace divClean
 
     void add_geometric_sources(      real_t* const __restrict__  divF, 
                                const real_t* const __restrict__  U,
+                               const Physics* const __restrict__ physics,
                                const int Ns)
     {
         real_t R; // HACK: cylindrical radius 
@@ -486,7 +484,6 @@ namespace divClean
     }
 
 
-    /* Maybe a WallBC function belongs in each Physics derived class? */
     static void torus_BC(      real_t* const __restrict__ UL, 
                                real_t* const __restrict__ UR,
                          const real_t* const __restrict__ nl,
@@ -496,12 +493,11 @@ namespace divClean
         enum conserved {Density, mom0, mom1, mom2, tot_energy, B0, B1, B2, psi};
         enum primitive {density, v0  , v1  , v2,   pressure};
         
-
         real_t nu[3]; // contravariant components of normal vector
         physics->metric->raise(nl, nu, mem);
 
         /* UL and UR should be identical, so just choose L arbitrarily */
-        real_t &P = UL;  // Primitives = incoming conserved variables
+        real_t* const __restrict__ &P = UL;  // Primitives = incoming conserved variables
 
         const real_t Bdotn = nl[0]*P[B0] + nl[1]*P[B1] + nl[2]*P[B2];
         real_t Bm[3];
@@ -511,7 +507,7 @@ namespace divClean
             Bm[d] = P[B0+d] - Bdotn * nu[d]; // Zero normal flux
 
         for (int d: dirs)
-            UL[  B0+d] = UR[  B0+d] = Bm[d];
+            UL[B0+d] = UR[B0+d] = Bm[d];
 
 
         /* Characteristic-variable-based outflow boundary condition for psi/
