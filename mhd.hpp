@@ -85,6 +85,10 @@ class MHD : public Physics
                       real_t (*__restrict__ F)[3],
                 const int mem) const override;
 
+    void Fluxes_divB_subsystem(const real_t* const __restrict__ P, 
+                                     real_t (*__restrict__ F)[3],
+                               const int mem) const override;
+
     void DiffusiveFluxes(const real_t* const __restrict__ U, 
                          const real_t (* const __restrict__ dU)[3],
                                real_t (*__restrict__ F)[3],
@@ -277,6 +281,24 @@ inline void MHD::Fluxes(const real_t* const __restrict__ P,
         F[B0+d][d] = P[psi] * ((DiagonalSpatialMetric*)metric)->ginv[d][mem]; // Overwrite the above
 
         F[psi][d] = ch_sq * B; 
+    }
+
+    return;
+}
+
+
+inline void MHD::Fluxes_divB_subsystem(const real_t* const __restrict__ P, 
+                                             real_t (*__restrict__ F)[3],
+                                       const int mem) const
+{
+    for (int field = 0; field < Nfield; ++field)
+        for (int d: dirs)
+            F[field][d] = 0.0;
+
+    for (int d: dirs)
+    {
+        F[B0+d][d] = P[psi] * ((DiagonalSpatialMetric*)metric)->ginv[d][mem]; 
+        F[psi][d]  = ch_sq * P[B0+d]; // P holds contravariant components
     }
 
     return;

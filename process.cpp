@@ -109,6 +109,7 @@ void Process::time_advance()
         //std::cout << ch_divClean << std::endl;
         //const real_t ch_divClean = 2.5;
 
+        Physics::ch    = ch_divClean;
         Physics::ch_sq = ch_divClean * ch_divClean;
         //F_from_P->ch_sq = physics->c_h * physics->c_h;
 

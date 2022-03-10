@@ -183,6 +183,49 @@ class HLL : public NumericalFlux
 };
 
 
+class HLL_divB_subsystem : public NumericalFlux
+{
+    public:
+
+    ACCEL_DECORATOR
+    inline void operator()(const real_t* const __restrict__ UL, 
+                           const real_t* const __restrict__ UR,
+                           const real_t* const __restrict__ n,
+                                 real_t (*Fnum)[3],
+                           const int, // dir not used
+                           const int mem) const override
+    {
+        /* Temporary variables --- use a fixed size */
+        constexpr int Nv = 10; // since Nfield isn't constexpr
+        real_t FL[Nv][3], FR[Nv][3];
+        const real_t cp =   Physics::ch;
+        const real_t cn = - Physics::ch;
+        
+        real_t Fstar;
+        real_t F0; // Here (FL + FR)/2 for now
+
+        /* P = U, so use U wherever P would usually go */
+
+        physics->Fluxes_divB_subsystem(UL, FL, mem);
+        physics->Fluxes_divB_subsystem(UR, FR, mem);
+
+        for (int field = 5; field <= 8; ++field)
+            for (int i: dirs)
+            {
+                Fstar = (cp*FL[field][i] - cn*FR[field][i]
+                                 + cp*cn*(UR[field] - UL[field])) / (cp - cn + TINY);
+
+                F0 = 0.5 * (FL[field][i] + FR[field][i]);
+
+                Fnum[field][i] = F0 * (1.0 - n[i]) + Fstar * n[i];
+            }
+
+        return;
+    }
+};
+
+
+
 
 /* Doesn't include the projection along the normal required
  * when using curved elements. Only calculates the flux in the
