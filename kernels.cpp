@@ -870,6 +870,15 @@ namespace kernels
         }
 #endif
 
+        /* Conserved variables and physical fluxes at one point */
+        real_t* UL = new real_t [lb.Nfield];
+        real_t* UR = new real_t [lb.Nfield];
+        real_t np[3]; // The face's normal vector at a single point
+        real_t (*F_num_phys)[3] = new real_t [lb.Nfield][3]; // pointer to an array
+
+        /* For setting normal fluxes only */
+        //real_t (*F_num_phys_R)[3] = new real_t [lb.Nfield][3]; // use previous version for _L
+
         if (face.external_face)
             for (int i = 0; i < face.Ntot * lb.Nfield; ++i)
                 face.neighbour_data[i] = face.my_data[i];
@@ -884,12 +893,6 @@ namespace kernels
             UL_data = face.neighbour_data;
             UR_data = face.my_data;
         }
-
-        /* Conserved variables and physical fluxes at one point */
-        real_t* UL = new real_t [lb.Nfield];
-        real_t* UR = new real_t [lb.Nfield];
-        real_t (*F_num_phys)[3] = new real_t [lb.Nfield][3]; // pointer to an array
-        real_t np[3]; // The face's normal vector at a single point
 
         
         for (int ne2 = 0; ne2 < face.Nelem[1]; ++ne2)
@@ -933,11 +936,22 @@ namespace kernels
                             face.neighbour_data[mem_face + field * face.Ntot] = UL[field]; 
                 }
 
+                /* Unique flux */
                 (*F_numerical)(UL, UR, np, F_num_phys, dir, mem);
 
                 /* Transform from physical to reference-space fluxes.
                  * Needs mem loc in the full 3D array */
                 fluxes_phys_to_ref(F_num_phys, F, S, mem, lb.Nfield, Nf_tot);
+
+#if 0
+                /* Unique normal flux */
+                (*F_numerical)(UL, UR, np, F_num_phys, F_num_phys_R, dir, mem);
+
+                if (face.orientation > 0)
+                    fluxes_phys_to_ref(F_num_phys, F, S, mem, lb.Nfield, Nf_tot);
+                else
+                    fluxes_phys_to_ref(F_num_phys_R, F, S, mem, lb.Nfield, Nf_tot);
+#endif
             }
         }
         
@@ -945,6 +959,8 @@ namespace kernels
         delete[] UR;
         delete[] F_num_phys;
 
+        //delete[] F_num_phys_R;
+        
         return;
     }
 
@@ -977,6 +993,9 @@ namespace kernels
         real_t* UL = new real_t [lb.Nfield];
         real_t* UR = new real_t [lb.Nfield];
         real_t (*F_num_phys)[3] = new real_t [lb.Nfield][3]; // pointer to an array
+
+        /* For setting normal fluxes only */
+        //real_t (*F_num_phys_R)[3] = new real_t [lb.Nfield][3]; // use previous version for _L
 
         real_t np[3]; // The face's normal vector at a single point
 
@@ -1011,6 +1030,7 @@ namespace kernels
                 for (int i: dirs)
                     np[i] = normal(i,mem_n);
 
+                /* Unique flux */
                 (*F_numerical)(UL, UR, np, F_num_phys, dir, mem_L); // Arbitrarily choose mem_L
 
                 /* Calculate reference-space flux and save into the left element */
@@ -1019,12 +1039,23 @@ namespace kernels
                 /* Copy into the right element */
                 for (int field = 0; field < lb.Nfield; ++field)
                     F[mem_R + field * Nf_tot] = F[mem_L + field * Nf_tot];
+
+#if 0
+                /* Unique normal flux */
+                //(*F_numerical)(UL, UR, np, F_num_phys, F_num_phys_R, dir, mem_L); // Arbitrarily choose mem_L
+
+                /* Calculate reference-space flux and save into each element */
+                //fluxes_phys_to_ref(F_num_phys  , F, S, mem_L, lb.Nfield, Nf_tot);
+                //fluxes_phys_to_ref(F_num_phys_R, F, S, mem_R, lb.Nfield, Nf_tot);
+#endif
             }
         }
 
         delete[] UL;
         delete[] UR;
         delete[] F_num_phys;
+
+        //delete[] F_num_phys_R;
 
         return;
     }

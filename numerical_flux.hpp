@@ -19,13 +19,24 @@ class NumericalFlux
 
     int Nfield;
 
+    /* Unique flux for both sides of the interface */
     ACCEL_DECORATOR
     inline virtual void operator()(const real_t* const __restrict__ UL, 
                                    const real_t* const __restrict__ UR,
                                    const real_t* const __restrict__ n,
                                          real_t (*Fnum)[3],
                                    const int dir,
-                                   const int mem) const = 0;
+                                   const int mem) const {}
+
+    /* Only creates a unique normal flux --- tangential flux is discontinuous */
+    ACCEL_DECORATOR
+    inline virtual void operator()(const real_t* const __restrict__ UL, 
+                                   const real_t* const __restrict__ UR,
+                                   const real_t* const __restrict__ n,
+                                         real_t (*Fnum_L)[3],
+                                         real_t (*Fnum_R)[3],
+                                   const int dir,
+                                   const int mem) const {}
 };
 
 
@@ -36,6 +47,7 @@ class NumericalFlux
 class HLL : public NumericalFlux
 {
     public:
+
     ACCEL_DECORATOR
     inline void operator()(const real_t* const __restrict__ UL, 
                            const real_t* const __restrict__ UR,
@@ -103,8 +115,72 @@ class HLL : public NumericalFlux
 
         return;
     }
-};
 
+
+    /* This only makes the normal flux consistent across the interface --- the tangential
+     * fluxes are left unchanged. */
+    ACCEL_DECORATOR
+    inline void operator()(const real_t* const __restrict__ UL, 
+                           const real_t* const __restrict__ UR,
+                           const real_t* const __restrict__ n,
+                                 real_t (*Fnum_L)[3],
+                                 real_t (*Fnum_R)[3],
+                           const int, // dir not used
+                           const int mem) const override
+    {
+        /* Temporary variables --- use a fixed size */
+        constexpr int Nv = 10; // since Nfield isn't constexpr
+        real_t PL[Nv],    PR[Nv];
+        real_t FL[Nv][3], FR[Nv][3];
+        real_t cL[3][2], cR[3][2];
+        real_t cpos[3], cneg[3];
+        real_t cp, cn;
+        
+        real_t Fstar;
+
+        physics->ConservedToPrimitive(UL, PL, mem);
+        physics->ConservedToPrimitive(UR, PR, mem);
+
+        for (int d: dirs)
+        {
+            physics->WaveSpeeds(PL, cL[d], d, mem);
+            physics->WaveSpeeds(PR, cR[d], d, mem);
+        }
+
+        physics->Fluxes(PL, FL, mem);
+        physics->Fluxes(PR, FR, mem);
+
+        /* Signed max wavespeeds in each direction.
+         * cpos is max speed parallel to the coord axis (L to R); ie Toro's S_R.
+         * cneg is max speed anti-parallel to the coord axis (R to L),
+         * keeping the negative sign; ie Toro's S_L.
+         * The outer MAX(0,..), MIN(0,..) is to allow the use of the general
+         * expression in supersonic cases. Otherwise would need an explicit
+         * test for eg if (cneg >= 0.0) Fnum = FL etc. */
+        for (int d: dirs)
+        {
+            cpos[d] = MAX(0.0, MAX(cL[d][0], cR[d][0])); // fastest +ve moving wave
+            cneg[d] = MIN(0.0, MIN(cL[d][1], cR[d][1])); // fastest -ve moving wave
+        }
+
+
+        for (int field = 0; field < Nfield; ++field)
+            for (int i: dirs)
+            {
+                cp = cpos[i];
+                cn = cneg[i];
+
+                Fstar = (cp*FL[field][i] - cn*FR[field][i]
+                                 + cp*cn*(UR[field] - UL[field])) / (cp - cn + TINY);
+
+                Fnum_L[field][i] = FL[field][i] * (1.0 - n[i]) + Fstar * n[i];
+                Fnum_R[field][i] = FR[field][i] * (1.0 - n[i]) + Fstar * n[i];
+            }
+
+        return;
+    }
+
+};
 
 
 
