@@ -25,7 +25,7 @@ SRC = main.cpp kernels.cpp process.cpp element_block.cpp params.cpp  \
 	  face_communicator.cpp edge.cpp transfinite_map.cpp \
 	  params_cartesian.cpp initial_state_cartesian.cpp \
 	  params_torus.cpp initial_state_torus.cpp cerfon_freidberg.cpp \
-	  desc.cpp divclean.cpp
+	  desc.cpp
 
 OBJ := $(SRC:%.cpp=%.o)
 DEP := $(SRC:%.cpp=%.d)

@@ -56,8 +56,6 @@ int main(int argc, char *argv[])
 
     proc.fill_external_boundary_data();
     
-    //proc.divB_subsystem_iterations(500, true);
-    
     write_data(proc); // Data generally lives on device
 
     write::message("\nFinished setup, starting time advancement \n");
@@ -68,7 +66,6 @@ int main(int argc, char *argv[])
             proc.is_output_step = true;
 
         proc.time_advance();
-        //proc.divB_subsystem_iterations(6, false);
 
         if (proc.is_output_step)
             write_data(proc);

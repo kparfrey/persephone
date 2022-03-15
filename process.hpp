@@ -93,8 +93,5 @@ class Process
     void move_to_device();
     void fill_external_boundary_data();
     void exchange_boundary_data();
-
-    void divB_subsystem_iterations(const int Niter, const bool initial_cleaning);
-    void find_divF_divB_subsystem(const real_t* const U, real_t* const divF);
 };
 #endif
