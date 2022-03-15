@@ -490,7 +490,7 @@ namespace kernels
                 case mhd:
                     divF[mem + 1*Ns] -= Fp[3][2] / R; // As for Navier-Stokes
                     // d_t (B^r) + ... = psi / R
-                    divF[mem + 5*Ns] -= Up[8]/R;
+                    //divF[mem + 5*Ns] -= Up[8]/R;
                     break;
                 default:
                     exit(123);
@@ -1088,6 +1088,14 @@ namespace kernels
             for (int i = 0; i < face.Ntot_all; ++i)
                 face.neighbour_data[i] = face.my_data[i];
                 //face.my_data[i] = face.neighbour_data[i] = 0.0;
+
+            /*
+            for (int j = 0; j < face.Ntot; ++j)
+            {
+                int i = j + 8*face.Ntot;
+                face.my_data[i] = face.neighbour_data[i] = 0.0;
+            }
+            */
 
             /*
             for (int field = 5; field < 8; field++) // B only

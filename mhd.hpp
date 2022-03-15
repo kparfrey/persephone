@@ -59,9 +59,9 @@ class MHD : public Physics
         variables[7] = "B2";
         variables[8] = "psi";
 
-        diffusive   = false;
-        viscosity   = 1e-3;
-        resistivity = 1e-3;
+        diffusive   = true;
+        viscosity   = 1e-4;
+        resistivity = 1e-4;
         diffusive_timestep_const = 1.0; // Default: 1/3, but larger can be more stable?!
 
         /* Divergence-cleaning parameters */
@@ -232,6 +232,9 @@ inline void MHD::WaveSpeeds(const real_t* const __restrict__ P,
     c[0] = MAX(0.0, P[v0+dir] + fast_speed); // P stores the contra velocity components
     c[1] = MIN(0.0, P[v0+dir] - fast_speed);
 
+    //c[0] = MAX(c[0],  ch);
+    //c[1] = MIN(c[1], -ch);
+
     return;
 }
 
@@ -259,6 +262,16 @@ inline void MHD::Fluxes(const real_t* const __restrict__ P,
     real_t v;
     real_t B;
 
+#if 0
+    real_t b[3]; // b^i
+    real_t bt = 0.0; // b^t
+    for (int i: dirs)
+        bt += Bu[i] * vu[i] * ((DiagonalSpatialMetric*)metric)->g[i][mem];
+    
+    for (int i: dirs)
+        b[i] = Bu[i] + bt * vu[i];
+#endif
+
     for (int d: dirs)
     {
         v = vu[d]; // velocity in this direction
@@ -278,7 +291,12 @@ inline void MHD::Fluxes(const real_t* const __restrict__ P,
         F[B1][d] = Bu[1]*v - B*vu[1]; 
         F[B2][d] = Bu[2]*v - B*vu[2]; 
 
-        F[B0+d][d] = P[psi] * ((DiagonalSpatialMetric*)metric)->ginv[d][mem]; // Overwrite the above
+        // Flux of B^i in the d direction
+        //for (int i: dirs)
+        //    F[B0+i][d] = - b[d] * vu[i] + b[i] * vu[d];
+
+        F[B0+d][d] = 0.0;
+        //F[B0+d][d] = P[psi] * ((DiagonalSpatialMetric*)metric)->ginv[d][mem]; // Overwrite the above
 
         F[psi][d] = ch_sq * B; 
     }

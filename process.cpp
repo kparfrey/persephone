@@ -147,11 +147,13 @@ void Process::divB_subsystem_iterations(const int Niter, const bool initial_clea
 
     /* ch is the only wavespeed in the divB subsystem, so can choose it to be anything.
      * Choose ch = 1.0 */
-    //Physics::ch    = 1.0;
-    //Physics::ch_sq = 1.0;
-    //Physics::psi_damping_rate = 1.0 / Physics::psi_damping_const; //p_d_c = c_r from Dedner
-
-    //const real_t dt_divB = 0.9 / tt_max_global; 
+    if (initial_cleaning)
+    {
+        Physics::ch    = 1.0;
+        Physics::ch_sq = 1.0;
+        Physics::psi_damping_rate = 1.0 / Physics::psi_damping_const; //p_d_c = c_r from Dedner
+        dt = 0.9 / tt_max_global; 
+    }
 
     const int Nstart  = 5 * eb.Ns_block; // Beginning of B0 data
     const int Nsubsys = 4 * eb.Ns_block; // 3 B componenents + Psi
@@ -164,7 +166,7 @@ void Process::divB_subsystem_iterations(const int Niter, const bool initial_clea
     real_t* divF         = kernels::alloc(Ntot);
 
     /* Set Psi to 0 at beginning and end --- decouples timescales between here and main loop */
-    //kernels::multiply_by_scalar_inPlace(&eb.fields[psi], 0.0, eb.Ns_block);
+    kernels::multiply_by_scalar_inPlace(&eb.fields[psi], 0.0, eb.Ns_block);
 
     if (initial_cleaning)
         write::message("Starting initial-field divergence cleaning, " + std::to_string(Niter) + " iterations");
@@ -185,9 +187,6 @@ void Process::divB_subsystem_iterations(const int Niter, const bool initial_clea
         kernels::add_3_vectors(&eb.fields[Nstart], &fields_inter[Nstart], &divF[Nstart], 
                                one_third, two_thirds  , -two_thirds*dt,  
                                &eb.fields[Nstart], Nsubsys);
-
-        if (initial_cleaning && (iter % 10 == 0))
-            std::cout << iter << "... ";
     }
 
 
@@ -197,13 +196,14 @@ void Process::divB_subsystem_iterations(const int Niter, const bool initial_clea
         kernels::multiply_by_scalar(&divF[psi], 1.0/Physics::ch_sq, eb.divB, eb.Ns_block);
     }
 
-    //kernels::multiply_by_scalar_inPlace(&eb.fields[psi], 0.0, eb.Ns_block);
+    //if (initial_cleaning)
+    kernels::multiply_by_scalar_inPlace(&eb.fields[psi], 0.0, eb.Ns_block);
 
     kernels::free(fields_inter);
     kernels::free(divF);
 
     if (initial_cleaning)
-        write::message("\nFinished initial-field divergence cleaning");
+        write::message("Finished initial-field divergence cleaning");
 
     return;
 }
@@ -284,6 +284,16 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
             /* Find divB from divF[psi] and save into elements.divB */
             const real_t over_chsq = 1.0/Physics::ch_sq;
             kernels::multiply_by_scalar(&divF[psi], over_chsq, eb.divB, eb.Ns_block);
+        }
+
+        /* Temporary --- add gradient of Psi directly */
+        const int Ns = eb.Ns_block;
+        DiagonalSpatialMetric* m = (DiagonalSpatialMetric*)(eb.physics_soln->metric);
+        for (int mem = 0; mem < eb.Ns_block; ++mem)
+        {
+            divF[5*Ns + mem] += m->ginv[0][mem] * dP(0, 8*Ns + mem);
+            divF[6*Ns + mem] += m->ginv[1][mem] * dP(1, 8*Ns + mem);
+            divF[7*Ns + mem] += m->ginv[2][mem] * dP(2, 8*Ns + mem);
         }
 
         /* Add the damping source term for the div-cleaning scalar field */
