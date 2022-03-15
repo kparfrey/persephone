@@ -59,7 +59,7 @@ class MHD : public Physics
         variables[7] = "B2";
         variables[8] = "psi";
 
-        diffusive   = true;
+        diffusive   = false;
         viscosity   = 1e-4;
         resistivity = 1e-4;
         diffusive_timestep_const = 1.0; // Default: 1/3, but larger can be more stable?!
@@ -295,8 +295,8 @@ inline void MHD::Fluxes(const real_t* const __restrict__ P,
         //for (int i: dirs)
         //    F[B0+i][d] = - b[d] * vu[i] + b[i] * vu[d];
 
-        F[B0+d][d] = 0.0;
-        //F[B0+d][d] = P[psi] * ((DiagonalSpatialMetric*)metric)->ginv[d][mem]; // Overwrite the above
+        //F[B0+d][d] = 0.0;
+        F[B0+d][d] = P[psi] * ((DiagonalSpatialMetric*)metric)->ginv[d][mem]; // Overwrite the above
 
         F[psi][d] = ch_sq * B; 
     }

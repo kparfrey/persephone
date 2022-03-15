@@ -287,6 +287,7 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
         }
 
         /* Temporary --- add gradient of Psi directly */
+        /**
         const int Ns = eb.Ns_block;
         DiagonalSpatialMetric* m = (DiagonalSpatialMetric*)(eb.physics_soln->metric);
         for (int mem = 0; mem < eb.Ns_block; ++mem)
@@ -295,6 +296,7 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
             divF[6*Ns + mem] += m->ginv[1][mem] * dP(1, 8*Ns + mem);
             divF[7*Ns + mem] += m->ginv[2][mem] * dP(2, 8*Ns + mem);
         }
+         **/
 
         /* Add the damping source term for the div-cleaning scalar field */
         kernels::add_scaled_vectors_inPlace(&divF[psi], &U[psi], 
