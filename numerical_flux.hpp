@@ -94,65 +94,9 @@ class HLL : public NumericalFlux
         }
 
 
-#if 0
-        const real_t Bdotn_L = n[0]*UL[5] + n[1]*UL[6] + n[2]*UL[7];        
-        const real_t Bdotn_R = n[0]*UR[5] + n[1]*UR[6] + n[2]*UR[7];        
-        real_t nu[3]; // contravariant components of normal vector
-        physics->metric->raise(n, nu, mem);
-
-        real_t Bn_L, Bn_R, Bt_L, Bt_R;
-        real_t Bn_m;
-        real_t B_L[3], B_R[3]; 
-        
-        for (int i: dirs)
-        {
-            Bn_L = Bdotn_L * nu[i];
-            Bn_R = Bdotn_R * nu[i];
-            Bt_L = UL[5+i] - Bdotn_L*nu[i];
-            Bt_R = UR[5+i] - Bdotn_R*nu[i];
-
-            Bn_m = 0.5 * (Bn_L + Bn_R);
-
-            B_L[i] = Bn_m + Bt_L;
-            B_R[i] = Bn_m + Bt_R;
-        }
-        
-        const real_t psi_m = 0.5 * (UR[8] + UL[8]);
-        //const real_t psi_m = 0.5 * (UR[8] + UL[8]) - 0.5 * Physics::ch * (Bdotn_R - Bdotn_L);
-
-        /**/
-        for (int i: dirs)
-        {
-            PL[5+i] = B_L[i];
-            PR[5+i] = B_R[i];
-        }
-        /**/
-
-        PL[8] = PR[8] = psi_m;
-#endif
-
         physics->Fluxes(PL, FL, mem);
         physics->Fluxes(PR, FR, mem);
 
-        /*
-        const real_t Mdotn_L = n[0]*UL[1] + n[1]*UL[2] + n[2]*UL[3];        
-        const real_t Mdotn_R = n[0]*UR[1] + n[1]*UR[2] + n[2]*UR[3];        
-
-        if ((Mdotn_L > 0) && (Mdotn_R > 0))
-        {
-            for (int field = 0; field < Nfield; ++field)
-                for (int i: dirs)
-                    Fnum[field][i] = FL[field][i];
-        }
-        else if ((Mdotn_L < 0) && (Mdotn_R < 0))
-        {
-            for (int field = 0; field < Nfield; ++field)
-                for (int i: dirs)
-                    Fnum[field][i] = FR[field][i];
-        }
-        else
-        { // Use HLL is the momenta are of opposite signs?
-        */
         for (int field = 0; field < Nfield; ++field)
             for (int i: dirs)
             {
@@ -164,16 +108,9 @@ class HLL : public NumericalFlux
 
                 F0 = 0.5 * (FL[field][i] + FR[field][i]);
 
-                /*
-                if ((Mdotn_L > 0) && (Mdotn_R > 0))
-                    Fstar = FL[field][i];
-                else if ((Mdotn_L < 0) && (Mdotn_R < 0))
-                    Fstar = FR[field][i];
-                    */
 
                 Fnum[field][i] = F0 * (1.0 - n[i]) + Fstar * n[i];
             }
-        //}
 
         return;
     }

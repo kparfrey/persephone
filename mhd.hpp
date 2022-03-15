@@ -188,7 +188,6 @@ inline void MHD::WaveSpeeds(const real_t* const __restrict__ P,
                             const int mem) const 
 {
     const real_t p = P[pressure];
-    //const real_t p = MAX(P[pressure], p_floor); // Apply pressure floor
 
     /* cs_sq = (sound speed)^2 */
     const real_t cs_sq = gamma * p / P[density];
@@ -232,9 +231,6 @@ inline void MHD::WaveSpeeds(const real_t* const __restrict__ P,
     c[0] = MAX(0.0, P[v0+dir] + fast_speed); // P stores the contra velocity components
     c[1] = MIN(0.0, P[v0+dir] - fast_speed);
 
-    //c[0] = MAX(c[0],  ch);
-    //c[1] = MIN(c[1], -ch);
-
     return;
 }
 
@@ -262,16 +258,6 @@ inline void MHD::Fluxes(const real_t* const __restrict__ P,
     real_t v;
     real_t B;
 
-#if 0
-    real_t b[3]; // b^i
-    real_t bt = 0.0; // b^t
-    for (int i: dirs)
-        bt += Bu[i] * vu[i] * ((DiagonalSpatialMetric*)metric)->g[i][mem];
-    
-    for (int i: dirs)
-        b[i] = Bu[i] + bt * vu[i];
-#endif
-
     for (int d: dirs)
     {
         v = vu[d]; // velocity in this direction
@@ -290,10 +276,6 @@ inline void MHD::Fluxes(const real_t* const __restrict__ P,
         F[B0][d] = Bu[0]*v - B*vu[0]; 
         F[B1][d] = Bu[1]*v - B*vu[1]; 
         F[B2][d] = Bu[2]*v - B*vu[2]; 
-
-        // Flux of B^i in the d direction
-        //for (int i: dirs)
-        //    F[B0+i][d] = - b[d] * vu[i] + b[i] * vu[d];
 
         F[B0+d][d] = P[psi] * ((DiagonalSpatialMetric*)metric)->ginv[d][mem]; // Overwrite the above
 
