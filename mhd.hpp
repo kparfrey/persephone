@@ -295,7 +295,6 @@ inline void MHD::Fluxes(const real_t* const __restrict__ P,
         //for (int i: dirs)
         //    F[B0+i][d] = - b[d] * vu[i] + b[i] * vu[d];
 
-        //F[B0+d][d] = 0.0;
         F[B0+d][d] = P[psi] * ((DiagonalSpatialMetric*)metric)->ginv[d][mem]; // Overwrite the above
 
         F[psi][d] = ch_sq * B; 
