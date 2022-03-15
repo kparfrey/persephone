@@ -162,11 +162,14 @@ void Process::divB_subsystem_iterations(const int Niter, const bool initial_clea
     const real_t one_third  = 1.0/3.0;
     const real_t two_thirds = 2.0/3.0;
 
-    real_t* fields_inter = kernels::alloc(Ntot);
+    real_t* fields_inter = kernels::alloc_raw(Ntot);
     real_t* divF         = kernels::alloc(Ntot);
 
     /* Set Psi to 0 at beginning and end --- decouples timescales between here and main loop */
-    kernels::multiply_by_scalar_inPlace(&eb.fields[psi], 0.0, eb.Ns_block);
+        kernels::multiply_by_scalar_inPlace(&eb.fields[psi], 0.0, eb.Ns_block);
+
+    for (int mem = 0; mem < Ntot; ++mem)
+        fields_inter[mem] = eb.fields[mem];
 
     if (initial_cleaning)
         write::message("Starting initial-field divergence cleaning, " + std::to_string(Niter) + " iterations");
@@ -196,8 +199,8 @@ void Process::divB_subsystem_iterations(const int Niter, const bool initial_clea
         kernels::multiply_by_scalar(&divF[psi], 1.0/Physics::ch_sq, eb.divB, eb.Ns_block);
     }
 
-    //if (initial_cleaning)
-    kernels::multiply_by_scalar_inPlace(&eb.fields[psi], 0.0, eb.Ns_block);
+    if (initial_cleaning)
+        kernels::multiply_by_scalar_inPlace(&eb.fields[psi], 0.0, eb.Ns_block);
 
     kernels::free(fields_inter);
     kernels::free(divF);
@@ -333,13 +336,13 @@ void Process::find_divF_divB_subsystem(const real_t* const U, real_t* const divF
 
     
     for (int i: dirs)
-        divClean::soln_to_flux(eb.soln2flux(i), U, Uf(i), eb.lengths, i);
+        kernels::soln_to_flux(eb.soln2flux(i), U, Uf(i), eb.lengths, i);
 
     for (int i: dirs)
         divClean::bulk_fluxes(Uf(i), F(i), eb.geometry.S[i], eb.physics[i], eb.lengths, i);
 
     for (int i: ifaces)
-        divClean::fill_face_data(Uf(faces[i].normal_dir), faces[i], eb.lengths);
+        kernels::fill_face_data(Uf(faces[i].normal_dir), faces[i], eb.lengths);
 
     exchange_boundary_data();
 

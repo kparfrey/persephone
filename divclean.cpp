@@ -357,7 +357,8 @@ namespace divClean
         const int Ns1 = lb.Ns[dir1];
 
         
-        for(int field = START_SUBSYS; field <= END_SUBSYS; ++field)
+        //for(int field = START_SUBSYS; field <= END_SUBSYS; ++field)
+        for(int field = 0; field < lb.Nfield; ++field)
         {
             field_offset      = field * lb.Nf_dir_block[dir];
             field_offset_face = field * face.Ntot;
@@ -586,7 +587,8 @@ namespace divClean
                  * For indexing the metric and saving the fluxes back into F */
                 mem = mem_offset + (n2 * Ns1 + n1) * Nf0 + face.n0;
 
-                for (int field = START_SUBSYS; field <= END_SUBSYS; ++field)
+                //for (int field = START_SUBSYS; field <= END_SUBSYS; ++field)
+                for (int field = 0; field < lb.Nfield; ++field)
                 {
                     UL[field] = UL_data[mem_face + field * face.Ntot];
                     UR[field] = UR_data[mem_face + field * face.Ntot];
@@ -668,7 +670,8 @@ namespace divClean
                 mem_R = mem_offset_R + (n2 * Ns1 + n1) * Nf0 + 0;
                 mem_n = mem_offset_n +  n2 * Ns1 + n1;
 
-                for (int field = START_SUBSYS; field <= END_SUBSYS; ++field)
+                //for (int field = START_SUBSYS; field <= END_SUBSYS; ++field)
+                for (int field = 0.0; field < lb.Nfield; ++field)
                 {
                     UL[field] = Uf[mem_L + field * Nf_tot];
                     UR[field] = Uf[mem_R + field * Nf_tot];
