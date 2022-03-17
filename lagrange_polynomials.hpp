@@ -36,6 +36,8 @@ namespace lagrange
 
     real_t* matrix_matrix_product(const real_t* const B, const real_t* const C,
                                   const int Nrows_B, const int Ncols_C, const int Nsum);
+
+    real_t* chebyshev_filtering_matrix(const int N);
 }
 
 #endif

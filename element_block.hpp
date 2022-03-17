@@ -66,6 +66,8 @@ class ElementBlock
     VectorField fluxDeriv2soln; // Take derivative of values on flux points, interpolate
                                 // back to soln points
 
+    VectorField chebyshev_filter; // Filtering matrices; only need one element's worth
+
     Geometry geometry;     // Holds the computational geometry
     Physics* physics[3];   // On flux points. These three and physics_soln only
     Physics* physics_soln; // differ in their SpatialMetric objects

@@ -80,6 +80,10 @@ namespace kernels
                                real_t* const __restrict__ divF,
                          const LengthBucket lb);
     
+    void filter_field(      real_t* const __restrict__ U,
+                      const VectorField filter_matrices,
+                      const LengthBucket lb);
+
     void add_geometric_sources(      real_t* const __restrict__  divF, 
                                const real_t* const __restrict__  U,
                                const VectorField                 dP,

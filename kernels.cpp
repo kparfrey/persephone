@@ -429,6 +429,69 @@ namespace kernels
         return;
     }
 
+    
+    /* Apply a Chebyshev filter to a single field, starting at U[0] */
+    void filter_field(      real_t* const __restrict__ U,
+                      const VectorField filter_matrices,
+                      const LengthBucket lb)
+    {
+        int id_elem;
+        int mem_offset, mem, mem2;
+        real_t* F; 
+        real_t sum;
+        int N;
+
+        for (int ke = 0; ke < lb.Nelem[2]; ++ke)
+        for (int je = 0; je < lb.Nelem[1]; ++je)
+        for (int ie = 0; ie < lb.Nelem[0]; ++ie)
+        {
+            id_elem = (ke*lb.Nelem[1] + je)*lb.Nelem[0] + ie;
+            mem_offset = id_elem * lb.Ns_elem;
+
+            /* Filter in 0 direction */
+            N = lb.Ns[0];
+            F = filter_matrices(0);
+
+            for (int k = 0; k < lb.Ns[2]; ++k)
+            for (int j = 0; j < lb.Ns[1]; ++j)
+            for (int i = 0; i < lb.Ns[0]; ++i)
+            {
+                mem  = mem_offset + (k * lb.Ns[1]  + j) * lb.Ns[0] + i;
+
+                sum = 0.0;
+                for (int n = 0; n < N; ++n)
+                {
+                    mem2 = mem_offset + (k * lb.Ns[1]  + j) * lb.Ns[0] + n; // i -> n
+                    sum += F[i*N + n] * U[mem2];
+                }
+                
+                U[mem] = sum;
+            }
+
+            /* Filter in 1 direction */
+            N = lb.Ns[1];
+            F = filter_matrices(1);
+
+            for (int k = 0; k < lb.Ns[2]; ++k)
+            for (int i = 0; i < lb.Ns[0]; ++i)
+            for (int j = 0; j < lb.Ns[1]; ++j)
+            {
+                mem  = mem_offset + (k * lb.Ns[1]  + j) * lb.Ns[0] + i;
+
+                sum = 0.0;
+                for (int n = 0; n < N; ++n)
+                {
+                    mem2 = mem_offset + (k * lb.Ns[1]  + n) * lb.Ns[0] + i; // j -> n
+                    sum += F[j*N + n] * U[mem2];
+                }
+                
+                U[mem] = sum;
+            }
+        }
+
+        return;
+    }
+
 
     void add_geometric_sources(      real_t* const __restrict__  divF, 
                                const real_t* const __restrict__  U,

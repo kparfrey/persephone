@@ -1,4 +1,5 @@
 #include "lagrange_polynomials.hpp"
+#include <cmath>
 
 namespace lagrange
 {
@@ -182,5 +183,63 @@ namespace lagrange
             }
 
         return A;
+    }
+
+
+    /* Assumes that the data will be located at the Chebyshev-Gauss nodes */
+    real_t* chebyshev_filtering_matrix(const int N)
+    {
+        //double alpha = 10.0;
+        //double s     = 8.0;
+        //double eta;
+
+        real_t* F = new real_t [N * N](); // Final filtering matrix
+
+        double* M    = new double [N * N]; // Forward: nodes to modes
+        double* Minv = new double [N * N]; // Reverse: modes to nodes
+        double* L    = new double [N];     // Diagonal filtering matrix
+        double* LM   = new double [N * N]; // L * M
+
+        /* NB: V[i,j] --> V[i*N + j] */
+
+        /* Forward transform: type-2 DCT */
+        for (int k = 0; k < N; ++k)
+            for (int j = 0; j < N; ++j)
+                M[k*N + j] = 2.0 * std::cos(0.5 * pi * k * (2.0*j + 1.0) / N);
+
+        /* Reverse transform: type-3 DCT with normalisation */
+        double norm = 1.0 / (2.0 * N);
+        for (int j = 0; j < N; ++j)
+        {
+            Minv[j*N + 0] = norm;
+            for (int k = 0; k < N; ++k)
+                Minv[j*N + k] = norm * 2.0 * std::cos(0.5 * pi * k * (2.0*j + 1.0) / N);
+        }
+
+        /* Diagonal components of filtering matrix */
+        for (int i = 0; i < N; ++i)
+        {
+            //eta  = (double)i/(N - 1.0);
+            //L[i] = std::exp(-alpha * std::pow(eta, s)); 
+            L[i] = 1.0; 
+        }
+
+        /* Multiply filtering and forward-transform matrices */
+        for (int k = 0; k < N; ++k)
+            for (int j = 0; j < N; ++j)
+                LM[k*N + j] = L[k] * M[k*N + j];
+
+        /* Multiply reverse-transform and filtered-forward matrices */
+        for (int i = 0; i < N; ++i)
+            for (int k = 0; k < N; ++k)
+                for (int m = 0; m < N; ++m)
+                    F[i*N + k] += (real_t)(Minv[i*N + m] * LM[m*N + k]);
+
+        delete[] M;
+        delete[] Minv;
+        delete[] L;
+        delete[] LM;
+
+        return F;
     }
 }

@@ -497,6 +497,11 @@ void ElementBlock::fill_spectral_difference_matrices()
         delete[] flux2soln;
     }
 
+    write::message("Filling Chebyshev filtering matrices");
+    /* For filtering data lying on the Gauss/solution points */
+    for (int d: dirs)
+        chebyshev_filter(d) = lagrange::chebyshev_filtering_matrix(Ns[d]);
+
     write::message("Finished filling spectral-difference matrices");
 
     return;
