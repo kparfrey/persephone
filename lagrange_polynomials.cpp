@@ -189,9 +189,9 @@ namespace lagrange
     /* Assumes that the data will be located at the Chebyshev-Gauss nodes */
     real_t* chebyshev_filtering_matrix(const int N)
     {
-        //double alpha = 10.0;
-        //double s     = 8.0;
-        //double eta;
+        double alpha = 0.5;
+        double s     = 16.0;
+        double eta;
 
         real_t* F = new real_t [N * N](); // Final filtering matrix
 
@@ -212,16 +212,15 @@ namespace lagrange
         for (int j = 0; j < N; ++j)
         {
             Minv[j*N + 0] = norm;
-            for (int k = 0; k < N; ++k)
+            for (int k = 1; k < N; ++k)
                 Minv[j*N + k] = norm * 2.0 * std::cos(0.5 * pi * k * (2.0*j + 1.0) / N);
         }
 
         /* Diagonal components of filtering matrix */
         for (int i = 0; i < N; ++i)
         {
-            //eta  = (double)i/(N - 1.0);
-            //L[i] = std::exp(-alpha * std::pow(eta, s)); 
-            L[i] = 1.0; 
+            eta  = (double)i/(N - 1.0);
+            L[i] = std::exp(-alpha * std::pow(eta, s)); 
         }
 
         /* Multiply filtering and forward-transform matrices */
@@ -231,9 +230,9 @@ namespace lagrange
 
         /* Multiply reverse-transform and filtered-forward matrices */
         for (int i = 0; i < N; ++i)
-            for (int k = 0; k < N; ++k)
+            for (int j = 0; j < N; ++j)
                 for (int m = 0; m < N; ++m)
-                    F[i*N + k] += (real_t)(Minv[i*N + m] * LM[m*N + k]);
+                    F[i*N + j] += (real_t)(Minv[i*N + m] * LM[m*N + j]);
 
         delete[] M;
         delete[] Minv;

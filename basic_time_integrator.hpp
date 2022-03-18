@@ -71,12 +71,18 @@ class RK3_SSP : public BasicTimeIntegrator
                                fields_inter, Ntot);
         kernels::floors(fields_inter, eb.physics_soln, eb.lengths);
 
+        //kernels::filter_field(&fields_inter[8*eb.Ns_block], eb.chebyshev_filter, eb.lengths);
+
+
         proc.substep = 2;
         proc.find_divF(fields_inter, proc.time + proc.dt, divF);
         kernels::add_3_vectors(eb.fields, fields_inter, divF, 
                                0.75     , 0.25        , -0.25*proc.dt,  
                                fields_inter, Ntot);
         kernels::floors(fields_inter, eb.physics_soln, eb.lengths);
+
+        //kernels::filter_field(&fields_inter[8*eb.Ns_block], eb.chebyshev_filter, eb.lengths);
+
 
         proc.substep = 3;
         proc.find_divF(fields_inter, proc.time + 0.5*proc.dt, divF);
@@ -86,7 +92,8 @@ class RK3_SSP : public BasicTimeIntegrator
         kernels::floors(eb.fields, eb.physics_soln, eb.lengths);
 
 
-        kernels::filter_field(&eb.fields[8*eb.Ns_block], eb.chebyshev_filter, eb.lengths);
+
+        //kernels::filter_field(&eb.fields[8*eb.Ns_block], eb.chebyshev_filter, eb.lengths);
         
 
         kernels::free(fields_inter);

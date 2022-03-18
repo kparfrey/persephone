@@ -438,8 +438,11 @@ namespace kernels
         int id_elem;
         int mem_offset, mem, mem2;
         real_t* F; 
-        real_t sum;
         int N;
+        
+        int Nmax = MAX(lb.Ns[0], MAX(lb.Ns[1], lb.Ns[2]));
+        real_t* Ufilt = new real_t [Nmax];
+
 
         for (int ke = 0; ke < lb.Nelem[2]; ++ke)
         for (int je = 0; je < lb.Nelem[1]; ++je)
@@ -454,40 +457,52 @@ namespace kernels
 
             for (int k = 0; k < lb.Ns[2]; ++k)
             for (int j = 0; j < lb.Ns[1]; ++j)
-            for (int i = 0; i < lb.Ns[0]; ++i)
             {
-                mem  = mem_offset + (k * lb.Ns[1]  + j) * lb.Ns[0] + i;
+                for (int i = 0; i < N; ++i)
+                    Ufilt[i] = 0.0;
 
-                sum = 0.0;
-                for (int n = 0; n < N; ++n)
+                for (int i = 0; i < N; ++i)
+                    for (int n = 0; n < N; ++n)
+                    {
+                        mem2 = mem_offset + (k * lb.Ns[1]  + j) * lb.Ns[0] + n; // i -> n
+                        Ufilt[i] += F[i*N + n] * U[mem2];
+                    }
+
+                for (int i = 0; i < N; ++i)
                 {
-                    mem2 = mem_offset + (k * lb.Ns[1]  + j) * lb.Ns[0] + n; // i -> n
-                    sum += F[i*N + n] * U[mem2];
+                    mem  = mem_offset + (k * lb.Ns[1]  + j) * lb.Ns[0] + i;
+                    U[mem] = Ufilt[i];
                 }
-                
-                U[mem] = sum;
             }
+
 
             /* Filter in 1 direction */
             N = lb.Ns[1];
             F = filter_matrices(1);
+            real_t* Ufilt = new real_t [N];
 
             for (int k = 0; k < lb.Ns[2]; ++k)
             for (int i = 0; i < lb.Ns[0]; ++i)
-            for (int j = 0; j < lb.Ns[1]; ++j)
             {
-                mem  = mem_offset + (k * lb.Ns[1]  + j) * lb.Ns[0] + i;
+                for (int j = 0; j < N; ++j)
+                    Ufilt[j] = 0.0;
 
-                sum = 0.0;
-                for (int n = 0; n < N; ++n)
+                for (int j = 0; j < N; ++j)
+                    for (int n = 0; n < N; ++n)
+                    {
+                        mem2 = mem_offset + (k * lb.Ns[1]  + n) * lb.Ns[0] + i; // j -> n
+                        Ufilt[j] += F[j*N + n] * U[mem2];
+                    }
+
+                for (int j = 0; j < N; ++j)
                 {
-                    mem2 = mem_offset + (k * lb.Ns[1]  + n) * lb.Ns[0] + i; // j -> n
-                    sum += F[j*N + n] * U[mem2];
+                    mem  = mem_offset + (k * lb.Ns[1]  + j) * lb.Ns[0] + i;
+                    U[mem] = Ufilt[j];
                 }
-                
-                U[mem] = sum;
             }
         }
+
+        delete[] Ufilt;
 
         return;
     }
