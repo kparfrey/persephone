@@ -211,22 +211,68 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
     {
         const int psi = 8 * eb.Ns_block; // mem location at which the psi field begins
 
+        /* Find divB from divF[psi] and save into elements.divB */
         if (is_output_step && (substep == 1))
-        {
-            /* Find divB from divF[psi] and save into elements.divB */
-            const real_t over_chsq = 1.0/Physics::ch_sq;
-            kernels::multiply_by_scalar(&divF[psi], over_chsq, eb.divB, eb.Ns_block);
-        }
+            kernels::multiply_by_scalar(&divF[psi], 1.0/Physics::ch_sq, eb.divB, eb.Ns_block);
 
         /* Add the damping source term for the div-cleaning scalar field */
         kernels::add_scaled_vectors_inPlace(&divF[psi], &U[psi], 
                                             Physics::psi_damping_rate, eb.Ns_block);
     }
 
+    /*
+     * Dump out the initial divB
+    if (rank == 0)
+    {
+        real_t Bsq, Bu[3];
+        for (int i = 0; i < eb.Ns_block; ++i)
+        {
+            for (int d: dirs)
+                Bu[d] = U[(5+d)*eb.Ns_block + i];
+            Bsq = eb.physics_soln->metric->square(Bu, i);
+
+            std::cout << std::abs(eb.divB[i])/std::sqrt(Bsq) << std::endl;
+        }
+
+        //exit(33);
+    }
+    */
 
     /* Add geometric source terms if not using Cartesian physical coordinates */
     if (eb.physics_soln->metric->physical_coords != cartesian)
         kernels::add_geometric_sources(divF, U, dP, eb.physics_soln, Nfield, eb.Ns_block);
+
+    /* Temp: Powell source terms */
+    if (false)
+    {
+        real_t rho, vl[3], vu[3], Bu[3], Bl[3], vdotB, divB;
+        const int N = eb.Ns_block;
+        for (int i = 0; i < N; ++i)
+        {
+            divB = eb.divB[i];
+            rho = U[i]; // 0th field
+            for (int d: dirs)
+                vl[d] = U[(1+d)*N + i] / rho;
+
+            for (int d: dirs)
+                Bu[d] = U[(5+d)*N + i];
+
+            eb.physics_soln->metric->raise(vl, vu, i);
+            eb.physics_soln->metric->lower(Bu, Bl, i);
+            vdotB = eb.physics_soln->metric->dot(vu, Bu, i);
+
+            // Momentum sources
+            for (int d: dirs)
+                divF[(1+d)*N + i] += divB * Bl[d];
+
+            // Energy source
+            divF[4*N + i] += divB * vdotB;
+
+            // Induction equation sources
+            for (int d: dirs)
+                divF[(5+d)*N +i] += divB * vu[d];
+        }
+    }
 
 
     for (int i: dirs)
