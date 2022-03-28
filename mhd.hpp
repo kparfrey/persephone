@@ -11,9 +11,6 @@
  * 2 rho v_1
  * 3 rho v_2
  * 4 E  ---  total energy density
- * 5 B^0
- * 6 B^1
- * 7 B^2
  *
  * P --- primitive
  * 0 rho
@@ -21,15 +18,20 @@
  * 2 v^1
  * 3 v^2
  * 4 p  ---  pressure
- * 5 B^0
- * 6 B^1
- * 7 B^2
+ *
+ * For both:
+ * 5  B^0
+ * 6  B^1
+ * 7  B^2
+ * 8  A_0
+ * 9  A_1
+ * 10 A_2
  */
 
 class MHD : public Physics
 {
     private:
-    enum conserved {Density, mom0, mom1, mom2, tot_energy, B0, B1, B2, psi};
+    enum conserved {Density, mom0, mom1, mom2, tot_energy, B0, B1, B2};
     enum primitive {density, v0  , v1  , v2,   pressure};
 
     public:
@@ -45,19 +47,23 @@ class MHD : public Physics
     MHD()
     {
         system = mhd;
-        Nfield = 8;
+        Nfield = 11;
+        Ncons  = 8;
         Nflux  = 5; 
         variables = new string [9];
-        variables[0] = "rho";
-        variables[1] = "v0";
-        variables[2] = "v1";
-        variables[3] = "v2";
-        variables[4] = "p";
-        variables[5] = "B0";
-        variables[6] = "B1";
-        variables[7] = "B2";
+        variables[0]  = "rho";
+        variables[1]  = "v0";
+        variables[2]  = "v1";
+        variables[3]  = "v2";
+        variables[4]  = "p";
+        variables[5]  = "B0";
+        variables[6]  = "B1";
+        variables[7]  = "B2";
+        variables[8]  = "A0";
+        variables[9]  = "A1";
+        variables[10] = "A2";
 
-        diffusive   = true;
+        diffusive   = false;
         viscosity   = 1e-6;
         resistivity = 1e-6;
         diffusive_timestep_const = 1.0; // Default: 1/3, but larger can be more stable?!

@@ -35,10 +35,6 @@ class RK2_midpoint : public BasicTimeIntegrator
         proc.find_divF(fields_mid, proc.time + 0.5*proc.dt, divF);
         kernels::add_2_vectors(eb.fields, divF, 1.0,     -proc.dt,  eb.fields, Ntot);
 
-        /* psi source term as a separate substep */
-        //kernels::multiply_by_scalar(&eb.fields[8*eb.Ns_block], 
-        //        proc.system_data->psi_damping_exp, eb.Ns_block);
-
         kernels::free(fields_mid);
         kernels::free(divF);
 
@@ -58,7 +54,6 @@ class RK3_SSP : public BasicTimeIntegrator
 
         /* Intermediate fields, reused */
         real_t* fields_inter = kernels::alloc_raw(Ntot);
-
         real_t* divF         = kernels::alloc_raw(Ntot);
 
         const real_t one_third  = 1.0/3.0;
@@ -71,8 +66,6 @@ class RK3_SSP : public BasicTimeIntegrator
                                fields_inter, Ntot);
         kernels::floors(fields_inter, eb.physics_soln, eb.lengths);
 
-        //kernels::filter_field(&fields_inter[8*eb.Ns_block], eb.chebyshev_filter, eb.lengths);
-
 
         proc.substep = 2;
         proc.find_divF(fields_inter, proc.time + proc.dt, divF);
@@ -81,8 +74,6 @@ class RK3_SSP : public BasicTimeIntegrator
                                fields_inter, Ntot);
         kernels::floors(fields_inter, eb.physics_soln, eb.lengths);
 
-        //kernels::filter_field(&fields_inter[8*eb.Ns_block], eb.chebyshev_filter, eb.lengths);
-
 
         proc.substep = 3;
         proc.find_divF(fields_inter, proc.time + 0.5*proc.dt, divF);
@@ -90,7 +81,6 @@ class RK3_SSP : public BasicTimeIntegrator
                                one_third, two_thirds  , -two_thirds*proc.dt,  
                                eb.fields, Ntot);
         kernels::floors(eb.fields, eb.physics_soln, eb.lengths);
-
 
 
         //kernels::filter_field(&eb.fields[8*eb.Ns_block], eb.chebyshev_filter, eb.lengths);

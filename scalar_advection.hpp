@@ -14,6 +14,7 @@ class ScalarAdvection : public Physics
     {
         system = scalar_advection;
         Nfield = 1;
+        Ncons  = 1;
         Nflux  = 1;
         variables = new string [1];
         variables[0] = "phi";

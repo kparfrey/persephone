@@ -127,7 +127,9 @@ void Process::time_advance()
 
 /* The fundamental function of the spectral difference method */
 /* U : vector of conserved solution fields (physical space) 
- * F : vector of fluxes (reference-element space) */
+ * F : vector of fluxes (reference-element space) 
+ * Note: here divF is just the negative of the "right hand side", for those
+ *       fields not evolved by a flux divergence. */
 void Process::find_divF(const real_t* const U, const real_t t, real_t* const divF)
 {
     ElementBlock& eb = elements;

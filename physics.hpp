@@ -12,8 +12,9 @@ class Physics
     public:
     /* Defined directly in derived-class constructors */
     EqnSystem system;
-    int Nfield; // Total number of conserved variables
-    int Nflux;  // Number of cons variables to calculate fluxes for
+    int Nfield; // Total number of fields
+    int Ncons;  // Number of conserved variables
+    int Nflux;  // Number of conserved variables to calculate fluxes for
     string* variables;
 
     /* The metric now lives here */

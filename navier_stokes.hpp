@@ -33,6 +33,7 @@ class NavierStokes : public Physics
     {
         system = navier_stokes;
         Nfield = 5;
+        Ncons  = 5;
         Nflux  = 5;
         variables = new string [5];
         variables[0] = "rho";

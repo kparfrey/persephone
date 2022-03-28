@@ -68,6 +68,7 @@ static void shu_vortex(const real_t r[3],
 /* From Toth (2000), section 6.3.1 */
 static void alfven_wave(const real_t r[3],
                               real_t* const __restrict__ fields,
+                              real_t* const __restrict__ Binit,
                         const int loc0,
                         const int Ns_block,
                         const MHD* const __restrict__ physics)
@@ -112,10 +113,10 @@ static void alfven_wave(const real_t r[3],
     fields[loc0 +    mom1*Ns_block] = density * v1;
     fields[loc0 +    mom2*Ns_block] = density * v2;
     fields[loc0 +  energy*Ns_block] = kinetic_energy + magnetic_energy + pressure / gm1;
-    fields[loc0 +      B0*Ns_block] = b0;
-    fields[loc0 +      B1*Ns_block] = b1;
-    fields[loc0 +      B2*Ns_block] = b2;
-    fields[loc0 +     psi*Ns_block] = 0.0;
+
+    Binit[loc0 + 0*Ns_block] = b0;
+    Binit[loc0 + 1*Ns_block] = b1;
+    Binit[loc0 + 2*Ns_block] = b2;
 
     return;
 }
@@ -150,7 +151,7 @@ void set_initial_state_cartesian(ElementBlock& eb)
                     shu_vortex(r, eb.fields, loc0, eb.Ns_block, (NavierStokes*)eb.physics_soln);
                     break;
                 case mhd:
-                    alfven_wave(r, eb.fields, loc0, eb.Ns_block, (MHD*)eb.physics_soln);
+                    alfven_wave(r, eb.fields, eb.Binit, loc0, eb.Ns_block, (MHD*)eb.physics_soln);
                     break;
             }
         }

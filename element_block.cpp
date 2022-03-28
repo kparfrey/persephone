@@ -96,8 +96,8 @@ void ElementBlock::allocate_on_host()
 
     if (physics_soln->system == mhd)
     {
+        Binit  = new real_t [     3 * Ns_block];
         divB = new real_t [Ns_block];
-        //divB_init = new real_t [Ns_block];
     }
 
     for (int i: dirs)
