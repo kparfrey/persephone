@@ -80,10 +80,6 @@ void Params::setup_process_generic(Process &proc)
 
         /* The above convenience pointer to proc.physics[d] is the only 
          * difference between the three copies of NumericalFlux */
-
-        /* For running the divergence-cleaning subsystem on its own */
-        proc.F_numerical_divB_subsystem[d] = new HLL_divB_subsystem;
-        proc.F_numerical_divB_subsystem[d]->physics = proc.elements.physics[d]; // Convenience pointer
     }
 
     //proc.F_numerical->U_to_P   = proc.U_to_P;   

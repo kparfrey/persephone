@@ -102,22 +102,6 @@ void Process::time_advance()
     else
         dt = dtmin_advect;
 
-
-    /* Calculate maximum stable div-cleaning wavespeed */
-    if (system == mhd)
-    {
-        const real_t ch_divClean = 1.0 /(dt * tt_max_global); //Should be stable with 1/()
-        //std::cout << ch_divClean << std::endl;
-        //const real_t ch_divClean = 2.5;
-
-        Physics::ch    = ch_divClean;
-        Physics::ch_sq = ch_divClean * ch_divClean;
-        //F_from_P->ch_sq = physics->c_h * physics->c_h;
-
-        Physics::psi_damping_rate = ch_divClean / Physics::psi_damping_const; //p_d_c = c_r from Dedner
-        //Physics::psi_damping_rate = Physics::psi_damping_const / dt; 
-        //physics->psi_damping_exp = std::exp(-cfl * physics->psi_damping_const);
-    }
     /********************************************/
 
     if (Physics::diffusive)
@@ -175,7 +159,6 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
 
     for (int i: dirs)
         kernels::bulk_fluxes(Uf(i), F(i), eb.geometry.S[i], eb.physics[i], eb.lengths, i);
-                             //U_to_P, F_from_P, eb.lengths, i);
 
     for (int i: ifaces)
         kernels::fill_face_data(Uf(faces[i].normal_dir), faces[i], eb.lengths);
@@ -204,21 +187,6 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
         kernels::fluxDeriv_to_soln(eb.fluxDeriv2soln(i), F(i), dF(i), eb.lengths, i);
 
     kernels::flux_divergence(dF, eb.geometry.Jrdetg(), divF, eb.lengths);
-
-    /* Add div-cleaning scalar field's source directly here. Could alternatively do operator
-     * splitting, and directly reduce psi in a subsequent substep. */
-    if (system == mhd)
-    {
-        const int psi = 8 * eb.Ns_block; // mem location at which the psi field begins
-
-        /* Find divB from divF[psi] and save into elements.divB */
-        if (is_output_step && (substep == 1))
-            kernels::multiply_by_scalar(&divF[psi], 1.0/Physics::ch_sq, eb.divB, eb.Ns_block);
-
-        /* Add the damping source term for the div-cleaning scalar field */
-        kernels::add_scaled_vectors_inPlace(&divF[psi], &U[psi], 
-                                            Physics::psi_damping_rate, eb.Ns_block);
-    }
 
     /*
      * Dump out the initial divB
@@ -269,8 +237,8 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
             divF[4*N + i] += divB * vdotB;
 
             // Induction equation sources
-            for (int d: dirs)
-                divF[(5+d)*N +i] += divB * vu[d];
+            //for (int d: dirs)
+            //    divF[(5+d)*N +i] += divB * vu[d];
         }
     }
 
@@ -306,7 +274,6 @@ void Process::add_diffusive_flux(VectorField Uf, VectorField dP, VectorField F)
         /* Initialise Fd to zero - otherwise have problems if forget to set 
          * a component in the DiffusiveFluxes functor. Doesn't seem to work?? */
         Fd(i) = kernels::alloc(Nfield * eb.Nf_dir_block[i]);
-        //dU(i) = kernels::alloc_raw(Nfield * eb.Ns_block);
         dP_ref(i) = kernels::alloc_raw(Nfield * eb.Ns_block);
 
         for (int j: dirs)
@@ -361,12 +328,8 @@ void Process::add_diffusive_flux(VectorField Uf, VectorField dP, VectorField F)
         for (int dderiv: dirs)
             kernels::internal_interface_average(dPf[dflux](dderiv), eb.lengths, dflux);
 
-    //const real_t coeffs[2] = {physics->viscosity, physics->resistivity};
     for (int i: dirs) // flux-point direction
         kernels::diffusive_flux(Pf(i), dPf[i], Fd(i), eb.physics[i], eb.geometry.S[i], eb.lengths, i);
-        //kernels::diffusive_flux(Uf(i), dPf[i], Fd(i), eb.physics[i], eb.geometry.S[i], eb.lengths, i);
-        //kernels::diffusive_flux(Uf(i), dUf[i], Fd(i), eb.physics[i], coeffs, eb.geometry.S[i], eb.lengths, i);
-        //kernels::diffusive_flux(Uf(i), dUf[i], Fd(i), F_diff, coeffs, eb.geometry.S[i], eb.lengths, i);
 
     for (int i: dirs)
         kernels::add_vectors_inPlace(F(i), Fd(i), Nfield*eb.Nf_dir_block[i]);

@@ -182,69 +182,6 @@ class HLL : public NumericalFlux
 };
 
 
-class HLL_divB_subsystem : public NumericalFlux
-{
-    public:
-
-    ACCEL_DECORATOR
-    inline void operator()(const real_t* const __restrict__ UL, 
-                           const real_t* const __restrict__ UR,
-                           const real_t* const __restrict__ n,
-                                 real_t (*Fnum)[3],
-                           const int, // dir not used
-                           const int mem) const override
-    {
-        /* Temporary variables --- use a fixed size */
-        constexpr int Nv = 10; // since Nfield isn't constexpr
-        real_t FL[Nv][3], FR[Nv][3];
-        real_t PL[Nv],    PR[Nv];
-        real_t cL[3][2], cR[3][2];
-        real_t cpos[3], cneg[3];
-        real_t cp, cn;
-        
-        real_t Fstar;
-        real_t F0; // Here (FL + FR)/2 for now
-
-        /* P = U, so use U wherever P would usually go */
-
-        physics->ConservedToPrimitive(UL, PL, mem);
-        physics->ConservedToPrimitive(UR, PR, mem);
-
-        physics->Fluxes_divB_subsystem(PL, FL, mem);
-        physics->Fluxes_divB_subsystem(PR, FR, mem);
-
-        for (int d: dirs)
-        {
-            physics->WaveSpeeds(PL, cL[d], d, mem);
-            physics->WaveSpeeds(PR, cR[d], d, mem);
-        }
-        
-        for (int d: dirs)
-        {
-            cpos[d] = MAX(0.0, MAX(cL[d][0], cR[d][0])); // fastest +ve moving wave
-            cneg[d] = MIN(0.0, MIN(cL[d][1], cR[d][1])); // fastest -ve moving wave
-        }
-
-
-        for (int field = 5; field <= 8; ++field)
-            for (int i: dirs)
-            {
-                cp = cpos[i];
-                cn = cneg[i];
-
-                Fstar = (cp*FL[field][i] - cn*FR[field][i]
-                                 + cp*cn*(UR[field] - UL[field])) / (cp - cn);
-
-                F0 = 0.5 * (FL[field][i] + FR[field][i]);
-
-                Fnum[field][i] = F0 * (1.0 - n[i]) + Fstar * n[i];
-            }
-
-        return;
-    }
-};
-
-
 
 
 /* Doesn't include the projection along the normal required
