@@ -155,6 +155,32 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
             dP(i) = kernels::alloc_raw(Nfield * eb.Ns_block);
     }
 
+    /************************************************** 
+     **** Find B from vector potential and save into U.
+     **** This is very hacky for now!                 */
+#if 0
+    eb.lengths.operation_mode = vecpot_mode;
+    const int A0 = 8;
+    const int A0_mem = A0 * eb.Ns_block;
+
+    VectorField Af; // Vec. pot. interpolated to flux points
+    for (int i: dirs)
+        Af(i) = kernels::alloc_raw(3 * eb.Nf_dir_block[i]);
+
+    for (int i: dirs)
+        kernels::soln_to_flux(eb.soln2flux(i), &U[A0_mem], Af(i), eb.lengths, i);
+
+    // Problem: will also need hydro data on faces to do the upwinding in 
+    // the Riemann flux....
+    for (int i: ifaces)
+        kernels::fill_face_data(Af(faces[i].normal_dir), faces[i], eb.lengths);
+
+    for (int i: dirs)
+        kernels::free(Af(i));
+
+    eb.lengths.operation_mode = normal_mode;
+#endif
+    /**************************************************/
     
     for (int i: dirs)
         kernels::soln_to_flux(eb.soln2flux(i), U, Uf(i), eb.lengths, i);
@@ -175,10 +201,8 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
     }
     
     for (int i: dirs)
-    {
         kernels::internal_numerical_flux(Uf(i), F(i), F_numerical[i],
                                          eb.geometry.S[i], eb.geometry.normal[i], eb.lengths, i);
-    }
 
     /* For explicit diffusive terms, calculate the diffusive flux and add
      * to the advective fluxes before taking the flux deriv: F += F_diffusive */
@@ -211,6 +235,40 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
     /* Add geometric source terms if not using Cartesian physical coordinates */
     if (eb.physics_soln->metric->physical_coords != cartesian)
         kernels::add_geometric_sources(divF, U, dP, eb.physics_soln, Nfield, eb.Ns_block);
+
+
+    /* VECTOR POTENTIAL STUFF 
+     * For now just try transporting A using the B already at solution points */
+    if (true)
+    {
+        real_t rdetg;
+        const int Ns = eb.Ns_block;
+        real_t* Up   = new real_t [Nfield];
+        real_t* Pp   = new real_t [Nfield];
+        real_t* v;
+        real_t* B;
+        
+        for (int mem = 0; mem < Ns; ++mem)
+        {
+            /* Load all field variables at this location into the Up array. */
+            for (int field = 0; field < Nfield; ++field)
+                Up[field] = U[mem + field * Ns];
+
+            eb.physics_soln->ConservedToPrimitive(Up, Pp, mem);
+            v = &Pp[1];
+            B = &Pp[5];
+
+            rdetg = eb.physics_soln->metric->rdetg[mem];
+    
+            divF[mem + 8*Ns] = rdetg * (v[2]*B[1] - v[1]*B[2]);
+            divF[mem + 9*Ns] = rdetg * (v[0]*B[2] - v[2]*B[0]);
+            divF[mem +10*Ns] = rdetg * (v[1]*B[0] - v[0]*B[1]);
+        }
+        
+        delete[] Up;
+        delete[] Pp;
+    }
+
 
     /* Temp: Powell source terms */
     if (false)
@@ -295,7 +353,7 @@ void Process::add_diffusive_flux(VectorField Uf, VectorField dP, VectorField F)
     for (int i: ifaces)
         kernels::external_interface_average(faces[i], Pf(faces[i].normal_dir), eb.lengths, false);
 
-    /* Average Uf on process-internal faces. */
+    /* Average Pf on process-internal faces. */
     for (int i: dirs)
         kernels::internal_interface_average(Pf(i), eb.lengths, i);
 
@@ -344,6 +402,85 @@ void Process::add_diffusive_flux(VectorField Uf, VectorField dP, VectorField F)
         for (int j: dirs)
             kernels::free(dPf[i](j));
     }
+
+    return;
+}
+
+
+void Process::replace_B()
+{
+    ElementBlock& eb = elements;
+    real_t* const U = eb.fields;
+
+    eb.lengths.Nfield = 3;
+    for (int i: ifaces)
+        faces[i].Ntot_all = 3 * faces[i].Ntot;
+
+    const int Ns = eb.Ns_block;
+    const int A0 = 8;
+    const int A0_mem = A0 * Ns;
+    
+    VectorField Af;
+    VectorField dA;
+    VectorField dA_ref;
+
+    for (int d: dirs)
+    {
+        Af(d) = kernels::alloc(3 * eb.Nf_dir_block[d]);
+        dA(d) = kernels::alloc(3 * eb.Ns_block);
+        dA_ref(d) = kernels::alloc(3 * eb.Ns_block);
+    }
+
+    for (int i: dirs)
+        kernels::soln_to_flux(eb.soln2flux(i), &U[A0_mem], Af(i), eb.lengths, i);
+
+    for (int i: ifaces)
+        kernels::fill_face_data(Af(faces[i].normal_dir), faces[i], eb.lengths);
+
+    exchange_boundary_data();
+    
+    for (int i: ifaces)
+        kernels::external_interface_average(faces[i], Af(faces[i].normal_dir), eb.lengths, false);
+    
+    for (int i: dirs)
+        kernels::internal_interface_average(Af(i), eb.lengths, i);
+    
+    for (int i: dirs) // i = derivative direction
+    {
+        // Af(i): A at the i-direction's flux points
+        // dA_ref(i): gradients of A in the i direction, at the solution points
+        kernels::fluxDeriv_to_soln(eb.fluxDeriv2soln(i), Af(i), dA_ref(i), eb.lengths, i);
+    }
+
+    /* Transform to physical-space gradient */
+    kernels::gradient_ref_to_phys(dA_ref, dA, eb.geometry.dxdr, eb.lengths);
+
+    /* Use physical dA to find curl(A), save into U: B = Binit + curl(A) */
+    real_t rdetg;
+    int c0, c1, c2; // indices for vector components
+    for (int mem = 0; mem < Ns; ++mem)
+    {
+        rdetg = eb.physics_soln->metric->rdetg[mem];
+        c0 = mem;
+        c1 = mem + Ns;
+        c2 = mem + 2*Ns;
+
+        U[mem + 5*Ns] = eb.Binit[c0] + (dA(1,c2) - dA(2,c1)) / rdetg;
+        U[mem + 6*Ns] = eb.Binit[c1] + (dA(2,c0) - dA(0,c2)) / rdetg;
+        U[mem + 7*Ns] = eb.Binit[c2] + (dA(0,c1) - dA(1,c0)) / rdetg;
+    }
+
+
+    for (int d: dirs)
+    {
+        kernels::free(dA(d));
+        kernels::free(dA_ref(d));
+        kernels::free(Af(d));
+    }
+    
+    eb.lengths.Nfield = 11;
+    for (int i: ifaces)
+        faces[i].Ntot_all = 11 * faces[i].Ntot;
 
     return;
 }

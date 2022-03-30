@@ -1,7 +1,7 @@
 ### Laptop ###
 CXX = mpic++
 CPPFLAGS = -I../HighFive/include
-CXXFLAGS = -std=c++17 -Wall -Werror -DHIGHFIVE_PARALLEL_HDF5=ON -O2 #-g -Og # -O3 -pg 
+CXXFLAGS = -std=c++17 -Wall -Werror -DHIGHFIVE_PARALLEL_HDF5=ON -g -Og # -O3 -pg 
 LDFLAGS  = #-pg
 LDLIBS   = -lmpi -lm -lhdf5
 

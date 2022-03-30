@@ -85,7 +85,6 @@ class RK3_SSP : public BasicTimeIntegrator
 
         //kernels::filter_field(&eb.fields[8*eb.Ns_block], eb.chebyshev_filter, eb.lengths);
         
-
         kernels::free(fields_inter);
         kernels::free(divF);
 

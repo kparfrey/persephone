@@ -83,5 +83,6 @@ class Process
     void move_to_device();
     void fill_external_boundary_data();
     void exchange_boundary_data();
+    void replace_B();
 };
 #endif

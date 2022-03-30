@@ -122,7 +122,13 @@ struct ScalarField
  * passing to kernels. */
 struct LengthBucket
 {
+    /* Not really a length, but handy to put this here since a 
+     * LengthBucket is passed to most kernels */
+    OpMode operation_mode;
+
     int Nfield;
+    int Ncons;
+    int Nflux;
 
     int Nelem[3];
 

@@ -380,8 +380,8 @@ namespace kernels
                 physics->Fluxes(Pp, Fp, mem);
 
                 /* Transform from physical to reference-space fluxes
-                 * for all fields */
-                fluxes_phys_to_ref(Fp, F, S, mem, lb.Nfield, Nf_tot);
+                 * for all conserved fields */
+                fluxes_phys_to_ref(Fp, F, S, mem, lb.Ncons, Nf_tot);
             }
         }
 
@@ -568,7 +568,7 @@ namespace kernels
                 case mhd:
                     divF[mem + 1*Ns] -= Fp[3][2] / R; // As for Navier-Stokes
                     // d_t (B^r) + ... = psi / R
-                    //divF[mem + 5*Ns] -= Up[8]/R;
+                    divF[mem + 5*Ns] -= Up[8]/R;
                     break;
                 default:
                     exit(123);
@@ -1019,7 +1019,7 @@ namespace kernels
 
                 /* Transform from physical to reference-space fluxes.
                  * Needs mem loc in the full 3D array */
-                fluxes_phys_to_ref(F_num_phys, F, S, mem, lb.Nfield, Nf_tot);
+                fluxes_phys_to_ref(F_num_phys, F, S, mem, lb.Ncons, Nf_tot);
 
 #if 0
                 /* Unique normal flux */
@@ -1112,7 +1112,7 @@ namespace kernels
                 (*F_numerical)(UL, UR, np, F_num_phys, dir, mem_L); // Arbitrarily choose mem_L
 
                 /* Calculate reference-space flux and save into the left element */
-                fluxes_phys_to_ref(F_num_phys, F, S, mem_L, lb.Nfield, Nf_tot);
+                fluxes_phys_to_ref(F_num_phys, F, S, mem_L, lb.Ncons, Nf_tot);
 
                 /* Copy into the right element */
                 for (int field = 0; field < lb.Nfield; ++field)

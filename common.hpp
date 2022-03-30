@@ -25,6 +25,9 @@ enum Prognosis {destroy, survive};
 enum TorusCentralPolygon {square, hexagon, octagon};
 enum TorusProblemType {cerfon_freidberg, explicit_modes, desc_input}; 
 
+enum OpMode {normal_mode, vecpot_mode}; // Whether currently in "normal" mode or
+                                        // dealing with the vector potential
+
 //enum Components {covariant, contravariant};
 //enum CoordTransDir {phys2ref, ref2phys};
 //enum Operation {soln_to_flux, fluxDeriv_to_soln};

@@ -31,7 +31,7 @@
 class MHD : public Physics
 {
     private:
-    enum conserved {Density, mom0, mom1, mom2, tot_energy, B0, B1, B2};
+    enum conserved {Density, mom0, mom1, mom2, tot_energy, B0, B1, B2, A0, A1, A2};
     enum primitive {density, v0  , v1  , v2,   pressure};
 
     public:
@@ -49,8 +49,8 @@ class MHD : public Physics
         system = mhd;
         Nfield = 11;
         Ncons  = 8;
-        Nflux  = 5; 
-        variables = new string [9];
+        Nflux  = 8; 
+        variables = new string [11];
         variables[0]  = "rho";
         variables[1]  = "v0";
         variables[2]  = "v1";
@@ -63,9 +63,9 @@ class MHD : public Physics
         variables[9]  = "A1";
         variables[10] = "A2";
 
-        diffusive   = false;
-        viscosity   = 1e-6;
-        resistivity = 1e-6;
+        diffusive   = true;
+        viscosity   = 1e-4;
+        resistivity = 1e-4;
         diffusive_timestep_const = 1.0; // Default: 1/3, but larger can be more stable?!
 
         apply_floors = true;
@@ -124,6 +124,11 @@ inline void MHD::ConservedToPrimitive(const real_t* const __restrict__ U,
     P[B1] = U[B1];
     P[B2] = U[B2];
 
+    /* Vector potential: covariant components */
+    //P[A0] = U[A0];
+    //P[A1] = U[A1];
+    //P[A2] = U[A2];
+
     const real_t KE_density = 0.5 * P[density] * 
                               (vl[0]*P[v0] + vl[1]*P[v1] + vl[2]*P[v2]);
 
@@ -159,7 +164,7 @@ inline void MHD::ConservedToPrimitive(const real_t* const __restrict__ U,
  * since you'll want to use it also on flux points, at the boundary etc. */
 inline void MHD::Floors(real_t* const __restrict__ U, const int mem) const
 {
-    real_t* P = new real_t [9];
+    real_t* P = new real_t [11];
 
     MHD::ConservedToPrimitive(U, P, mem);
 
@@ -266,12 +271,16 @@ inline void MHD::Fluxes(const real_t* const __restrict__ P,
 
         F[mom0+d][d] += Ptot;
 
-        /* Don't calculate fluxes for the magnetic field */
-        //F[B0][d] = Bu[0]*v - B*vu[0]; 
-        //F[B1][d] = Bu[1]*v - B*vu[1]; 
-        //F[B2][d] = Bu[2]*v - B*vu[2]; 
-        //F[B0+d][d] = 0.0;
+        F[B0][d] = Bu[0]*v - B*vu[0]; 
+        F[B1][d] = Bu[1]*v - B*vu[1]; 
+        F[B2][d] = Bu[2]*v - B*vu[2]; 
+        F[B0+d][d] = 0.0;
     }
+
+    /* Store the A_i physical components in the flux array for convenience */
+    //F[A0][0] = P[A0];
+    //F[A1][1] = P[A1];
+    //F[A2][2] = P[A2];
 
     return;
 }
@@ -347,10 +356,10 @@ inline void MHD::DiffusiveFluxes(const real_t* const __restrict__   P,
                            + resistivity * JxB;
 
         /* Magnetic part - resistivity is really a magnetic diffusivity */
-        //F[B0][d] = - resistivity * (dP[B0][d] - dP[B0+d][0]); 
-        //F[B1][d] = - resistivity * (dP[B1][d] - dP[B0+d][1]); 
-        //F[B2][d] = - resistivity * (dP[B2][d] - dP[B0+d][2]); 
-        //F[B0+d][d] = 0.0; // Overwrite the above
+        F[B0][d] = - resistivity * (dP[B0][d] - dP[B0+d][0]); 
+        F[B1][d] = - resistivity * (dP[B1][d] - dP[B0+d][1]); 
+        F[B2][d] = - resistivity * (dP[B2][d] - dP[B0+d][2]); 
+        F[B0+d][d] = 0.0; // Overwrite the above
     }
 
     return;
@@ -361,6 +370,7 @@ inline void MHD::OrthonormaliseVectors(real_t* const P, const int mem) const
 {
     metric->orthonormals(&P[v0], mem);
     metric->orthonormals(&P[B0], mem);
+    //metric->orthonormals(&P[A0], mem);
 
     return;
 }

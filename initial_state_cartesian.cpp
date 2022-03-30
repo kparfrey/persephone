@@ -73,7 +73,7 @@ static void alfven_wave(const real_t r[3],
                         const int Ns_block,
                         const MHD* const __restrict__ physics)
 {
-    enum conserved {Density, mom0, mom1, mom2, energy, B0, B1, B2, psi};
+    enum conserved {Density, mom0, mom1, mom2, energy, B0, B1, B2, A0, A1, A2};
     real_t density, v0, v1, v2, pressure, b0, b1, b2; // primitive variables
 
     const real_t gm1   = physics->gm1;
@@ -113,6 +113,12 @@ static void alfven_wave(const real_t r[3],
     fields[loc0 +    mom1*Ns_block] = density * v1;
     fields[loc0 +    mom2*Ns_block] = density * v2;
     fields[loc0 +  energy*Ns_block] = kinetic_energy + magnetic_energy + pressure / gm1;
+    fields[loc0 +      B0*Ns_block] = b0; 
+    fields[loc0 +      B1*Ns_block] = b1; 
+    fields[loc0 +      B2*Ns_block] = b2; 
+    fields[loc0 +      A0*Ns_block] = 0.0; 
+    fields[loc0 +      A1*Ns_block] = 0.0; 
+    fields[loc0 +      A2*Ns_block] = 0.0; 
 
     Binit[loc0 + 0*Ns_block] = b0;
     Binit[loc0 + 1*Ns_block] = b1;

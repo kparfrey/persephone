@@ -40,7 +40,10 @@ void ElementBlock::setup()
 
 
     /* Setup LengthBucket... */
-    lengths.Nfield  = Nfield;
+    lengths.operation_mode = normal_mode;
+    lengths.Nfield  = physics_soln->Nfield;
+    lengths.Ncons   = physics_soln->Ncons;
+    lengths.Nflux   = physics_soln->Nflux;
     lengths.Ns_elem = Ns_elem;
     lengths.Ns_block = Ns_block;
     for (int i: dirs)

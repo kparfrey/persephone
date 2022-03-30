@@ -170,8 +170,8 @@ class Snapshot(object):
         self.B0  = [0] * self.Ngroup
         self.B1  = [0] * self.Ngroup 
         self.B2  = [0] * self.Ngroup 
-        self.psi = [0] * self.Ngroup
-        self.divB = [0] * self.Ngroup
+        #self.psi = [0] * self.Ngroup
+        #self.divB = [0] * self.Ngroup
         #self.B   = [0] * self.Ngroup
 
         self.vsq = [0] * self.Ngroup
@@ -197,8 +197,8 @@ class Snapshot(object):
             self.B1[ig]  = self.dfile[sg]['B1']
             self.B2[ig]  = self.dfile[sg]['B2']
             #self.B[ig]   = [self.B0, self.B1, self.B2]
-            self.psi[ig] = self.dfile[sg]['psi']
-            self.divB[ig] = self.dfile[sg]['divB']
+            #self.psi[ig] = self.dfile[sg]['psi']
+            #self.divB[ig] = self.dfile[sg]['divB']
 
             self.R[ig] = self.m.g[ig].r0
             self.Z[ig] = self.m.g[ig].r1
@@ -207,7 +207,7 @@ class Snapshot(object):
             # These actually load data into memory - might want to reorganise
             self.vsq[ig] = self.v0[ig][...]**2 + self.v1[ig][...]**2 + self.v2[ig][...]**2
             self.Bsq[ig] = self.B0[ig][...]**2 + self.B1[ig][...]**2 + self.B2[ig][...]**2
-            self.divB_B[ig] = np.abs(self.divB[ig][...])/np.sqrt(self.Bsq[ig])
+            #self.divB_B[ig] = np.abs(self.divB[ig][...])/np.sqrt(self.Bsq[ig])
             self.beta[ig] = np.abs(self.p[ig]) / (0.5 * self.Bsq[ig][...])
             self.over_beta[ig] = 1.0 / self.beta[ig][...]
             self.ptot[ig] = self.p[ig] + 0.5*self.Bsq[ig]
@@ -247,9 +247,10 @@ class Snapshot(object):
             if mag:
                 f[ig] = np.abs(f[ig])
 
-        R = self.connect_groups(R)
-        Z = self.connect_groups(Z)
-        f = self.connect_groups(f)
+        if self.Ngroup > 1:
+            R = self.connect_groups(R)
+            Z = self.connect_groups(Z)
+            f = self.connect_groups(f)
             
         for ig in range(self.Ngroup):
             plt.contour(R[ig], Z[ig], f[ig], levels=levels, linewidths=width, zorder=5)

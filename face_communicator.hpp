@@ -38,7 +38,7 @@ class FaceCommunicator
               // Indices assigned cyclically: N[0] -> normal_dir + 1 cyclic
               //                              N[1] -> normal_dir + 2 cyclic
     int Ntot; // Total no. of points on face: N[0] * N[1] * Nelem[0] * Nelem[1]
-    int Ntot_all; // Total no. of data values: Nfield * N_tot
+    int Ntot_all; // Total no. of data values: Nfield * N_tot in simple case
 
     VectorField normal;
 
