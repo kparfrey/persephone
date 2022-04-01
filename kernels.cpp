@@ -286,7 +286,7 @@ namespace kernels
         relative_to_fixed_indices(n0_s, n1, n2,  i,  j,  k,  dir);
         relative_to_fixed_indices(ne0, ne1, ne2, ie, je, ke, dir);
 
-        for(int field = 0; field < lb.Ncons; ++field)
+        for(int field = 0; field < lb.Nfield; ++field)
         {
             field_offset_s = field * lb.Ns_block;
             field_offset_f = field * lb.Nf_dir_block[dir];

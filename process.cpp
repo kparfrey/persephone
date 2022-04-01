@@ -238,7 +238,72 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
 
 
     /* VECTOR POTENTIAL STUFF */
-    if(true)
+    /* Try to do the Chen & Liang method */
+    if (true)
+    {
+        VectorField dA_ref;
+        VectorField dA;
+        const int Ns = eb.Ns_block;
+
+        real_t* Up   = new real_t [Nfield];
+        real_t* Pp   = new real_t [Nfield];
+        real_t* v;
+        real_t  B[3];
+
+        for (int d: dirs)
+        {
+            dA(d) = kernels::alloc(3 * eb.Ns_block);
+            dA_ref(d) = kernels::alloc(3 * eb.Ns_block);
+        }
+
+        /* Copy from dF into dA_ref */
+        for (int d: dirs)
+            for (int f: dirs)
+                for (int i = 0; i < Ns; ++i)
+                    dA_ref(d,i + f*Ns) = dF(d,i + (8+f)*Ns);
+
+        /* Transform to physical-space gradient. Need to do this only on the A components... */
+        eb.lengths.Nfield = 3;
+        kernels::gradient_ref_to_phys(dA_ref, dA, eb.geometry.dxdr, eb.lengths);
+        eb.lengths.Nfield = 11;
+
+        int c0, c1, c2;
+        real_t rdetg;
+        for (int mem = 0; mem < Ns; ++mem)
+        {
+            /* Load all field variables at this location into the Up array. */
+            for (int field = 0; field < Nfield; ++field)
+                Up[field] = U[mem + field * Ns];
+
+            eb.physics_soln->ConservedToPrimitive(Up, Pp, mem);
+            v = &Pp[1];
+
+            c0 = mem;
+            c1 = mem + Ns;
+            c2 = mem + 2*Ns;
+
+            rdetg = eb.physics_soln->metric->rdetg[mem];
+
+            B[0] = eb.Binit[c0] + (dA(1,c2) - dA(2,c1)) / rdetg;
+            B[1] = eb.Binit[c1] + (dA(2,c0) - dA(0,c2)) / rdetg;
+            B[2] = eb.Binit[c2] + (dA(0,c1) - dA(1,c0)) / rdetg;
+    
+            divF[mem + 8*Ns] = rdetg * (v[2]*B[1] - v[1]*B[2]);
+            divF[mem + 9*Ns] = rdetg * (v[0]*B[2] - v[2]*B[0]);
+            divF[mem +10*Ns] = rdetg * (v[1]*B[0] - v[0]*B[1]);
+
+            //for (int d: dirs)
+            //    U[mem + (5+d)*Ns] = B[d];
+        }
+
+        for (int d: dirs)
+        {
+            kernels::free(dA(d));
+            kernels::free(dA_ref(d));
+        }
+    }
+
+    if(false)
     {
         eb.lengths.Ncons = 3;
         int mem;

@@ -64,8 +64,8 @@ class MHD : public Physics
         variables[10] = "A2";
 
         diffusive   = false;
-        viscosity   = 1e-4;
-        resistivity = 1e-4;
+        viscosity   = 1e-9;
+        resistivity = 1e-9;
         diffusive_timestep_const = 1.0; // Default: 1/3, but larger can be more stable?!
 
         apply_floors = true;
@@ -279,11 +279,14 @@ inline void MHD::Fluxes(const real_t* const __restrict__ P,
 
     /* Store the electric field components in the A slots, 
      * ie E_0 in F[A0][0], E_1 in F[A1][0] etc. */
-    const real_t rdetg = metric->rdetg[mem];
-
-    F[A0][0] = rdetg * (vu[2]*Bu[1] - vu[1]*Bu[2]); // E_0
-    F[A1][0] = rdetg * (vu[0]*Bu[2] - vu[2]*Bu[0]); // E_1
-    F[A2][0] = rdetg * (vu[1]*Bu[0] - vu[0]*Bu[1]); // E_2
+    //const real_t rdetg = metric->rdetg[mem];
+    //F[A0][0] = rdetg * (vu[2]*Bu[1] - vu[1]*Bu[2]); // E_0
+    //F[A1][0] = rdetg * (vu[0]*Bu[2] - vu[2]*Bu[0]); // E_1
+    //F[A2][0] = rdetg * (vu[1]*Bu[0] - vu[0]*Bu[1]); // E_2
+    
+    F[A0][0] = P[A0];
+    F[A1][0] = P[A1];
+    F[A2][0] = P[A2];
 
     return;
 }
