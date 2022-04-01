@@ -63,7 +63,7 @@ class MHD : public Physics
         variables[9]  = "A1";
         variables[10] = "A2";
 
-        diffusive   = true;
+        diffusive   = false;
         viscosity   = 1e-4;
         resistivity = 1e-4;
         diffusive_timestep_const = 1.0; // Default: 1/3, but larger can be more stable?!
@@ -125,9 +125,9 @@ inline void MHD::ConservedToPrimitive(const real_t* const __restrict__ U,
     P[B2] = U[B2];
 
     /* Vector potential: covariant components */
-    //P[A0] = U[A0];
-    //P[A1] = U[A1];
-    //P[A2] = U[A2];
+    P[A0] = U[A0];
+    P[A1] = U[A1];
+    P[A2] = U[A2];
 
     const real_t KE_density = 0.5 * P[density] * 
                               (vl[0]*P[v0] + vl[1]*P[v1] + vl[2]*P[v2]);

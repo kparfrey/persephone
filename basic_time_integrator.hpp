@@ -81,7 +81,7 @@ class RK3_SSP : public BasicTimeIntegrator
                                one_third, two_thirds  , -two_thirds*proc.dt,  
                                eb.fields, Ntot);
         kernels::floors(eb.fields, eb.physics_soln, eb.lengths);
-
+        
 
         //kernels::filter_field(&eb.fields[8*eb.Ns_block], eb.chebyshev_filter, eb.lengths);
         

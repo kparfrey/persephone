@@ -822,7 +822,7 @@ namespace kernels
         enum conserved {Density, mom0, mom1, mom2, tot_energy, B0, B1, B2, psi};
         enum primitive {density, v0  , v1  , v2,   pressure};
         
-        real_t P[9];  // Primitives from incoming conserved variables
+        real_t P[11];  // Primitives from incoming conserved variables
 
         real_t nu[3]; // contravariant components of normal vector
         physics->metric->raise(nl, nu, mem);

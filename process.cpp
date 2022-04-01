@@ -263,6 +263,14 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
             divF[mem + 8*Ns] = rdetg * (v[2]*B[1] - v[1]*B[2]);
             divF[mem + 9*Ns] = rdetg * (v[0]*B[2] - v[2]*B[0]);
             divF[mem +10*Ns] = rdetg * (v[1]*B[0] - v[0]*B[1]);
+
+            if (Physics::diffusive)
+            {
+                // Just implemented for Cartesian geometry for now
+                divF[mem + 8*Ns] += Physics::resistivity * (dP(1,mem+7*Ns) - dP(2,mem+6*Ns));
+                divF[mem + 9*Ns] += Physics::resistivity * (dP(2,mem+5*Ns) - dP(0,mem+7*Ns));
+                divF[mem +10*Ns] += Physics::resistivity * (dP(0,mem+6*Ns) - dP(1,mem+5*Ns));
+            }
         }
         
         delete[] Up;
@@ -407,10 +415,9 @@ void Process::add_diffusive_flux(VectorField Uf, VectorField dP, VectorField F)
 }
 
 
-void Process::replace_B()
+void Process::replace_B(real_t* const U)
 {
     ElementBlock& eb = elements;
-    real_t* const U = eb.fields;
 
     eb.lengths.Nfield = 3;
     for (int i: ifaces)

@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
             proc.is_output_step = true;
 
         proc.time_advance();
-        proc.replace_B();
+        proc.replace_B(proc.elements.fields);
 
         if (proc.is_output_step)
             write_data(proc);

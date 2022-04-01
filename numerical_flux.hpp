@@ -57,7 +57,7 @@ class HLL : public NumericalFlux
                            const int mem) const override
     {
         /* Temporary variables --- use a fixed size */
-        constexpr int Nv = 10; // since Nfield isn't constexpr
+        constexpr int Nv = 11; // since Nfield isn't constexpr
         real_t PL[Nv],    PR[Nv];
         real_t FL[Nv][3], FR[Nv][3];
         real_t cL[3][2], cR[3][2];
@@ -128,7 +128,7 @@ class HLL : public NumericalFlux
                            const int mem) const override
     {
         /* Temporary variables --- use a fixed size */
-        constexpr int Nv = 10; // since Nfield isn't constexpr
+        constexpr int Nv = 11; // since Nfield isn't constexpr
         real_t PL[Nv],    PR[Nv];
         real_t FL[Nv][3], FR[Nv][3];
         real_t cL[3][2], cR[3][2];
@@ -200,7 +200,7 @@ class HLL_straight : public NumericalFlux
                            const int mem) const override
     {
         /* Temporary variables --- use a fixed size */
-        constexpr int Nv = 10; // since Nfield isn't constexpr
+        constexpr int Nv = 11; // since Nfield isn't constexpr
         real_t PL[Nv],    PR[Nv];
         real_t FL[Nv][3], FR[Nv][3];
         real_t cL[2], cR[2];
