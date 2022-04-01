@@ -107,6 +107,7 @@ void ElementBlock::allocate_on_host()
     {
         int matrix_size = Ns[i] * Nf[i]; 
         soln2flux(i)      = new real_t [matrix_size]; // Nf x Ns matrices
+        flux2soln(i)      = new real_t [matrix_size]; // Ns x Nf matrices
         fluxDeriv2soln(i) = new real_t [matrix_size]; // Ns x Nf matrices
     
         physics[i]->metric->allocate_on_host(Nf_dir_block[i]);
@@ -491,13 +492,16 @@ void ElementBlock::fill_spectral_difference_matrices()
         real_t* D = lagrange::differentiation_matrix(xf(d), nf);
 
         /* Matrix for interpolating from flux to solution points */
-        real_t* flux2soln = lagrange::barycentric_interpolation_matrix(xf(d), nf, xs(d), ns);
+        /* Vector potential: store flux2soln for interpolating back E without taking deriv */
+        flux2soln(d) = lagrange::barycentric_interpolation_matrix(xf(d), nf, xs(d), ns);
+        //real_t* flux2soln = lagrange::barycentric_interpolation_matrix(xf(d), nf, xs(d), ns);
 
         /* Compose the operations to give a single matrix */
-        fluxDeriv2soln(d) = lagrange::matrix_matrix_product(flux2soln, D, ns, nf, nf);
+        fluxDeriv2soln(d) = lagrange::matrix_matrix_product(flux2soln(d), D, ns, nf, nf);
+        //fluxDeriv2soln(d) = lagrange::matrix_matrix_product(flux2soln, D, ns, nf, nf);
 
         delete[] D;
-        delete[] flux2soln;
+        //delete[] flux2soln;
     }
 
     write::message("Filling Chebyshev filtering matrices");

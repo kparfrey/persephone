@@ -112,6 +112,23 @@ class HLL : public NumericalFlux
                 Fnum[field][i] = F0 * (1.0 - n[i]) + Fstar * n[i];
             }
 
+        /* Electric fields : replace the above values (vector potential) */
+        int Ex, Ey, Ez;
+        int Bx, By, Bz;
+        Ex = 8; Ey = 9; Ez = 10;
+        Bx = 5; By = 6; Bz = 7;
+
+        //Fnum[Ez][0] = (cpos[0]*cpos[1]*FL[Ez][0] + cneg[0]*cneg[1]*FR[Ez][0])/((cpos[0]-cneg[0])*(cpos[1] - cneg[1])) ...
+       
+        //LLF
+        int c[3];
+        for (int d: dirs)
+            c[d] = MAX(cpos[d], -cneg[d]);
+
+        Fnum[Ex][0] = 0.5*(FL[Ex][0] + FR[Ex][0] + c[1]*(UR[Bz] - UL[Bz]) - c[2]*(UR[By] - UL[By]));
+        Fnum[Ey][0] = 0.5*(FL[Ey][0] + FR[Ey][0] + c[2]*(UR[Bx] - UL[Bx]) - c[0]*(UR[Bz] - UL[Bz]));
+        Fnum[Ez][0] = 0.5*(FL[Ez][0] + FR[Ez][0] + c[0]*(UR[By] - UL[By]) - c[1]*(UR[Bx] - UL[Bx]));
+
         return;
     }
 

@@ -237,9 +237,28 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
         kernels::add_geometric_sources(divF, U, dP, eb.physics_soln, Nfield, eb.Ns_block);
 
 
-    /* VECTOR POTENTIAL STUFF 
-     * For now just try transporting A using the B already at solution points */
-    if (true)
+    /* VECTOR POTENTIAL STUFF */
+    if(true)
+    {
+        eb.lengths.Ncons = 3;
+        int mem;
+
+        /* Here the F and dF both just store the electric field --- no derivative being taken */
+        for (int i: dirs)
+            kernels::fluxDeriv_to_soln(eb.flux2soln(i), &F(i,8*eb.Nf_dir_block[i]), &dF(i,8*eb.Ns_block), eb.lengths, i);
+            
+        for (int f = 8; f < 11; ++f)
+        for (int i = 0; i < eb.Ns_block; ++i)
+        {
+            mem = f*eb.Ns_block + i;
+            divF[mem] = (dF(0,mem) + dF(1,mem) + dF(2,mem))/3.0;
+        }
+        
+        eb.lengths.Ncons = 8;
+    }
+
+    /* For now just try transporting A using the B already at solution points */
+    if (false)
     {
         real_t rdetg;
         const int Ns = eb.Ns_block;
@@ -420,6 +439,7 @@ void Process::replace_B(real_t* const U)
     ElementBlock& eb = elements;
 
     eb.lengths.Nfield = 3;
+    eb.lengths.Ncons = 3;
     for (int i: ifaces)
         faces[i].Ntot_all = 3 * faces[i].Ntot;
 
@@ -486,6 +506,7 @@ void Process::replace_B(real_t* const U)
     }
     
     eb.lengths.Nfield = 11;
+    eb.lengths.Ncons = 8;
     for (int i: ifaces)
         faces[i].Ntot_all = 11 * faces[i].Ntot;
 

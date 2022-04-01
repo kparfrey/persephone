@@ -63,6 +63,7 @@ class ElementBlock
      * Need one matrix for each transform direction, stored in flattened blocks.
      * i.e. index with matrix(transform-direction, flattened data). */
     VectorField soln2flux;      // Interpolate from soln points to flux points
+    VectorField flux2soln;      // Interpolate from flux points to soln points
     VectorField fluxDeriv2soln; // Take derivative of values on flux points, interpolate
                                 // back to soln points
 

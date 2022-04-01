@@ -277,10 +277,13 @@ inline void MHD::Fluxes(const real_t* const __restrict__ P,
         F[B0+d][d] = 0.0;
     }
 
-    /* Store the A_i physical components in the flux array for convenience */
-    //F[A0][0] = P[A0];
-    //F[A1][1] = P[A1];
-    //F[A2][2] = P[A2];
+    /* Store the electric field components in the A slots, 
+     * ie E_0 in F[A0][0], E_1 in F[A1][0] etc. */
+    const real_t rdetg = metric->rdetg[mem];
+
+    F[A0][0] = rdetg * (vu[2]*Bu[1] - vu[1]*Bu[2]); // E_0
+    F[A1][0] = rdetg * (vu[0]*Bu[2] - vu[2]*Bu[0]); // E_1
+    F[A2][0] = rdetg * (vu[1]*Bu[0] - vu[0]*Bu[1]); // E_2
 
     return;
 }

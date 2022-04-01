@@ -286,7 +286,7 @@ namespace kernels
         relative_to_fixed_indices(n0_s, n1, n2,  i,  j,  k,  dir);
         relative_to_fixed_indices(ne0, ne1, ne2, ie, je, ke, dir);
 
-        for(int field = 0; field < lb.Nfield; ++field)
+        for(int field = 0; field < lb.Ncons; ++field)
         {
             field_offset_s = field * lb.Ns_block;
             field_offset_f = field * lb.Nf_dir_block[dir];
@@ -382,6 +382,10 @@ namespace kernels
                 /* Transform from physical to reference-space fluxes
                  * for all conserved fields */
                 fluxes_phys_to_ref(Fp, F, S, mem, lb.Ncons, Nf_tot);
+                
+                /* Vector potential */
+                for (int f = 8; f < 11; ++f)
+                    F[mem + f * Nf_tot] = Fp[f][0];
             }
         }
 
@@ -403,7 +407,7 @@ namespace kernels
         int field_offset;
         int mem, mem0;
 
-        for(int field = 0; field < lb.Nfield; ++field)
+        for(int field = 0; field < lb.Ncons; ++field)
         {
             field_offset = field * lb.Ns_block;
 
@@ -1020,6 +1024,10 @@ namespace kernels
                 /* Transform from physical to reference-space fluxes.
                  * Needs mem loc in the full 3D array */
                 fluxes_phys_to_ref(F_num_phys, F, S, mem, lb.Ncons, Nf_tot);
+                
+                /* Vector potential */
+                for (int f = 8; f < 11; ++f)
+                    F[mem + f * Nf_tot] = F_num_phys[f][0];
 
 #if 0
                 /* Unique normal flux */
@@ -1114,9 +1122,14 @@ namespace kernels
                 /* Calculate reference-space flux and save into the left element */
                 fluxes_phys_to_ref(F_num_phys, F, S, mem_L, lb.Ncons, Nf_tot);
 
+                /* Vector potential */
+                for (int f = 8; f < 11; ++f)
+                    F[mem_L + f * Nf_tot] = F_num_phys[f][0];
+
                 /* Copy into the right element */
                 for (int field = 0; field < lb.Nfield; ++field)
                     F[mem_R + field * Nf_tot] = F[mem_L + field * Nf_tot];
+                
 
 #if 0
                 /* Unique normal flux */
