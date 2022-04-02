@@ -239,7 +239,7 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
 
     /* VECTOR POTENTIAL STUFF */
     /* Try to do the Chen & Liang method */
-    if (true)
+    if (false)
     {
         VectorField dA_ref;
         VectorField dA;
@@ -323,7 +323,7 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
     }
 
     /* For now just try transporting A using the B already at solution points */
-    if (false)
+    if (true)
     {
         real_t rdetg;
         const int Ns = eb.Ns_block;

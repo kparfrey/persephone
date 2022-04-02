@@ -64,8 +64,8 @@ class MHD : public Physics
         variables[10] = "A2";
 
         diffusive   = false;
-        viscosity   = 1e-9;
-        resistivity = 1e-9;
+        viscosity   = 1e-4;
+        resistivity = 1e-4;
         diffusive_timestep_const = 1.0; // Default: 1/3, but larger can be more stable?!
 
         apply_floors = true;
