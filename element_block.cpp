@@ -165,9 +165,34 @@ void ElementBlock::set_computational_coords()
             xs(d,i) = 0.5 * (1.0 - std::cos(pi * (i + 0.5) / Ns[d]));
 
     /* Flux / Lobatto points */
+    //for (int d: dirs)
+    //    for (int i = 0; i < Nf[d]; ++i)
+    //        xf(d,i) = 0.5 * (1.0 - std::cos(pi * i  / (Nf[d] - 1.0)));
+
+    // Test: 5th order 
+    /****/
     for (int d: dirs)
-        for (int i = 0; i < Nf[d]; ++i)
-            xf(d,i) = 0.5 * (1.0 - std::cos(pi * i  / (Nf[d] - 1.0)));
+    {
+        real_t xi[6];
+        // flux points from van den Abeele
+        //xi[0] = - 1.0; xi[1] = - 0.83; xi[2] = - 0.36;
+        //xi[3] = 0.36;  xi[4] = 0.83;   xi[5] = 1.0;
+
+        // Legendre zeros
+        // Can find with scipy.special.roots_legendre(n),
+        // where n is the number of INTERIOR points needed
+        xi[0] = - 1.0; 
+        xi[1] = - 0.861136311594053;
+        xi[2] = - 0.339981043584856;
+        xi[3] =   0.339981043584856;
+        xi[4] =   0.861136311594053;
+        xi[5] =   1.0;
+    
+        for (int i = 0; i < 6; ++i)
+            xf(d,i) = 0.5 * (1.0 + xi[i]);
+    }
+    /*****/
+
 
     return;
 }
