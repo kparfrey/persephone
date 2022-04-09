@@ -163,34 +163,44 @@ void ElementBlock::set_computational_coords()
 {
     /* Points are defined on [0, 1], so that xf[0] = 0 */
 
-    /* Solution / Gauss points */
+    /* Solution / Gauss points of Chebyshev polynomials */
     for (int d: dirs)
         for (int i = 0; i < Ns[d]; ++i)
             xs(d,i) = 0.5 * (1.0 - std::cos(pi * (i + 0.5) / Ns[d]));
 
-    /* Flux / Lobatto points */
+    /* Flux points : Lobatto points of Chebyshev polynomials */
     //for (int d: dirs)
     //    for (int i = 0; i < Nf[d]; ++i)
     //        xf(d,i) = 0.5 * (1.0 - std::cos(pi * i  / (Nf[d] - 1.0)));
     
-    // Test: 5th order 
+    /* Flux points : zeros of Legendre polynomials */
     for (int d: dirs)
     {
-        real_t xi[6];
-        // flux points from van den Abeele
+        real_t* xi = new real_t [Nf[d]];
+
+        xi[0]     = - 1.0; 
+        xi[Ns[d]] =   1.0; // Nf - 1 = Ns
+
+        switch(Ns[d])
+        {
+            case 1:
+                break;
+            case 5:
+                xi[1] = - 0.861136311594053;
+                xi[2] = - 0.339981043584856;
+                xi[3] =   0.339981043584856;
+                xi[4] =   0.861136311594053;
+                break;
+        }
+
+        // 5th order flux points from van den Abeele
         //xi[0] = - 1.0; xi[1] = - 0.83; xi[2] = - 0.36;
         //xi[3] = 0.36;  xi[4] = 0.83;   xi[5] = 1.0;
-
-        // Legendre zeros
-        xi[0] = - 1.0; 
-        xi[1] = - 0.861136311594053;
-        xi[2] = - 0.339981043584856;
-        xi[3] =   0.339981043584856;
-        xi[4] =   0.861136311594053;
-        xi[5] =   1.0;
     
-        for (int i = 0; i < 6; ++i)
+        for (int i = 0; i < Nf[d]; ++i)
             xf(d,i) = 0.5 * (1.0 + xi[i]);
+
+        delete[] xi;
     }
 
     return;
