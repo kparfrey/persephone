@@ -17,8 +17,8 @@ static int Nelem[3] = {5,5,1};
 static int Ns[3]    = {5,5,1};
 
 static real_t cfl      = 0.8;
-static real_t end_time = 50.0;
-static real_t dt_write = 0.5;
+static real_t end_time = 0.2;
+static real_t dt_write = 0.1;
 
 static ParamsCartesian active_parameters(equations, time_method, 
                                   Nproc, Nelem, Ns,

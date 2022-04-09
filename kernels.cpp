@@ -572,7 +572,7 @@ namespace kernels
                 case mhd:
                     divF[mem + 1*Ns] -= Fp[3][2] / R; // As for Navier-Stokes
                     // d_t (B^r) + ... = psi / R
-                    divF[mem + 5*Ns] -= Up[8]/R;
+                    //divF[mem + 5*Ns] -= Up[8]/R;
                     break;
                 default:
                     exit(123);
@@ -823,7 +823,7 @@ namespace kernels
                          const Physics* const __restrict__ physics,
                          const int mem)
     {
-        enum conserved {Density, mom0, mom1, mom2, tot_energy, B0, B1, B2, psi};
+        enum conserved {Density, mom0, mom1, mom2, tot_energy, B0, B1, B2, A0, A1, A2};
         enum primitive {density, v0  , v1  , v2,   pressure};
         
         real_t P[11];  // Primitives from incoming conserved variables
@@ -860,6 +860,7 @@ namespace kernels
             //UL[mom0+d] = UR[mom0+d] = P[Density] * vl[d]; // for impermeable BC
             UL[mom0+d] = UR[mom0+d] = 0.0; // No slip
             UL[  B0+d] = UR[  B0+d] = Bm[d];
+            UL[  A0+d] = UR[  A0+d] = 0.0;
 
             /* Right face only */
             //UR[mom0+d] = 0.0; // No slip

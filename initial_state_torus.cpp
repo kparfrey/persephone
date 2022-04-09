@@ -118,6 +118,9 @@ void set_torus_initial_state(ElementBlock& eb, TorusConfig& config)
     
         for (int i = 0; i < eb.Nfield; ++i)
             eb.fields[loc0 + i*eb.Ns_block] = U[i];
+
+        for (int d: dirs)
+            eb.Binit[loc0 + d*eb.Ns_block] = U[5+d];
     }
 
     return;
