@@ -1,6 +1,7 @@
 #include "initial_state_torus.hpp"
 
 #include <cmath>
+#include <iostream>
 #include "element_block.hpp"
 #include "physics_includes.hpp"
 #include "cerfon_freidberg.hpp"
@@ -101,7 +102,7 @@ void set_torus_initial_state(ElementBlock& eb, TorusConfig& config)
 {
     real_t r_uds[3];
     real_t r_phys[3];
-    real_t U[9]; // Conserved variables at a point
+    real_t U[11]; // Conserved variables at a point
 
     config.gamma = ((MHD*)eb.physics_soln)->gamma;
 

@@ -1171,6 +1171,13 @@ namespace kernels
         const int Ns1 = lb.Ns[dir1];
         const int Nf_tot = lb.Nf_dir_block[dir]; //Total # of this-dir flux points in the block
 
+        // HACK : always set A to zero on external faces when averaging to find curlA
+        if (lb.Nfield == 3 && face.external_face) // only true inside Process::replaceB()
+        {
+            for (int i = 0; i < face.Ntot_all; ++i)
+                face.neighbour_data[i] = face.my_data[i] = 0.0;
+        }
+            
         /* The BC for derivatives */
         if (face.external_face && averaging_derivs)
         {

@@ -13,7 +13,7 @@ class TorusConfig
 
     /* construct_equilibrium takes both UDS and physical coords, because different config types will use
      * different coords: CF uses physical, DESC needs UDS. */
-    virtual void construct_equilibrium(const real_t r_uds[3], const real_t r_phys[3], real_t U[9]) const = 0;
+    virtual void construct_equilibrium(const real_t r_uds[3], const real_t r_phys[3], real_t U[11]) const = 0;
 };
 
 #endif
