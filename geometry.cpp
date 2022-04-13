@@ -130,7 +130,7 @@ void Geometry::setup_full(ElementBlock& eb)
             J.fill(Jarr);
             J.find_determinant();
             detJ = std::abs(J.det);
-
+            
             Jrdetg(mem_loc) = detJ * eb.physics_soln->metric->rdetg[mem_loc];
 
             /* sqrt(1-x^2) for x in [-1,1] --> 2 sqrt(x-x^2) for x in [0,1] */

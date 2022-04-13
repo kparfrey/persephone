@@ -189,7 +189,7 @@ namespace lagrange
     /* Assumes that the data will be located at the Chebyshev-Gauss nodes */
     real_t* chebyshev_filtering_matrix(const int N)
     {
-        double alpha = 0.1;
+        double alpha = 0.01;
         double s     = 32.0;
         double eta;
 

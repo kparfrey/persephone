@@ -240,6 +240,7 @@ class Snapshot(object):
         kinetic  = 0.0
         thermal  = 0.0
         magnetic = 0.0
+        mass     = 0.0
         for ig in range(self.Ngroup):
             kinetic_d  = 0.5 * self.rho[ig][:] * self.vsq[ig]
             thermal_d  = self.p[ig][:] / (self.gamma - 1.0)
@@ -248,10 +249,13 @@ class Snapshot(object):
             kinetic  += np.add.reduce(kinetic_d  * self.Qinteg[ig][:], axis=None)
             thermal  += np.add.reduce(thermal_d  * self.Qinteg[ig][:], axis=None)
             magnetic += np.add.reduce(magnetic_d * self.Qinteg[ig][:], axis=None)
+            mass     += np.add.reduce(self.rho[ig][:] * self.Qinteg[ig][:], axis=None)
 
         total_energy = kinetic + thermal + magnetic
 
-        return np.array([total_energy, kinetic, thermal, magnetic])
+        #                     0           1        2         3      4
+        return np.array([total_energy, kinetic, thermal, magnetic, mass])
+
 
 
     # k is the grid index in the azimuthal direction 
@@ -326,4 +330,24 @@ class Snapshot(object):
         F[0][0,-1] = F[3][0,-1] = F[4][0,0] = third * (f[0][0,-1] + f[3][0,-1] + f[4][0,0])
 
         return F
+
+
+# Creates a 2D array of the energy evolution over time
+# Array has shape (4, Ntimes)
+def energy_curves(start, end):
+    s = Snapshot(start)
+    e0 = s.integrate_energy()
+
+    s = Snapshot(start+1)
+    e1 = s.integrate_energy()
+
+    e_combined = np.stack((e0,e1), axis=-1) # Creates 2D array
+
+    for i in range(start+2, end+1):
+        s = Snapshot(i)
+        e = s.integrate_energy()
+        e_combined = np.hstack((e_combined, np.expand_dims(e,axis=1)))
+
+    return e_combined
+
 
