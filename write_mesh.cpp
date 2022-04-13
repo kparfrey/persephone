@@ -74,7 +74,7 @@ void write_mesh(Process &proc)
 
             /* For now, just write all data as separate scalar variables */
             constexpr int Nvec   = 1;
-            constexpr int Nscal  = 0;
+            constexpr int Nscal  = 1;
             constexpr int Nwrite = Nscal + 3*Nvec;
             int count = 0; // For keeping track of the variable lists
 
@@ -83,11 +83,12 @@ void write_mesh(Process &proc)
             string names[Nwrite];
             real_t* datalist[Nwrite];
 
-            string group              = groupstring; // + "/coords";
             string vecnames[Nvec]     = {"r"};
             VectorField veclist[Nvec] = {eb.rs};
+            vector_organization(meshfile, Nvec, count, groupstring, vecnames, veclist, names, datalist);
 
-            vector_organization(meshfile, Nvec, count, group, vecnames, veclist, names, datalist);
+            names[3]    = groupstring + "/IntegrationWeight";
+            datalist[3] = eb.geometry.Qinteg();
 
             /* Allocate data buffer for repacking each component */
             real_t* data = new real_t [local_dims[0]*local_dims[1]*local_dims[2]];

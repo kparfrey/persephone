@@ -25,6 +25,8 @@ class Geometry
     ScalarField Jrdetg;  // |J| sqrt{det(g)}
     VectorField dxdr[3]; // dxdr[i](j,...) = d x^i / d r^j 
                          // Only used to find grad(U) for diffusive flux
+    ScalarField Qinteg;  // Weights for volume integration: I = Sum f_ijk Q_ijk
+                         // Q = J rdetg Product_d sqrt(1-x_d^2) * pi/N_d 
 
 
     /* ...and on flux points */

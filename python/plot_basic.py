@@ -67,6 +67,8 @@ class Mesh(object):
             ## This seems to load the data to disk - may want to use list 
             #group.r  = np.array((group.r0,group.r1,group.r2))
 
+            group.Qinteg = m[sg]['IntegrationWeight']
+
             # Edges 0-3, the "front" poloidal edges
             group.e0 = m[sg]['edges']['0']
             group.e1 = m[sg]['edges']['1']
@@ -135,6 +137,7 @@ class Snapshot(object):
     dt      = None
 
     Ngroup  = None
+    gamma   = 5.0/3.0
 
     # Use these to convert B to e.g. Teslas
     # The code writes B / sqrt{mu_0}
@@ -187,6 +190,7 @@ class Snapshot(object):
         self.R   = [0] * self.Ngroup
         self.Z   = [0] * self.Ngroup
         self.Phi = [0] * self.Ngroup
+        self.Qinteg = [0] * self.Ngroup
 
         for ig in range(self.Ngroup):
             sg = str(ig)
@@ -209,6 +213,7 @@ class Snapshot(object):
             self.R[ig] = self.m.g[ig].r0
             self.Z[ig] = self.m.g[ig].r1
             self.Phi[ig] = self.m.g[ig].r2
+            self.Qinteg[ig] = self.m.g[ig].Qinteg
 
             # These actually load data into memory - might want to reorganise
             self.vsq[ig] = self.v0[ig][...]**2 + self.v1[ig][...]**2 + self.v2[ig][...]**2
@@ -229,6 +234,24 @@ class Snapshot(object):
 
         # Don't close the file --- not loading arrays into memory
         return
+
+
+    def integrate_energy(self):
+        kinetic  = 0.0
+        thermal  = 0.0
+        magnetic = 0.0
+        for ig in range(self.Ngroup):
+            kinetic_d  = 0.5 * self.rho[ig][:] * self.vsq[ig]
+            thermal_d  = self.p[ig][:] / (self.gamma - 1.0)
+            magnetic_d = 0.5 * self.Bsq[ig]
+
+            kinetic  += np.add.reduce(kinetic_d  * self.Qinteg[ig][:], axis=None)
+            thermal  += np.add.reduce(thermal_d  * self.Qinteg[ig][:], axis=None)
+            magnetic += np.add.reduce(magnetic_d * self.Qinteg[ig][:], axis=None)
+
+        total_energy = kinetic + thermal + magnetic
+
+        return np.array([total_energy, kinetic, thermal, magnetic])
 
 
     # k is the grid index in the azimuthal direction 

@@ -82,14 +82,11 @@ class RK3_SSP : public BasicTimeIntegrator
                                eb.fields, Ntot);
         kernels::floors(eb.fields, eb.physics_soln, eb.lengths);
         
-        /* Filter hydro variables */
+        /* Filter hydro variables.
+         * Seem to get better results when not filtering B or A. */
         for (int f = 0; f < 5; ++f)
             kernels::filter_field(&eb.fields[f*eb.Ns_block], eb.chebyshev_filter, eb.lengths);
 
-        /* Filter A --- seems better not to do this... */
-        //for (int f = 8; f < 11; ++f)
-        //    kernels::filter_field(&eb.fields[f*eb.Ns_block], eb.chebyshev_filter, eb.lengths);
-        
         kernels::free(fields_inter);
         kernels::free(divF);
 

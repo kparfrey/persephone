@@ -16,6 +16,7 @@ void Geometry::allocate_on_host(const int Ns, const int Nf[3])
 
     /* Solution points */
     Jrdetg = new real_t [Ns]();
+    Qinteg = new real_t [Ns]();
     
     for(int dref: dirs)
         for(int dphys: dirs)
@@ -85,6 +86,8 @@ void Geometry::setup_full(ElementBlock& eb)
 
 
     /* Solution points */
+    real_t Q_prefac = 8.0 * pi*pi*pi /(eb.Ns[0]*eb.Ns[1]*eb.Ns[2]); // for Qinteg
+
     for (int ke = 0; ke < eb.Nelem[2]; ++ke)
     for (int je = 0; je < eb.Nelem[1]; ++je)
     for (int ie = 0; ie < eb.Nelem[0]; ++ie)
@@ -129,6 +132,10 @@ void Geometry::setup_full(ElementBlock& eb)
             detJ = std::abs(J.det);
 
             Jrdetg(mem_loc) = detJ * eb.physics_soln->metric->rdetg[mem_loc];
+
+            /* sqrt(1-x^2) for x in [-1,1] --> 2 sqrt(x-x^2) for x in [0,1] */
+            Qinteg(mem_loc) = Q_prefac * Jrdetg(mem_loc) * 
+                                std::sqrt((xe[0]-xe[0]*xe[0]) * (xe[1]-xe[1]*xe[1]) * (xe[2]-xe[2]*xe[2])); 
 
             /* Used to find grad(U) for diffusive terms */
             J.find_inverse();
