@@ -164,12 +164,12 @@ void ElementBlock::set_computational_coords()
     /* Points are defined on [0, 1], so that xf[0] = 0 */
 
     /* Solution / Gauss points of Chebyshev polynomials */
-    /*
     for (int d: dirs)
         for (int i = 0; i < Ns[d]; ++i)
             xs(d,i) = 0.5 * (1.0 - std::cos(pi * (i + 0.5) / Ns[d]));
-     */
 
+    /** Using Legendre roots for solution points -- just to confirm conservation **/
+    /**
     for (int d: dirs)
     {
         if (Ns[d] == 5) // Use Legendre poly roots, for testing integration
@@ -184,6 +184,7 @@ void ElementBlock::set_computational_coords()
             for (int i = 0; i < Ns[d]; ++i)
                 xs(d,i) = 0.5 * (1.0 - std::cos(pi * (i + 0.5) / Ns[d]));
     }
+     **/
 
     /* Flux points : Lobatto points of Chebyshev polynomials */
     /***

@@ -86,7 +86,7 @@ void Geometry::setup_full(ElementBlock& eb)
 
 
     /* Solution points */
-    //real_t Q_prefac = 8.0 * pi*pi*pi /(eb.Ns[0]*eb.Ns[1]*eb.Ns[2]); // for Qinteg
+    real_t Q_prefac = 8.0 * pi*pi*pi /(eb.Ns[0]*eb.Ns[1]*eb.Ns[2]); // for Qinteg
 
     for (int ke = 0; ke < eb.Nelem[2]; ++ke)
     for (int je = 0; je < eb.Nelem[1]; ++je)
@@ -134,12 +134,14 @@ void Geometry::setup_full(ElementBlock& eb)
             Jrdetg(mem_loc) = detJ * eb.physics_soln->metric->rdetg[mem_loc];
 
             /* sqrt(1-x^2) for x in [-1,1] --> 2 sqrt(x-x^2) for x in [0,1] */
-            //Qinteg(mem_loc) = Q_prefac * Jrdetg(mem_loc) * 
-            //                    std::sqrt((xe[0]-xe[0]*xe[0]) * (xe[1]-xe[1]*xe[1]) * (xe[2]-xe[2]*xe[2])); 
+            Qinteg(mem_loc) = Q_prefac * Jrdetg(mem_loc) * 
+                                std::sqrt((xe[0]-xe[0]*xe[0]) * (xe[1]-xe[1]*xe[1]) * (xe[2]-xe[2]*xe[2])); 
 
-            /* Using Legendre weights */
+            /* Using Legendre weights, for when solution points are Legendre roots */
+            /**
             real_t wl[5] = {0.23692689, 0.47862867, 0.56888889, 0.47862867, 0.23692689};
             Qinteg(mem_loc) = Jrdetg(mem_loc) * wl[i] * wl[j]; // Ignore k direction
+             **/
 
             /* Used to find grad(U) for diffusive terms */
             J.find_inverse();
