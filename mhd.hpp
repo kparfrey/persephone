@@ -376,7 +376,7 @@ inline void MHD::OrthonormaliseVectors(real_t* const P, const int mem) const
 {
     metric->orthonormals(&P[v0], mem);
     metric->orthonormals(&P[B0], mem);
-    //metric->orthonormals(&P[A0], mem);
+    metric->orthonormals(&P[A0], mem);
 
     return;
 }

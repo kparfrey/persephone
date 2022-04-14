@@ -78,19 +78,22 @@ static void alfven_wave(const real_t r[3],
 
     const real_t gm1   = physics->gm1;
 
-    real_t x, y, alpha, cosa, sina;
-    real_t bpar, bperp, vpar, vperp;
+    real_t x, y;
     real_t kinetic_energy, magnetic_energy;
+
+    x = r[0];
+    y = r[1];
 
     density  = 1.0;
     pressure = 0.1;
 
+    /** Toth's original oblique version **/
+    real_t alpha, cosa, sina;
+    real_t bpar, bperp, vpar, vperp;
+
     alpha = pi / 6.0;
     cosa  = std::cos(alpha);
     sina  = std::sin(alpha);
-    x = r[0];
-    y = r[1];
-
     vpar = 0.0; // vpar = 1 gives standing wave
     bpar = 1.0;
 
@@ -103,6 +106,16 @@ static void alfven_wave(const real_t r[3],
     v1 = vpar*sina + vperp*cosa;
     b0 = bpar*cosa - bperp*sina;
     b1 = bpar*sina + bperp*cosa;
+
+    /** Cheng & Liang's aligned version **/
+    /**
+    v0 = 0.0;
+    v1 = 0.1*std::sin(2*pi*x);
+    v2 = 0.1*std::cos(2*pi*x);
+    b0 = 1.0;
+    b1 = v1;
+    b2 = v2;
+     **/
 
     kinetic_energy  = 0.5 * density * (v0*v0 + v1*v1 + v2*v2);
     magnetic_energy = 0.5 * (b0*b0 + b1*b1 + b2*b2);
@@ -123,6 +136,46 @@ static void alfven_wave(const real_t r[3],
     Binit[loc0 + 0*Ns_block] = b0;
     Binit[loc0 + 1*Ns_block] = b1;
     Binit[loc0 + 2*Ns_block] = b2;
+
+    return;
+}
+
+
+/* From the Athena test page. Left-going sound wave. */
+static void sound_wave(const real_t r[3],
+                              real_t* const __restrict__ fields,
+                              real_t* const __restrict__ Binit,
+                        const int loc0,
+                        const int Ns_block,
+                        const MHD* const __restrict__ physics)
+{
+    enum conserved {Density, mom0, mom1, mom2, energy, B0, B1, B2, A0, A1, A2};
+
+    real_t x;
+    real_t A = 1e-2;
+
+    x = r[0];
+
+    real_t Asin2pix = A * std::sin(2.0 * pi * x);
+
+    real_t Ebg = 1.0 / (physics->gamma * physics->gm1);
+
+    /* Convert to conserved variables */
+    fields[loc0 + Density*Ns_block] = 1.0 + Asin2pix;
+    fields[loc0 +    mom0*Ns_block] = - Asin2pix;
+    fields[loc0 +    mom1*Ns_block] =   Asin2pix;
+    fields[loc0 +    mom2*Ns_block] =   Asin2pix;
+    fields[loc0 +  energy*Ns_block] = Ebg + 1.5 * Asin2pix;
+    fields[loc0 +      B0*Ns_block] = 0.0; 
+    fields[loc0 +      B1*Ns_block] = 0.0; 
+    fields[loc0 +      B2*Ns_block] = 0.0; 
+    fields[loc0 +      A0*Ns_block] = 0.0; 
+    fields[loc0 +      A1*Ns_block] = 0.0; 
+    fields[loc0 +      A2*Ns_block] = 0.0; 
+
+    Binit[loc0 + 0*Ns_block] = 0.0;
+    Binit[loc0 + 1*Ns_block] = 0.0;
+    Binit[loc0 + 2*Ns_block] = 0.0;
 
     return;
 }
@@ -158,6 +211,8 @@ void set_initial_state_cartesian(ElementBlock& eb)
                     break;
                 case mhd:
                     alfven_wave(r, eb.fields, eb.Binit, loc0, eb.Ns_block, (MHD*)eb.physics_soln);
+                    if(false)
+                        sound_wave(r, eb.fields, eb.Binit, loc0, eb.Ns_block, (MHD*)eb.physics_soln);
                     break;
             }
         }
