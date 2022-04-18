@@ -173,23 +173,32 @@ void ElementBlock::set_computational_coords()
     /****/
     for (int d: dirs)
     {
-        real_t xi[6];
-        // flux points from van den Abeele
-        //xi[0] = - 1.0; xi[1] = - 0.83; xi[2] = - 0.36;
-        //xi[3] = 0.36;  xi[4] = 0.83;   xi[5] = 1.0;
+        switch (Ns[d])
+        {
+            case 1:
+                xf(d,0) = 0.0;
+                xf(d,1) = 1.0;
+                break;
+            case 5:
+                real_t xi[6];
+                // flux points from van den Abeele
+                //xi[0] = - 1.0; xi[1] = - 0.83; xi[2] = - 0.36;
+                //xi[3] = 0.36;  xi[4] = 0.83;   xi[5] = 1.0;
 
-        // Legendre zeros
-        // Can find with scipy.special.roots_legendre(n),
-        // where n is the number of INTERIOR points needed
-        xi[0] = - 1.0; 
-        xi[1] = - 0.861136311594053;
-        xi[2] = - 0.339981043584856;
-        xi[3] =   0.339981043584856;
-        xi[4] =   0.861136311594053;
-        xi[5] =   1.0;
-    
-        for (int i = 0; i < 6; ++i)
-            xf(d,i) = 0.5 * (1.0 + xi[i]);
+                // Legendre zeros
+                // Can find with scipy.special.roots_legendre(n),
+                // where n is the number of INTERIOR points needed
+                xi[0] = - 1.0; 
+                xi[1] = - 0.861136311594053;
+                xi[2] = - 0.339981043584856;
+                xi[3] =   0.339981043584856;
+                xi[4] =   0.861136311594053;
+                xi[5] =   1.0;
+            
+                for (int i = 0; i < 6; ++i)
+                    xf(d,i) = 0.5 * (1.0 + xi[i]);
+                break;
+        }
     }
     /*****/
 

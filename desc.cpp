@@ -7,7 +7,7 @@
 #include "jacobi.hpp"
 #include "write_screen.hpp"
 
-#define SHRINK 1.0
+#define SHRINK 0.8
 
 /*
 inline static long int factorial(const int n)

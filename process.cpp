@@ -127,7 +127,7 @@ void Process::time_advance()
                                              + " --- last output no.: " + std::to_string(data_output_counter-1));
     else
         write::message("Starting time step " + std::to_string(step) + " --- t = " + std::to_string(time)
-                                             + " --- dt = " + std::to_string(dt)
+                                             + " --- dt = " + std::to_string(dt*1e6)
                                              + " --- last output no.: " + std::to_string(data_output_counter-1));
 
     /* Call the fundamental time step method we're using */
