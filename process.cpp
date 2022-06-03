@@ -120,15 +120,25 @@ void Process::time_advance()
     }
     /********************************************/
 
-    if (Physics::diffusive)
-        write::message("Starting time step " + std::to_string(step) + " --- t = " + std::to_string(time)
-                                             + " --- dt = " + std::to_string(dt)
-                                             + " --- dt ratio: " + std::to_string(dt_ratio)
-                                             + " --- last output no.: " + std::to_string(data_output_counter-1));
-    else
-        write::message("Starting time step " + std::to_string(step) + " --- t = " + std::to_string(time)
-                                             + " --- dt = " + std::to_string(dt*1e6)
-                                             + " --- last output no.: " + std::to_string(data_output_counter-1));
+    if (rank == 0)
+    {
+        using namespace std;
+        cout << scientific;
+        const int defaultprec = cout.precision();
+        cout.precision(5);
+
+        if (Physics::diffusive)
+            cout << "Starting time step " << step << " --- t = " << time
+                 << " --- dt = " << dt 
+                 << " --- dt ratio: " << dt_ratio
+                 << " --- last output no.: " << data_output_counter-1 << endl;
+        else
+            cout << "Starting time step " << step << " --- t = " << time
+                 << " --- dt = " << dt << " --- last output no.: " << data_output_counter-1 << endl;
+
+        cout << defaultfloat;
+        cout.precision(defaultprec);
+    }
 
     /* Call the fundamental time step method we're using */
     (*time_integrator)(*this); //Since storing a pointer to a BasicTimeIntegrator

@@ -21,7 +21,7 @@ static BasicTimeMethod time_method = rk3_ssp;
 static TorusProblemType problem_type = desc_input;
 
 static int Nproc[3] = {1,1,1};
-static int Nelem[3] = {8,8,16};
+static int Nelem[3] = {4,4,8};
 static int Ns[3]    = {5,5,5};
 
 static real_t cfl      = 0.8; // Seems stable to 1.0 for ideal MHD
@@ -34,7 +34,7 @@ static ParamsTorus active_parameters(equations, time_method,
                                      problem_type,
                                      //"DESC_example_stellarator.h5",0);
                                      //"WISTELL-A_output.h5", 4);
-                                     "NCSX_cheb1_output.h5", 7);
-                                     //"DSHAPE_output.h5", 2);
+                                     //"NCSX_cheb1_output.h5", 7);
+                                     "DSHAPE_output.h5", 2);
                                      //"DSHAPE_cheb1_output.h5", 2);
                                      //"AXISYM_output.h5", 20);

@@ -59,7 +59,7 @@ class MHD : public Physics
         variables[7] = "B2";
         variables[8] = "psi";
 
-        diffusive   = false;
+        diffusive   = true;
         viscosity   = 1e-6;
         resistivity = 1e-6;
         diffusive_timestep_const = 1.0; // Default: 1/3, but larger can be more stable?!
