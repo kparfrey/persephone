@@ -55,8 +55,14 @@ void write_data(Process &proc)
         if (ig == proc.group)
         { 
             write::message("Creating data file " + std::to_string(proc.data_output_counter));
-            HighFive::File datafile(filename, HighFive::File::ReadWrite,
-                                        HighFive::MPIOFileDriver(proc.group_comm, MPI_INFO_NULL));
+
+            HighFive::FileAccessProps fapl{}; 
+            fapl.add(HighFive::MPIOFileAccess(proc.group_comm, MPI_INFO_NULL));
+            
+            HighFive::File datafile(filename, HighFive::File::ReadWrite, fapl);
+
+            //HighFive::File datafile(filename, HighFive::File::ReadWrite,
+            //                            HighFive::MPIOFileDriver(proc.group_comm, MPI_INFO_NULL));
 
             /* Create HDF5 groups for our Groups of processes */
             datafile.createGroup(groupstring);

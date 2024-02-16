@@ -55,10 +55,13 @@ void write_mesh(Process &proc)
     {
         if (ig == proc.group)
         {
-            HighFive::File meshfile(filename, HighFive::File::ReadWrite,
-                                        HighFive::MPIOFileDriver(proc.group_comm, MPI_INFO_NULL));
-            //HighFive::File meshfile(filename, HighFive::File::Create,
-            //                            HighFive::MPIOFileDriver(MPI_COMM_WORLD, MPI_INFO_NULL));
+            HighFive::FileAccessProps fapl{}; 
+            fapl.add(HighFive::MPIOFileAccess(proc.group_comm, MPI_INFO_NULL));
+
+            HighFive::File meshfile(filename, HighFive::File::ReadWrite, fapl);
+
+            //HighFive::File meshfile(filename, HighFive::File::ReadWrite,
+            //                            HighFive::MPIOFileDriver(proc.group_comm, MPI_INFO_NULL));
 
             /* Create HDF5 groups for our Groups of processes */
             meshfile.createGroup(groupstring);
