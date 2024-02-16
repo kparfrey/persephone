@@ -57,6 +57,10 @@ void write_mesh(Process &proc)
         {
             HighFive::FileAccessProps fapl{}; 
             fapl.add(HighFive::MPIOFileAccess(proc.group_comm, MPI_INFO_NULL));
+            fapl.add(HighFive::MPIOCollectiveMetadata());
+
+            HighFive::DataTransferProps xfpl{};
+            xfpl.add(HighFive::UseCollectiveIO());
 
             HighFive::File meshfile(filename, HighFive::File::ReadWrite, fapl);
 
@@ -105,7 +109,7 @@ void write_mesh(Process &proc)
 
                 /* Pass the repacked 1D array cast as a triple pointer */
                 // write::message("Writing " + names[i]);
-                dataset.select(offset, local_dims).write((real_t***)data);
+                dataset.select(offset, local_dims).write((real_t***)data, xfpl);
             }
 
             delete[] data;
@@ -154,7 +158,7 @@ void write_mesh(Process &proc)
 
                 HighFive::DataSet dataset = meshfile.createDataSet<real_t>(name, 
                                                    HighFive::DataSpace(global_dims));
-                dataset.select(offset, local_dims).write((real_t***)edge_data);
+                dataset.select(offset, local_dims).write((real_t***)edge_data, xfpl);
 
                 delete[] edge_data;
             } // closes: loop over this element's 12 edges

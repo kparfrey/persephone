@@ -58,7 +58,12 @@ void write_data(Process &proc)
 
             HighFive::FileAccessProps fapl{}; 
             fapl.add(HighFive::MPIOFileAccess(proc.group_comm, MPI_INFO_NULL));
-            
+            fapl.add(HighFive::MPIOCollectiveMetadata());
+
+            HighFive::DataTransferProps xfpl{};
+            xfpl.add(HighFive::UseCollectiveIO());
+
+
             HighFive::File datafile(filename, HighFive::File::ReadWrite, fapl);
 
             //HighFive::File datafile(filename, HighFive::File::ReadWrite,
@@ -114,7 +119,7 @@ void write_data(Process &proc)
 
                 /* Pass the repacked 1D array cast as a triple pointer */
                 // write::message("Writing " + name);
-                dataset.select(offset, local_dims).write((real_t***)data);
+                dataset.select(offset, local_dims).write((real_t***)data, xfpl);
             }
             
             delete[] primitives;
@@ -131,7 +136,7 @@ void write_data(Process &proc)
 
                 /* Pass the repacked 1D array cast as a triple pointer */
                 // write::message("Writing " + name);
-                dataset.select(offset, local_dims).write((real_t***)data);
+                dataset.select(offset, local_dims).write((real_t***)data, xfpl);
             }
 
             delete[] data;
