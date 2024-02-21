@@ -111,7 +111,7 @@ void Process::time_advance()
         //const real_t ch_divClean = 2.5;
 
         Physics::ch    = ch_divClean;
-        Physics::ch_sq = ch_divClean * ch_divClean;
+        //Physics::ch_sq = ch_divClean * ch_divClean;
         //F_from_P->ch_sq = physics->c_h * physics->c_h;
 
         Physics::psi_damping_rate = ch_divClean / Physics::psi_damping_const; //p_d_c = c_r from Dedner
@@ -166,7 +166,7 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
     VectorField dF; // Store d_j ( root_det_g * F(i)^j )
     
     /* Only used by diffusive terms. Needs to be here, rather than in add_diffusive_flux(), 
-     * so can be passed to geometric sources */
+     * so can be passed to geometric sources. Also used by MHD for GLM sources -- grad(psi). */
     VectorField dP; // Physical-space derivatives of primitives at the solution points
     
     for (int i: dirs)
@@ -215,19 +215,53 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
 
     kernels::flux_divergence(dF, eb.geometry.Jrdetg(), divF, eb.lengths);
 
-    /* Add div-cleaning scalar field's source directly here. Could alternatively do operator
-     * splitting, and directly reduce psi in a subsequent substep. */
+    /**** Add full GLM sources here, including Powell terms. Should move and reorganize.
+     **** See Eqns 3.17 and 4.75 of Derigs+ 2018.                                    ***/
     if (system == mhd)
     {
         const int psi = 8 * eb.Ns_block; // mem location at which the psi field begins
 
         /* Find divB from divF[psi] and save into elements.divB */
-        if (is_output_step && (substep == 1))
-            kernels::multiply_by_scalar(&divF[psi], 1.0/Physics::ch_sq, eb.divB, eb.Ns_block);
+        kernels::multiply_by_scalar(&divF[psi], 1.0/Physics::ch, eb.divB, eb.Ns_block);
+
+        real_t rho, vl[3], vu[3], Bu[3], Bl[3], vdotB, divB;
+        real_t gradpsi_dot_v;
+        const int N = eb.Ns_block;
+        for (int i = 0; i < N; ++i)
+        {
+            divB = eb.divB[i];
+            rho = U[i]; // 0th field
+            for (int d: dirs)
+                vl[d] = U[(1+d)*N + i] / rho;
+
+            for (int d: dirs)
+                Bu[d] = U[(5+d)*N + i];
+
+            eb.physics_soln->metric->raise(vl, vu, i);
+            eb.physics_soln->metric->lower(Bu, Bl, i);
+            vdotB = eb.physics_soln->metric->dot(vu, Bu, i);
+
+            gradpsi_dot_v = dP(0,psi+i) * vu[0] + dP(1,psi+i) * vu[1] + dP(2,psi+i) * vu[2];
+
+
+            // Momentum sources
+            for (int d: dirs)
+                divF[(1+d)*N + i] += divB * Bl[d];
+
+            // Energy source
+            divF[4*N + i] += divB * vdotB + gradpsi_dot_v * U[psi + i];
+
+            // Induction equation sources
+            for (int d: dirs)
+                divF[(5+d)*N +i] += divB * vu[d];
+
+            // Psi equation sources
+            divF[psi + i] += Physics::psi_damping_rate * U[psi + i] + gradpsi_dot_v;
+        }
 
         /* Add the damping source term for the div-cleaning scalar field */
-        kernels::add_scaled_vectors_inPlace(&divF[psi], &U[psi], 
-                                            Physics::psi_damping_rate, eb.Ns_block);
+        //kernels::add_scaled_vectors_inPlace(&divF[psi], &U[psi], 
+        //                                    Physics::psi_damping_rate, eb.Ns_block);
     }
 
     /*
@@ -253,6 +287,7 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
         kernels::add_geometric_sources(divF, U, dP, eb.physics_soln, Nfield, eb.Ns_block);
 
     /* Temp: Powell source terms */
+    /***
     if (false)
     {
         real_t rho, vl[3], vu[3], Bu[3], Bl[3], vdotB, divB;
@@ -283,6 +318,7 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
                 divF[(5+d)*N +i] += divB * vu[d];
         }
     }
+    ***/
 
 
     for (int i: dirs)

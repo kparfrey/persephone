@@ -247,9 +247,10 @@ class Snapshot(object):
             if mag:
                 f[ig] = np.abs(f[ig])
 
-        R = self.connect_groups(R)
-        Z = self.connect_groups(Z)
-        f = self.connect_groups(f)
+        if self.Ngroup > 1:
+            R = self.connect_groups(R)
+            Z = self.connect_groups(Z)
+            f = self.connect_groups(f)
             
         for ig in range(self.Ngroup):
             plt.contour(R[ig], Z[ig], f[ig], levels=levels, linewidths=width, zorder=5)

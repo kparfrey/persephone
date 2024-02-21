@@ -65,7 +65,7 @@ class MHD : public Physics
         diffusive_timestep_const = 1.0; // Default: 1/3, but larger can be more stable?!
 
         /* Divergence-cleaning parameters */
-        psi_damping_const = 1.0; // c_r --- Dedner suggests 0.18
+        psi_damping_const = 0.18; // c_r --- Dedner suggests 0.18
         //psi_damping_const = 0.03; // 0 < p_d_const < 1
 
         apply_floors = true;
@@ -85,9 +85,9 @@ class MHD : public Physics
                       real_t (*__restrict__ F)[3],
                 const int mem) const override;
 
-    void Fluxes_divB_subsystem(const real_t* const __restrict__ P, 
-                                     real_t (*__restrict__ F)[3],
-                               const int mem) const override;
+    //void Fluxes_divB_subsystem(const real_t* const __restrict__ P, 
+    //                                 real_t (*__restrict__ F)[3],
+    //                           const int mem) const override;
 
     void DiffusiveFluxes(const real_t* const __restrict__ U, 
                          const real_t (* const __restrict__ dU)[3],
@@ -134,8 +134,10 @@ inline void MHD::ConservedToPrimitive(const real_t* const __restrict__ U,
                               (vl[0]*P[v0] + vl[1]*P[v1] + vl[2]*P[v2]);
 
     const real_t mag_density = 0.5 * metric->square(&P[B0], mem);
+
+    const real_t psi_energy_density = 0.5 * P[psi] * P[psi];
     
-    P[pressure] = gm1 * (U[tot_energy] - KE_density - mag_density);
+    P[pressure] = gm1 * (U[tot_energy] - KE_density - mag_density - psi_energy_density);
 
     if (apply_floors)
     {
@@ -264,7 +266,7 @@ inline void MHD::Fluxes(const real_t* const __restrict__ P,
         B = Bu[d]; // B in this direction
 
         F[density][d]    = v * P[density];
-        F[tot_energy][d] = v * (E + Ptot) - Bdotv*B;
+        F[tot_energy][d] = v * (E + Ptot) - Bdotv*B + ch * P[psi] * B;
 
         F[mom0][d] = P[density] * v * vl[0] - B*Bl[0];
         F[mom1][d] = P[density] * v * vl[1] - B*Bl[1];
@@ -277,15 +279,16 @@ inline void MHD::Fluxes(const real_t* const __restrict__ P,
         F[B1][d] = Bu[1]*v - B*vu[1]; 
         F[B2][d] = Bu[2]*v - B*vu[2]; 
 
-        F[B0+d][d] = P[psi] * ((DiagonalSpatialMetric*)metric)->ginv[d][mem]; // Overwrite the above
+        F[B0+d][d] = ch * P[psi] * ((DiagonalSpatialMetric*)metric)->ginv[d][mem]; // Overwrite the above
 
-        F[psi][d] = ch_sq * B; 
+        F[psi][d]  = ch * B; 
     }
 
     return;
 }
 
 
+/***
 inline void MHD::Fluxes_divB_subsystem(const real_t* const __restrict__ P, 
                                              real_t (*__restrict__ F)[3],
                                        const int mem) const
@@ -302,6 +305,7 @@ inline void MHD::Fluxes_divB_subsystem(const real_t* const __restrict__ P,
 
     return;
 }
+***/
 
 
 inline void MHD::DiffusiveFluxes(const real_t* const __restrict__   P, 

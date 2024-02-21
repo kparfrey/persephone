@@ -26,9 +26,9 @@ class Physics
 
     /* Only used by MHD */
     inline static real_t ch; 
-    inline static real_t ch_sq; // Square of wave/transport speed for hyperbolic part of div cleaning
-    inline static real_t psi_damping_const; // Mignone & Tzeferacos's alpha, 0 < const < 1
-    inline static real_t psi_damping_rate;  // d psi/dt ... = - rate * psi
+    //inline static real_t ch_sq; // Square of wave/transport speed for hyperbolic part of div cleaning
+    inline static real_t psi_damping_const; // Dedner's cr; Mignone & Tzeferacos's alpha, 0 < const < 1
+    inline static real_t psi_damping_rate;  // Derigs' alpha = ch^2/cp^2 = ch/cr; d psi/dt ... = - rate * psi
                                             // p_d_rate = CFL * p_d_const / dt
     //inline static real_t psi_damping_exp;   // exp(-damping_rate * dt)
 
@@ -70,9 +70,9 @@ class Physics
     virtual void Floors(real_t* const __restrict__ U, const int mem) const = 0;
 
     /* Only used by MHD, and potential future MHD extensions */ 
-    virtual void Fluxes_divB_subsystem(const real_t* const __restrict__ P, 
-                                             real_t (*__restrict__ F)[3],
-                                       const int mem) const {}
+    //virtual void Fluxes_divB_subsystem(const real_t* const __restrict__ P, 
+    //                                         real_t (*__restrict__ F)[3],
+    //                                   const int mem) const {}
 };
 
 

@@ -182,6 +182,7 @@ class HLL : public NumericalFlux
 };
 
 
+/***
 class HLL_divB_subsystem : public NumericalFlux
 {
     public:
@@ -194,7 +195,7 @@ class HLL_divB_subsystem : public NumericalFlux
                            const int, // dir not used
                            const int mem) const override
     {
-        /* Temporary variables --- use a fixed size */
+        // Temporary variables --- use a fixed size 
         constexpr int Nv = 10; // since Nfield isn't constexpr
         real_t FL[Nv][3], FR[Nv][3];
         real_t PL[Nv],    PR[Nv];
@@ -205,7 +206,7 @@ class HLL_divB_subsystem : public NumericalFlux
         real_t Fstar;
         real_t F0; // Here (FL + FR)/2 for now
 
-        /* P = U, so use U wherever P would usually go */
+        // P = U, so use U wherever P would usually go
 
         physics->ConservedToPrimitive(UL, PL, mem);
         physics->ConservedToPrimitive(UR, PR, mem);
@@ -243,6 +244,7 @@ class HLL_divB_subsystem : public NumericalFlux
         return;
     }
 };
+***/
 
 
 
