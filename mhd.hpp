@@ -59,14 +59,13 @@ class MHD : public Physics
         variables[7] = "B2";
         variables[8] = "psi";
 
-        diffusive   = true;
+        diffusive   = false;
         viscosity   = 1e-6;
         resistivity = 1e-6;
         diffusive_timestep_const = 1.0; // Default: 1/3, but larger can be more stable?!
 
         /* Divergence-cleaning parameters */
-        psi_damping_const = 0.18; // c_r --- Dedner suggests 0.18
-        //psi_damping_const = 0.03; // 0 < p_d_const < 1
+        psi_damping_const = 0.06; // c_r --- Dedner suggests 0.18; 0 < p_d_const < 1
 
         apply_floors = true;
     }

@@ -106,7 +106,8 @@ void Process::time_advance()
     /* Calculate maximum stable div-cleaning wavespeed */
     if (system == mhd)
     {
-        const real_t ch_divClean = 1.0 /(dt * tt_max_global); //Should be stable with 1/()
+        /* This is equivalent to setting c_h = lambda_max on a uniform grid */
+        const real_t ch_divClean = 0.2 * 1.0 /(dt * tt_max_global); //Should be stable with 1/()
         //std::cout << ch_divClean << std::endl;
         //const real_t ch_divClean = 2.5;
 
@@ -115,8 +116,7 @@ void Process::time_advance()
         //F_from_P->ch_sq = physics->c_h * physics->c_h;
 
         Physics::psi_damping_rate = ch_divClean / Physics::psi_damping_const; //p_d_c = c_r from Dedner
-        //Physics::psi_damping_rate = Physics::psi_damping_const / dt; 
-        //physics->psi_damping_exp = std::exp(-cfl * physics->psi_damping_const);
+        //std::cout << Physics::psi_damping_rate << std::endl;
     }
     /********************************************/
 
@@ -210,8 +210,15 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
     if (Physics::diffusive)
         add_diffusive_flux(Uf, dP, F);
 
+    /* For testing that dP's are being calculated correctly -- put a known function *
+     * in, say, pressure and dump out its derivative.                               */
+    //for (int i=0; i < eb.Ns_block; i++)
+    //    eb.divB[i] = dP(0,4*eb.Ns_block + i);
+    //return;
+
     for (int i: dirs)
         kernels::fluxDeriv_to_soln(eb.fluxDeriv2soln(i), F(i), dF(i), eb.lengths, i);
+    
 
     kernels::flux_divergence(dF, eb.geometry.Jrdetg(), divF, eb.lengths);
 
@@ -219,10 +226,10 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
      **** See Eqns 3.17 and 4.75 of Derigs+ 2018.                                    ***/
     if (system == mhd)
     {
-        const int psi = 8 * eb.Ns_block; // mem location at which the psi field begins
+        const int pstart = 8 * eb.Ns_block; // mem location at which the psi field begins
 
         /* Find divB from divF[psi] and save into elements.divB */
-        kernels::multiply_by_scalar(&divF[psi], 1.0/Physics::ch, eb.divB, eb.Ns_block);
+        kernels::multiply_by_scalar(&divF[pstart], 1.0/Physics::ch, eb.divB, eb.Ns_block);
 
         real_t rho, vl[3], vu[3], Bu[3], Bl[3], vdotB, divB;
         real_t gradpsi_dot_v;
@@ -241,7 +248,10 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
             eb.physics_soln->metric->lower(Bu, Bl, i);
             vdotB = eb.physics_soln->metric->dot(vu, Bu, i);
 
-            gradpsi_dot_v = dP(0,psi+i) * vu[0] + dP(1,psi+i) * vu[1] + dP(2,psi+i) * vu[2];
+            /* Using Eulerian method of Derigs+ 2018, Sec 3.9 
+               Lagrangian method seems unstable for discontinuous field loop test?
+               Add the grad(psi).v terms to use the Lagrangian method */
+            //gradpsi_dot_v = dP(0,pstart+i) * vu[0] + dP(1,pstart+i) * vu[1] + dP(2,pstart+i) * vu[2];
 
 
             // Momentum sources
@@ -249,14 +259,14 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
                 divF[(1+d)*N + i] += divB * Bl[d];
 
             // Energy source
-            divF[4*N + i] += divB * vdotB + gradpsi_dot_v * U[psi + i];
+            divF[4*N + i] += divB * vdotB; // + gradpsi_dot_v * U[pstart + i];
 
             // Induction equation sources
             for (int d: dirs)
                 divF[(5+d)*N +i] += divB * vu[d];
 
             // Psi equation sources
-            divF[psi + i] += Physics::psi_damping_rate * U[psi + i] + gradpsi_dot_v;
+            divF[pstart + i] += Physics::psi_damping_rate * U[pstart + i]; // + gradpsi_dot_v;
         }
 
         /* Add the damping source term for the div-cleaning scalar field */

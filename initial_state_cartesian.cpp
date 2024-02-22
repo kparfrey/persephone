@@ -121,6 +121,86 @@ static void alfven_wave(const real_t r[3],
 }
 
 
+/* From Veiga+ 2021, Eqns 9 (simple) and 46 (rotation)  *
+ * See also Gardiner & Stone 2005, Sec 3.3.1            */
+static void field_loop_advection(const real_t r[3],
+                                       real_t* const __restrict__ fields,
+                                 const int loc0,
+                                 const int Ns_block,
+                                 const MHD* const __restrict__ physics)
+{
+    enum conserved {Density, mom0, mom1, mom2, energy, B0, B1, B2, psi};
+    real_t density, v0, v1, v2, pressure, b0, b1, b2; // primitive variables
+
+    const real_t gm1   = physics->gm1;
+
+    real_t x, y, alpha, cosa, sina, vmag;
+    real_t kinetic_energy, magnetic_energy;
+    real_t A0, xc, yc, rsize, rr;
+
+    density  = 1.0;
+    pressure = 1.0; // + 0.5 * std::sin(2*M_PI*r[0]);
+
+    alpha = pi / 4.0;
+    vmag = std::sqrt(2.0);
+    cosa  = std::cos(alpha);
+    sina  = std::sin(alpha);
+    x = r[0];
+    y = r[1];
+
+    xc = 0.5;
+    yc = 0.5;
+    A0 = 1e-3;
+    rsize = 0.25;
+
+    v0 = vmag * cosa;
+    v1 = vmag * sina;
+    v2 = 0.0;
+
+    rr = std::sqrt((x-xc)*(x-xc) + (y-yc)*(y-yc));
+
+    b0 = 0.0;
+    b1 = 0.0;
+    b2 = 0.0;
+
+    /* Discontinuous field loop */
+    /****/
+    if (rr < rsize)
+    {
+        b0 = - A0 * (y - yc) / (rr + 1e-12);
+        b1 =   A0 * (x - xc) / (rr + 1e-12);
+    }
+    /****/
+        
+    /* Smooth field loop */
+    /*
+    if (rr < 0.45)
+    {
+        b0 = - A0 * std::exp(-2*std::pow(rr/rsize,2)) * (y - yc) / (rr + 1e-12);
+        b1 =   A0 * std::exp(-2*std::pow(rr/rsize,2)) * (x - xc) / (rr + 1e-12);
+    }
+    */
+
+    kinetic_energy  = 0.5 * density * (v0*v0 + v1*v1 + v2*v2);
+    magnetic_energy = 0.5 * (b0*b0 + b1*b1 + b2*b2);
+
+    /* Convert to conserved variables */
+    fields[loc0 + Density*Ns_block] = density;
+    fields[loc0 +    mom0*Ns_block] = density * v0;
+    fields[loc0 +    mom1*Ns_block] = density * v1;
+    fields[loc0 +    mom2*Ns_block] = density * v2;
+    fields[loc0 +  energy*Ns_block] = kinetic_energy + magnetic_energy + pressure / gm1;
+    fields[loc0 +      B0*Ns_block] = b0;
+    fields[loc0 +      B1*Ns_block] = b1;
+    fields[loc0 +      B2*Ns_block] = b2;
+    fields[loc0 +     psi*Ns_block] = 0.0;
+
+    return;
+}
+
+
+
+
 void set_initial_state_cartesian(ElementBlock& eb)
 {
     int mem_offset;
@@ -150,7 +230,8 @@ void set_initial_state_cartesian(ElementBlock& eb)
                     shu_vortex(r, eb.fields, loc0, eb.Ns_block, (NavierStokes*)eb.physics_soln);
                     break;
                 case mhd:
-                    alfven_wave(r, eb.fields, loc0, eb.Ns_block, (MHD*)eb.physics_soln);
+                    //alfven_wave(r, eb.fields, loc0, eb.Ns_block, (MHD*)eb.physics_soln);
+                    field_loop_advection(r, eb.fields, loc0, eb.Ns_block, (MHD*)eb.physics_soln);
                     break;
             }
         }

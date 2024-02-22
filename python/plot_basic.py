@@ -207,8 +207,8 @@ class Snapshot(object):
             # These actually load data into memory - might want to reorganise
             self.vsq[ig] = self.v0[ig][...]**2 + self.v1[ig][...]**2 + self.v2[ig][...]**2
             self.Bsq[ig] = self.B0[ig][...]**2 + self.B1[ig][...]**2 + self.B2[ig][...]**2
-            self.divB_B[ig] = np.abs(self.divB[ig][...])/np.sqrt(self.Bsq[ig])
-            self.beta[ig] = np.abs(self.p[ig]) / (0.5 * self.Bsq[ig][...])
+            self.divB_B[ig] = np.abs(self.divB[ig][...])/(np.sqrt(self.Bsq[ig]) + 1e-15)
+            self.beta[ig] = np.abs(self.p[ig]) / (0.5 * self.Bsq[ig][...] + 1e-15)
             self.over_beta[ig] = 1.0 / self.beta[ig][...]
             self.ptot[ig] = self.p[ig] + 0.5*self.Bsq[ig]
 
@@ -255,6 +255,7 @@ class Snapshot(object):
         for ig in range(self.Ngroup):
             plt.contour(R[ig], Z[ig], f[ig], levels=levels, linewidths=width, zorder=5)
 
+        plt.colorbar()
         plt.title('t = %.4lf' % self.time)
 
         ax = plt.gca()
