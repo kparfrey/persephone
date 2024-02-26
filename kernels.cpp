@@ -1302,6 +1302,30 @@ namespace kernels
         return;
     }
 
+
+    /* Takes three physical vector components and combines them into a single
+     * component of the reference-space vector along the chosen direction.    */
+    void phys_vector_to_ref_density(const real_t* const __restrict__ V_phys,
+                                          real_t* const __restrict__ V_ref,
+                                    const VectorField                S,
+                                    const LengthBucket               lb,
+                                    const int                        dir)
+    {
+        int N = lb.Nf_dir_block[dir]; //Total # of this-dir flux points in the block
+
+        real_t lsum;
+        for (int i = 0; i < N; ++i) // i = mem loc for zeroth field
+        {
+            lsum = 0.0;
+            for (int dphys: dirs) 
+                lsum += S(dphys,i) * V_phys[i + dphys*N];
+
+            V_ref[i] = lsum; 
+        }
+
+        return;
+    }
+
     
     void diffusive_flux(const real_t* const __restrict__ Pf,
                         const VectorField                dPf,

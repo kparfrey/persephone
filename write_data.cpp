@@ -32,6 +32,9 @@ void write_data(Process &proc)
 
     string groupstring = std::to_string(proc.group);
 
+    /* Create diagnostic data */
+    if (proc.system == mhd)
+        proc.find_divB(&eb.fields[5 * eb.Ns_block], eb.divB);
 
     /* Create filename */
     std::stringstream filenum;

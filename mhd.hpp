@@ -60,8 +60,8 @@ class MHD : public Physics
         variables[8] = "psi";
 
         diffusive   = false;
-        viscosity   = 1e-6;
-        resistivity = 1e-6;
+        viscosity   = 5e-5;
+        resistivity = 5e-5;
         diffusive_timestep_const = 1.0; // Default: 1/3, but larger can be more stable?!
 
         /* Divergence-cleaning parameters */

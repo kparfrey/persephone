@@ -108,7 +108,6 @@ class HLL : public NumericalFlux
 
                 F0 = 0.5 * (FL[field][i] + FR[field][i]);
 
-
                 Fnum[field][i] = F0 * (1.0 - n[i]) + Fstar * n[i];
             }
 
@@ -117,7 +116,7 @@ class HLL : public NumericalFlux
 
 
     /* This only makes the normal flux consistent across the interface --- the tangential
-     * fluxes are left unchanged. */
+     * fluxes are left unchanged. Not sure this is actually used? */
     ACCEL_DECORATOR
     inline void operator()(const real_t* const __restrict__ UL, 
                            const real_t* const __restrict__ UR,

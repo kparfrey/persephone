@@ -134,6 +134,12 @@ namespace kernels
                               const VectorField dxdr[3],
                               const LengthBucket lb);
 
+    void phys_vector_to_ref_density(const real_t* const __restrict__ V_phys,
+                                          real_t* const __restrict__ V_ref,
+                                    const VectorField                S,
+                                    const LengthBucket               lb,
+                                    const int                        dir);
+
     void diffusive_flux(const real_t* const __restrict__ Pf,
                         const VectorField                dPf,
                               real_t* const __restrict__ F,

@@ -107,7 +107,7 @@ void Process::time_advance()
     if (system == mhd)
     {
         /* This is equivalent to setting c_h = lambda_max on a uniform grid */
-        const real_t ch_divClean = 0.2 * 1.0 /(dt * tt_max_global); //Should be stable with 1/()
+        const real_t ch_divClean = 0.3 * 1.0 /(dt * tt_max_global); //Should be stable with 1/()
         //std::cout << ch_divClean << std::endl;
         //const real_t ch_divClean = 2.5;
 
@@ -229,7 +229,11 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
         const int pstart = 8 * eb.Ns_block; // mem location at which the psi field begins
 
         /* Find divB from divF[psi] and save into elements.divB */
-        kernels::multiply_by_scalar(&divF[pstart], 1.0/Physics::ch, eb.divB, eb.Ns_block);
+        // kernels::multiply_by_scalar(&divF[pstart], 1.0/Physics::ch, eb.divB, eb.Ns_block);
+        
+        /* Find divB independently, by averaging B components at the element interfaces.
+         * This seems to work better. */
+        find_divB(&U[5 * eb.Ns_block], eb.divB);
 
         real_t rho, vl[3], vu[3], Bu[3], Bl[3], vdotB, divB;
         real_t gradpsi_dot_v;
@@ -345,6 +349,71 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
 }
 
 
+/* Separate function for finding divB --- can repurpose to find derivative of
+ * any vector field. Element interfaces are joined using simple averaging
+ * rather than e.g. the HLL flux.                                               */
+void Process::find_divB(const real_t* const B, real_t* const divB)
+{
+    ElementBlock& eb = elements;
+
+    const int hold_Nfield = eb.lengths.Nfield; // True total no. of fields
+
+    /* These vectors are in "transform direction" space */
+    VectorField Bf; // Physical B components interpolated to flux points
+    VectorField B_ref; // Reference-space components in each transform direction
+    VectorField dB; // Store d_j ( root_det_g * B(i)^j )
+                    
+    for (int i: dirs)
+    {
+        Bf(i)    = kernels::alloc_raw(3 * eb.Nf_dir_block[i]);
+        B_ref(i) = kernels::alloc_raw(    eb.Nf_dir_block[i]);
+        dB(i)    = kernels::alloc_raw(    eb.Ns_block);
+    }
+
+    eb.lengths.Nfield = 3; 
+
+    for (int i: dirs)
+        kernels::soln_to_flux(eb.soln2flux(i), B, Bf(i), eb.lengths, i);
+    
+    for (int i: ifaces)
+        kernels::fill_face_data(Bf(faces[i].normal_dir), faces[i], eb.lengths);
+    
+    /* Exchanges more data than necessary since only have 3 "fields" here */
+    exchange_boundary_data();
+
+    /* Average Bf on process-external faces. */
+    for (int i: ifaces)
+        kernels::external_interface_average(faces[i], Bf(faces[i].normal_dir), eb.lengths, false);
+
+    /* Average Bf on process-internal faces. */
+    for (int i: dirs)
+        kernels::internal_interface_average(Bf(i), eb.lengths, i);
+
+    /* On each flux-point-block, this converts the three physical vector components into a 
+     * single component of the vector, in reference space, along that flux-transform direction. */
+    for (int i: dirs)
+        kernels::phys_vector_to_ref_density(Bf(i), B_ref(i), eb.geometry.S[i], eb.lengths, i);
+    
+    eb.lengths.Nfield = 1; // Previous operation means we're effectively dealing with
+                           // the flux of a single scalar field now.
+
+    for (int i: dirs)
+        kernels::fluxDeriv_to_soln(eb.fluxDeriv2soln(i), B_ref(i), dB(i), eb.lengths, i);
+    
+    kernels::flux_divergence(dB, eb.geometry.Jrdetg(), divB, eb.lengths);
+                
+    for (int i: dirs)
+    {
+        kernels::free(Bf(i));
+        kernels::free(B_ref(i));
+        kernels::free(dB(i));
+    }
+
+    eb.lengths.Nfield = hold_Nfield;
+
+    return;
+}
+
 
 /* Finds the diffusive flux, adds in place to the advective flux in F */
 void Process::add_diffusive_flux(VectorField Uf, VectorField dP, VectorField F)
@@ -382,7 +451,7 @@ void Process::add_diffusive_flux(VectorField Uf, VectorField dP, VectorField F)
     for (int i: ifaces)
         kernels::external_interface_average(faces[i], Pf(faces[i].normal_dir), eb.lengths, false);
 
-    /* Average Uf on process-internal faces. */
+    /* Average Pf on process-internal faces. */
     for (int i: dirs)
         kernels::internal_interface_average(Pf(i), eb.lengths, i);
 
