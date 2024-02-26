@@ -73,6 +73,7 @@ void Process::time_advance()
     real_t dtmin_advect;
     real_t dtmin_diff, dt_ratio;
 
+    Physics::ch = 0.0; // Find timestep without cleaning wave
     for (int d: dirs)
     {
         real_t* Uf = kernels::alloc_raw(Nfield*eb.Nf_dir_block[d]);
@@ -107,15 +108,10 @@ void Process::time_advance()
     if (system == mhd)
     {
         /* This is equivalent to setting c_h = lambda_max on a uniform grid */
-        const real_t ch_divClean = 0.3 * 1.0 /(dt * tt_max_global); //Should be stable with 1/()
-        //std::cout << ch_divClean << std::endl;
-        //const real_t ch_divClean = 2.5;
+        Physics::ch = 2.0; // 1.0 /(dt * tt_max_global); //Should be stable with 1/()
+        //std::cout << Physics::ch << std::endl;
 
-        Physics::ch    = ch_divClean;
-        //Physics::ch_sq = ch_divClean * ch_divClean;
-        //F_from_P->ch_sq = physics->c_h * physics->c_h;
-
-        Physics::psi_damping_rate = ch_divClean / Physics::psi_damping_const; //p_d_c = c_r from Dedner
+        Physics::psi_damping_rate = Physics::ch / Physics::psi_damping_const; //p_d_c = c_r from Dedner
         //std::cout << Physics::psi_damping_rate << std::endl;
     }
     /********************************************/
@@ -229,7 +225,7 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
         const int pstart = 8 * eb.Ns_block; // mem location at which the psi field begins
 
         /* Find divB from divF[psi] and save into elements.divB */
-        // kernels::multiply_by_scalar(&divF[pstart], 1.0/Physics::ch, eb.divB, eb.Ns_block);
+        //kernels::multiply_by_scalar(&divF[pstart], 1.0/Physics::ch, eb.divB, eb.Ns_block);
         
         /* Find divB independently, by averaging B components at the element interfaces.
          * This seems to work better. */
@@ -257,7 +253,6 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
                Add the grad(psi).v terms to use the Lagrangian method */
             //gradpsi_dot_v = dP(0,pstart+i) * vu[0] + dP(1,pstart+i) * vu[1] + dP(2,pstart+i) * vu[2];
 
-
             // Momentum sources
             for (int d: dirs)
                 divF[(1+d)*N + i] += divB * Bl[d];
@@ -272,68 +267,11 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
             // Psi equation sources
             divF[pstart + i] += Physics::psi_damping_rate * U[pstart + i]; // + gradpsi_dot_v;
         }
-
-        /* Add the damping source term for the div-cleaning scalar field */
-        //kernels::add_scaled_vectors_inPlace(&divF[psi], &U[psi], 
-        //                                    Physics::psi_damping_rate, eb.Ns_block);
     }
-
-    /*
-     * Dump out the initial divB
-    if (rank == 0)
-    {
-        real_t Bsq, Bu[3];
-        for (int i = 0; i < eb.Ns_block; ++i)
-        {
-            for (int d: dirs)
-                Bu[d] = U[(5+d)*eb.Ns_block + i];
-            Bsq = eb.physics_soln->metric->square(Bu, i);
-
-            std::cout << std::abs(eb.divB[i])/std::sqrt(Bsq) << std::endl;
-        }
-
-        //exit(33);
-    }
-    */
 
     /* Add geometric source terms if not using Cartesian physical coordinates */
     if (eb.physics_soln->metric->physical_coords != cartesian)
         kernels::add_geometric_sources(divF, U, dP, eb.physics_soln, Nfield, eb.Ns_block);
-
-    /* Temp: Powell source terms */
-    /***
-    if (false)
-    {
-        real_t rho, vl[3], vu[3], Bu[3], Bl[3], vdotB, divB;
-        const int N = eb.Ns_block;
-        for (int i = 0; i < N; ++i)
-        {
-            divB = eb.divB[i];
-            rho = U[i]; // 0th field
-            for (int d: dirs)
-                vl[d] = U[(1+d)*N + i] / rho;
-
-            for (int d: dirs)
-                Bu[d] = U[(5+d)*N + i];
-
-            eb.physics_soln->metric->raise(vl, vu, i);
-            eb.physics_soln->metric->lower(Bu, Bl, i);
-            vdotB = eb.physics_soln->metric->dot(vu, Bu, i);
-
-            // Momentum sources
-            for (int d: dirs)
-                divF[(1+d)*N + i] += divB * Bl[d];
-
-            // Energy source
-            divF[4*N + i] += divB * vdotB;
-
-            // Induction equation sources
-            for (int d: dirs)
-                divF[(5+d)*N +i] += divB * vu[d];
-        }
-    }
-    ***/
-
 
     for (int i: dirs)
     {

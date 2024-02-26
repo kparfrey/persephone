@@ -141,6 +141,8 @@ class Snapshot(object):
     mu0     = 4 * np.pi * 1e-7
     sqrt_mu0 = np.sqrt(mu0) 
 
+    adiabatic_idx = 5.0 / 3.0;
+
     def __init__(self, filenum = 0):
         self.m = Mesh()
         self.Ngroup = self.m.Ngroup
@@ -180,6 +182,8 @@ class Snapshot(object):
         self.beta = [0] * self.Ngroup
         self.over_beta = [0] * self.Ngroup
         self.ptot = [0] * self.Ngroup
+        self.cs   = [0] * self.Ngroup   # sound speed
+        self.mach = [0] * self.Ngroup
         
         self.R   = [0] * self.Ngroup
         self.Z   = [0] * self.Ngroup
@@ -211,6 +215,8 @@ class Snapshot(object):
             self.beta[ig] = np.abs(self.p[ig]) / (0.5 * self.Bsq[ig][...] + 1e-15)
             self.over_beta[ig] = 1.0 / self.beta[ig][...]
             self.ptot[ig] = self.p[ig] + 0.5*self.Bsq[ig]
+            self.cs[ig] = np.sqrt(self.adiabatic_idx * self.p[ig][...] / self.rho[ig][...])
+            self.mach[ig] = np.sqrt(self.vsq[ig])/self.cs[ig]
 
 
         # Can't make "global" v array, since the groups can have

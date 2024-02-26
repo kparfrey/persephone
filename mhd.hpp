@@ -60,14 +60,14 @@ class MHD : public Physics
         variables[8] = "psi";
 
         diffusive   = false;
-        viscosity   = 5e-5;
-        resistivity = 5e-5;
+        viscosity   = 1e-4;
+        resistivity = 1e-4;
         diffusive_timestep_const = 1.0; // Default: 1/3, but larger can be more stable?!
 
         /* Divergence-cleaning parameters */
-        psi_damping_const = 0.06; // c_r --- Dedner suggests 0.18; 0 < p_d_const < 1
+        psi_damping_const = 0.2; // c_r --- Dedner suggests 0.18; 0 < p_d_const < 1
 
-        apply_floors = true;
+        apply_floors = false;
     }
 
 
@@ -229,8 +229,18 @@ inline void MHD::WaveSpeeds(const real_t* const __restrict__ P,
         fast_speed = std::sqrt(cs_sq);
 
 
-    c[0] = MAX(0.0, P[v0+dir] + fast_speed); // P stores the contra velocity components
-    c[1] = MIN(0.0, P[v0+dir] - fast_speed);
+    //c[0] = MAX(0.0, P[v0+dir] + fast_speed); 
+    //c[1] = MIN(0.0, P[v0+dir] - fast_speed);
+
+    /* DEBUG */
+    real_t lplus, lminus;  // Eigenvalues for the cleaning wave --> doesn't propagate at ch!
+    real_t v = P[v0+dir];  // P stores the contravariant velocity components
+    
+    lplus  = 0.5 * (v + std::sqrt(v*v + 4.0*ch*ch)); // will need metric term on right here,
+    lminus = 0.5 * (v - std::sqrt(v*v + 4.0*ch*ch)); // v*v --> vu * vl etc.
+
+    c[0] = MAX(0.0, MAX(v + fast_speed, lplus)); 
+    c[1] = MIN(0.0, MIN(v - fast_speed, lminus));
 
     return;
 }
