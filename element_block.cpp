@@ -9,6 +9,7 @@
 #include "edge.hpp"
 #include "geometry_labels.hpp"
 #include "physics.hpp"
+#include "legendre_roots.hpp"
 
 
 void ElementBlock::setup()
@@ -159,18 +160,28 @@ void ElementBlock::set_computational_coords()
 {
     /* Points are defined on [0, 1], so that xf[0] = 0 */
 
-    /* Solution / Gauss points */
+    /* Solution points --- Gauss-Chebyshev */
     for (int d: dirs)
         for (int i = 0; i < Ns[d]; ++i)
             xs(d,i) = 0.5 * (1.0 - std::cos(pi * (i + 0.5) / Ns[d]));
 
-    /* Flux / Lobatto points */
+    /* Flux points 
+     * Lobatto-Chebyshev points --- weakly unstable */
     //for (int d: dirs)
     //    for (int i = 0; i < Nf[d]; ++i)
     //        xf(d,i) = 0.5 * (1.0 - std::cos(pi * i  / (Nf[d] - 1.0)));
 
+    /* Flux points --- Gauss-Legendre */
+    for (int d: dirs)
+    {
+        int n = Ns[d] - 1; // Order of Legendre polynomial & no. of interior points needed
+        xf(d,       0) = 0.0;
+        xf(d, Nf[d]-1) = 1.0;
+        legendre::find_roots(xf(d), n);
+    }
+
     // Test: 5th order 
-    /****/
+    /****
     for (int d: dirs)
     {
         switch (Ns[d])
@@ -200,7 +211,7 @@ void ElementBlock::set_computational_coords()
                 break;
         }
     }
-    /*****/
+     *****/
 
 
     return;
