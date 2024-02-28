@@ -9,7 +9,11 @@ class Group(object):
 
     r0 = None
     r1 = None
+    r2 = None
     r  = None
+
+    Jrdetg = None
+    quadweight = None
 
     e0 = None
     e1 = None
@@ -64,6 +68,9 @@ class Mesh(object):
             group.r2 = m[sg]['r']['2']
             group.r  = [group.r0, group.r1, group.r2]
             
+            group.Jrdetg = m[sg]['Jrdetg']
+            group.quadweight = m[sg]['quadweight']
+
             ## This seems to load the data to disk - may want to use list 
             #group.r  = np.array((group.r0,group.r1,group.r2))
 
@@ -304,4 +311,14 @@ class Snapshot(object):
         F[0][0,-1] = F[3][0,-1] = F[4][0,0] = third * (f[0][0,-1] + f[3][0,-1] + f[4][0,0])
 
         return F
+
+
+    def global_integral(self, f):
+        lsum = 0.0
+
+        for ig in range(self.Ngroup):
+            lsum += np.sum( f[ig][()] * self.m.g[ig].Jrdetg[()] * self.m.g[ig].quadweight[()] , axis=None )
+
+        return lsum
+
 

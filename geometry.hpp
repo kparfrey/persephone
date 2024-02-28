@@ -25,6 +25,7 @@ class Geometry
     ScalarField Jrdetg;  // |J| sqrt{det(g)}
     VectorField dxdr[3]; // dxdr[i](j,...) = d x^i / d r^j 
                          // Only used to find grad(U) for diffusive flux
+    ScalarField quadrature_weight; // Reference-space weight for 3D Gaussian quadrature
 
 
     /* ...and on flux points */

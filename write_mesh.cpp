@@ -81,7 +81,7 @@ void write_mesh(Process &proc)
 
             /* For now, just write all data as separate scalar variables */
             constexpr int Nvec   = 1;
-            constexpr int Nscal  = 0;
+            constexpr int Nscal  = 2;
             constexpr int Nwrite = Nscal + 3*Nvec;
             int count = 0; // For keeping track of the variable lists
 
@@ -89,6 +89,14 @@ void write_mesh(Process &proc)
              * to break this into a function for use with data output too. */
             string names[Nwrite];
             real_t* datalist[Nwrite];
+
+            /* Store Jrdetg and quadrature_weight for calculating integrals with Gaussian quadrature */
+            names[0]    = groupstring + "/Jrdetg";
+            datalist[0] = eb.geometry.Jrdetg();
+
+            names[1]    = groupstring + "/quadweight";
+            datalist[1] = eb.geometry.quadrature_weight();
+            count += 2; // Start the vectors at names[2], datalist[2] 
 
             string group              = groupstring; // + "/coords";
             string vecnames[Nvec]     = {"r"};
