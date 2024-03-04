@@ -13,10 +13,10 @@ static EqnSystem equations = mhd;
 static BasicTimeMethod time_method = rk3_ssp;
 
 static int Nproc[3] = {2,2,1};
-static int Nelem[3] = {8,6,1};
-static int Ns[3]    = {5,9,1};
+static int Nelem[3] = {8,8,1};
+static int Ns[3]    = {5,5,1};
 
-static real_t cfl      = 0.4;
+static real_t cfl      = 0.7;
 static real_t end_time = 20.0;
 static real_t dt_write = 0.5;
 

@@ -1534,9 +1534,10 @@ namespace kernels
 #endif
 
 
-    /* Temporary standalone method. Should reintegrate into other operations. */
-    /* Returns the timestep restriction along this reference direction.       */
+    /* Temporary standalone method. Should reintegrate into other operations.    */
+    /* Returns the timestep restriction along this reference direction.          */
     real_t local_timestep(const real_t* const __restrict__ Uf,
+                                real_t& vmax,
                           const VectorField timestep_transform,
                           const Physics* const __restrict__ physics,
                           //const ConservedToPrimitive*  U_to_P,
@@ -1562,6 +1563,8 @@ namespace kernels
         real_t chi_v;
         real_t chi_v_max = 0.0;
 
+        real_t vmax_loc = 0.0;
+        real_t vmag     = 0.0;
 
         for (int ne2 = 0; ne2 < lb.Nelem[dir2]; ++ne2)
         for (int ne1 = 0; ne1 < lb.Nelem[dir1]; ++ne1)
@@ -1601,8 +1604,16 @@ namespace kernels
 
                 if (chi_v > chi_v_max)
                     chi_v_max = chi_v;
+
+                /* Finds maximum |v| for calculating the max stable div-cleaning
+                 * wavespeed ch. Should tidy up so is eqn-system agnostic again. */
+                vmag = std::sqrt(physics->metric->square(&Pp[1], mem));
+                if (vmag > vmax_loc) 
+                    vmax_loc = vmag;
             }
         }
+
+        vmax = vmax_loc;
 
         delete[] Up;
         delete[] Pp;

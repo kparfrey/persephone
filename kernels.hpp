@@ -165,9 +165,10 @@ namespace kernels
 
     /* Not a final "kernel", obviously */
     real_t local_timestep(const real_t* const __restrict__ Uf,
-                      const VectorField timestep_transform,
-                      const Physics* const __restrict__ physics,
-                      //const ConservedToPrimitive*  U_to_P,
-                      //const WaveSpeedsFromPrimitive* c_from_P,
-                      const LengthBucket lb, const int dir);
+                                real_t& vmax,
+                          const VectorField timestep_transform,
+                          const Physics* const __restrict__ physics,
+                          //const ConservedToPrimitive*  U_to_P,
+                          //const WaveSpeedsFromPrimitive* c_from_P,
+                          const LengthBucket lb, const int dir);
 }

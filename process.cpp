@@ -74,17 +74,23 @@ void Process::time_advance()
     real_t dtmin_diff, dt_ratio;
 
     Physics::ch = 0.0; // Find timestep without cleaning wave
+
+    /* Should be able to convert this to a single search over data on the solution points? */
+    real_t vmax_dir[3]; 
+    real_t vmax;
     for (int d: dirs)
     {
         real_t* Uf = kernels::alloc_raw(Nfield*eb.Nf_dir_block[d]);
         kernels::soln_to_flux(eb.soln2flux(d), eb.fields, Uf, eb.lengths, d);
-        dtmin_dir[d] = kernels::local_timestep(Uf, eb.geometry.timestep_transform[d],
+        dtmin_dir[d] = kernels::local_timestep(Uf, vmax_dir[d], eb.geometry.timestep_transform[d],
                                                eb.physics[d], eb.lengths, d);                          
-                                               //U_to_P, c_from_P, eb.lengths, d);                          
         delete Uf;
     }
     dtmin = MIN(dtmin_dir[0], MIN(dtmin_dir[1], dtmin_dir[2]));
+    vmax  = MAX(vmax_dir[0],  MAX(vmax_dir[1],  vmax_dir[2]));
+
     MPI_Allreduce(MPI_IN_PLACE, &dtmin, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+    MPI_Allreduce(MPI_IN_PLACE, &vmax, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
     dtmin_advect = cfl * dtmin;
 
     if (Physics::diffusive)
@@ -107,9 +113,15 @@ void Process::time_advance()
     /* Calculate maximum stable div-cleaning wavespeed */
     if (system == mhd)
     {
-        /* This is equivalent to setting c_h = lambda_max on a uniform grid */
-        Physics::ch = 2.0; // 1.0 /(dt * tt_max_global); //Should be stable with 1/()
-        //std::cout << Physics::ch << std::endl;
+        real_t lambda_max = 1.0 /(dt * tt_max_global); // Max allowable e'value on the grid
+
+        real_t safety = 0.95;
+        if (cfl < 0.4)
+            safety = 0.75; // Seem to run into trouble at very high ch for small cfl
+
+        /* For using the non-Galilean-invariant method of Derigs+ 2018 */
+        Physics::ch = safety * std::sqrt(lambda_max * (lambda_max - vmax));
+        //std::cout << "ch = " << Physics::ch << std::endl;
 
         Physics::psi_damping_rate = Physics::ch / Physics::psi_damping_const; //p_d_c = c_r from Dedner
         //std::cout << Physics::psi_damping_rate << std::endl;
