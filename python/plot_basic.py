@@ -2,7 +2,40 @@ import numpy as np
 import h5py
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+#import fejer_quadrature
 #from scipy.interpolate import griddata
+
+
+def fejer_1(order):
+    """Backend for Fejer type I quadrature."""
+    order = int(order)
+    if order == 0:
+        return np.array([0.5]), np.array([1.0])
+    order += 1
+
+    abscissas = -0.5 * np.cos(np.pi * (np.arange(order) + 0.5) / order) + 0.5
+
+    steps = np.arange(1, order, 2)
+    length = len(steps)
+    remains = order - length
+
+    kappa = np.arange(remains)
+    beta = np.hstack(
+        [
+            2 * np.exp(1j * np.pi * kappa / order) / (1 - 4 * kappa**2),
+            np.zeros(length + 1),
+        ]
+    )
+    beta = beta[:-1] + np.conjugate(beta[:0:-1])
+
+    weights = np.fft.ifft(beta)
+    assert max(weights.imag) < 1e-15
+    weights = weights.real / 2.0
+
+    #return abscissas, weights
+    # Only return the weights, since the point locations are already set
+    return weights 
+
 
 class Group(object):
     group = None
@@ -314,11 +347,34 @@ class Snapshot(object):
 
 
     def global_integral(self, f):
-        lsum = 0.0
+        sum_all_groups = 0.0
 
         for ig in range(self.Ngroup):
-            lsum += np.sum( f[ig][()] * self.m.g[ig].Jrdetg[()] * self.m.g[ig].quadweight[()] , axis=None )
+            g  = self.m.g[ig]
+            Nelem = g.Nelem
+            Ns = g.Ns
 
-        return lsum
+            # Set up the Fejer weights
+            weights = np.ndarray(f[ig].shape)
+
+            w0 = fejer_1(Ns[0] - 1)
+            w1 = fejer_1(Ns[1] - 1)
+            w2 = fejer_1(Ns[2] - 1)
+
+            for ke in range(Nelem[2]):
+                for je in range(Nelem[1]):
+                    for ie in range(Nelem[0]):
+                        for k in range(Ns[2]):
+                            for j in range(Ns[1]):
+                                for i in range(Ns[0]):
+                                    il = ie * Ns[0] + i
+                                    jl = je * Ns[1] + j
+                                    kl = ke * Ns[2] + k
+                                    weights[il][jl][kl] = w0[i] * w1[j] * w2[k]
+
+            # Do the integral
+            sum_all_groups += np.sum( f[ig][()] * self.m.g[ig].Jrdetg[()] * weights[()] , axis=None )
+
+        return sum_all_groups
 
 
