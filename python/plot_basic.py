@@ -6,23 +6,21 @@ import matplotlib.pyplot as plt
 #from scipy.interpolate import griddata
 
 
-def fejer_1(order):
-    """Backend for Fejer type I quadrature."""
-    order = int(order)
-    if order == 0:
-        return np.array([0.5]), np.array([1.0])
-    order += 1
+### Returns weights for 1D Fejer (type 1) quadrature on npoints points
+### Therefore polynomial_order = npoints - 1
+def fejer_weights(npoints):
+    npoints = int(npoints)
+    if npoints == 1:
+        return np.array([1.0])
 
-    abscissas = -0.5 * np.cos(np.pi * (np.arange(order) + 0.5) / order) + 0.5
-
-    steps = np.arange(1, order, 2)
+    steps = np.arange(1, npoints, 2)
     length = len(steps)
-    remains = order - length
+    remains = npoints - length
 
     kappa = np.arange(remains)
     beta = np.hstack(
         [
-            2 * np.exp(1j * np.pi * kappa / order) / (1 - 4 * kappa**2),
+            2 * np.exp(1j * np.pi * kappa / npoints) / (1 - 4 * kappa**2),
             np.zeros(length + 1),
         ]
     )
@@ -32,8 +30,6 @@ def fejer_1(order):
     assert max(weights.imag) < 1e-15
     weights = weights.real / 2.0
 
-    #return abscissas, weights
-    # Only return the weights, since the point locations are already set
     return weights 
 
 
@@ -79,6 +75,8 @@ class Mesh(object):
     Ns        = None
     Nf        = None
 
+    weights_found = False
+
     fileref = None # Handle for h5py file object
     
     g = dict() # Dictionary of Groups
@@ -91,7 +89,7 @@ class Mesh(object):
         self.Ngroup = m['Ngroup'][()]
         self.Nproc  = m['Nproc'][()]
         self.Nfield = m['Nfield'][()]
-
+        
         for ig in range(self.Ngroup):
             sg = str(ig)
             group = Group(ig)
@@ -101,8 +99,8 @@ class Mesh(object):
             group.r2 = m[sg]['r']['2']
             group.r  = [group.r0, group.r1, group.r2]
             
-            group.Jrdetg = m[sg]['Jrdetg']
-            group.quadweight = m[sg]['quadweight']
+            group.Jrdetg     = m[sg]['Jrdetg']
+            #group.quadweight = m[sg]['quadweight']
 
             ## This seems to load the data to disk - may want to use list 
             #group.r  = np.array((group.r0,group.r1,group.r2))
@@ -161,6 +159,40 @@ class Mesh(object):
         ax = plt.gca()
         ax.set_aspect('equal')
         return
+    
+
+    ### Find weights for 3D Fejer quadrature
+    ### For now, assume all elements in a group are identical
+    def setup_quadrature_weights(self):
+        print("Finding quadrature weights")
+
+        for ig in range(self.Ngroup):
+            g  = self.g[ig]
+            Nelem = g.Nelem
+            Ns = g.Ns
+
+            g.quadweight = np.ndarray(g.Jrdetg.shape)
+
+            w0 = fejer_weights(Ns[0])
+            w1 = fejer_weights(Ns[1])
+            w2 = fejer_weights(Ns[2])
+
+            # Not the most efficient, but at least it's clear...
+            for ke in range(Nelem[2]):
+                for je in range(Nelem[1]):
+                    for ie in range(Nelem[0]):
+                        for k in range(Ns[2]):
+                            for j in range(Ns[1]):
+                                for i in range(Ns[0]):
+                                    il = ie * Ns[0] + i
+                                    jl = je * Ns[1] + j
+                                    kl = ke * Ns[2] + k
+                                    g.quadweight[il][jl][kl] = w0[i] * w1[j] * w2[k]
+
+        self.weights_found = True
+        return
+
+
 
 
 
@@ -349,31 +381,12 @@ class Snapshot(object):
     def global_integral(self, f):
         sum_all_groups = 0.0
 
+        if self.m.weights_found == False:
+            self.m.setup_quadrature_weights()
+
         for ig in range(self.Ngroup):
-            g  = self.m.g[ig]
-            Nelem = g.Nelem
-            Ns = g.Ns
-
-            # Set up the Fejer weights
-            weights = np.ndarray(f[ig].shape)
-
-            w0 = fejer_1(Ns[0] - 1)
-            w1 = fejer_1(Ns[1] - 1)
-            w2 = fejer_1(Ns[2] - 1)
-
-            for ke in range(Nelem[2]):
-                for je in range(Nelem[1]):
-                    for ie in range(Nelem[0]):
-                        for k in range(Ns[2]):
-                            for j in range(Ns[1]):
-                                for i in range(Ns[0]):
-                                    il = ie * Ns[0] + i
-                                    jl = je * Ns[1] + j
-                                    kl = ke * Ns[2] + k
-                                    weights[il][jl][kl] = w0[i] * w1[j] * w2[k]
-
-            # Do the integral
-            sum_all_groups += np.sum( f[ig][()] * self.m.g[ig].Jrdetg[()] * weights[()] , axis=None )
+            g = self.m.g[ig]
+            sum_all_groups += np.sum( f[ig][()] * g.Jrdetg[()] * g.quadweight[()] , axis=None )
 
         return sum_all_groups
 

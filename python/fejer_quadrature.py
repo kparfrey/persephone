@@ -5,7 +5,8 @@ def fejer_1(order):
     """Backend for Fejer type I quadrature."""
     order = int(order)
     if order == 0:
-        return numpy.array([0.5]), numpy.array([1.0])
+        return numpy.array([1.0]) # weight only
+        # return numpy.array([0.5]), numpy.array([1.0]) # Abscissa and weight
     order += 1
 
     abscissas = -0.5 * numpy.cos(numpy.pi * (numpy.arange(order) + 0.5) / order) + 0.5
