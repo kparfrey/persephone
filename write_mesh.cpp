@@ -81,7 +81,7 @@ void write_mesh(Process &proc)
 
             /* For now, just write all data as separate scalar variables */
             constexpr int Nvec   = 1;
-            constexpr int Nscal  = 2;
+            constexpr int Nscal  = 1;
             constexpr int Nwrite = Nscal + 3*Nvec;
             int count = 0; // For keeping track of the variable lists
 
@@ -94,9 +94,7 @@ void write_mesh(Process &proc)
             names[0]    = groupstring + "/Jrdetg";
             datalist[0] = eb.geometry.Jrdetg();
 
-            names[1]    = groupstring + "/quadweight";
-            datalist[1] = eb.geometry.quadrature_weight();
-            count += 2; // Start the vectors at names[2], datalist[2] 
+            count += 1; // Start the vectors at names[1], datalist[1] 
 
             string group              = groupstring; // + "/coords";
             string vecnames[Nvec]     = {"r"};

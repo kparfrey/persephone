@@ -16,7 +16,6 @@ void Geometry::allocate_on_host(const int Ns, const int Nf[3])
 
     /* Solution points */
     Jrdetg            = new real_t [Ns]();
-    quadrature_weight = new real_t [Ns]();
     
     for(int dref: dirs)
         for(int dphys: dirs)
@@ -130,13 +129,6 @@ void Geometry::setup_full(ElementBlock& eb)
             detJ = std::abs(J.det);
 
             Jrdetg(mem_loc) = detJ * eb.physics_soln->metric->rdetg[mem_loc];
-
-            /* Reference-space quadrature weight for this solution point 
-             * The xs are on [0,1] but the standard formula needs the abscissas on [-1,1] 
-             * therefore xstandard = 2 * xs - 1 and the leading factors of 0.5 */
-            quadrature_weight(mem_loc) = (0.5 * pi * std::sqrt(1.0 - std::pow(2*xe[0]-1,2))/eb.Ns[0]) * 
-                                         (0.5 * pi * std::sqrt(1.0 - std::pow(2*xe[1]-1,2))/eb.Ns[1]) *
-                                         (0.5 * pi * std::sqrt(1.0 - std::pow(2*xe[2]-1,2))/eb.Ns[2]) ; 
 
             /* Used to find grad(U) for diffusive terms */
             J.find_inverse();

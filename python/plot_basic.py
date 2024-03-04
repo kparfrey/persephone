@@ -100,7 +100,6 @@ class Mesh(object):
             group.r  = [group.r0, group.r1, group.r2]
             
             group.Jrdetg     = m[sg]['Jrdetg']
-            #group.quadweight = m[sg]['quadweight']
 
             ## This seems to load the data to disk - may want to use list 
             #group.r  = np.array((group.r0,group.r1,group.r2))
