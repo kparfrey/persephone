@@ -255,6 +255,7 @@ class Snapshot(object):
         self.ptot = [0] * self.Ngroup
         self.cs   = [0] * self.Ngroup   # sound speed
         self.mach = [0] * self.Ngroup
+        self.Etot = [0] * self.Ngroup
         
         self.R   = [0] * self.Ngroup
         self.Z   = [0] * self.Ngroup
@@ -288,6 +289,10 @@ class Snapshot(object):
             self.ptot[ig] = self.p[ig] + 0.5*self.Bsq[ig]
             self.cs[ig] = np.sqrt(self.adiabatic_idx * self.p[ig][...] / self.rho[ig][...])
             self.mach[ig] = np.sqrt(self.vsq[ig])/self.cs[ig]
+            self.Etot[ig] = ( 0.5 * self.rho[ig][...] * self.vsq[ig] +
+                              0.5 * self.Bsq[ig] +
+                              self.p[ig][...] / (self.adiabatic_idx - 1.0) + 
+                              0.5 * self.psi[ig][...] * self.psi[ig][...] )
 
 
         # Can't make "global" v array, since the groups can have
