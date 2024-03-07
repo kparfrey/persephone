@@ -61,6 +61,173 @@ namespace kernels
     }
 
 
+    /* Maybe a WallBC function belongs in each Physics derived class? */
+    static void torus_BC(      real_t* const __restrict__ UL, 
+                               real_t* const __restrict__ UR,
+                         const real_t* const __restrict__ nl,
+                         const Physics* const __restrict__ physics,
+                         const int mem)
+    {
+        enum conserved {Density, mom0, mom1, mom2, tot_energy, B0, B1, B2, psi};
+        enum primitive {density, v0  , v1  , v2,   pressure};
+        
+        real_t P[9];  // Primitives from incoming conserved variables
+
+        real_t nu[3]; // contravariant components of normal vector
+        physics->metric->raise(nl, nu, mem);
+
+        /* UL and UR should be identical, so just choose L arbitrarily */
+        physics->ConservedToPrimitive(UL, P, mem);
+
+        if (physics->apply_floors)
+            UL[Density] = UR[Density] = P[density];
+        
+        //const real_t vdotn = nl[0]*P[v0] + nl[1]*P[v1] + nl[2]*P[v2];
+        //real_t vm[3];
+        const real_t Bdotn = nl[0]*P[B0] + nl[1]*P[B1] + nl[2]*P[B2];
+        real_t Bm[3];
+
+        /* Remove the normal velocity and magnetic field */
+        for (int d: dirs)
+        {
+            //vm[d] = P[v0+d] - vdotn * nu[d]; // Impenetrable -- seems more stable than no-slip?
+            //vm[d] = 0.0; // Impermeability + no slip
+            Bm[d] = P[B0+d] - Bdotn * nu[d]; // Zero normal flux
+        }
+
+        /* The density, tot_energy, and psi conserved vars are unchanged.
+         * Only need to overwrite the momentum and magnetic field */
+        //real_t vl[3];
+        //physics->metric->lower(vm, vl, mem);
+
+        //UL[Density] = UR[Density] = P[Density] = 1.0;
+
+        for (int d: dirs)
+        {
+            //UL[mom0+d] = UR[mom0+d] = P[Density] * vm[d]; // For impermeable only; need to lower vm
+            UL[mom0+d] = UR[mom0+d] = 0.0; // No slip
+            UL[  B0+d] = UR[  B0+d] = Bm[d];
+
+            /* Right face only */
+            //UR[mom0+d] = 0.0; // No slip
+            //UR[  B0+d] = Bm[d];
+        }
+        
+        // UL[psi] = UR[psi] = 0.0;
+
+        /*
+        P[pressure] = 110.0; // Isothermal-ish wall at set temperature
+        const real_t mag_density = 0.5 * physics->metric->square(Bm, mem);
+        const real_t KE_density  = 0.5 * P[density] * physics->metric->square(vm, mem);
+        const real_t psi_density = 0.5 * P[psi] * P[psi];
+        const real_t thermal_density = P[pressure]/((MHD*)physics)->gm1;
+        UL[tot_energy] = UR[tot_energy] = KE_density + mag_density + thermal_density + psi_density;
+         */
+
+        /* Reset total energy, since you've removed some kinetic and magnetic energy by 
+         * chopping off the normal velocity and magnetic field. Not clear if this is 
+         * necessary and/or a good idea ... */
+        /***
+        const real_t mag_density = 0.5 * physics->metric->square(Bm, mem);
+        const real_t KE_density  = 0.5 * P[density] * physics->metric->square(vm, mem);
+        UL[tot_energy] = UR[tot_energy] = KE_density + mag_density + P[pressure]/((MHD*)physics)->gm1
+                                          + 0.5 * P[psi] * P[psi];
+        ***/
+
+        /* This seems to make things worse... */
+        //if (physics->apply_floors)
+        if (false)
+        {
+            /* Since pressure might have been increased inside cons-to-prim
+             * Might want to use kinetic and magnetic energy from before the BC adjustments were applied?
+             * Or is it better for the total energy to be consistent? */
+            const real_t mag_density = 0.5 * physics->metric->square(Bm, mem);
+            //const real_t KE_density  = 0.5 * P[density] * physics->metric->square(vm, mem);
+            const real_t KE_density  = 0.0; // Zero for no-slip
+            UL[tot_energy] = UR[tot_energy] = KE_density + mag_density + P[pressure]/((MHD*)physics)->gm1;
+        }
+         
+
+        /* Set a minimum gas pressure floor on the external boundary. 
+         * Seems to help delay p < 0 a short while. */
+        /***
+        const real_t p_floor = 5.0;
+        if (P[pressure] < p_floor)
+        {
+            const real_t add_internal_e = (p_floor - P[pressure])/((MHD*)physics)->gm1;
+            // UR is the neighbour face's data for the torus's external faces,
+            // which are face 5 having positive orientation.
+            UR[tot_energy] += add_internal_e;
+        }
+         ***/
+
+        /* Characteristic-variable-based outflow boundary condition for psi/
+         * Not yet clear if this is better than just leaving psi alone at
+         * its extrapolated value.
+         * Update for DESC equilibria: seems better to not impose a BC on psi at all... */
+        //const real_t c_h = std::sqrt(physics->ch_sq);
+        //UL[psi] = UR[psi] = P[psi] + c_h * Bdotn;
+        /* Seems better to just apply as the external data? */
+        //UR[psi] = P[psi] + c_h * Bdotn;
+        //UL[psi] = UR[psi] = 0.0;
+
+        return;
+    }
+
+
+#if 0
+    static void torus_BC_derivatives(const FaceCommunicator face)
+    {
+        const int dir  = face.normal_dir;
+        const int dir1 = dir_plus_one[dir]; 
+        const int dir2 = dir_plus_two[dir];
+        int id_elem, id_elem_face;
+        int mem_offset, mem_offset_face;
+        int mem, mem_face;
+
+        const int Nf0 = lb.Nf[dir];
+        const int Ns1 = lb.Ns[dir1];
+        const int Nf_tot = lb.Nf_dir_block[dir]; //Total # of this-dir flux points in the block
+
+
+        for (int ne2 = 0; ne2 < face.Nelem[1]; ++ne2)
+        for (int ne1 = 0; ne1 < face.Nelem[0]; ++ne1)
+        {
+            id_elem_face    = (ne2 * lb.Nelem[dir1]) + ne1;
+            mem_offset_face = id_elem_face * lb.Ns[dir2] * lb.Ns[dir1];
+
+            id_elem    = (ne2*lb.Nelem[dir1] + ne1)*lb.Nelem[dir] + face.ne0;
+            mem_offset = id_elem * lb.Nf_dir[dir];
+
+            for (int n2 = 0; n2 < face.N[1]; ++n2)
+            for (int n1 = 0; n1 < face.N[0]; ++n1)
+            {
+                /* Memory location for the zeroth field */
+                mem_face = mem_offset_face +  n2 * Ns1 + n1;
+                
+                /* Memory location in the full 3D flux array
+                 * For indexing the metric. */
+                mem = mem_offset + (n2 * Ns1 + n1) * Nf0 + face.n0;
+
+                for (int field = 0; field < lb.Nfield; ++field)
+                {
+                    UL[field] = UL_data[mem_face + field * face.Ntot];
+                    UR[field] = UR_data[mem_face + field * face.Ntot];
+                }
+
+                for (int i: dirs)
+                    np[i] = face.normal(i,mem_face);
+
+
+                for (int field = 0; field < lb.Nfield; ++field)
+                    face.my_data[mem_face + field * face.Ntot] = 
+                        face.neighbour_data[mem_face + field * face.Ntot] = XYZ; 
+            }
+        }
+
+        return;
+    }
+#endif
     /*** End of static functions ***/
 
 
@@ -812,117 +979,6 @@ namespace kernels
     }
 
 
-    /* Maybe a WallBC function belongs in each Physics derived class? */
-    static void torus_BC(      real_t* const __restrict__ UL, 
-                               real_t* const __restrict__ UR,
-                         const real_t* const __restrict__ nl,
-                         const Physics* const __restrict__ physics,
-                         const int mem)
-    {
-        enum conserved {Density, mom0, mom1, mom2, tot_energy, B0, B1, B2, psi};
-        enum primitive {density, v0  , v1  , v2,   pressure};
-        
-        real_t P[9];  // Primitives from incoming conserved variables
-
-        real_t nu[3]; // contravariant components of normal vector
-        physics->metric->raise(nl, nu, mem);
-
-        /* UL and UR should be identical, so just choose L arbitrarily */
-        physics->ConservedToPrimitive(UL, P, mem);
-
-        if (physics->apply_floors)
-            UL[Density] = UR[Density] = P[density];
-        
-        const real_t vdotn = nl[0]*P[v0] + nl[1]*P[v1] + nl[2]*P[v2];
-        const real_t Bdotn = nl[0]*P[B0] + nl[1]*P[B1] + nl[2]*P[B2];
-        real_t vm[3];
-        real_t Bm[3];
-
-        /* Remove the normal velocity and magnetic field */
-        for (int d: dirs)
-        {
-            vm[d] = P[v0+d] - vdotn * nu[d]; // Impenetrable -- seems more stable than no-slip?
-            //vm[d] = 0.0; // No slip
-            Bm[d] = P[B0+d] - Bdotn * nu[d]; // Zero normal flux
-        }
-
-        /* The density, tot_energy, and psi conserved vars are unchanged.
-         * Only need to overwrite the momentum and magnetic field */
-        //real_t vl[3];
-        //physics->metric->lower(vm, vl, mem);
-
-        for (int d: dirs)
-        {
-            //UL[mom0+d] = UR[mom0+d] = P[Density] * vl[d]; // for impermeable BC
-            UL[mom0+d] = UR[mom0+d] = P[Density] * vm[d]; 
-            //UL[mom0+d] = UR[mom0+d] = 0.0; // No slip
-            UL[  B0+d] = UR[  B0+d] = Bm[d];
-
-            /* Right face only */
-            //UR[mom0+d] = 0.0; // No slip
-            //UR[  B0+d] = Bm[d];
-        }
-        
-        // UL[psi] = UR[psi] = 0.0;
-
-        /*
-        P[pressure] = 110.0; // Isothermal-ish wall at set temperature
-        const real_t mag_density = 0.5 * physics->metric->square(Bm, mem);
-        const real_t KE_density  = 0.5 * P[density] * physics->metric->square(vm, mem);
-        const real_t psi_density = 0.5 * P[psi] * P[psi];
-        const real_t thermal_density = P[pressure]/((MHD*)physics)->gm1;
-        UL[tot_energy] = UR[tot_energy] = KE_density + mag_density + thermal_density + psi_density;
-         */
-
-        /* Reset total energy, since you've removed some kinetic and magnetic energy by 
-         * chopping off the normal velocity and magnetic field. Not clear if this is 
-         * necessary and/or a good idea ... */
-        /***
-        const real_t mag_density = 0.5 * physics->metric->square(Bm, mem);
-        const real_t KE_density  = 0.5 * P[density] * physics->metric->square(vm, mem);
-        UL[tot_energy] = UR[tot_energy] = KE_density + mag_density + P[pressure]/((MHD*)physics)->gm1
-                                          + 0.5 * P[psi] * P[psi];
-        ***/
-
-        /* This seems to make things worse... */
-        //if (physics->apply_floors)
-        if (false)
-        {
-            /* Since pressure might have been increased inside cons-to-prim
-             * Might want to use kinetic and magnetic energy from before the BC adjustments were applied?
-             * Or is it better for the total energy to be consistent? */
-            const real_t mag_density = 0.5 * physics->metric->square(Bm, mem);
-            //const real_t KE_density  = 0.5 * P[density] * physics->metric->square(vm, mem);
-            const real_t KE_density  = 0.0; // Zero for no-slip
-            UL[tot_energy] = UR[tot_energy] = KE_density + mag_density + P[pressure]/((MHD*)physics)->gm1;
-        }
-         
-
-        /* Set a minimum gas pressure floor on the external boundary. 
-         * Seems to help delay p < 0 a short while. */
-        /***
-        const real_t p_floor = 5.0;
-        if (P[pressure] < p_floor)
-        {
-            const real_t add_internal_e = (p_floor - P[pressure])/((MHD*)physics)->gm1;
-            // UR is the neighbour face's data for the torus's external faces,
-            // which are face 5 having positive orientation.
-            UR[tot_energy] += add_internal_e;
-        }
-         ***/
-
-        /* Characteristic-variable-based outflow boundary condition for psi/
-         * Not yet clear if this is better than just leaving psi alone at
-         * its extrapolated value.
-         * Update for DESC equilibria: seems better to not impose a BC on psi at all... */
-        //const real_t c_h = std::sqrt(physics->ch_sq);
-        //UL[psi] = UR[psi] = P[psi] + c_h * Bdotn;
-        /* Seems better to just apply as the external data? */
-        //UR[psi] = P[psi] + c_h * Bdotn;
-        //UL[psi] = UR[psi] = 0.0;
-
-        return;
-    }
 
 
     void external_numerical_flux(const FaceCommunicator           face,
@@ -1173,15 +1229,18 @@ namespace kernels
         const int Ns1 = lb.Ns[dir1];
         const int Nf_tot = lb.Nf_dir_block[dir]; //Total # of this-dir flux points in the block
 
-        /* The BC for derivatives */
-        //if (face.external_face)
+        /* The BC for derivatives -- should have already applied BCs for the solution */
         if (face.external_face && averaging_derivs)
         {
+            // torus_BC_derivatives(face);
+
+            for (int i = 0; i < face.Ntot_all; ++i)
+                face.neighbour_data[i] = face.my_data[i];
+
             /* Set all derivatives to zero on the boundary ?
              * Sending zero velocity & B gradients into the diffusive flux function
              * is equivalent to setting viscosity = resistivity = 0 at the boundary */
-            for (int i = 0; i < face.Ntot_all; ++i)
-                face.neighbour_data[i] = face.my_data[i];
+            //for (int i = 0; i < face.Ntot_all; ++i)
                 //face.my_data[i] = face.neighbour_data[i] = 0.0;
 
             /***
@@ -1549,6 +1608,82 @@ namespace kernels
         return;
     }
 #endif
+
+
+    /* Data on external faces has now been saved into dPf, the derivatives of the primitives
+     * on the flux points. Use the FaceCommunicator object as a guide to navigating dPf.   
+     * This function removes the tangential derivatives of the velocity on the wall, since 
+     * v^i = 0 on this surface. Not sure that this actually helps... */
+    void wall_BC_derivatives(const FaceCommunicator face,
+                                   VectorField      dPf,
+                             const Physics* const __restrict__ physics,                                   
+                             const LengthBucket     lb)
+    {
+        enum conserved {Density, mom0, mom1, mom2, tot_energy, B0, B1, B2, psi};
+        enum primitive {density, v0  , v1  , v2,   pressure};
+
+        const int dir  = face.normal_dir;
+        const int dir1 = dir_plus_one[dir]; 
+        const int dir2 = dir_plus_two[dir];
+        int id_elem, id_elem_face;
+        int mem_offset, mem_offset_face;
+        int mem, mem_face; //, mem_face_field;
+
+        const int Nf0 = lb.Nf[dir];
+        const int Ns1 = lb.Ns[dir1];
+        const int Nf_tot = lb.Nf_dir_block[dir]; //Total # of this-dir flux points in the block
+
+        real_t nl[3];    // covariant components of normal vector
+        real_t nu[3];    // contravariant components ...
+        real_t dv[3][3]; // dv[component][deriv dir] = d_deriv v^component
+        real_t ndotgradv[3]; // ndotgradv[i] = n^k d_k v^i
+        
+
+        for (int ne2 = 0; ne2 < face.Nelem[1]; ++ne2)
+        for (int ne1 = 0; ne1 < face.Nelem[0]; ++ne1)
+        {
+            id_elem_face    = (ne2 * lb.Nelem[dir1]) + ne1;
+            mem_offset_face = id_elem_face * lb.Ns[dir2] * lb.Ns[dir1];
+
+            id_elem    = (ne2*lb.Nelem[dir1] + ne1)*lb.Nelem[dir] + face.ne0;
+            mem_offset = id_elem * lb.Nf_dir[dir];
+
+            for (int n2 = 0; n2 < face.N[1]; ++n2)
+            for (int n1 = 0; n1 < face.N[0]; ++n1)
+            {
+                /* Memory location on the face, for the zeroth field */
+                mem_face = mem_offset_face +  n2 * Ns1 + n1;
+                
+                /* Memory location in the full 3D flux-point array, zeroth field */
+                mem = mem_offset + (n2 * Ns1 + n1) * Nf0 + face.n0;
+
+                /* Normal vector */
+                for (int i: dirs)
+                    nl[i] = face.normal(i,mem_face);
+
+                physics->metric->raise(nl, nu, mem);
+
+                /* dv[i][j] = d_j v^i --- same as in MHD object */
+                for (int comp: dirs)
+                    for (int deriv: dirs)
+                        dv[comp][deriv] = dPf(deriv, mem + (v0+comp) * Nf_tot); 
+                    
+                for (int comp: dirs)
+                    ndotgradv[comp] = nu[0]*dv[comp][0] + nu[1]*dv[comp][1] + nu[2]*dv[comp][2];
+
+                /* Set dv = ndotgradv * n --- remove tangential derivative */
+                for (int comp: dirs)
+                    for (int deriv: dirs)
+                        dv[comp][deriv] = nl[deriv] * ndotgradv[comp];
+                
+                for (int deriv: dirs)
+                    for (int comp: dirs)
+                        dPf(deriv, mem + (v0+comp) * Nf_tot) = dv[comp][deriv];
+            }
+        }
+
+        return;
+    }
 
 
     /* Temporary standalone method. Should reintegrate into other operations.    */

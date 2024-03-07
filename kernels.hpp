@@ -156,12 +156,17 @@ namespace kernels
 
     void conserved_to_primitive_fluxpoints(      real_t* const __restrict__  UPf,
                                            const Physics* const __restrict__ physics,
-                                           const LengthBucket               lb,
-                                           const int                        dir);
+                                           const LengthBucket                lb,
+                                           const int                         dir);
 
     void conserved_to_primitive_faces(      FaceCommunicator face,
                                       const Physics* const __restrict__ physics,
-                                      const LengthBucket               lb);
+                                      const LengthBucket                lb);
+
+    void wall_BC_derivatives(const FaceCommunicator face,
+                                   VectorField      dPf,
+                             const Physics* const __restrict__ physics,                                   
+                             const LengthBucket     lb);
 
     /* Not a final "kernel", obviously */
     real_t local_timestep(const real_t* const __restrict__ Uf,

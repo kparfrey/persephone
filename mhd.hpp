@@ -60,8 +60,8 @@ class MHD : public Physics
         variables[8] = "psi";
 
         diffusive   = true;
-        viscosity   = 1e-4;
-        resistivity = 1e-4; //1e-4;
+        viscosity   = 1e-5;
+        resistivity = 1e-5;
         diffusive_timestep_const = 1.0; // Default: 1/3, but larger can be more stable?!
 
         /* Divergence-cleaning parameters */
@@ -110,7 +110,10 @@ inline void MHD::ConservedToPrimitive(const real_t* const __restrict__ U,
         if (apply_floors)
             P[density] = 1e-3;
         else if (P[density] < 0)
+        {
+            std::cout << "Negative density encountered --- exiting." << std::endl;
             exit(99);
+        }
     }
 
     real_t vl[3]; // Covariant velocity components
@@ -137,6 +140,12 @@ inline void MHD::ConservedToPrimitive(const real_t* const __restrict__ U,
     const real_t psi_energy_density = 0.5 * P[psi] * P[psi];
     
     P[pressure] = gm1 * (U[tot_energy] - KE_density - mag_density - psi_energy_density);
+
+    if (P[pressure] < 0.0)
+    {
+        std::cout << "Negative pressure encountered --- exiting." << std::endl;
+        exit(90);
+    }
 
     if (apply_floors)
     {

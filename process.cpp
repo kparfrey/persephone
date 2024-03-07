@@ -412,7 +412,7 @@ void Process::add_diffusive_flux(VectorField Uf, VectorField dP, VectorField F)
         kernels::fluxDeriv_to_soln(eb.fluxDeriv2soln(i), Pf(i), dP_ref(i), eb.lengths, i);
     }
 
-    /* Transform to physical-space gradient */
+    /* Transform to physical-space gradient on the solution points */
     kernels::gradient_ref_to_phys(dP_ref, dP, eb.geometry.dxdr, eb.lengths);
 
     for (int dderiv: dirs)
@@ -421,20 +421,35 @@ void Process::add_diffusive_flux(VectorField Uf, VectorField dP, VectorField F)
                                                                      eb.lengths, dflux);
     
     /* For now, do the interface averaging separately for each physical derivative direction */
+    /* DEBUG: Somehow the contents of this for loop have a stabilizing effect even when the diffusive
+     * coefficients are set to zero.... Still have stabilizing effect without doing the exchange... */
     for (int dderiv: dirs)
     {
         for (int i: ifaces)
             kernels::fill_face_data(dPf[faces[i].normal_dir](dderiv), faces[i], eb.lengths);
 
-        exchange_boundary_data(); // So have to do 3 separate MPI calls...
+        exchange_boundary_data(); // Do 3 separate MPI calls, one for each physical derivative direction
+                                  // This means we never have all three derivatives at the same time...
 
         for (int i: ifaces)
             kernels::external_interface_average(faces[i], dPf[faces[i].normal_dir](dderiv), eb.lengths, true);
     }
-        
+
     for (int dflux: dirs)
         for (int dderiv: dirs)
             kernels::internal_interface_average(dPf[dflux](dderiv), eb.lengths, dflux);
+
+
+    /* Do BCs for the velocity derivatives here */
+    for (int i: ifaces)
+    {
+        if (faces[i].external_face)
+        {
+            const int ndir = faces[i].normal_dir;
+            kernels::wall_BC_derivatives(faces[i], dPf[ndir], eb.physics[ndir], eb.lengths);
+        }
+    }
+
 
     //const real_t coeffs[2] = {physics->viscosity, physics->resistivity};
     for (int i: dirs) // flux-point direction

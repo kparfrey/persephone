@@ -35,6 +35,6 @@ static ParamsTorus active_parameters(equations, time_method,
                                      //"DESC_example_stellarator.h5",0);
                                      //"WISTELL-A_output.h5", 4);
                                      //"NCSX_cheb1_output.h5", 7);
-                                     "DSHAPE_output.h5", 2);
-                                     //"DSHAPE_cheb1_output.h5", 2);
+                                     //"DSHAPE_output.h5", 2);
+                                     "DSHAPE_cheb1_output.h5", 2);
                                      //"AXISYM_output.h5", 20);
