@@ -308,7 +308,7 @@ class Snapshot(object):
 
 
     # k is the grid index in the azimuthal direction 
-    def contour_plot(self, variable, width=0.7, levels=[None,], k=0, mag=False):
+    def contour_plot(self, variable, width=0.7, levels=[None,], k=0, mag=False, **kwargs):
         if levels[0] == None:
             if mag:
                 fmax = np.amax(np.abs(variable))
@@ -335,7 +335,7 @@ class Snapshot(object):
             f = self.connect_groups(f)
             
         for ig in range(self.Ngroup):
-            plt.contour(R[ig], Z[ig], f[ig], levels=levels, linewidths=width, zorder=5)
+            plt.contour(R[ig], Z[ig], f[ig], levels=levels, linewidths=width, zorder=5, **kwargs)
 
         plt.colorbar()
         plt.title('t = %.4lf' % self.time)

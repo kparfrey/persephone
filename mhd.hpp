@@ -61,7 +61,7 @@ class MHD : public Physics
 
         diffusive   = true;
         viscosity   = 1e-4;
-        resistivity = 1e-4;
+        resistivity = 1e-4; //1e-4;
         diffusive_timestep_const = 1.0; // Default: 1/3, but larger can be more stable?!
 
         /* Divergence-cleaning parameters */
@@ -141,7 +141,7 @@ inline void MHD::ConservedToPrimitive(const real_t* const __restrict__ U,
     if (apply_floors)
     {
         const real_t beta = P[pressure] / mag_density;
-        const real_t beta_min = 1e-4;
+        const real_t beta_min = 1e-3;
 
         if (beta < beta_min)
             P[pressure] = beta_min * mag_density;

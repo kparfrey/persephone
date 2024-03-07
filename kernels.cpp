@@ -833,15 +833,15 @@ namespace kernels
         if (physics->apply_floors)
             UL[Density] = UR[Density] = P[density];
         
-        //const real_t vdotn = nl[0]*P[v0] + nl[1]*P[v1] + nl[2]*P[v2];
+        const real_t vdotn = nl[0]*P[v0] + nl[1]*P[v1] + nl[2]*P[v2];
         const real_t Bdotn = nl[0]*P[B0] + nl[1]*P[B1] + nl[2]*P[B2];
-        //real_t vm[3];
+        real_t vm[3];
         real_t Bm[3];
 
         /* Remove the normal velocity and magnetic field */
         for (int d: dirs)
         {
-            //vm[d] = P[v0+d] - vdotn * nu[d]; // Impenetrable
+            vm[d] = P[v0+d] - vdotn * nu[d]; // Impenetrable -- seems more stable than no-slip?
             //vm[d] = 0.0; // No slip
             Bm[d] = P[B0+d] - Bdotn * nu[d]; // Zero normal flux
         }
@@ -854,13 +854,25 @@ namespace kernels
         for (int d: dirs)
         {
             //UL[mom0+d] = UR[mom0+d] = P[Density] * vl[d]; // for impermeable BC
-            UL[mom0+d] = UR[mom0+d] = 0.0; // No slip
+            UL[mom0+d] = UR[mom0+d] = P[Density] * vm[d]; 
+            //UL[mom0+d] = UR[mom0+d] = 0.0; // No slip
             UL[  B0+d] = UR[  B0+d] = Bm[d];
 
             /* Right face only */
             //UR[mom0+d] = 0.0; // No slip
             //UR[  B0+d] = Bm[d];
         }
+        
+        // UL[psi] = UR[psi] = 0.0;
+
+        /*
+        P[pressure] = 110.0; // Isothermal-ish wall at set temperature
+        const real_t mag_density = 0.5 * physics->metric->square(Bm, mem);
+        const real_t KE_density  = 0.5 * P[density] * physics->metric->square(vm, mem);
+        const real_t psi_density = 0.5 * P[psi] * P[psi];
+        const real_t thermal_density = P[pressure]/((MHD*)physics)->gm1;
+        UL[tot_energy] = UR[tot_energy] = KE_density + mag_density + thermal_density + psi_density;
+         */
 
         /* Reset total energy, since you've removed some kinetic and magnetic energy by 
          * chopping off the normal velocity and magnetic field. Not clear if this is 
@@ -868,10 +880,13 @@ namespace kernels
         /***
         const real_t mag_density = 0.5 * physics->metric->square(Bm, mem);
         const real_t KE_density  = 0.5 * P[density] * physics->metric->square(vm, mem);
-        UL[tot_energy] = UR[tot_energy] = KE_density + mag_density + P[pressure]/((MHD*)physics)->gm1;
-         ***/
+        UL[tot_energy] = UR[tot_energy] = KE_density + mag_density + P[pressure]/((MHD*)physics)->gm1
+                                          + 0.5 * P[psi] * P[psi];
+        ***/
 
-        if (physics->apply_floors)
+        /* This seems to make things worse... */
+        //if (physics->apply_floors)
+        if (false)
         {
             /* Since pressure might have been increased inside cons-to-prim
              * Might want to use kinetic and magnetic energy from before the BC adjustments were applied?
@@ -881,6 +896,7 @@ namespace kernels
             const real_t KE_density  = 0.0; // Zero for no-slip
             UL[tot_energy] = UR[tot_energy] = KE_density + mag_density + P[pressure]/((MHD*)physics)->gm1;
         }
+         
 
         /* Set a minimum gas pressure floor on the external boundary. 
          * Seems to help delay p < 0 a short while. */
@@ -1158,22 +1174,23 @@ namespace kernels
         const int Nf_tot = lb.Nf_dir_block[dir]; //Total # of this-dir flux points in the block
 
         /* The BC for derivatives */
+        //if (face.external_face)
         if (face.external_face && averaging_derivs)
         {
-            /* Set all derivatives to zero on the boundary 
+            /* Set all derivatives to zero on the boundary ?
              * Sending zero velocity & B gradients into the diffusive flux function
              * is equivalent to setting viscosity = resistivity = 0 at the boundary */
             for (int i = 0; i < face.Ntot_all; ++i)
                 face.neighbour_data[i] = face.my_data[i];
                 //face.my_data[i] = face.neighbour_data[i] = 0.0;
 
-            /*
+            /***
             for (int j = 0; j < face.Ntot; ++j)
             {
                 int i = j + 8*face.Ntot;
                 face.my_data[i] = face.neighbour_data[i] = 0.0;
             }
-            */
+            ***/
 
             /*
             for (int field = 5; field < 8; field++) // B only

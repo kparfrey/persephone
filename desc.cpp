@@ -7,7 +7,7 @@
 #include "jacobi.hpp"
 #include "write_screen.hpp"
 
-#define SHRINK 1.0 
+#define SHRINK 1.0
 //0.8
 
 /*
@@ -255,8 +255,8 @@ void DescConfig::construct_equilibrium(const real_t r_uds[3],
 
     /* Need to take account of units: DESC uses SI units, we effectively
      * use B^SI / sqrt(mu0). sqrt_mu0 lives in TorusConfig, copied from MHD */
-    BR /= sqrt_mu0;
-    BZ /= sqrt_mu0;
+    BR    /= sqrt_mu0;
+    BZ    /= sqrt_mu0;
     Bzeta /= sqrt_mu0;
 
     U[B0] = BR;
