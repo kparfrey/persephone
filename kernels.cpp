@@ -66,10 +66,15 @@ namespace kernels
                                real_t* const __restrict__ UR,
                          const real_t* const __restrict__ nl,
                          const Physics* const __restrict__ physics,
-                         const int mem)
+                         const int mem, const int orientation)
     {
         enum conserved {Density, mom0, mom1, mom2, tot_energy, B0, B1, B2, psi};
         enum primitive {density, v0  , v1  , v2,   pressure};
+
+        /* Note: initially both UL and UR hold this element's data, so only need to
+         * modify Ubc for those variables where different values are needed. */
+        //real_t* Umy; // Points to the real data from this element
+        //real_t* Ubc; // Points to the data for the imaginary boundary element
         
         real_t P[9];  // Primitives from incoming conserved variables
 
@@ -79,8 +84,22 @@ namespace kernels
         /* UL and UR should be identical, so just choose L arbitrarily */
         physics->ConservedToPrimitive(UL, P, mem);
 
-        if (physics->apply_floors)
-            UL[Density] = UR[Density] = P[density];
+        /***
+         * Remove the orientation parameter if keep this commented out.
+        if (orientation > 0)
+        {
+            Umy = UL;
+            Ubc = UR;
+        }
+        else
+        {
+            Umy = UR;
+            Ubc = UL;
+        }
+         ***/
+
+        //if (physics->apply_floors)
+        //    UL[Density] = UR[Density] = P[density];
         
         //const real_t vdotn = nl[0]*P[v0] + nl[1]*P[v1] + nl[2]*P[v2];
         //real_t vm[3];
@@ -108,6 +127,10 @@ namespace kernels
             UL[mom0+d] = UR[mom0+d] = 0.0; // No slip
             UL[  B0+d] = UR[  B0+d] = Bm[d];
 
+            //Ubc[mom0+d] = - Umy[mom0+d]; // Only set non-slip for the imaginary adjoining element
+                               // Should do this or v_bc = - v_my
+            //Ubc[B0+d]   = Bm[d] - Bdotn * nu[d]; // B_bc = B_tangential - B_normal
+
             /* Right face only */
             //UR[mom0+d] = 0.0; // No slip
             //UR[  B0+d] = Bm[d];
@@ -115,14 +138,14 @@ namespace kernels
         
         // UL[psi] = UR[psi] = 0.0;
 
-        /*
-        P[pressure] = 110.0; // Isothermal-ish wall at set temperature
+        /****
+        P[pressure] = 0.001; // Isothermal-ish wall at set temperature
         const real_t mag_density = 0.5 * physics->metric->square(Bm, mem);
-        const real_t KE_density  = 0.5 * P[density] * physics->metric->square(vm, mem);
+        const real_t KE_density  = 0.0; // 0.5 * P[density] * physics->metric->square(vm, mem);
         const real_t psi_density = 0.5 * P[psi] * P[psi];
         const real_t thermal_density = P[pressure]/((MHD*)physics)->gm1;
         UL[tot_energy] = UR[tot_energy] = KE_density + mag_density + thermal_density + psi_density;
-         */
+        ****/
 
         /* Reset total energy, since you've removed some kinetic and magnetic energy by 
          * chopping off the normal velocity and magnetic field. Not clear if this is 
@@ -1076,7 +1099,7 @@ namespace kernels
                 if (face.external_face)
                 {
                     /* Sets UL=UR to give desired exact fluxes */
-                    torus_BC(UL, UR, np, F_numerical->physics, mem);
+                    torus_BC(UL, UR, np, F_numerical->physics, mem, face.orientation);
 
                     /* Save UL=UR back into the face's main arrays,
                      * to set the BCs for the diffusive fluxes */

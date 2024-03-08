@@ -337,7 +337,7 @@ class Snapshot(object):
         for ig in range(self.Ngroup):
             plt.contour(R[ig], Z[ig], f[ig], levels=levels, linewidths=width, zorder=5, **kwargs)
 
-        plt.colorbar()
+        #plt.colorbar()
         plt.title('t = %.4lf' % self.time)
 
         ax = plt.gca()

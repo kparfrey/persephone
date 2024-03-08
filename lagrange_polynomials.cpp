@@ -190,7 +190,7 @@ namespace lagrange
     real_t* chebyshev_filtering_matrix(const int N)
     {
         double alpha = 0.01;
-        double s     = 32.0;
+        double s     = 30.0;
         double eta;
 
         real_t* F = new real_t [N * N](); // Final filtering matrix

@@ -441,6 +441,7 @@ void Process::add_diffusive_flux(VectorField Uf, VectorField dP, VectorField F)
 
 
     /* Do BCs for the velocity derivatives here */
+    /***
     for (int i: ifaces)
     {
         if (faces[i].external_face)
@@ -449,6 +450,7 @@ void Process::add_diffusive_flux(VectorField Uf, VectorField dP, VectorField F)
             kernels::wall_BC_derivatives(faces[i], dPf[ndir], eb.physics[ndir], eb.lengths);
         }
     }
+     ***/
 
 
     //const real_t coeffs[2] = {physics->viscosity, physics->resistivity};
