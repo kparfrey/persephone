@@ -60,8 +60,8 @@ class MHD : public Physics
         variables[8] = "psi";
 
         diffusive   = true;
-        viscosity   = 1e-5;
-        resistivity = 0.0;
+        viscosity   = 1e-3;
+        resistivity = 3e-4;
         diffusive_timestep_const = 1.0; // Default: 1/3, but larger can be more stable?!
 
         /* Divergence-cleaning parameters */
@@ -121,6 +121,8 @@ inline void MHD::ConservedToPrimitive(const real_t* const __restrict__ U,
     vl[0] = U[mom0] / P[density]; // Momenta are covariant components
     vl[1] = U[mom1] / P[density];
     vl[2] = U[mom2] / P[density];
+
+    vl[2] = 0.0;
 
     /* Store the contravariant components into P */
     metric->raise(vl, &P[v0], mem);
@@ -335,23 +337,35 @@ inline void MHD::DiffusiveFluxes(const real_t* const __restrict__   P,
     const real_t lambda = - (2.0/3.0) * mu;   // from Stokes hypothesis
     
     real_t v[3];
+    real_t B[3];
     real_t tau[3][3];
     real_t dv[3][3]; // dv[component][deriv dir] = d_deriv v^component
+    real_t dB[3][3]; // dB[component][deriv dir] = d_deriv B^component
     real_t rdetg_deriv[3]; // (1/rdetg)*d_j(rdetg) at a single point
     real_t divv;
     real_t duB[3][3]; // duB[j][i] = d^i B^j -- 1st index raised, for Etot flux
     real_t Bl[3];     // need B_i for Etot flux
     real_t JxB;       // for Etot flux
+    real_t duBsq[3];  // d^i B^2, for JxB 
+
+    real_t kappa = 1e-3;
+    real_t duT[3];
 
     int dp1, dp2; // cyclic addition d+1, d+2 -- used in Etot flux
     
 
     for (int d: dirs)
-        v[d] = P[v0+d];
+    {
+        v[d] = P[v0+d];  // v^i
+        B[d] = P[B0+d];  // B^i
+    }
 
     for (int comp: dirs)
         for (int deriv: dirs)
+        {
             dv[comp][deriv] = dP[v0+comp][deriv]; // dv[i][j] = d_j v^i
+            dB[comp][deriv] = dP[B0+comp][deriv]; // dB[i][j] = d_j B^i
+        }
             
     for (int d: dirs)
         rdetg_deriv[d] = metric->rdetg_deriv[d][mem];
@@ -363,15 +377,21 @@ inline void MHD::DiffusiveFluxes(const real_t* const __restrict__   P,
     for (int d: dirs)
         tau[d][d] = 2*mu*dv[d][d] + lambda*divv;
 
+    /* Will need to be more careful about up-down indices here when d_phi != 0,
+     * v^phi != 0. DEBUG / REDO / HACK */
     tau[0][1] = tau[1][0] = mu * (dv[0][1] + dv[1][0]);
     tau[0][2] = tau[2][0] = mu * (dv[0][2] + dv[2][0]);
     tau[1][2] = tau[2][1] = mu * (dv[1][2] + dv[2][1]);
 
     /* Raise index on the derivative operator to form duB[j][i] = d^i B^j */
     for (int d: dirs)
-        metric->raise(dP[B0+d], duB[d], mem);
+        metric->raise(dB[d], duB[d], mem); // since dB[d] = d_i B^d
+        //metric->raise(dP[B0+d], duB[d], mem);
+
+    metric->raise(dP[psi], duBsq, mem); // since saving B^2 into the psi slot
+    metric->raise(dP[pressure], duT, mem); // since saving T into the pressure slot
     
-    metric->lower(&P[B0], Bl, mem); // P[Bi] = B^i 
+    metric->lower(B, Bl, mem); 
 
     for (int d: dirs) // flux direction
     {
@@ -383,24 +403,44 @@ inline void MHD::DiffusiveFluxes(const real_t* const __restrict__   P,
 
         /* Shouldn't this have a contribution from resistivity too? 
          * Yes, should have an eta*JxB contribution from the resistive part 
-         * of the electric field */
+         * of the electric field: E + vxB = eta J */
         /* F(tot E)^d = - v^i tau_i^d + eta (J x B)^d
          * Contracting on tau's lower index, so don't need any metric terms */
         dp1 = dir_plus_one[d];
         dp2 = dir_plus_two[d];
 
         /* This should be (j x B)^d */
-        JxB = Bl[dp2]*(duB[d][dp2] - duB[dp2][d]) - Bl[dp1]*(duB[dp1][d] - duB[d][dp1]);
+        //JxB = Bl[dp2]*(duB[d][dp2] - duB[dp2][d]) - Bl[dp1]*(duB[dp1][d] - duB[d][dp1]);
+        
+        /* Using curlB x B = B dot grad B - 0.5 B^2 --- seems slightly more accurate? */
+        /* Should be correct for general coordinates */
+        JxB = B[0] * dB[d][0] + B[1] * dB[d][1] + B[2] * dB[d][2] - 0.5 * duBsq[d];
 
-        F[tot_energy][d] = - (v[0]*tau[0][d] + v[1]*tau[1][d] + v[2]*tau[2][d]) 
-                           + resistivity * JxB;
+        // Think should be + eta * JxB here, but only get decreasing energy with negative sign? 
+        F[tot_energy][d] = - (v[0]*tau[0][d] + v[1]*tau[1][d] + v[2]*tau[2][d])
+                           + resistivity * JxB - kappa * duT[d];
 
         /* Magnetic part - resistivity is really a magnetic diffusivity */
+        /* Original *
         F[B0][d] = - resistivity * (dP[B0][d] - dP[B0+d][0]); 
         F[B1][d] = - resistivity * (dP[B1][d] - dP[B0+d][1]); 
         F[B2][d] = - resistivity * (dP[B2][d] - dP[B0+d][2]); 
+         ***/
 
-        F[B0+d][d] = 0.0; // Overwrite the above
+        /* Constructing flux from d_t B + ... + curl(eta curlB) = 0 directly.
+         * This doesn't explicitly assume that divB = 0. 
+         * Should be correct for general coordinates. */
+        F[B0][d] = resistivity * (duB[d][0] - duB[0][d]); 
+        F[B1][d] = resistivity * (duB[d][1] - duB[1][d]); 
+        F[B2][d] = resistivity * (duB[d][2] - duB[2][d]); 
+        
+        /* From d_t B + ...  = div ( eta grad B ) ---> flux = - eta grad B 
+         * This assumes divB = 0 exactly */
+        //F[B0][d] = - resistivity * duB[0][d]; // Seems to give better B0, B1 contours than above?
+        //F[B1][d] = - resistivity * duB[1][d]; 
+        //F[B2][d] = - resistivity * duB[2][d]; 
+
+        //F[B0+d][d] = 0.0; // Overwrite the above
 
         F[psi][d] = 0.0;
         //F[psi][d] = - 0.1 * dP[psi][d];

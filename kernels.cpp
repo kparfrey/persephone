@@ -135,11 +135,12 @@ namespace kernels
             //UR[mom0+d] = 0.0; // No slip
             //UR[  B0+d] = Bm[d];
         }
+
         
         // UL[psi] = UR[psi] = 0.0;
 
         /****
-        P[pressure] = 0.001; // Isothermal-ish wall at set temperature
+        P[pressure] = 10.0 * P[density]; // Isothermal-ish wall at set temperature
         const real_t mag_density = 0.5 * physics->metric->square(Bm, mem);
         const real_t KE_density  = 0.0; // 0.5 * P[density] * physics->metric->square(vm, mem);
         const real_t psi_density = 0.5 * P[psi] * P[psi];
@@ -1260,6 +1261,29 @@ namespace kernels
             for (int i = 0; i < face.Ntot_all; ++i)
                 face.neighbour_data[i] = face.my_data[i];
 
+            /*** For an adiabatic wall ***/
+            /***/
+            int mem;
+            for (int i = 0; i < face.Ntot; ++i)
+            {
+                mem = 4 * face.Ntot + i; // index for pressure slot, holding temperature
+                face.neighbour_data[mem] = face.my_data[mem] = 0.0;
+            }
+            /***/
+
+            /*** Set magnetic field derivatives to zero -- equivalent to setting eta = 0 there */
+            /***
+            int mem;
+            for (int i = 0; i < face.Ntot; ++i)
+            {
+                for (int comp = 0; comp < 3; comp++)
+                {
+                    mem = (5+comp) * face.Ntot + i; // holds d_i B^comp
+                    face.neighbour_data[mem] = face.my_data[mem] = 0.0;
+                }
+            }
+             ***/
+
             /* Set all derivatives to zero on the boundary ?
              * Sending zero velocity & B gradients into the diffusive flux function
              * is equivalent to setting viscosity = resistivity = 0 at the boundary */
@@ -1508,7 +1532,9 @@ namespace kernels
 
 
     /* Transform from conserved to primitive variables on flux points, and save back
-     * into the same arrays */
+     * into the same arrays. 
+     * Should only be used to find diffusive fluxes.
+     * Save T into p slot, and B^2 into psi slot */
     void conserved_to_primitive_fluxpoints(      real_t* const __restrict__  UPf,
                                            const Physics* const __restrict__ physics,
                                            const LengthBucket               lb,
@@ -1529,6 +1555,13 @@ namespace kernels
 
             physics->ConservedToPrimitive(Up, Pp, i);
 
+            if (physics->system == mhd)
+            {
+                enum primitive {density, v0, v1, v2, pressure, B0, B1, B2, psi};
+                Pp[pressure] = Pp[pressure] / Pp[density];
+                Pp[psi] = physics->metric->square(&Pp[B0], i); 
+            }
+
             for (int field = 0; field < lb.Nfield; ++field)
                UPf[i + field * N] = Pp[field];
 
@@ -1542,7 +1575,9 @@ namespace kernels
 
 
     /* Transform from conserved to primitive variables on faces, and save back
-     * into the same arrays */
+     * into the same arrays 
+     * Should only be used to find diffusive fluxes.
+     * Save T into p slot, and B^2 into psi slot */
     void conserved_to_primitive_faces(      FaceCommunicator face,
                                       const Physics* const __restrict__ physics,
                                       const LengthBucket               lb)
@@ -1591,6 +1626,16 @@ namespace kernels
 
                 physics->ConservedToPrimitive(Up_my, Pp_my, mem);
                 physics->ConservedToPrimitive(Up_nb, Pp_nb, mem);
+
+                if (physics->system == mhd)
+                {
+                    enum primitive {density, v0, v1, v2, pressure, B0, B1, B2, psi};
+                    Pp_my[pressure] = Pp_my[pressure] / Pp_my[density];
+                    Pp_nb[pressure] = Pp_nb[pressure] / Pp_nb[density];
+                    Pp_my[psi] = physics->metric->square(&Pp_my[B0], mem); 
+                    Pp_nb[psi] = physics->metric->square(&Pp_nb[B0], mem); 
+                }
+
 
                 for (int field = 0; field < lb.Nfield; ++field)
                 {
