@@ -3,6 +3,7 @@
 #include <string>
 #include <mpi.h>
 #include <cmath>
+#include <filesystem>
 #include "params.hpp"
 #include "write_screen.hpp"
 #include "basic_time_integrator.hpp"
@@ -40,8 +41,17 @@ void Process::setup()
     /* Calculates the global maximum of the timestep_transform array, for use
      * in calculating the maximum stable div-cleaning speed c_h in MHD */
     MPI_Allreduce(&elements.timestep_transform_max, &tt_max_global, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+
+    write::message("Creating data directory");
+    if (rank == 0)
+        if (std::filesystem::exists("data") == false)
+            if (std::filesystem::create_directory("data") == false)
+                write::error("Failed to create data directory", destroy);
     
     write::message("Finished setting up process\n");
+    
+    MPI_Barrier(MPI_COMM_WORLD);
+
     return;
 }
 

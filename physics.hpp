@@ -19,8 +19,9 @@ class Physics
     SpatialMetric* metric;
 
     inline static bool diffusive;
-    inline static real_t viscosity;   // kinematic viscosity ("nu")
-    inline static real_t resistivity; // really magnetic diffusivity...
+    inline static real_t viscosity;    // kinematic viscosity ("nu")
+    inline static real_t resistivity;  // really magnetic diffusivity...
+    inline static real_t conductivity;  
     inline static real_t diffusive_timestep_const; // effective "CFL for diffusion"
     inline static bool apply_floors; // Whether to use a flooring procedure
 
@@ -39,6 +40,7 @@ class Physics
         diffusive = false;
         viscosity = 0.0;
         resistivity = 0.0;
+        conductivity = 0.0;
         diffusive_timestep_const = 1.0/3.0; // Appears safe even for WaveRect
         apply_floors = false;
     }

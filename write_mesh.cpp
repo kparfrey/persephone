@@ -20,7 +20,6 @@
 using std::string;
 
 
-/* Very basic mesh output for simplest Cartesian topology */
 void write_mesh(Process &proc)
 {
     ElementBlock& eb = proc.elements;

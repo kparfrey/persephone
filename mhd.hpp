@@ -59,9 +59,12 @@ class MHD : public Physics
         variables[7] = "B2";
         variables[8] = "psi";
 
-        diffusive   = true;
-        viscosity   = 1e-3;
-        resistivity = 3e-4;
+        diffusive = true;
+
+        viscosity    = 1e-3;
+        resistivity  = 1e-4;
+        conductivity = 3e-4;
+
         diffusive_timestep_const = 1.0; // Default: 1/3, but larger can be more stable?!
 
         /* Divergence-cleaning parameters */
@@ -348,7 +351,6 @@ inline void MHD::DiffusiveFluxes(const real_t* const __restrict__   P,
     real_t JxB;       // for Etot flux
     real_t duBsq[3];  // d^i B^2, for JxB 
 
-    real_t kappa = 1e-3;
     real_t duT[3];
 
     int dp1, dp2; // cyclic addition d+1, d+2 -- used in Etot flux
@@ -418,7 +420,7 @@ inline void MHD::DiffusiveFluxes(const real_t* const __restrict__   P,
 
         // Think should be + eta * JxB here, but only get decreasing energy with negative sign? 
         F[tot_energy][d] = - (v[0]*tau[0][d] + v[1]*tau[1][d] + v[2]*tau[2][d])
-                           + resistivity * JxB - kappa * duT[d];
+                           + resistivity * JxB - conductivity * duT[d];
 
         /* Magnetic part - resistivity is really a magnetic diffusivity */
         /* Original *

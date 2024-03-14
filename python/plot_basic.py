@@ -83,7 +83,7 @@ class Mesh(object):
 
     def __init__(self):
         print("Loading mesh file")
-        filename = 'mesh.h5'
+        filename = 'data/mesh.h5'
         m = h5py.File(filename, 'r')
 
         self.Ngroup = m['Ngroup'][()]
@@ -231,7 +231,7 @@ class Snapshot(object):
         if self.dfile is not None:
             self.dfile.close()
 
-        filename = 'data%04d.h5' % filenum
+        filename = 'data/data%04d.h5' % filenum
         self.dfile = h5py.File(filename,'r')
 
         self.rho = [0] * self.Ngroup 
@@ -334,10 +334,12 @@ class Snapshot(object):
             Z = self.connect_groups(Z)
             f = self.connect_groups(f)
             
+        plots = list()
         for ig in range(self.Ngroup):
-            plt.contour(R[ig], Z[ig], f[ig], levels=levels, linewidths=width, zorder=5, **kwargs)
+            if np.min(f[ig]) < levels[-1] and np.max(f[ig]) > levels[0]:
+                plots.append(plt.contour(R[ig], Z[ig], f[ig], levels=levels, linewidths=width, zorder=5, **kwargs))
 
-        #plt.colorbar()
+        plt.colorbar(mappable=plots[-1])
         plt.title('t = %.4lf' % self.time)
 
         ax = plt.gca()
