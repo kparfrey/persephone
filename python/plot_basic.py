@@ -308,38 +308,48 @@ class Snapshot(object):
 
 
     # k is the grid index in the azimuthal direction 
-    def contour_plot(self, variable, width=0.7, levels=[None,], k=0, mag=False, **kwargs):
+    def contour_plot(self, variable, width=0.7, levels=[None,], Nlevels=20, k=0, mag=False, balance=False, **kwargs):
+        if mag:
+            variable = [np.abs(group_array) for group_array in variable] # variable is a list of arrays
+
+        f = [group_array[:,:,k] for group_array in variable]
+        R = [group_array[:,:,k] for group_array in self.R]
+        Z = [group_array[:,:,k] for group_array in self.Z]
+
+        levels = np.array(levels) # Convert to array if not already an array
+
         if levels[0] == None:
-            if mag:
-                fmax = np.amax(np.abs(variable))
-                fmin = np.amin(np.abs(variable))
-            else:
-                fmax = np.amax(variable)
-                fmin = np.amin(variable)
-            levels = np.linspace(fmin, fmax, 30)
+            fmax = np.amax([np.amax(x) for x in variable])
+            fmin = np.amin([np.amin(x) for x in variable])
+            if balance:
+                fmax = np.amax([fmax, np.abs(fmin)])
+                fmin = - fmax
+            levels = np.linspace(fmin, fmax, Nlevels)
 
-        R = [0] * self.Ngroup
-        Z = [0] * self.Ngroup
-        f = [0] * self.Ngroup
-
-        for ig in range(self.Ngroup):
-            R[ig] = self.R[ig][:,:,k]
-            Z[ig] = self.Z[ig][:,:,k]
-            f[ig] = variable[ig][:,:,k]
-            if mag:
-                f[ig] = np.abs(f[ig])
-
+        # Make separate plots for each group
         if self.Ngroup > 1:
             R = self.connect_groups(R)
             Z = self.connect_groups(Z)
             f = self.connect_groups(f)
             
-        plots = list()
-        for ig in range(self.Ngroup):
-            if np.min(f[ig]) < levels[-1] and np.max(f[ig]) > levels[0]:
-                plots.append(plt.contour(R[ig], Z[ig], f[ig], levels=levels, linewidths=width, zorder=5, **kwargs))
+        plots = [plt.contour(R[ig], Z[ig], f[ig], levels=levels, linewidths=width, zorder=5, **kwargs) for ig in range(self.Ngroup)]
 
-        plt.colorbar(mappable=plots[-1])
+        #plt.colorbar(mappable=plots[-1]) # Colorbar from last group only; hard to get colorbar applicable for all groups
+
+        # Make standalone custom colorbar --- doesn't show contour levels but at least shows colors and limits
+        cmap = plots[0].cmap
+        boundaries = np.ndarray((len(levels)+1,))
+        boundaries[0]    = levels[0]
+        boundaries[1:-1] = 0.5 * np.array(levels[:-1] + levels[1:])
+        boundaries[-1]   = levels[-1]
+        norm = mpl.colors.BoundaryNorm(boundaries, cmap.N)
+        cbar = plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap))
+        if len(levels) < 15:
+            ticks = levels
+            ticks[0]  = 0.5 * (boundaries[0] + boundaries[1])
+            ticks[-1] = 0.5 * (boundaries[-1] + boundaries[-2])
+            cbar.set_ticks(ticks)
+
         plt.title('t = %.4lf' % self.time)
 
         ax = plt.gca()
