@@ -33,6 +33,23 @@ def fejer_weights(npoints):
     return weights 
 
 
+#### Convenience functions for basic operations on lists of arrays #####
+#### d stands for "domain"
+
+### Global minimum and maximum
+def dmin(var):
+    return np.amin([np.amin(x) for x in var])
+
+def dmax(var):
+    return np.amax([np.amax(x) for x in var])
+
+def dabs(var):
+    return [np.abs(x) for x in var]
+
+def dmult(a, b):
+    return [a[i][...] * b[i][...] for i in range(len(a))]
+########################################################################
+
 class Group(object):
     group = None
 
@@ -310,7 +327,7 @@ class Snapshot(object):
     # k is the grid index in the azimuthal direction 
     def contour_plot(self, variable, width=0.7, levels=[None,], Nlevels=20, k=0, mag=False, balance=False, **kwargs):
         if mag:
-            variable = [np.abs(group_array) for group_array in variable] # variable is a list of arrays
+            variable = dabs(variable)
 
         f = [group_array[:,:,k] for group_array in variable]
         R = [group_array[:,:,k] for group_array in self.R]
@@ -319,12 +336,12 @@ class Snapshot(object):
         levels = np.array(levels) # Convert to array if not already an array
 
         if levels[0] == None:
-            fmax = np.amax([np.amax(x) for x in variable])
-            fmin = np.amin([np.amin(x) for x in variable])
+            fmax = dmax(variable)
+            fmin = dmin(variable)
             if balance:
                 fmax = np.amax([fmax, np.abs(fmin)])
                 fmin = - fmax
-            levels = np.linspace(fmin, fmax, Nlevels)
+            levels = np.linspace(1.01*fmin, 0.99*fmax, Nlevels)
 
         # Make separate plots for each group
         if self.Ngroup > 1:
@@ -337,18 +354,19 @@ class Snapshot(object):
         #plt.colorbar(mappable=plots[-1]) # Colorbar from last group only; hard to get colorbar applicable for all groups
 
         # Make standalone custom colorbar --- doesn't show contour levels but at least shows colors and limits
+        Ncc = 20 # Nlevels at which you cease to do a "careful colorbar", labeling each contour level
         cmap = plots[0].cmap
         boundaries = np.ndarray((len(levels)+1,))
         boundaries[0]    = levels[0]
         boundaries[1:-1] = 0.5 * np.array(levels[:-1] + levels[1:])
         boundaries[-1]   = levels[-1]
+        if len(levels) < Ncc:
+            boundaries[0]  -= 0.5*(levels[1]-levels[0]) # Extend a half-step to get lower color boundary
+            boundaries[-1] += 0.5 * (levels[-1] - levels[-2])
         norm = mpl.colors.BoundaryNorm(boundaries, cmap.N)
         cbar = plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap))
-        if len(levels) < 15:
-            ticks = levels
-            ticks[0]  = 0.5 * (boundaries[0] + boundaries[1])
-            ticks[-1] = 0.5 * (boundaries[-1] + boundaries[-2])
-            cbar.set_ticks(ticks)
+        if len(levels) < Ncc:
+            cbar.set_ticks(levels)
 
         plt.title('t = %.4lf' % self.time)
 
