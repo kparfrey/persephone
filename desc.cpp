@@ -191,8 +191,26 @@ void DescConfig::unit_disc_to_physical_space(real_t r[3]) const
 
     deriv_dir deriv = none;
 
+    /* Use the surface poly expansion for all internal radii */
+    /***
     surface_polynomial_expansion(R, r, R_lmn, R_modes, deriv);
     surface_polynomial_expansion(Z, r, Z_lmn, Z_modes, deriv);
+     ***/
+
+    /* Only do the expansion for the outer boundary shape, then linearly
+     * blend inwards. */
+    /***/
+    real_t Rout, Raxis;
+    real_t rout[3]  = {1.0, r[1], r[2]}; // UDS coords for outer surface
+    real_t raxis[3] = {0.0, r[1], r[2]}; // UDS coords for magnetic axis
+    surface_polynomial_expansion(Rout, rout, R_lmn, R_modes, deriv);
+    surface_polynomial_expansion(Z, rout, Z_lmn, Z_modes, deriv);
+    surface_polynomial_expansion(Raxis, raxis, R_lmn, R_modes, deriv);
+
+    R  = (1.0 - r[0]) * Raxis + r[0] * Rout; // Want R = Raxis at r_uds = 0
+    Z *= r[0]; // Linearly reduce Z in r_uds from outer surface
+    /***/
+
 
     r[0] = R;
     r[1] = Z;
