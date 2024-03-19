@@ -14,6 +14,7 @@ class ParamsTorus : public Params
     public:
 
     TorusProblemType problem_type;
+    TorusGridMethod grid_method;
     std::string input_file;
 
 
@@ -61,10 +62,11 @@ class ParamsTorus : public Params
                 real_t end_time = 1.0,
                 real_t dt_write = 0.5,
                 TorusProblemType problem_type = cerfon_freidberg,
+                TorusGridMethod grid_method = internal_surface_expansion,
                 std::string input_file = "output.h5",
                 int desc_iteration = 1)
     : Params(equations, time_method, cfl, end_time, dt_write),
-      problem_type(problem_type), input_file(input_file),
+      problem_type(problem_type), grid_method(grid_method), input_file(input_file),
       desc_iteration(desc_iteration)
     {
         central_polygon = square; 

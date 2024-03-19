@@ -191,25 +191,29 @@ void DescConfig::unit_disc_to_physical_space(real_t r[3]) const
 
     deriv_dir deriv = none;
 
-    /* Use the surface poly expansion for all internal radii */
-    /***
-    surface_polynomial_expansion(R, r, R_lmn, R_modes, deriv);
-    surface_polynomial_expansion(Z, r, Z_lmn, Z_modes, deriv);
-     ***/
+    if (grid_method == internal_surface_expansion)
+    {
+        /* Use the surface poly expansion for all internal radii */
+        surface_polynomial_expansion(R, r, R_lmn, R_modes, deriv);
+        surface_polynomial_expansion(Z, r, Z_lmn, Z_modes, deriv);
+    }
+    else if (grid_method == blend_boundary_to_axis)
+    {
+        /* Only do the expansion for the outer boundary shape, then linearly
+         * blend inwards to the magnetic axis. */
+        real_t Rout, Raxis, Zout, Zaxis;
+        real_t rout[3]  = {1.0, r[1], r[2]}; // UDS coords for outer surface
+        real_t raxis[3] = {0.0, r[1], r[2]}; // UDS coords for magnetic axis
+        surface_polynomial_expansion(Rout, rout, R_lmn, R_modes, deriv);
+        surface_polynomial_expansion(Zout, rout, Z_lmn, Z_modes, deriv);
+        surface_polynomial_expansion(Raxis, raxis, R_lmn, R_modes, deriv);
+        surface_polynomial_expansion(Zaxis, raxis, Z_lmn, Z_modes, deriv);
 
-    /* Only do the expansion for the outer boundary shape, then linearly
-     * blend inwards. */
-    /***/
-    real_t Rout, Raxis;
-    real_t rout[3]  = {1.0, r[1], r[2]}; // UDS coords for outer surface
-    real_t raxis[3] = {0.0, r[1], r[2]}; // UDS coords for magnetic axis
-    surface_polynomial_expansion(Rout, rout, R_lmn, R_modes, deriv);
-    surface_polynomial_expansion(Z, rout, Z_lmn, Z_modes, deriv);
-    surface_polynomial_expansion(Raxis, raxis, R_lmn, R_modes, deriv);
-
-    R  = (1.0 - r[0]) * Raxis + r[0] * Rout; // Want R = Raxis at r_uds = 0
-    Z *= r[0]; // Linearly reduce Z in r_uds from outer surface
-    /***/
+        R = (1.0 - r[0]) * Raxis + r[0] * Rout; // Want (R,Z) = (Raxis,Zaxis) at r_uds = 0
+        Z = (1.0 - r[0]) * Zaxis + r[0] * Zout; 
+    }
+    else
+        write::error("UDS-to-physical gridding method not recognized", destroy);
 
 
     r[0] = R;
@@ -291,7 +295,8 @@ void DescConfig::construct_equilibrium(const real_t r_uds[3],
 }
 
 
-DescConfig::DescConfig(std::string input_file, const int iteration)
+DescConfig::DescConfig(std::string input_file, const int iteration, TorusGridMethod grid_method)
+    : grid_method(grid_method)
 {
     using std::vector;
 

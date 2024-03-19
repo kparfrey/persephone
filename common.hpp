@@ -22,8 +22,10 @@ enum PhysicalCoords {cartesian, cylindrical}; // Minkowski space unless noted
 
 enum WhoWrites {root_only, all_ranks, one_rank};
 enum Prognosis {destroy, survive};
+
 enum TorusCentralPolygon {square, hexagon, octagon};
 enum TorusProblemType {cerfon_freidberg, explicit_modes, desc_input}; 
+enum TorusGridMethod {internal_surface_expansion, blend_boundary_to_axis}; // Methods in UDS-to-physical mapping
 
 //enum Components {covariant, contravariant};
 //enum CoordTransDir {phys2ref, ref2phys};

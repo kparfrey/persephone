@@ -278,6 +278,9 @@ class Snapshot(object):
         self.Z   = [0] * self.Ngroup
         self.Phi = [0] * self.Ngroup
 
+        self.PoloidalFlux = [0] * self.Ngroup
+        self.MaxPFOuterSurface = None
+
         for ig in range(self.Ngroup):
             sg = str(ig)
             self.rho[ig] = self.dfile[sg]['rho']
@@ -329,7 +332,9 @@ class Snapshot(object):
         if mag:
             variable = dabs(variable)
 
-        f = [group_array[:,:,k] for group_array in variable]
+        f = variable
+        if (len(f[0].shape) == 3):
+            f = [group_array[:,:,k] for group_array in variable]
         R = [group_array[:,:,k] for group_array in self.R]
         Z = [group_array[:,:,k] for group_array in self.Z]
 
@@ -423,5 +428,76 @@ class Snapshot(object):
             sum_all_groups += np.sum( f[ig][()] * g.Jrdetg[()] * g.quadweight[()] , axis=None )
 
         return sum_all_groups
+
+
+    ### For now, assume dealing with a strictly axisymmetric simulation in torus geometry
+    def find_poloidal_flux_function(self):
+        for ig in range(1,5):
+            BR = self.B0[ig][:,:,0]
+            BZ = self.B1[ig][:,:,0]
+            R  = self.R[ig][:,:,0]
+            Z  = self.Z[ig][:,:,0]
+            (N0,N1) = BR.shape # dir-0 is normal to outer boundary, dir-1 is tangential
+            self.PoloidalFlux[ig] = np.zeros((N0,N1))
+            BRa = np.zeros((N0,N1))
+            BZa = np.zeros((N0,N1))
+            BRa[-1,:] = BR[-1,:] # Outer surface -- not taking account of normal flux going to 
+            BZa[-1,:] = BZ[-1,:] # zero on the boundary yet...
+            BRa[:-1,:] = 0.5 * (BR[:-1,:] + BR[1:,:])
+            BZa[:-1,:] = 0.5 * (BZ[:-1,:] + BZ[1:,:])
+
+            RdR = np.zeros((N0,N1))
+            RdZ = np.zeros((N0,N1))
+            RdR[-1,:] = R[-1,:] * 0.2 * (R[-2,:] - R[-1,:]) # dR_outer ~ 0.2 dR of neighbouring cell?
+            RdZ[-1,:] = R[-1,:] * 0.2 * (Z[-2,:] - Z[-1,:])
+            RdR[:-1,:] = 0.5 * (R[:-1,:] + R[1:,:]) * (R[:-1,:] - R[1:,:])
+            RdZ[:-1,:] = 0.5 * (R[:-1,:] + R[1:,:]) * (Z[:-1,:] - Z[1:,:])
+
+            ### Now integrate inwards from outer boundary
+            for j in range(N1): # tangential direction
+                self.PoloidalFlux[ig][N0-1,j] = BZa[N0-1,j]*RdR[N0-1,j] - BRa[N0-1,j]*RdZ[N0-1,j]
+                for i in reversed(range(N0-1)): # radial direction, inward from boundary
+                    self.PoloidalFlux[ig][i,j] = (self.PoloidalFlux[ig][i+1,j] +
+                                                    BZa[i,j]*RdR[i,j] - BRa[i,j]*RdZ[i,j])
+
+        ### Store the maximum value of the poloidal flux function reached on the outermost
+        ### line of solution points.
+        self.MaxPFOuterSurface = np.amax([np.amax(x[-1,:]) for x in self.PoloidalFlux[1:]]) 
+
+        ### Central group --- integrate from group 2 since their coordinate axes are aligned
+        BR = self.B0[0][:,:,0]
+        BZ = self.B1[0][:,:,0]
+        R  = self.R[0][:,:,0]
+        Z  = self.Z[0][:,:,0]
+        (N0,N1) = BR.shape # dir-0 is normal to outer boundary, dir-1 is tangential
+        self.PoloidalFlux[0] = np.zeros((N0,N1))
+        BRa = np.zeros((N0,N1))
+        BZa = np.zeros((N0,N1))
+        ### The top of group 0 attaches to the bottom of group 2
+        BRa[-1,:] = 0.5 * (BR[-1,:] + self.B0[2][0,:,0])
+        BZa[-1,:] = 0.5 * (BZ[-1,:] + self.B1[2][0,:,0])
+        BRa[:-1,:] = 0.5 * (BR[:-1,:] + BR[1:,:])
+        BZa[:-1,:] = 0.5 * (BZ[:-1,:] + BZ[1:,:])
+
+        RdR = np.zeros((N0,N1))
+        RdZ = np.zeros((N0,N1))
+        RdR[-1,:] = 0.5 * (R[-1,:] + self.R[2][0,:,0]) * (R[-1,:] - self.R[2][0,:,0])
+        RdZ[-1,:] = 0.5 * (R[-1,:] + self.R[2][0,:,0]) * (Z[-1,:] - self.Z[2][0,:,0])
+        RdR[:-1,:] = 0.5 * (R[:-1,:] + R[1:,:]) * (R[:-1,:] - R[1:,:])
+        RdZ[:-1,:] = 0.5 * (R[:-1,:] + R[1:,:]) * (Z[:-1,:] - Z[1:,:])
+        
+        for j in range(N1): 
+            self.PoloidalFlux[0][N0-1,j] = self.PoloidalFlux[2][0,j] + BZa[N0-1,j]*RdR[N0-1,j] - BRa[N0-1,j]*RdZ[N0-1,j]
+            for i in reversed(range(N0-1)): 
+                self.PoloidalFlux[0][i,j] = (self.PoloidalFlux[0][i+1,j] +
+                                                BZa[i,j]*RdR[i,j] - BRa[i,j]*RdZ[i,j])
+        
+        ### Blend the three other edges of group 0 --- isn't usually necessary, and is a sign something's going on...
+        ### Outermost set of solution points --- set equal to values from the other groups
+        #self.PoloidalFlux[0][:,0]  = self.PoloidalFlux[1][0,:]       # with group 1
+        #self.PoloidalFlux[0][:,-1] = self.PoloidalFlux[3][0,:][::-1] # group 3 -- dir-1 is reversed
+        #self.PoloidalFlux[0][0,:]  = self.PoloidalFlux[4][0,:][::-1] # group 4 -- "      "   " 
+
+        return
 
 

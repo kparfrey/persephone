@@ -398,7 +398,7 @@ void ParamsTorus::setup_elementblock(ElementBlock &elements, Process &proc)
         //    elements.map   = new BasicSquareTorusMap(proc.group, boundary_modes);
         //    break;
         case desc_input:
-            torus_config = new DescConfig(input_file, desc_iteration);
+            torus_config = new DescConfig(input_file, desc_iteration, grid_method);
             break;
         case cerfon_freidberg:
             torus_config = new CerfonFreidbergConfig();
