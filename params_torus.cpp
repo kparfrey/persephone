@@ -132,13 +132,15 @@ void ParamsTorus::setup_process(Process &proc)
     {
         FaceCommunicator& face = proc.faces[i];
 
+        face.metric = new DiagonalSpatialMetric(cylindrical);
+
         face.setup(proc, i);
 
         /* Inter-process connectivity */
         int normal = face.normal_dir;
         face.neighbour_group = proc.group; // Modify later if this Process is on a group boundary
 
-        /* Start by setting neighbour_idx[3] relative to the group with a straightfoward
+        /* Start by setting neighbour_idx[3] relative to the group with a straightforward
          * Cartesian connectivity */
         for (int d: dirs)
             face.neighbour_idx[d] = proc.group_idx[d];
@@ -253,7 +255,7 @@ void ParamsTorus::setup_process(Process &proc)
                     f.neighbour_idx[0] = -1;
                     f.neighbour_group  = -1;
                     f.neighbour_id     = -1;
-                    f.external_face = true;
+                    f.domain_external_face = true;
 
 #if 0
                     /* Make periodic for testing */
@@ -331,9 +333,11 @@ void ParamsTorus::setup_process(Process &proc)
 
         /* Set up external boundary conditions 
          * Not actually using this object --- should remove or correct */
-        if (f.external_face == true)
+        /**
+        if (f.domain_external_face == true)
             f.BC = new TorusWallBC(f.Ntot, proc.Nfield, equations);
             //f.BC = new ImplosionTestBC(f.Ntot, proc.Nfield, equations);
+        **/
     }
 
     /* Write out connectivity info for testing */

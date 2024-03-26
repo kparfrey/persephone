@@ -757,9 +757,11 @@ namespace kernels
                     divF[mem + 1*Ns] -= Fp[3][2] / R;
                     break;
                 case mhd:
-                    divF[mem + 1*Ns] -= Fp[3][2] / R; // As for Navier-Stokes
+                    divF[mem + 1*Ns] -= Fp[3][2] / R; 
+                    //divF[mem + 3*Ns] -= Fp[3][0]; 
                     // d_t (B^r) + ... = psi / R
-                    divF[mem + 5*Ns] -= Up[8]/R;
+                    divF[mem + 5*Ns] -= R * Fp[7][2]; // Since taking div of F^{ij} tensor for B?
+                    //divF[mem + 5*Ns] -= Up[8]/R;
                     break;
                 default:
                     exit(123);
@@ -1053,7 +1055,7 @@ namespace kernels
         /* For setting normal fluxes only */
         //real_t (*F_num_phys_R)[3] = new real_t [lb.Nfield][3]; // use previous version for _L
 
-        if (face.external_face)
+        if (face.domain_external_face)
             for (int i = 0; i < face.Ntot * lb.Nfield; ++i)
                 face.neighbour_data[i] = face.my_data[i];
         
@@ -1097,7 +1099,7 @@ namespace kernels
                 for (int i: dirs)
                     np[i] = face.normal(i,mem_face);
 
-                if (face.external_face)
+                if (face.domain_external_face)
                 {
                     /* Sets UL=UR to give desired exact fluxes */
                     torus_BC(UL, UR, np, F_numerical->physics, mem, face.orientation);
@@ -1253,11 +1255,15 @@ namespace kernels
         const int Ns1 = lb.Ns[dir1];
         const int Nf_tot = lb.Nf_dir_block[dir]; //Total # of this-dir flux points in the block
 
+
         /* The BC for derivatives -- should have already applied BCs for the solution */
-        if (face.external_face && averaging_derivs)
+        if (face.domain_external_face && averaging_derivs)
         {
             // torus_BC_derivatives(face);
 
+            /* Don't need to set the neighbour_data to my_data here when averaging the solution itself, 
+             * since this was already done in external_numerical_flux() immediately after the Dirichlet
+             * boundary conditions were applied.  */
             for (int i = 0; i < face.Ntot_all; ++i)
                 face.neighbour_data[i] = face.my_data[i];
 

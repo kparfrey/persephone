@@ -4,6 +4,7 @@
 #include <mpi.h>
 #include "common.hpp"
 #include "tensor_field.hpp"
+#include "spatial_metric.hpp"
 
 class Process;
 class BoundaryConditions;
@@ -26,9 +27,9 @@ class FaceCommunicator
     int orientation;      // +1 if the elem's OUTWARD normal points along the 0/1/2 axis
                           // -1 if it points along the negative of the 0/1/2 axis
 
-    bool external_face; // True if this face needs a boundary condition rather
-                        // than communication from another process
-    BoundaryConditions* BC;  // Object for applying the boundary conditions
+    bool domain_external_face; // True if this face needs a boundary condition rather
+                               // than communication from another process
+    //BoundaryConditions* BC;  // Object for applying the boundary conditions
 
     int n0;  // Normal-direction flux-point index of this face
     int ne0; // Normal-direction element index of this face
@@ -41,6 +42,8 @@ class FaceCommunicator
     int Ntot_all; // Total no. of data values: Nfield * N_tot
 
     VectorField normal;
+
+    SpatialMetric* metric;
 
     real_t* my_data;         // This face's data, in its native ordering
     real_t* my_data_to_send; //  "     "      " , in ordering expected by the receiving proc

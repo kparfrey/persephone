@@ -235,7 +235,8 @@ void DescConfig::construct_equilibrium(const real_t r_uds[3],
     const real_t R   = r_phys[0]; // physical cylindrical radial coordinate
 
     //const real_t p_floor = 0.01 * pressure[0];
-    const real_t p_floor = 10.0;
+    const real_t p_floor = 10.0; // Works for DSHAPE
+    //const real_t p_floor = 0.0;
 
     real_t p = p_floor;
     for (int i = 0; i < N_pressure; ++i)
@@ -325,7 +326,7 @@ DescConfig::DescConfig(std::string input_file, const int iteration, TorusGridMet
     rotational_transform = H5Easy::load<vector<double>>(data, base + "_iota/_params");
     pressure = H5Easy::load<vector<double>>(data, base + "_pressure/_params");
 
-    Nfp   = H5Easy::load<double>(data, base + "_NFP");
+    Nfp   = H5Easy::load<int>(data, base + "_NFP");
     psi_a = H5Easy::load<double>(data, base + "_Psi");
 
     N_L = L_lmn.size();
@@ -343,7 +344,7 @@ DescConfig::DescConfig(std::string input_file, const int iteration, TorusGridMet
     write::variable<int>("No. of modes in Z polynomial      ", N_Z);
     write::variable<int>("No. of modes in iota polynomial   ", N_iota);
     write::variable<int>("No. of modes in pressure poly.    ", N_pressure);
-    write::variable<double>("No. of field periods ", Nfp);
+    write::variable<int>("No. of field periods ", Nfp);
 
     write::message("Finished loading input data\n");
 

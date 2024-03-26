@@ -46,8 +46,14 @@ def dmax(var):
 def dabs(var):
     return [np.abs(x) for x in var]
 
+def dsqrt(var):
+    return [np.sqrt(x) for x in var]
+
+def dsq(var):
+    return [np.square(x) for x in var]
+
 def dmult(a, b):
-    return [a[i][...] * b[i][...] for i in range(len(a))]
+    return [np.multiply(x,y) for (x,y) in zip(a,b)]
 ########################################################################
 
 class Group(object):

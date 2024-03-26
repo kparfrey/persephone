@@ -2,6 +2,7 @@
 
 #include "process.hpp"
 #include "kernels.hpp"
+#include "physics.hpp"
 #include "write_screen.hpp"
 
 void FaceCommunicator::setup(Process& proc, int face_id)
@@ -71,18 +72,20 @@ void FaceCommunicator::setup(Process& proc, int face_id)
     Ntot     = N[0] * N[1] * Nelem[0] * Nelem[1];
     Ntot_all = proc.Nfield * Ntot;
 
-    external_face = false; // By default
-    change_data_order = false;
-    swap_index_order  = false;
+    domain_external_face    = false; // By default
+    change_data_order       = false;
+    swap_index_order        = false;
     reverse_index_direction = false;
 
    
     allocate();
 
-    /* Fill normal array from ElementBlock */
-    int id_elem_face, id_elem_normals;
-    int mem_offset_face, mem_offset_normals;
-    int mem_face, mem_normals;
+    metric->allocate_on_host(Ntot);
+
+    /* Fill normal array and metric arrays from ElementBlock */
+    int id_elem_face, id_elem_normals, id_elem;
+    int mem_offset_face, mem_offset_normals, mem_offset;
+    int mem_face, mem_normals, mem;
 
     for (int ne2 = 0; ne2 < Nelem[1]; ++ne2)
     for (int ne1 = 0; ne1 < Nelem[0]; ++ne1)
@@ -98,14 +101,28 @@ void FaceCommunicator::setup(Process& proc, int face_id)
             id_elem_normals = (ne2*Nelem[0] + ne1)*(proc.elements.Nelem[normal_dir]+1) + ne0+1;
         mem_offset_normals = id_elem_normals * N[0] * N[1];
 
+        /* Offsets in the main flux-point arrays, for accessing the metric */
+        id_elem    = (ne2*proc.elements.Nelem[normal_p1] + ne1)*proc.elements.Nelem[normal_dir] + ne0;
+        mem_offset = id_elem * proc.elements.Nf_dir[normal_dir];
+
         for (int n2 = 0; n2 < N[1]; ++n2)
         for (int n1 = 0; n1 < N[0]; ++n1)
         {
             mem_face    = mem_offset_face    + n2 * N[0] + n1;
             mem_normals = mem_offset_normals + n2 * N[0] + n1;  
+            mem         = mem_offset         + (n2 * proc.elements.Ns[normal_p1] + n1) * proc.elements.Nf[normal_dir] + n0;
 
             for (int i: dirs)
                 normal(i,mem_face) = proc.elements.geometry.normal[normal_dir](i,mem_normals);
+
+            /* Assume diagonal spatial metric for now. DIAGONAL HACK */
+            for (int i: dirs)
+            {
+                metric->g[i][mem_face]           = proc.elements.physics[normal_dir]->metric->g[i][mem];
+                metric->ginv[i][mem_face]        = proc.elements.physics[normal_dir]->metric->ginv[i][mem];
+                metric->rdetg_deriv[i][mem_face] = proc.elements.physics[normal_dir]->metric->rdetg_deriv[i][mem];
+            }
+            metric->rdetg[mem_face] = proc.elements.physics[normal_dir]->metric->rdetg[mem];
         }
     }
 
@@ -143,7 +160,7 @@ MPI_Request FaceCommunicator::send_data()
     MPI_Request request = MPI_REQUEST_NULL;
     int send_tag = my_id;
 
-    if (!external_face)
+    if (!domain_external_face)
         MPI_Isend(my_data_host, Ntot_all, MPI_real_t, neighbour_rank, send_tag, 
                                                    MPI_COMM_WORLD, &request);
 
@@ -159,7 +176,7 @@ MPI_Request FaceCommunicator::receive_data()
     MPI_Request request = MPI_REQUEST_NULL;
     int recv_tag = neighbour_id;
     
-    if (!external_face)
+    if (!domain_external_face)
         MPI_Irecv(neighbour_data_host, Ntot_all, MPI_real_t, neighbour_rank,
                                       recv_tag, MPI_COMM_WORLD, &request);
 

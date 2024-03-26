@@ -72,7 +72,7 @@ class Process
     NumericalFlux* F_numerical[3]; // One for each set of flux points. Only diff in
                                    // which Physics object their physics pointer points to
 
-    NumericalFlux* F_numerical_divB_subsystem[3]; 
+    //NumericalFlux* F_numerical_divB_subsystem[3]; 
 
     /***
     SystemData*              system_data;

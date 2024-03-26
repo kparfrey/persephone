@@ -59,16 +59,23 @@ class MHD : public Physics
         variables[7] = "B2";
         variables[8] = "psi";
 
-        diffusive = true;
+        diffusive = false;
 
+        /* Works for DSHAPE */
+        /*
         viscosity    = 1e-3;
         resistivity  = 1e-4;
         conductivity = 3e-4;
+         */
+        
+        viscosity    = 0.0;
+        resistivity  = 0.0;
+        conductivity = 0.0;
 
         diffusive_timestep_const = 1.0; // Default: 1/3, but larger can be more stable?!
 
         /* Divergence-cleaning parameters */
-        psi_damping_const = 0.2; // c_r --- Dedner suggests 0.18; 0 < p_d_const < 1
+        psi_damping_const = 0.1; // c_r --- Dedner suggests 0.18; 0 < p_d_const < 1
 
         apply_floors = false;
     }
@@ -144,13 +151,8 @@ inline void MHD::ConservedToPrimitive(const real_t* const __restrict__ U,
 
     const real_t psi_energy_density = 0.5 * P[psi] * P[psi];
     
+    //P[pressure] = gm1 * (U[tot_energy] - KE_density - mag_density);
     P[pressure] = gm1 * (U[tot_energy] - KE_density - mag_density - psi_energy_density);
-
-    if (P[pressure] < 0.0)
-    {
-        std::cout << "Negative pressure encountered --- exiting." << std::endl;
-        exit(90);
-    }
 
     if (apply_floors)
     {
@@ -158,7 +160,15 @@ inline void MHD::ConservedToPrimitive(const real_t* const __restrict__ U,
         const real_t beta_min = 1e-3;
 
         if (beta < beta_min)
+        {
             P[pressure] = beta_min * mag_density;
+            std::cout << "Negative pressure encountered" << std::endl;
+        }
+    }
+    else if (P[pressure] < 0.0)
+    {
+        std::cout << "Negative pressure encountered --- exiting." << std::endl;
+        exit(90);
     }
 
     /**
@@ -189,8 +199,9 @@ inline void MHD::Floors(real_t* const __restrict__ U, const int mem) const
     /* Having to recalculate vsq and Bsq here -- can probably do better */
     const real_t KE_density  = 0.5 * P[density] * metric->square(&P[v0], mem);
     const real_t mag_density = 0.5 * metric->square(&P[B0], mem);
+    const real_t psi_energy_density = 0.5 * P[psi] * P[psi];
 
-    U[tot_energy] = mag_density + KE_density + P[pressure]/gm1;
+    U[tot_energy] = mag_density + KE_density + P[pressure]/gm1 + psi_energy_density;
 
     delete[] P;
     return;
@@ -347,9 +358,11 @@ inline void MHD::DiffusiveFluxes(const real_t* const __restrict__   P,
     real_t rdetg_deriv[3]; // (1/rdetg)*d_j(rdetg) at a single point
     real_t divv;
     real_t duB[3][3]; // duB[j][i] = d^i B^j -- 1st index raised, for Etot flux
+    real_t duv[3][3]; // duv[j][i] = d^i B^j -- 1st index raised, for tau
     real_t Bl[3];     // need B_i for Etot flux
     real_t JxB;       // for Etot flux
     real_t duBsq[3];  // d^i B^2, for JxB 
+    real_t tauUP[3][3]; // tau^{ij} --- symmetric
 
     real_t duT[3];
 
@@ -376,19 +389,34 @@ inline void MHD::DiffusiveFluxes(const real_t* const __restrict__   P,
     divv = dv[0][0] + dv[1][1] + dv[2][2] + 
            v[0] * rdetg_deriv[0] + v[1] * rdetg_deriv[1] + v[2] * rdetg_deriv[2];
 
+    /* Only true for Cartesian coords */
+    /***
     for (int d: dirs)
         tau[d][d] = 2*mu*dv[d][d] + lambda*divv;
-
-    /* Will need to be more careful about up-down indices here when d_phi != 0,
-     * v^phi != 0. DEBUG / REDO / HACK */
     tau[0][1] = tau[1][0] = mu * (dv[0][1] + dv[1][0]);
     tau[0][2] = tau[2][0] = mu * (dv[0][2] + dv[2][0]);
     tau[1][2] = tau[2][1] = mu * (dv[1][2] + dv[2][1]);
+     ***/
+
 
     /* Raise index on the derivative operator to form duB[j][i] = d^i B^j */
     for (int d: dirs)
+    {
         metric->raise(dB[d], duB[d], mem); // since dB[d] = d_i B^d
-        //metric->raise(dP[B0+d], duB[d], mem);
+        metric->raise(dv[d], duv[d], mem); // since dv[d] = d_i v^d
+    }
+
+    for (int i: dirs)
+        for (int j: dirs)
+            tauUP[i][j] = mu * (duv[i][j] + duv[j][i]);
+
+    /* For now, assume metric is diagonal --- need to generalize // DIAGONAL */
+    for (int i: dirs)
+        tauUP[i][i] += lambda * divv * ((DiagonalSpatialMetric*)metric)->ginv[i][mem];
+
+    for (int d: dirs)
+        metric->lower(tauUP[d], tau[d], mem); // tau = tau^i_j
+    
 
     metric->raise(dP[psi], duBsq, mem); // since saving B^2 into the psi slot
     metric->raise(dP[pressure], duT, mem); // since saving T into the pressure slot
@@ -401,7 +429,7 @@ inline void MHD::DiffusiveFluxes(const real_t* const __restrict__   P,
         F[Density][d] = 0.0;
 
         for (int i: dirs)
-            F[mom0+i][d] = - tau[d][i];
+            F[mom0+i][d] = - tau[d][i]; // tau^d_i
 
         /* Shouldn't this have a contribution from resistivity too? 
          * Yes, should have an eta*JxB contribution from the resistive part 

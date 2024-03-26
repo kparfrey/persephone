@@ -23,7 +23,7 @@ class DescConfig : public TorusConfig
     std::vector<std::vector<int>> L_modes, R_modes, Z_modes; // 2D vector relating 1D to 3D mode indices
     std::vector<double>           rotational_transform, pressure; // Coefficients for profiles of p and iota
 
-    double Nfp;   // Number of field periods --- stored as a double
+    int Nfp;   // Number of field periods --- now an integer, was stored as a double
     double psi_a; // Total toroidal flux
 
     // Should remove these, not needed

@@ -11,6 +11,10 @@ class SpatialMetric
 
     PhysicalCoords physical_coords;
 
+    /* This will need to be thought out better when we go to non-diagonal metrics */
+    real_t* g[3];    // g[i] == g_{ii}
+    real_t* ginv[3]; // ginv[i] == g^{ii}
+
     real_t* rdetg;
     real_t* rdetg_deriv[3]; // (1/rdetg) * d_j (rdetg) for each j
                             // Only used in finding stress tensor for viscosity
@@ -64,9 +68,6 @@ class SpatialMetric
 class DiagonalSpatialMetric : public SpatialMetric
 {
     public:
-
-    real_t* g[3];    // g[i] == g_{ii}
-    real_t* ginv[3]; // ginv[i] == g^{ii}
 
     DiagonalSpatialMetric(PhysicalCoords physical_coords) 
         : SpatialMetric(physical_coords) {}

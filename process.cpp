@@ -110,7 +110,8 @@ void Process::time_advance()
         // d_t_c = 1/3 stable for WaveRect at high viscosity, but 0.4 breaks sometimes...?
         // Seems to be excessively restrictive when have an inhomogeneous grid?
         // Very problem dependent: can use d_t_c = 0.9 for the MHD Alfven wave problem
-        const real_t diffusion = MAX(Physics::viscosity, Physics::resistivity);
+        real_t diffusion = MAX(MAX(Physics::viscosity, Physics::resistivity), Physics::conductivity);
+        diffusion = MAX(diffusion, 1e-15);
         dtmin_diff   = (Physics::diffusive_timestep_const/diffusion) * (1./(tt_max_global*tt_max_global));
 
         dt = MIN(dtmin_advect, dtmin_diff); 
@@ -125,7 +126,7 @@ void Process::time_advance()
     {
         real_t lambda_max = 1.0 /(dt * tt_max_global); // Max allowable e'value on the grid
 
-        real_t safety = 0.95;
+        real_t safety = 0.8; // 0.95;
         if (cfl < 0.4)
             safety = 0.75; // Seem to run into trouble at very high ch for small cfl
 
@@ -336,7 +337,43 @@ void Process::find_divB(const real_t* const B, real_t* const divB)
         kernels::soln_to_flux(eb.soln2flux(i), B, Bf(i), eb.lengths, i);
     
     for (int i: ifaces)
+    {
         kernels::fill_face_data(Bf(faces[i].normal_dir), faces[i], eb.lengths);
+
+        if (faces[i].domain_external_face)
+        {
+            FaceCommunicator& f = faces[i];
+
+            /* Just set neighbour data to existing data. This is better
+             * than doing nothing */
+            //for (int mem = 0; mem < f.Ntot * 3; ++mem)
+            //    f.neighbour_data[mem] = f.my_data[mem];
+
+            /* HACK: set normal flux to zero on the boundary - move to kernels */
+            real_t nl[3], nu[3];
+            real_t B[3],  Bm[3];
+            real_t Bdotn;
+            for (int j = 0; j < f.Ntot; ++j) // for each location on the face...
+            {
+                for (int d: dirs)
+                {
+                    nl[d] = f.normal(d,j);
+                    B[d]  = f.my_data[j + d * f.Ntot];
+                }
+
+                Bdotn = nl[0]*B[0] + nl[1]*B[1] + nl[2]*B[2];
+
+                f.metric->raise(nl, nu, j);
+            
+                for (int d: dirs)
+                    Bm[d] = B[d] - Bdotn * nu[d]; // Zero normal flux
+                
+                for (int d: dirs)
+                    f.neighbour_data[j + d * f.Ntot] = f.my_data[j + d * f.Ntot] = Bm[d];
+                    //f.neighbour_data[j + d * f.Ntot] = Bm[d];
+            }
+        }
+    }
     
     /* Exchanges more data than necessary since only have 3 "fields" here */
     exchange_boundary_data();
@@ -431,8 +468,6 @@ void Process::add_diffusive_flux(VectorField Uf, VectorField dP, VectorField F)
                                                                      eb.lengths, dflux);
     
     /* For now, do the interface averaging separately for each physical derivative direction */
-    /* DEBUG: Somehow the contents of this for loop have a stabilizing effect even when the diffusive
-     * coefficients are set to zero.... Still have stabilizing effect without doing the exchange... */
     for (int dderiv: dirs)
     {
         for (int i: ifaces)
@@ -503,10 +538,10 @@ void Process::fill_external_boundary_data()
     }
 
     for (int i: ifaces)
-        if (faces[i].external_face == true)
+        if (faces[i].domain_external_face)
         {
             kernels::fill_face_data(Uf(faces[i].normal_dir), faces[i], eb.lengths);
-            faces[i].BC->setup(faces[i].my_data);
+            //faces[i].BC->setup(faces[i].my_data);
         }
 
     for (int i: dirs)
