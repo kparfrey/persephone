@@ -953,7 +953,6 @@ namespace kernels
 
 
 
-    /* Is only called on domain-external faces */
     void dirichlet_boundary_conditions(const FaceCommunicator& face)
     {
         /* Explicitly setting both interface sides to the same values here */
@@ -981,6 +980,35 @@ namespace kernels
         }
 
         delete[] U;
+
+        return;
+    }
+
+
+    /* Because are currently handling each physical derivative direction
+     * independently, can only easily apply zero total derivative BCs. Will need
+     * to pass a flag saying which PDD the data refers to if we to apply BCs
+     * on the normal derivative only */
+    void neumann_boundary_conditions(const FaceCommunicator& face)
+    {
+        real_t* dP = new real_t [face.Nfield];
+                     
+        for (int i = 0; i < face.Ntot_all; ++i)
+            face.neighbour_data[i] = face.my_data[i];
+
+        for (int i = 0; i < face.Ntot; ++i)
+        {
+            for (int field = 0; field < face.Nfield; ++field)
+                dP[field] = face.my_data[i + field * face.Ntot];
+
+            face.BC->neumann(dP);
+
+            for (int field = 0; field < face.Nfield; ++field)
+                face.my_data[i + field * face.Ntot] = 
+                             face.neighbour_data[i + field * face.Ntot] = dP[field]; 
+        }
+
+        delete[] dP;
 
         return;
     }
@@ -1205,8 +1233,7 @@ namespace kernels
      * Only required when have diffusive terms. */
     void external_interface_average(const FaceCommunicator           face,
                                           real_t* const __restrict__ Pf,
-                                    const LengthBucket               lb,
-                                    const bool                       averaging_derivs)
+                                    const LengthBucket               lb)
     {
         const int dir  = face.normal_dir;
         const int dir1 = dir_plus_one[dir]; 
@@ -1221,6 +1248,7 @@ namespace kernels
 
 
         /* The BC for derivatives -- should have already applied BCs for the solution */
+#if 0
         if (face.domain_external_face && averaging_derivs)
         {
             /* Don't need to set the neighbour_data to my_data here when averaging the solution itself, 
@@ -1230,51 +1258,14 @@ namespace kernels
                 face.neighbour_data[i] = face.my_data[i];
 
             /*** For an adiabatic wall ***/
-            /***/
             int mem;
             for (int i = 0; i < face.Ntot; ++i)
             {
                 mem = 4 * face.Ntot + i; // index for pressure slot, holding temperature
                 face.neighbour_data[mem] = face.my_data[mem] = 0.0;
             }
-            /***/
-
-            /*** Set magnetic field derivatives to zero -- equivalent to setting eta = 0 there */
-            /***
-            int mem;
-            for (int i = 0; i < face.Ntot; ++i)
-            {
-                for (int comp = 0; comp < 3; comp++)
-                {
-                    mem = (5+comp) * face.Ntot + i; // holds d_i B^comp
-                    face.neighbour_data[mem] = face.my_data[mem] = 0.0;
-                }
-            }
-             ***/
-
-            /* Set all derivatives to zero on the boundary ?
-             * Sending zero velocity & B gradients into the diffusive flux function
-             * is equivalent to setting viscosity = resistivity = 0 at the boundary */
-            //for (int i = 0; i < face.Ntot_all; ++i)
-                //face.my_data[i] = face.neighbour_data[i] = 0.0;
-
-            /***
-            for (int j = 0; j < face.Ntot; ++j)
-            {
-                int i = j + 8*face.Ntot;
-                face.my_data[i] = face.neighbour_data[i] = 0.0;
-            }
-            ***/
-
-            /*
-            for (int field = 5; field < 8; field++) // B only
-                for (int j = 0; j < face.Ntot; ++j)
-                {
-                    int i = j + field*face.Ntot;
-                    face.my_data[i] = face.neighbour_data[i] = 0.0;
-                }
-             */
         }
+#endif
 
         for (int ne2 = 0; ne2 < face.Nelem[1]; ++ne2)
         for (int ne1 = 0; ne1 < face.Nelem[0]; ++ne1)
@@ -1523,6 +1514,7 @@ namespace kernels
 
             physics->ConservedToPrimitive(Up, Pp, i);
 
+            /* HACK : eventually put into the Physics object */
             if (physics->system == mhd)
             {
                 enum primitive {density, v0, v1, v2, pressure, B0, B1, B2, psi};

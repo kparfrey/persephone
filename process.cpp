@@ -379,7 +379,7 @@ void Process::find_divB(const real_t* const B, real_t* const divB)
 
     /* Average Bf on process-external faces. */
     for (int i: ifaces)
-        kernels::external_interface_average(faces[i], Bf(faces[i].normal_dir), eb.lengths, false);
+        kernels::external_interface_average(faces[i], Bf(faces[i].normal_dir), eb.lengths);
 
     /* Average Bf on process-internal faces. */
     for (int i: dirs)
@@ -445,7 +445,7 @@ void Process::add_diffusive_flux(VectorField Uf, VectorField dP, VectorField F)
 
     /* Average Pf on process-external faces. */
     for (int i: ifaces)
-        kernels::external_interface_average(faces[i], Pf(faces[i].normal_dir), eb.lengths, false);
+        kernels::external_interface_average(faces[i], Pf(faces[i].normal_dir), eb.lengths);
 
     /* Average Pf on process-internal faces. */
     for (int i: dirs)
@@ -466,7 +466,7 @@ void Process::add_diffusive_flux(VectorField Uf, VectorField dP, VectorField F)
             kernels::soln_to_flux(eb.soln2flux(dflux), dP(dderiv), dPf[dflux](dderiv), 
                                                                      eb.lengths, dflux);
     
-    /* For now, do the interface averaging separately for each physical derivative direction */
+    /* For now, do the interface averaging separately for each *physical* derivative direction */
     for (int dderiv: dirs)
     {
         for (int i: ifaces)
@@ -476,25 +476,17 @@ void Process::add_diffusive_flux(VectorField Uf, VectorField dP, VectorField F)
                                   // This means we never have all three derivatives at the same time...
 
         for (int i: ifaces)
-            kernels::external_interface_average(faces[i], dPf[faces[i].normal_dir](dderiv), eb.lengths, true);
+        {
+            if (faces[i].domain_external_face)
+                kernels::neumann_boundary_conditions(faces[i]);
+
+            kernels::external_interface_average(faces[i], dPf[faces[i].normal_dir](dderiv), eb.lengths);
+        }
     }
 
     for (int dflux: dirs)
         for (int dderiv: dirs)
             kernels::internal_interface_average(dPf[dflux](dderiv), eb.lengths, dflux);
-
-
-    /* Do BCs for the velocity derivatives here */
-    /***
-    for (int i: ifaces)
-    {
-        if (faces[i].external_face)
-        {
-            const int ndir = faces[i].normal_dir;
-            kernels::wall_BC_derivatives(faces[i], dPf[ndir], eb.physics[ndir], eb.lengths);
-        }
-    }
-     ***/
 
 
     //const real_t coeffs[2] = {physics->viscosity, physics->resistivity};

@@ -108,6 +108,8 @@ namespace kernels
 
     void dirichlet_boundary_conditions(const FaceCommunicator& face);
     
+    void neumann_boundary_conditions(const FaceCommunicator& face);
+    
     void external_numerical_flux(const FaceCommunicator           face,
                                        real_t* const __restrict__ F,
                                  const NumericalFlux*             F_numerical,
@@ -124,8 +126,7 @@ namespace kernels
 
     void external_interface_average(const FaceCommunicator           face,
                                           real_t* const __restrict__ Pf,
-                                    const LengthBucket               lb,
-                                    const bool                       averaging_derivs);
+                                    const LengthBucket               lb);
 
     void internal_interface_average(      real_t* const __restrict__ Pf,
                                     const LengthBucket               lb,

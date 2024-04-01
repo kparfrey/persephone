@@ -14,6 +14,8 @@ class BoundaryConditions
                            const real_t* const __restrict__ nl,
                            const Physics* const __restrict__ physics,
                            const int mem) const = 0;
+    
+    virtual void neumann(real_t* const __restrict__ dP) const = 0;
 };
 
 
@@ -59,9 +61,21 @@ class WallBC_NoSlip_ZeroNormalB : public BoundaryConditions
             U[mom0+d] = 0.0; // No slip
             U[  B0+d] = Bm[d];
         }
+
+        return;
     }
 
     
+    /*** For an adiabatic wall ***/
+    void neumann(real_t* const __restrict__ dP) const override
+    {
+        /* Using the fact that the pressure slot holds temperature (and the Psi slot holds B^2)
+         * from kernels::conserved_to_primitive_fluxpoints() */
+
+        dP[pressure] = 0.0; // Zero total (not just normal) temperature gradient
+        
+        return;
+    }
 };
 
 #endif
