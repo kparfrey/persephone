@@ -8,139 +8,60 @@ class BoundaryConditions
 {
     public:
     
-    const int Ntot;   // Total number of points on the face
-    const int Nfield;
+    BoundaryConditions(){}
 
-    real_t* stored_data; // Usually the initial conditions
-
-    BoundaryConditions(const int Ntot, const int Nfield)
-        : Ntot(Ntot), Nfield(Nfield){}
-
-    void setup(const real_t* const data);
-
-    /* Use a functor to set the external BCs for each field and face location.
-     * Can this be made more efficient and/or cleaner? */
-    virtual real_t operator()(const int field, const int i,
-                              const real_t* const __restrict__ my_data) = 0;
-
-    /* Original method, with loop in this file. Now use the functor approach 
-     * above, with the loop in kernels */
-    //virtual void apply(const real_t* const __restrict__ my_data,
-    //                         real_t* const __restrict__ neighbour_data) = 0;
+    virtual void dirichlet(      real_t* const __restrict__ U, 
+                           const real_t* const __restrict__ nl,
+                           const Physics* const __restrict__ physics,
+                           const int mem) const = 0;
 };
 
 
-/* Make sure to call after the face's data has been
- * filled with the initial conditions and moved to device */
-inline void BoundaryConditions::setup(const real_t* const data)
+
+class WallBC_NoSlip_ZeroNormalB : public BoundaryConditions
 {
-    stored_data = kernels::alloc_raw(Nfield * Ntot);
-
-    for(int i = 0; i < Nfield*Ntot; ++i)
-        stored_data[i] = data[i];
-
-    return;
-}
-
-
-class ImplosionTestBC : public BoundaryConditions
-{
-    enum conserved {density, mom0, mom1, mom2, tot_energy};
-    const EqnSystem equations = navier_stokes;
+    private:
+    enum conserved {Density, mom0, mom1, mom2, tot_energy, B0, B1, B2, psi};
+    enum primitive {density, v0  , v1  , v2,   pressure};
 
     public:
 
-    ImplosionTestBC(const int Ntot, const int Nfield, const EqnSystem evolved_system)
-        : BoundaryConditions(Ntot, Nfield) 
+    WallBC_NoSlip_ZeroNormalB(){}
+
+    void dirichlet(      real_t* const __restrict__ U, 
+                   const real_t* const __restrict__ nl,
+                   const Physics* const __restrict__ physics,
+                   const int mem) const override
     {
-        if (evolved_system != equations)
-            write::error("Chosen boundary conditions not applicable for this equation system", destroy);
+        real_t P[9];  // Primitives from incoming conserved variables
+        real_t nu[3]; // contravariant components of normal vector
+                      
+        physics->metric->raise(nl, nu, mem);
+
+        physics->ConservedToPrimitive(U, P, mem);
+        
+        //const real_t vdotn = nl[0]*P[v0] + nl[1]*P[v1] + nl[2]*P[v2];
+        //real_t vm[3];
+        const real_t Bdotn = nl[0]*P[B0] + nl[1]*P[B1] + nl[2]*P[B2];
+        real_t Bm[3];
+
+        /* Remove the normal velocity and magnetic field */
+        for (int d: dirs)
+        {
+            //vm[d] = P[v0+d] - vdotn * nu[d]; // Impenetrable -- seems more stable than no-slip?
+            //vm[d] = 0.0; // Impermeability + no slip
+            Bm[d] = P[B0+d] - Bdotn * nu[d]; // Zero normal magnetic flux
+        }
+                
+        for (int d: dirs)
+        {
+            //U[mom0+d] = P[Density] * vm[d]; // For impermeable only; need to lower vm first
+            U[mom0+d] = 0.0; // No slip
+            U[  B0+d] = Bm[d];
+        }
     }
 
     
-    real_t operator()(const int field, const int i,
-                      const real_t* const __restrict__ my_data) override
-    {
-        switch(field)
-        {
-            case density:
-                return stored_data[density*Ntot + i];
-            case mom0:
-                return - my_data[mom0*Ntot + i]; // Radial wall
-            case mom1:
-            case mom2:
-                return 0.0;
-            case tot_energy:
-                return stored_data[tot_energy*Ntot + i];
-        }
-
-        return 0.0;
-    }
-
-    /***
-    virtual void apply(const real_t* const __restrict__ my_data,
-                             real_t* const __restrict__ neighbour_data)
-    {
-        for (int i = 0; i < Ntot; ++i)
-        {
-            neighbour_data[density*Ntot + i]    = stored_data[density*Ntot + i];
-            neighbour_data[mom0*Ntot + i]       = - my_data[mom0*Ntot + i]; 
-            neighbour_data[mom1*Ntot + i]       = 0.0;
-            neighbour_data[mom2*Ntot + i]       = 0.0;
-            neighbour_data[tot_energy*Ntot + i] = stored_data[tot_energy*Ntot + i];
-        }
-
-        return;
-    }
-     ***/
-};
-
-
-class TorusWallBC : public BoundaryConditions
-{
-    enum conserved {density, mom0, mom1, mom2, tot_energy, B0, B1, B2, psi};
-    const EqnSystem equations = mhd;
-
-    public:
-
-    TorusWallBC(const int Ntot, const int Nfield, const EqnSystem evolved_system)
-        : BoundaryConditions(Ntot, Nfield) 
-    {
-        if (evolved_system != equations)
-            write::error("Chosen boundary conditions not applicable for this equation system", destroy);
-    }
-
-    
-    real_t operator()(const int field, const int i,
-                      const real_t* const __restrict__ my_data) override
-    {
-        return - my_data[field*Ntot + i]; // Set all fluxes to zero 
-
-#if 0
-        switch(field)
-        {
-            case density:
-                return stored_data[density*Ntot + i]; // ??
-            case mom0:
-                return - my_data[mom0*Ntot + i]; // Radial wall
-            case mom1:
-            case mom2:
-                return 0.0;
-            case tot_energy:
-                return stored_data[tot_energy*Ntot + i];
-            case B0:
-                return stored_data[B0*Ntot + i];
-            case B1:
-                return stored_data[B1*Ntot + i];
-            case B2:
-                return stored_data[B2*Ntot + i];
-            case psi:
-                return stored_data[psi*Ntot + i];
-        }
-
-        return 0.0;
-#endif
-    }
 };
 
 #endif

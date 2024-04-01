@@ -106,6 +106,8 @@ namespace kernels
                               FaceCommunicator           face,
                         const LengthBucket               lb);
 
+    void dirichlet_boundary_conditions(const FaceCommunicator& face);
+    
     void external_numerical_flux(const FaceCommunicator           face,
                                        real_t* const __restrict__ F,
                                  const NumericalFlux*             F_numerical,

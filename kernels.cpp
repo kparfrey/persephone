@@ -62,6 +62,7 @@ namespace kernels
 
 
     /* Maybe a WallBC function belongs in each Physics derived class? */
+#if 0
     static void torus_BC(      real_t* const __restrict__ UL, 
                                real_t* const __restrict__ UR,
                          const real_t* const __restrict__ nl,
@@ -194,60 +195,6 @@ namespace kernels
         /* Seems better to just apply as the external data? */
         //UR[psi] = P[psi] + c_h * Bdotn;
         //UL[psi] = UR[psi] = 0.0;
-
-        return;
-    }
-
-
-#if 0
-    static void torus_BC_derivatives(const FaceCommunicator face)
-    {
-        const int dir  = face.normal_dir;
-        const int dir1 = dir_plus_one[dir]; 
-        const int dir2 = dir_plus_two[dir];
-        int id_elem, id_elem_face;
-        int mem_offset, mem_offset_face;
-        int mem, mem_face;
-
-        const int Nf0 = lb.Nf[dir];
-        const int Ns1 = lb.Ns[dir1];
-        const int Nf_tot = lb.Nf_dir_block[dir]; //Total # of this-dir flux points in the block
-
-
-        for (int ne2 = 0; ne2 < face.Nelem[1]; ++ne2)
-        for (int ne1 = 0; ne1 < face.Nelem[0]; ++ne1)
-        {
-            id_elem_face    = (ne2 * lb.Nelem[dir1]) + ne1;
-            mem_offset_face = id_elem_face * lb.Ns[dir2] * lb.Ns[dir1];
-
-            id_elem    = (ne2*lb.Nelem[dir1] + ne1)*lb.Nelem[dir] + face.ne0;
-            mem_offset = id_elem * lb.Nf_dir[dir];
-
-            for (int n2 = 0; n2 < face.N[1]; ++n2)
-            for (int n1 = 0; n1 < face.N[0]; ++n1)
-            {
-                /* Memory location for the zeroth field */
-                mem_face = mem_offset_face +  n2 * Ns1 + n1;
-                
-                /* Memory location in the full 3D flux array
-                 * For indexing the metric. */
-                mem = mem_offset + (n2 * Ns1 + n1) * Nf0 + face.n0;
-
-                for (int field = 0; field < lb.Nfield; ++field)
-                {
-                    UL[field] = UL_data[mem_face + field * face.Ntot];
-                    UR[field] = UR_data[mem_face + field * face.Ntot];
-                }
-
-                for (int i: dirs)
-                    np[i] = face.normal(i,mem_face);
-
-
-                for (int field = 0; field < lb.Nfield; ++field)
-                    face.my_data[mem_face + field * face.Ntot] = 
-                        face.neighbour_data[mem_face + field * face.Ntot] = XYZ; 
-            }
-        }
 
         return;
     }
@@ -1006,6 +953,38 @@ namespace kernels
 
 
 
+    /* Is only called on domain-external faces */
+    void dirichlet_boundary_conditions(const FaceCommunicator& face)
+    {
+        /* Explicitly setting both interface sides to the same values here */
+        real_t* U = new real_t [face.Nfield];
+        real_t n[3]; // The face's normal vector at a single point
+                     
+        /* Do first for all boundary conditions - set whole neighbour
+         * array equal to my array (i.e. for all fields) */
+        for (int i = 0; i < face.Ntot_all; ++i)
+            face.neighbour_data[i] = face.my_data[i];
+
+        for (int i = 0; i < face.Ntot; ++i)
+        {
+            for (int field = 0; field < face.Nfield; ++field)
+                U[field] = face.my_data[i + field * face.Ntot];
+
+            for (int d: dirs)
+                n[d] = face.normal(d,i);
+            
+            face.BC->dirichlet(U, n, face.physics, i);
+
+            for (int field = 0; field < face.Nfield; ++field)
+                face.my_data[i + field * face.Ntot] = 
+                             face.neighbour_data[i + field * face.Ntot] = U[field]; 
+        }
+
+        delete[] U;
+
+        return;
+    }
+
 
     void external_numerical_flux(const FaceCommunicator           face,
                                        real_t* const __restrict__ F,
@@ -1027,25 +1006,6 @@ namespace kernels
         const real_t* __restrict__ UL_data;
         const real_t* __restrict__ UR_data;
 
-
-        /* To apply external boundary conditions, set the incoming neighbour data on
-         * external faces such that the fluxes are as desired. */
-#if 0
-        if (face.external_face)
-        {
-            real_t npu[3]; // contravariant components of normal vector
-            for (int i = 0; i < face.Ntot; ++i)
-            {
-                for (int d: dirs)
-                    np[d] = face.normal(d,i);
-                    F_numerical->physics->metric->raise(np, npu, mem);
-
-                for (int field = 0; field < lb.Nfield; ++field)
-                        face.neighbour_data[field*face.Ntot + i] = (*face.BC)(field, i, face.my_data, np);
-            }
-        }
-#endif
-
         /* Conserved variables and physical fluxes at one point */
         real_t* UL = new real_t [lb.Nfield];
         real_t* UR = new real_t [lb.Nfield];
@@ -1055,9 +1015,12 @@ namespace kernels
         /* For setting normal fluxes only */
         //real_t (*F_num_phys_R)[3] = new real_t [lb.Nfield][3]; // use previous version for _L
 
+        /* Moved to separate dirichlet kernel */
+#if 0
         if (face.domain_external_face)
             for (int i = 0; i < face.Ntot * lb.Nfield; ++i)
                 face.neighbour_data[i] = face.my_data[i];
+#endif
         
         if (face.orientation > 0)
         {
@@ -1099,6 +1062,7 @@ namespace kernels
                 for (int i: dirs)
                     np[i] = face.normal(i,mem_face);
 
+#if 0
                 if (face.domain_external_face)
                 {
                     /* Sets UL=UR to give desired exact fluxes */
@@ -1111,7 +1075,7 @@ namespace kernels
                             face.my_data[mem_face + field * face.Ntot] = 
                             face.neighbour_data[mem_face + field * face.Ntot] = UL[field]; 
                 }
-
+#endif
                 /* Unique flux */
                 (*F_numerical)(UL, UR, np, F_num_phys, dir, mem);
 
@@ -1259,8 +1223,6 @@ namespace kernels
         /* The BC for derivatives -- should have already applied BCs for the solution */
         if (face.domain_external_face && averaging_derivs)
         {
-            // torus_BC_derivatives(face);
-
             /* Don't need to set the neighbour_data to my_data here when averaging the solution itself, 
              * since this was already done in external_numerical_flux() immediately after the Dirichlet
              * boundary conditions were applied.  */

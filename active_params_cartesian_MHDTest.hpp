@@ -13,12 +13,12 @@ static EqnSystem equations = mhd;
 static BasicTimeMethod time_method = rk3_ssp;
 
 static int Nproc[3] = {2,2,1};
-static int Nelem[3] = {8,8,1};
-static int Ns[3]    = {5,5,1};
+static int Nelem[3] = {6,6,1};
+static int Ns[3]    = {5,7,1};
 
-static real_t cfl      = 0.7;
-static real_t end_time = 20.0;
-static real_t dt_write = 0.5;
+static real_t cfl      = 0.6;
+static real_t end_time = 50.0;
+static real_t dt_write = 0.2;
 
 static ParamsCartesian active_parameters(equations, time_method, 
                                   Nproc, Nelem, Ns,

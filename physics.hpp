@@ -27,7 +27,6 @@ class Physics
 
     /* Only used by MHD */
     inline static real_t ch; 
-    //inline static real_t ch_sq; // Square of wave/transport speed for hyperbolic part of div cleaning
     inline static real_t psi_damping_const; // Dedner's cr; Mignone & Tzeferacos's alpha, 0 < const < 1
     inline static real_t psi_damping_rate;  // Derigs' alpha = ch^2/cp^2 = ch/cr; d psi/dt ... = - rate * psi
                                             // p_d_rate = CFL * p_d_const / dt

@@ -365,6 +365,7 @@ class Snapshot(object):
         #plt.colorbar(mappable=plots[-1]) # Colorbar from last group only; hard to get colorbar applicable for all groups
 
         # Make standalone custom colorbar --- doesn't show contour levels but at least shows colors and limits
+        '''
         Ncc = 20 # Nlevels at which you cease to do a "careful colorbar", labeling each contour level
         cmap = plots[0].cmap
         boundaries = np.ndarray((len(levels)+1,))
@@ -378,6 +379,7 @@ class Snapshot(object):
         cbar = plt.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap))
         if len(levels) < Ncc:
             cbar.set_ticks(levels)
+        '''
 
         plt.title('t = %.4lf' % self.time)
 

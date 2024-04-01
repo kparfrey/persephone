@@ -132,9 +132,11 @@ void ParamsTorus::setup_process(Process &proc)
     {
         FaceCommunicator& face = proc.faces[i];
 
-        face.metric = new DiagonalSpatialMetric(cylindrical);
+        face.physics->metric = new DiagonalSpatialMetric(cylindrical);
 
         face.setup(proc, i);
+
+        face.BC = new WallBC_NoSlip_ZeroNormalB();
 
         /* Inter-process connectivity */
         int normal = face.normal_dir;
@@ -438,21 +440,6 @@ void ParamsTorus::set_initial_state(ElementBlock &elements)
     set_torus_initial_state(elements, *torus_config);
 
     write::message("Finished setting initial state");
-
-#if 0
-    switch (elements.physics_soln->system)
-    {
-        case navier_stokes:
-            set_euler_torus(elements);
-            break;
-        case mhd:
-            set_torus_initial_state(elements, *torus_config);
-            break;
-        case scalar_advection:
-            write::error("Scalar advection not implemented for torus", destroy);
-            break;
-    }
-#endif
 
     return;
 }

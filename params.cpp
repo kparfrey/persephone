@@ -37,31 +37,23 @@ void Params::setup_process_generic(Process &proc)
         case scalar_advection:
             for (int d: dirs)
                 proc.elements.physics[d] = new ScalarAdvection;
-            proc.elements.physics_soln = new ScalarAdvection;
-            //proc.system_data = new SystemData_scalar_advection;
-            //proc.U_to_P   = new UtoP_scalar_advection;
-            //proc.c_from_P = new WaveSpeeds_scalar_advection;
-            //proc.F_from_P = new Fluxes_scalar_advection;
+            proc.elements.physics_soln   = new ScalarAdvection;
+            for (int f: ifaces)
+                proc.faces[f].physics    = new ScalarAdvection;
             break;
         case navier_stokes:
             for (int d: dirs)
                 proc.elements.physics[d] = new NavierStokes;
-            proc.elements.physics_soln = new NavierStokes;
-            //proc.system_data = new SystemData_navstokes;
-            //proc.U_to_P   = new UtoP_navstokes;
-            //proc.c_from_P = new WaveSpeeds_navstokes;
-            //proc.F_from_P = new Fluxes_navstokes;
-            //proc.F_diff   = new DiffusiveFluxes_navstokes;
+            proc.elements.physics_soln   = new NavierStokes;
+            for (int f: ifaces)
+                proc.faces[f].physics    = new NavierStokes;
             break;
         case mhd:
             for (int d: dirs)
                 proc.elements.physics[d] = new MHD;
-            proc.elements.physics_soln = new MHD;
-            //proc.system_data = new SystemData_mhd;
-            //proc.U_to_P   = new UtoP_mhd;
-            //proc.c_from_P = new WaveSpeeds_mhd;
-            //proc.F_from_P = new Fluxes_mhd;
-            //proc.F_diff   = new DiffusiveFluxes_mhd;
+            proc.elements.physics_soln   = new MHD;
+            for (int f: ifaces)
+                proc.faces[f].physics    = new MHD;
             break;
         default:
             write::error("Equation system not recognised.");
@@ -85,10 +77,6 @@ void Params::setup_process_generic(Process &proc)
         //proc.F_numerical_divB_subsystem[d] = new HLL_divB_subsystem;
         //proc.F_numerical_divB_subsystem[d]->physics = proc.elements.physics[d]; // Convenience pointer
     }
-
-    //proc.F_numerical->U_to_P   = proc.U_to_P;   
-    //proc.F_numerical->c_from_P = proc.c_from_P;
-    //proc.F_numerical->F_from_P = proc.F_from_P;
 
     return;
 }

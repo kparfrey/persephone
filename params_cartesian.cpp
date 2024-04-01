@@ -94,6 +94,8 @@ void ParamsCartesian::setup_process(Process &proc)
 
         write::variable<int>("Setting up face:", i);
 
+        face.physics->metric = new DiagonalSpatialMetric(cartesian);
+
         face.setup(proc, i);
 
         /* Inter-process connectivity */
@@ -134,12 +136,12 @@ void ParamsCartesian::setup_elementblock(ElementBlock &elements, Process &proc)
     elements.Nelem_block = Nelem_proc; 
     elements.Nfield      = proc.Nfield;
 
-    elements.map = new BasicRect2D;
-    //elements.map = new WaveRect2D; //new QuarterAnnulusMap; // specify manually for now...
+    //elements.map = new BasicRect2D;
+    elements.map = new WaveRect2D; //new QuarterAnnulusMap; // specify manually for now...
 
     for (int d: dirs)
         elements.physics[d]->metric = new DiagonalSpatialMetric(cartesian);
-    elements.physics_soln->metric = new DiagonalSpatialMetric(cartesian);
+    elements.physics_soln->metric   = new DiagonalSpatialMetric(cartesian);
 
     /* At this point all external information is present, and the internal
      * setup method can take over. */

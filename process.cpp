@@ -204,7 +204,6 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
 
     for (int i: dirs)
         kernels::bulk_fluxes(Uf(i), F(i), eb.geometry.S[i], eb.physics[i], eb.lengths, i);
-                             //U_to_P, F_from_P, eb.lengths, i);
 
     for (int i: ifaces)
         kernels::fill_face_data(Uf(faces[i].normal_dir), faces[i], eb.lengths);
@@ -213,16 +212,17 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
 
     for (int i: ifaces)
     {
+        if (faces[i].domain_external_face)
+            kernels::dirichlet_boundary_conditions(faces[i]);
+
         int dir = faces[i].normal_dir;
         kernels::external_numerical_flux(faces[i], F(dir), F_numerical[dir],
                                          eb.geometry.S[dir], eb.lengths);
     }
     
     for (int i: dirs)
-    {
         kernels::internal_numerical_flux(Uf(i), F(i), F_numerical[i],
                                          eb.geometry.S[i], eb.geometry.normal[i], eb.lengths, i);
-    }
 
     /* For explicit diffusive terms, calculate the diffusive flux and add
      * to the advective fluxes before taking the flux deriv: F += F_diffusive */
@@ -363,14 +363,13 @@ void Process::find_divB(const real_t* const B, real_t* const divB)
 
                 Bdotn = nl[0]*B[0] + nl[1]*B[1] + nl[2]*B[2];
 
-                f.metric->raise(nl, nu, j);
+                f.physics->metric->raise(nl, nu, j);
             
                 for (int d: dirs)
                     Bm[d] = B[d] - Bdotn * nu[d]; // Zero normal flux
                 
                 for (int d: dirs)
                     f.neighbour_data[j + d * f.Ntot] = f.my_data[j + d * f.Ntot] = Bm[d];
-                    //f.neighbour_data[j + d * f.Ntot] = Bm[d];
             }
         }
     }
