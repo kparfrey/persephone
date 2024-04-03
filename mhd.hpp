@@ -85,6 +85,10 @@ class MHD : public Physics
                                     real_t* const __restrict__ P,
                               const int mem) const override;
 
+    void PrimitiveToConserved(const real_t* const __restrict__ P, 
+                                    real_t* const __restrict__ U,
+                              const int mem) const override;
+
     void WaveSpeeds(const real_t* const __restrict__ P, 
                           real_t* const __restrict__ c,
                     const int dir,
@@ -181,6 +185,40 @@ inline void MHD::ConservedToPrimitive(const real_t* const __restrict__ U,
     else
         P[pressure] = gm1 * (U[tot_energy] - KE_density - mag_density);
      **/
+
+    return;
+}
+
+
+inline void MHD::PrimitiveToConserved(const real_t* const __restrict__ P, 
+                                            real_t* const __restrict__ U,
+                                      const int mem) const
+{
+    const real_t rho = P[density];
+
+    U[density] = rho;
+
+    real_t vl[3];
+    metric->lower(&P[v0], vl, mem);
+
+    U[mom0] = rho * vl[0];
+    U[mom1] = rho * vl[1];
+    U[mom2] = rho * vl[2];
+
+    /* Magnetic fields are contravariant components */
+    U[B0] = P[B0];
+    U[B1] = P[B1];
+    U[B2] = P[B2];
+
+    U[psi] = P[psi];
+
+    const real_t KE_density = 0.5 * rho * (vl[0]*P[v0] + vl[1]*P[v1] + vl[2]*P[v2]);
+
+    const real_t mag_density = 0.5 * metric->square(&P[B0], mem);
+
+    const real_t psi_energy_density = 0.5 * P[psi] * P[psi];
+    
+    U[tot_energy] = KE_density + P[pressure]/gm1 + mag_density + psi_energy_density;
 
     return;
 }

@@ -28,6 +28,15 @@ class ScalarAdvection : public Physics
     }
 
 
+    void PrimitiveToConserved(const real_t* const __restrict__ P, 
+                                    real_t* const __restrict__ U,
+                              const int) const override
+    {
+        U[0] = P[0];
+        return;
+    }
+
+
     void WaveSpeeds(const real_t* const P, real_t* const c,
                     const int dir, const int) const override
     {

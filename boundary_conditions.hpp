@@ -78,4 +78,81 @@ class WallBC_NoSlip_ZeroNormalB : public BoundaryConditions
     }
 };
 
+
+class PeriodicPressureBC : public BoundaryConditions
+{
+    private:
+    enum conserved {Density, mom0, mom1, mom2, tot_energy};
+    enum primitive {density, v0  , v1  , v2,   pressure  };
+
+    public:
+    const int orientation;
+    real_t dPdx = 1.0;
+    real_t P0   = 1.0;
+
+    PeriodicPressureBC(const int orientation): orientation(orientation) {}
+
+    
+    void dirichlet(      real_t* const __restrict__ U, 
+                   const real_t* const __restrict__ ,
+                   const Physics* const __restrict__ physics,
+                   const int mem) const override
+    {
+        real_t* P = new real_t [physics->Nfield];
+
+        physics->ConservedToPrimitive(U, P, mem);
+
+        P[pressure] = P0 + orientation * 0.5 * dPdx;
+
+        physics->PrimitiveToConserved(P, U, mem);
+
+        return;
+    }
+
+
+    void neumann(real_t* const __restrict__ ) const override
+    {
+        return;
+    }
+};
+
+
+class CouettePlateBC : public BoundaryConditions
+{
+    private:
+    enum conserved {Density, mom0, mom1, mom2, tot_energy};
+    enum primitive {density, v0  , v1  , v2,   pressure  };
+
+    public:
+    const int orientation;
+    real_t v_top = 1.0;
+
+    CouettePlateBC(const int orientation): orientation(orientation) {}
+    
+    void dirichlet(      real_t* const __restrict__ U, 
+                   const real_t* const __restrict__ ,
+                   const Physics* const __restrict__ physics,
+                   const int mem) const override
+    {
+        real_t* P = new real_t [physics->Nfield];
+
+        physics->ConservedToPrimitive(U, P, mem);
+
+        /* orientation =  1: v0 = v_top
+         * orientation = -1: v0 = 0     */
+        P[v0] =  0.5 * (1.0 + orientation) * v_top;
+
+        physics->PrimitiveToConserved(P, U, mem);
+
+        return;
+    }
+
+
+    void neumann(real_t* const __restrict__ dP) const override
+    {
+        dP[pressure] = 0.0; // Zero total (not just normal) temperature gradient
+
+        return;
+    }
+};
 #endif

@@ -52,6 +52,10 @@ class Physics
                                             real_t* const __restrict__ P,
                                       const int mem) const = 0;
 
+    virtual void PrimitiveToConserved(const real_t* const __restrict__ P, 
+                                            real_t* const __restrict__ U,
+                                      const int mem) const = 0;
+
     virtual void WaveSpeeds(const real_t* const __restrict__ P, 
                                   real_t* const __restrict__ c,
                             const int dir,
