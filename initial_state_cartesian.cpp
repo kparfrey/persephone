@@ -81,16 +81,19 @@ static void couette_flow(const real_t r[3],
     /* Velocities */
     /* Use domain [0,1], with v0 = 0 at bottom, = 1 at top */
     
-    //v0 = y;  // Exact solution for dPdx = 0 case
+    v0 = y;  // Exact solution for dPdx = 0 case
     
     /* "Ledge shape": boundaries have linear shear, viscous effects
-     * propagate from interior of domain (y = 0.25 and 0.75) */
+     * propagate from interior of domain (y = 0.25 and 0.75). Use with
+     * dPdx = 0 to test relaxation to the v0 = y solution. */
+    /*
     if (y > 0 && y <= 0.25)
         v0 = 0.5 * (y / 0.25);
     else if (y > 0.25 && y <= 0.75)
         v0 = 0.5;
     else
         v0 = 0.5 * (1.0 + (y - 0.75) / 0.25);
+     */
 
     v1 = 0.0;
     v2 = 0.0;

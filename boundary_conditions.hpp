@@ -87,8 +87,7 @@ class PeriodicPressureBC : public BoundaryConditions
 
     public:
     const int orientation;
-    real_t dPdx = 0.0;
-    real_t P0   = 1.0;
+    real_t dPdx = 5e-2;
 
     PeriodicPressureBC(const int orientation): orientation(orientation) {}
 
@@ -102,10 +101,13 @@ class PeriodicPressureBC : public BoundaryConditions
 
         physics->ConservedToPrimitive(U, P, mem);
 
-        P[pressure] = P0 + orientation * 0.5 * dPdx;
+        /* Have only 1 grid point in x-dir, so the value extrapolated
+         * to the faces is equal to the central solution value */
+        P[pressure] += orientation * 0.5 * dPdx;
 
         physics->PrimitiveToConserved(P, U, mem);
 
+        delete[] P;
         return;
     }
 
@@ -144,10 +146,11 @@ class CouettePlateBC : public BoundaryConditions
         P[v1] = 0.0;
         P[v2] = 0.0;
 
-        // P[pressure] = 1.0;
+        //P[pressure] = 1.0;
 
         physics->PrimitiveToConserved(P, U, mem);
 
+        delete[] P;
         return;
     }
 
