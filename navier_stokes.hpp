@@ -49,6 +49,10 @@ class NavierStokes : public Physics
                                     real_t* const __restrict__ P,
                               const int mem) const override;
 
+    void PrimitiveToConserved(const real_t* const __restrict__ P, 
+                                    real_t* const __restrict__ U,
+                              const int mem) const override;
+
     void WaveSpeeds(const real_t* const __restrict__ P, 
                           real_t* const __restrict__ c,
                     const int dir,
@@ -91,6 +95,30 @@ inline void NavierStokes::ConservedToPrimitive(const real_t* const __restrict__ 
                               (vl[0]*P[v0] + vl[1]*P[v1] + vl[2]*P[v2]);
 
     P[pressure] = gm1 * (U[tot_energy] - KE_density);
+
+    return;
+}
+
+
+
+inline void NavierStokes::PrimitiveToConserved(const real_t* const __restrict__ P, 
+                                                     real_t* const __restrict__ U,
+                                               const int mem) const
+{
+    const real_t rho = P[density];
+
+    U[density] = rho;
+
+    real_t vl[3];
+    metric->lower(&P[v0], vl, mem);
+
+    U[mom0] = rho * vl[0];
+    U[mom1] = rho * vl[1];
+    U[mom2] = rho * vl[2];
+    
+    const real_t KE_density = 0.5 * rho * (vl[0]*P[v0] + vl[1]*P[v1] + vl[2]*P[v2]);
+
+    U[tot_energy] = KE_density + P[pressure] / gm1;
 
     return;
 }

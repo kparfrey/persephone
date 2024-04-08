@@ -10,6 +10,7 @@
 #include "geometry_labels.hpp"
 #include "spatial_metric.hpp"
 #include "physics.hpp"
+#include "boundary_conditions.hpp"
 
 using std::cout;
 using std::endl;
@@ -118,6 +119,21 @@ void ParamsCartesian::setup_process(Process &proc)
                              + face.neighbour_idx[1]) * proc.Nproc_group[2]
                              + face.neighbour_idx[2];
     }
+
+    /*** For 1D non-periodic test problems ***/
+#if 1
+    /* x/0 direction */
+    proc.faces[2].domain_external_face = true;
+    proc.faces[3].domain_external_face = true;
+    proc.faces[2].BC = new PeriodicPressureBC(-1);
+    proc.faces[3].BC = new PeriodicPressureBC(1);
+
+    /* y/1 direction */
+    proc.faces[4].domain_external_face = true;
+    proc.faces[5].domain_external_face = true;
+    proc.faces[4].BC = new CouettePlateBC(-1);
+    proc.faces[5].BC = new CouettePlateBC(1);
+#endif
 
     write::message("Finished setup_process()");
 
