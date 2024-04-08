@@ -41,7 +41,9 @@ class NavierStokes : public Physics
         variables[4] = "p";
 
         diffusive = true;
-        viscosity = 5e-2;
+        viscosity = 1e-2;
+        
+        diffusive_timestep_const = 0.3; 
     }
 
 
@@ -177,7 +179,7 @@ inline void NavierStokes::Fluxes(const real_t* const __restrict__ P,
 }
 
 
-/* Still needs to be finished for general coords */
+/* Still needs to be finished for general coords --- could build in from MHD object */
 inline void NavierStokes::DiffusiveFluxes(const real_t* const __restrict__    P, 
                                           const real_t (* const __restrict__ dP)[3],
                                                 real_t (*__restrict__ F)[3],
@@ -221,7 +223,7 @@ inline void NavierStokes::DiffusiveFluxes(const real_t* const __restrict__    P,
             F[mom0+i][d] = - tau[d][i];
 
         /* F(tot E)^d = - v^i tau_i^d
-         * i.e. dE/dt = ... - div( v.tau 
+         * i.e. dE/dt = ... - div( v.tau )
          * Contracting on tau's lower index, so don't need any metric terms */
         F[tot_energy][d] = - (v[0]*tau[0][d] + v[1]*tau[1][d] + v[2]*tau[2][d]); 
     }

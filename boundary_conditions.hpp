@@ -87,7 +87,7 @@ class PeriodicPressureBC : public BoundaryConditions
 
     public:
     const int orientation;
-    real_t dPdx = 1.0;
+    real_t dPdx = 0.0;
     real_t P0   = 1.0;
 
     PeriodicPressureBC(const int orientation): orientation(orientation) {}
@@ -140,7 +140,11 @@ class CouettePlateBC : public BoundaryConditions
 
         /* orientation =  1: v0 = v_top
          * orientation = -1: v0 = 0     */
-        P[v0] =  0.5 * (1.0 + orientation) * v_top;
+        P[v0] = 0.5 * (1.0 + orientation) * v_top;
+        P[v1] = 0.0;
+        P[v2] = 0.0;
+
+        // P[pressure] = 1.0;
 
         physics->PrimitiveToConserved(P, U, mem);
 
@@ -150,7 +154,7 @@ class CouettePlateBC : public BoundaryConditions
 
     void neumann(real_t* const __restrict__ dP) const override
     {
-        dP[pressure] = 0.0; // Zero total (not just normal) temperature gradient
+        // dP[pressure] = 0.0; // Zero total (not just normal) temperature gradient
 
         return;
     }

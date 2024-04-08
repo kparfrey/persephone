@@ -121,19 +121,29 @@ void ParamsCartesian::setup_process(Process &proc)
     }
 
     /*** For 1D non-periodic test problems ***/
-#if 1
-    /* x/0 direction */
-    proc.faces[2].domain_external_face = true;
-    proc.faces[3].domain_external_face = true;
-    proc.faces[2].BC = new PeriodicPressureBC(-1);
-    proc.faces[3].BC = new PeriodicPressureBC(1);
+    if (!periodic)
+    {
+        /* x/0 direction */
+        proc.faces[2].domain_external_face = true;
+        proc.faces[3].domain_external_face = true;
+        proc.faces[2].BC = new PeriodicPressureBC(-1);
+        proc.faces[3].BC = new PeriodicPressureBC(1);
 
-    /* y/1 direction */
-    proc.faces[4].domain_external_face = true;
-    proc.faces[5].domain_external_face = true;
-    proc.faces[4].BC = new CouettePlateBC(-1);
-    proc.faces[5].BC = new CouettePlateBC(1);
-#endif
+        /* y/1 direction */
+        /* If this process's face-5 is the top face of the domain */
+        if (proc.faces[5].neighbour_idx[1] == 0)
+        {
+            proc.faces[5].domain_external_face = true;
+            proc.faces[5].BC = new CouettePlateBC(1);
+        }
+        
+        /* If this process's face-4 is the bottom face of the domain */
+        if (proc.faces[4].neighbour_idx[1] == proc.Nproc_group[1] - 1)
+        {
+            proc.faces[4].domain_external_face = true;
+            proc.faces[4].BC = new CouettePlateBC(-1);
+        }
+    }
 
     write::message("Finished setup_process()");
 
@@ -152,8 +162,8 @@ void ParamsCartesian::setup_elementblock(ElementBlock &elements, Process &proc)
     elements.Nelem_block = Nelem_proc; 
     elements.Nfield      = proc.Nfield;
 
-    //elements.map = new BasicRect2D;
-    elements.map = new WaveRect2D; //new QuarterAnnulusMap; // specify manually for now...
+    elements.map = new BasicRect2D;
+    //elements.map = new WaveRect2D; //new QuarterAnnulusMap; // specify manually for now...
 
     for (int d: dirs)
         elements.physics[d]->metric = new DiagonalSpatialMetric(cartesian);

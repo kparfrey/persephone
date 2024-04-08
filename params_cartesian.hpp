@@ -10,6 +10,8 @@ class ParamsCartesian : public Params
     int Nelem[3];  // No. of elements in each direction, in each process
     int Ns[3];     // No. of solution points in each direction, in each element
 
+    bool periodic; // Whether we're dealing with a fully periodic domain
+
     /* Secondary or derived quantities */
     int Ns_elem; // Total numbers of soln/flux points per element
     int Nf_elem;
@@ -30,8 +32,9 @@ class ParamsCartesian : public Params
                     int (& Ns_)[3], 
                     real_t cfl = 0.8,
                     real_t end_time = 1.0,
-                    real_t dt_write = 0.5)
-    : Params(equations, time_method, cfl, end_time, dt_write)
+                    real_t dt_write = 0.5,
+                    bool periodic = true)
+    : Params(equations, time_method, cfl, end_time, dt_write), periodic(periodic)
     {
         for (int i=0; i<3; i++)
         {

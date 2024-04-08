@@ -99,10 +99,18 @@ class BasicRect2D : public DomainMap
     const real_t ymax = 1.0/std::sin(pi/6.0);
      */
 
+    /*
     const real_t xmin = - 5.0;
     const real_t xmax =   5.0;
     const real_t ymin = - 5.0;
     const real_t ymax =   5.0;
+     */
+
+    /* For 1D tests */
+    const real_t xmin = - 0.5;
+    const real_t xmax =   0.5;
+    const real_t ymin =   0.0;
+    const real_t ymax =   1.0;
 
     BasicRect2D()
     {

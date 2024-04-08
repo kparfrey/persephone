@@ -65,6 +65,53 @@ static void shu_vortex(const real_t r[3],
 }
 
 
+static void couette_flow(const real_t r[3],
+                               real_t* const __restrict__ fields,
+                         const int loc0,
+                         const int Ns_block,
+                         const NavierStokes* const __restrict__ physics)
+{
+    enum conserved {Density, mom0, mom1, mom2, energy};
+    real_t density, v0, v1, v2, pressure; // primitive variables
+
+    const real_t gamma = physics->gamma;
+    const real_t gm1   = physics->gm1;
+    const real_t y     = r[1];
+
+    /* Velocities */
+    /* Use domain [0,1], with v0 = 0 at bottom, = 1 at top */
+    
+    //v0 = y;  // Exact solution for dPdx = 0 case
+    
+    /* "Ledge shape": boundaries have linear shear, viscous effects
+     * propagate from interior of domain (y = 0.25 and 0.75) */
+    if (y > 0 && y <= 0.25)
+        v0 = 0.5 * (y / 0.25);
+    else if (y > 0.25 && y <= 0.75)
+        v0 = 0.5;
+    else
+        v0 = 0.5 * (1.0 + (y - 0.75) / 0.25);
+
+    v1 = 0.0;
+    v2 = 0.0;
+
+    const real_t specific_KE = 0.5 * (v0*v0 + v1*v1 + v2*v2);
+
+    /* Density and pressure */
+    density  = 1.0;
+    pressure = 1.0;
+
+    /* Convert to conserved variables */
+    fields[loc0 + Density*Ns_block] = density;
+    fields[loc0 +    mom0*Ns_block] = density * v0;
+    fields[loc0 +    mom1*Ns_block] = density * v1;
+    fields[loc0 +    mom2*Ns_block] = density * v2;
+    fields[loc0 +  energy*Ns_block] = density * specific_KE + pressure / gm1;
+
+    return;
+}
+
+
 /* From Toth (2000), section 6.3.1 */
 static void alfven_wave(const real_t r[3],
                               real_t* const __restrict__ fields,
@@ -279,7 +326,8 @@ void set_initial_state_cartesian(ElementBlock& eb)
                     eb.fields[loc0] = scalar_function(r);
                     break;
                 case navier_stokes:
-                    shu_vortex(r, eb.fields, loc0, eb.Ns_block, (NavierStokes*)eb.physics_soln);
+                    //shu_vortex(r, eb.fields, loc0, eb.Ns_block, (NavierStokes*)eb.physics_soln);
+                    couette_flow(r, eb.fields, loc0, eb.Ns_block, (NavierStokes*)eb.physics_soln);
                     break;
                 case mhd:
                     //alfven_wave(r, eb.fields, loc0, eb.Ns_block, (MHD*)eb.physics_soln);
