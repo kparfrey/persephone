@@ -61,10 +61,11 @@ class MHD : public Physics
 
         diffusive = true;
 
-        /* Works for DSHAPE */
+        /* Works for DSHAPE *
         viscosity    = 1e-3;
         resistivity  = 1e-4;
         conductivity = 3e-4;
+         */
         
         /*
         viscosity    = 0.0;
@@ -72,7 +73,12 @@ class MHD : public Physics
         conductivity = 0.0;
          */
 
-        diffusive_timestep_const = 1.0; // Default: 1/3, but larger can be more stable?!
+        /* For Hartmann flow test */
+        viscosity    = 1e-2;
+        resistivity  = 1e-2;
+        conductivity = 0.0;
+
+        //diffusive_timestep_const = 0.2; // Default: 1/3
 
         /* Divergence-cleaning parameters */
         psi_damping_const = 0.1; // c_r --- Dedner suggests 0.18; 0 < p_d_const < 1
@@ -385,7 +391,9 @@ inline void MHD::DiffusiveFluxes(const real_t* const __restrict__   P,
                                        real_t (*__restrict__ F)[3],
                                  const int mem) const
 {
-    const real_t mu = P[density] * viscosity; // mu = dynamic viscosity
+    //const real_t mu = P[density] * viscosity; // mu = dynamic viscosity
+    const real_t mu = viscosity; // For Hartmann flow, since based on const dynamic viscosity
+
     const real_t lambda = - (2.0/3.0) * mu;   // from Stokes hypothesis
     
     real_t v[3];
@@ -487,7 +495,7 @@ inline void MHD::DiffusiveFluxes(const real_t* const __restrict__   P,
         // Think should be + eta * JxB here, but only get decreasing energy with negative sign? 
         F[tot_energy][d] = - (v[0]*tau[0][d] + v[1]*tau[1][d] + v[2]*tau[2][d])
                            + resistivity * JxB - conductivity * duT[d];
-
+        
         /* Magnetic part - resistivity is really a magnetic diffusivity */
         /* Original *
         F[B0][d] = - resistivity * (dP[B0][d] - dP[B0+d][0]); 
@@ -508,7 +516,7 @@ inline void MHD::DiffusiveFluxes(const real_t* const __restrict__   P,
         //F[B1][d] = - resistivity * duB[1][d]; 
         //F[B2][d] = - resistivity * duB[2][d]; 
 
-        //F[B0+d][d] = 0.0; // Overwrite the above
+        F[B0+d][d] = 0.0; // Overwrite the above
 
         F[psi][d] = 0.0;
         //F[psi][d] = - 0.1 * dP[psi][d];

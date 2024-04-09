@@ -146,7 +146,52 @@ class CouettePlateBC : public BoundaryConditions
         P[v1] = 0.0;
         P[v2] = 0.0;
 
-        //P[pressure] = 1.0;
+        physics->PrimitiveToConserved(P, U, mem);
+
+        delete[] P;
+        return;
+    }
+
+
+    void neumann(real_t* const __restrict__ ) const override
+    {
+        return;
+    }
+};
+
+
+/* To match analytic solution need to make incompressible: set fluxes of
+ * density and y-momentum (mom1) to zero. */
+class HartmannPlateBC : public BoundaryConditions
+{
+    private:
+    enum conserved {Density, mom0, mom1, mom2, tot_energy, B0, B1, B2, psi};
+    enum primitive {density, v0  , v1  , v2,   pressure  };
+
+    public:
+    const int orientation;
+    real_t v_top    = 1.0;
+
+    HartmannPlateBC(const int orientation): orientation(orientation) {}
+    
+    void dirichlet(      real_t* const __restrict__ U, 
+                   const real_t* const __restrict__ ,
+                   const Physics* const __restrict__ physics,
+                   const int mem) const override
+    {
+        real_t* P = new real_t [physics->Nfield];
+
+        physics->ConservedToPrimitive(U, P, mem);
+
+        /* orientation =  1: v0 = v_top
+         * orientation = -1: v0 = - v_top     */
+        P[v0] = orientation * v_top;
+        P[v1] = 0.0;
+        P[v2] = 0.0;
+
+        P[B0] = 0.0;
+        P[B1] = 1.0;
+        P[B2] = 0.0;
 
         physics->PrimitiveToConserved(P, U, mem);
 
@@ -155,11 +200,10 @@ class CouettePlateBC : public BoundaryConditions
     }
 
 
-    void neumann(real_t* const __restrict__ dP) const override
+    void neumann(real_t* const __restrict__ ) const override
     {
-        // dP[pressure] = 0.0; // Zero total (not just normal) temperature gradient
-
         return;
     }
 };
+
 #endif

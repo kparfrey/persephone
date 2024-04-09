@@ -303,6 +303,49 @@ static void MHD_vortex(const real_t r[3],
 }
 
 
+static void hartmann_flow(const real_t r[3],
+                                real_t* const __restrict__ fields,
+                          const int loc0,
+                          const int Ns_block,
+                          const MHD* const __restrict__ physics)
+{
+    enum conserved {Density, mom0, mom1, mom2, energy, B0, B1, B2, psi};
+    real_t density, v0, v1, v2, pressure, b0, b1, b2; // primitive variables
+
+    const real_t gm1 = physics->gm1;
+    const real_t y   = r[1];
+
+    real_t kinetic_energy, magnetic_energy;
+
+    density  = 1.0;
+    pressure = 1.0;
+
+    v0 = 2.0 * y - 1.0; // linear from y=0, v0=-1 to y=1, v0=1
+    v1 = 0.0;
+    v2 = 0.0;
+
+    b0 = 0.0;
+    b1 = 1.0;  
+    b2 = 0.0;
+
+    kinetic_energy  = 0.5 * density * (v0*v0 + v1*v1 + v2*v2);
+    magnetic_energy = 0.5 * (b0*b0 + b1*b1 + b2*b2);
+
+    /* Convert to conserved variables */
+    fields[loc0 + Density*Ns_block] = density;
+    fields[loc0 +    mom0*Ns_block] = density * v0;
+    fields[loc0 +    mom1*Ns_block] = density * v1;
+    fields[loc0 +    mom2*Ns_block] = density * v2;
+    fields[loc0 +  energy*Ns_block] = kinetic_energy + magnetic_energy + pressure / gm1;
+    fields[loc0 +      B0*Ns_block] = b0;
+    fields[loc0 +      B1*Ns_block] = b1;
+    fields[loc0 +      B2*Ns_block] = b2;
+    fields[loc0 +     psi*Ns_block] = 0.0;
+
+    return;
+}
+
+
 void set_initial_state_cartesian(ElementBlock& eb)
 {
     int mem_offset;
@@ -335,7 +378,8 @@ void set_initial_state_cartesian(ElementBlock& eb)
                 case mhd:
                     //alfven_wave(r, eb.fields, loc0, eb.Ns_block, (MHD*)eb.physics_soln);
                     //field_loop_advection(r, eb.fields, loc0, eb.Ns_block, (MHD*)eb.physics_soln);
-                    MHD_vortex(r, eb.fields, loc0, eb.Ns_block, (MHD*)eb.physics_soln);
+                    //MHD_vortex(r, eb.fields, loc0, eb.Ns_block, (MHD*)eb.physics_soln);
+                    hartmann_flow(r, eb.fields, loc0, eb.Ns_block, (MHD*)eb.physics_soln);
                     break;
             }
         }

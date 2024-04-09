@@ -185,8 +185,8 @@ inline void NavierStokes::DiffusiveFluxes(const real_t* const __restrict__    P,
                                                 real_t (*__restrict__ F)[3],
                                           const int mem) const
 {
-    //const real_t mu = P[density] * viscosity; // mu = dynamic viscosity
-    const real_t mu = viscosity; // For Couette test, which is defined for const. *dynamic* viscosity
+    const real_t mu = P[density] * viscosity; // mu = dynamic viscosity
+    //const real_t mu = viscosity; // For Couette test, which is defined for const. *dynamic* viscosity
 
     const real_t lambda = - (2.0/3.0) * mu; // from Stokes hypothesis: zero bulk viscosity (ζ)
     

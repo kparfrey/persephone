@@ -124,24 +124,28 @@ void ParamsCartesian::setup_process(Process &proc)
     if (!periodic)
     {
         /* x/0 direction */
+        /*** Only for Couette flow test ***
         proc.faces[2].domain_external_face = true;
         proc.faces[3].domain_external_face = true;
         proc.faces[2].BC = new PeriodicPressureBC(-1);
         proc.faces[3].BC = new PeriodicPressureBC(1);
+         ***/
 
         /* y/1 direction */
         /* If this process's face-5 is the top face of the domain */
         if (proc.faces[5].neighbour_idx[1] == 0)
         {
             proc.faces[5].domain_external_face = true;
-            proc.faces[5].BC = new CouettePlateBC(1);
+            proc.faces[5].BC = new HartmannPlateBC(1);
+            //proc.faces[5].BC = new CouettePlateBC(1);
         }
         
         /* If this process's face-4 is the bottom face of the domain */
         if (proc.faces[4].neighbour_idx[1] == proc.Nproc_group[1] - 1)
         {
             proc.faces[4].domain_external_face = true;
-            proc.faces[4].BC = new CouettePlateBC(-1);
+            proc.faces[4].BC = new HartmannPlateBC(-1);
+            //proc.faces[4].BC = new CouettePlateBC(-1);
         }
     }
 
