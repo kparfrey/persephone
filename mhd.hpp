@@ -59,24 +59,26 @@ class MHD : public Physics
         variables[7] = "B2";
         variables[8] = "psi";
 
-        diffusive = true;
+        diffusive = false;
 
-        /* Works for DSHAPE *
-        viscosity    = 1e-3;
-        resistivity  = 1e-4;
-        conductivity = 3e-4;
-         */
+        /**
+        viscosity    = 2e-3;
+        resistivity  = 3e-4;
+        conductivity = 6e-4;
+         ***/
         
-        /*
+        /****/
         viscosity    = 0.0;
         resistivity  = 0.0;
         conductivity = 0.0;
-         */
+        /****/
 
         /* For Hartmann flow test */
+        /*
         viscosity    = 1e-2;
         resistivity  = 1e-2;
         conductivity = 0.0;
+         */
 
         //diffusive_timestep_const = 0.2; // Default: 1/3
 
@@ -391,8 +393,8 @@ inline void MHD::DiffusiveFluxes(const real_t* const __restrict__   P,
                                        real_t (*__restrict__ F)[3],
                                  const int mem) const
 {
-    //const real_t mu = P[density] * viscosity; // mu = dynamic viscosity
-    const real_t mu = viscosity; // For Hartmann flow, since based on const dynamic viscosity
+    const real_t mu = P[density] * viscosity; // mu = dynamic viscosity
+    //const real_t mu = viscosity; // For Hartmann flow, since based on const dynamic viscosity
 
     const real_t lambda = - (2.0/3.0) * mu;   // from Stokes hypothesis
     

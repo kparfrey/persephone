@@ -7,7 +7,7 @@
 #include "jacobi.hpp"
 #include "write_screen.hpp"
 
-#define SHRINK 0.9
+#define SHRINK 1.0
 //0.8
 
 /*

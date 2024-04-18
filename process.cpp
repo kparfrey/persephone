@@ -350,7 +350,7 @@ void Process::find_divB(const real_t* const B, real_t* const divB)
             //    f.neighbour_data[mem] = f.my_data[mem];
 
             /* HACK: set normal flux to zero on the boundary - move to kernels */
-            /*
+            /***/
             real_t nl[3], nu[3];
             real_t B[3],  Bm[3];
             real_t Bdotn;
@@ -372,17 +372,17 @@ void Process::find_divB(const real_t* const B, real_t* const divB)
                 for (int d: dirs)
                     f.neighbour_data[j + d * f.Ntot] = f.my_data[j + d * f.Ntot] = Bm[d];
             }
-             */
+            /***/
 
             /* DOUBLE HACK: set normal B to 1 for the Hartmann flow test .... */
-            /***/
+            /*** 
             for (int j = 0; j < f.Ntot; ++j) 
             {
                 f.neighbour_data[j + 0 * f.Ntot] = f.my_data[j + 0 * f.Ntot] = 0.0;
                 f.neighbour_data[j + 1 * f.Ntot] = f.my_data[j + 1 * f.Ntot] = 1.0;
                 f.neighbour_data[j + 2 * f.Ntot] = f.my_data[j + 2 * f.Ntot] = 0.0;
             }
-            /***/
+             ***/
         }
     }
     
