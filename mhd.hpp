@@ -59,19 +59,19 @@ class MHD : public Physics
         variables[7] = "B2";
         variables[8] = "psi";
 
-        diffusive = false;
+        diffusive = false; 
 
-        /**
+        /***/
         viscosity    = 2e-3;
         resistivity  = 3e-4;
-        conductivity = 6e-4;
-         ***/
+        conductivity = 1e-3;
+        /***/
         
-        /****/
+        /****
         viscosity    = 0.0;
         resistivity  = 0.0;
         conductivity = 0.0;
-        /****/
+        ****/
 
         /* For Hartmann flow test */
         /*
@@ -85,7 +85,7 @@ class MHD : public Physics
         /* Divergence-cleaning parameters */
         psi_damping_const = 0.1; // c_r --- Dedner suggests 0.18; 0 < p_d_const < 1
 
-        apply_floors = false;
+        apply_floors = true;
     }
 
 
@@ -169,7 +169,7 @@ inline void MHD::ConservedToPrimitive(const real_t* const __restrict__ U,
     if (apply_floors)
     {
         const real_t beta = P[pressure] / mag_density;
-        const real_t beta_min = 1e-3;
+        const real_t beta_min = 2e-4;
 
         if (beta < beta_min)
         {
