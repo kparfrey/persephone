@@ -44,6 +44,10 @@ class MHD : public Physics
     
     //const real_t p_floor = 1e-3; // pressure floor, for recovering from inversion errors...
 
+
+    const real_t floor_density  = 1e-3;
+    const real_t floor_pressure = 100.0;
+
     MHD()
     {
         system = mhd;
@@ -127,15 +131,15 @@ inline void MHD::ConservedToPrimitive(const real_t* const __restrict__ U,
 {
     P[density] = U[density]; 
 
-    if (P[density] < 1e-3)
+    if (apply_floors)
     {
-        if (apply_floors)
-            P[density] = 1e-3;
-        else if (P[density] < 0)
-        {
-            std::cout << "Negative density encountered --- exiting." << std::endl;
-            exit(99);
-        }
+        if (P[density] < floor_density)
+            P[density] = floor_density;
+    }
+    else if (P[density] < 0)
+    {
+        std::cout << "Negative density encountered --- exiting." << std::endl;
+        exit(99);
     }
 
     real_t vl[3]; // Covariant velocity components
@@ -168,14 +172,17 @@ inline void MHD::ConservedToPrimitive(const real_t* const __restrict__ U,
 
     if (apply_floors)
     {
-        const real_t beta = P[pressure] / mag_density;
-        const real_t beta_min = 2e-4;
+        //const real_t beta = P[pressure] / mag_density;
+        //const real_t beta_min = 2e-4;
 
-        if (beta < beta_min)
-        {
-            P[pressure] = beta_min * mag_density;
-            std::cout << "Negative pressure encountered" << std::endl;
-        }
+        //if (beta < beta_min)
+        //{
+        //    P[pressure] = beta_min * mag_density;
+        //    std::cout << "Negative pressure encountered" << std::endl;
+        //}
+
+        if (P[pressure] < floor_pressure)
+            P[pressure] = floor_pressure;
     }
     else if (P[pressure] < 0.0)
     {
