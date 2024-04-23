@@ -66,9 +66,9 @@ class MHD : public Physics
         diffusive = false; 
 
         /***/
-        viscosity    = 2e-3;
+        viscosity    = 1e-3;
         resistivity  = 3e-4;
-        conductivity = 1e-3;
+        conductivity = 2e-3;
         /***/
         
         /****
@@ -87,7 +87,7 @@ class MHD : public Physics
         //diffusive_timestep_const = 0.2; // Default: 1/3
 
         /* Divergence-cleaning parameters */
-        psi_damping_const = 0.1; // c_r --- Dedner suggests 0.18; 0 < p_d_const < 1
+        psi_damping_const = 0.3; // c_r --- Dedner suggests 0.18; 0 < p_d_const < 1
 
         apply_floors = true;
     }
@@ -167,8 +167,8 @@ inline void MHD::ConservedToPrimitive(const real_t* const __restrict__ U,
 
     const real_t psi_energy_density = 0.5 * P[psi] * P[psi];
     
-    //P[pressure] = gm1 * (U[tot_energy] - KE_density - mag_density);
-    P[pressure] = gm1 * (U[tot_energy] - KE_density - mag_density - psi_energy_density);
+    P[pressure] = gm1 * (U[tot_energy] - KE_density - mag_density);
+    //P[pressure] = gm1 * (U[tot_energy] - KE_density - mag_density - psi_energy_density);
 
     if (apply_floors)
     {
@@ -233,7 +233,7 @@ inline void MHD::PrimitiveToConserved(const real_t* const __restrict__ P,
 
     const real_t psi_energy_density = 0.5 * P[psi] * P[psi];
     
-    U[tot_energy] = KE_density + P[pressure]/gm1 + mag_density + psi_energy_density;
+    U[tot_energy] = KE_density + P[pressure]/gm1 + mag_density; // + psi_energy_density;
 
     return;
 }

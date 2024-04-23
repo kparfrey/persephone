@@ -57,10 +57,17 @@ class WallBC_NoSlip_ZeroNormalB : public BoundaryConditions
                 
         for (int d: dirs)
         {
-            //U[mom0+d] = P[Density] * vm[d]; // For impermeable only; need to lower vm first
-            U[mom0+d] = 0.0; // No slip
-            U[  B0+d] = Bm[d];
+            //P[v0+d] = vm[d]; // For impermeable only
+            P[v0+d] = 0.0; // No slip
+            P[B0+d] = Bm[d];
         }
+
+	//P[psi] = 0.0;
+
+	/* Want to set the primitives and then reconstruct the conserved variables in case
+	 * the pressure or density was reset by the flooring procedure in the earlier call
+	 * to MHD::ConservedToPrimitive() */
+	physics->PrimitiveToConserved(P, U, mem);
 
         return;
     }
