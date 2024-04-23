@@ -44,9 +44,10 @@ class MHD : public Physics
     
     //const real_t p_floor = 1e-3; // pressure floor, for recovering from inversion errors...
 
-
     const real_t floor_density  = 1e-3;
     const real_t floor_pressure = 100.0;
+
+    bool divB_subsystem_only = false;
 
     MHD()
     {
@@ -167,8 +168,8 @@ inline void MHD::ConservedToPrimitive(const real_t* const __restrict__ U,
 
     const real_t psi_energy_density = 0.5 * P[psi] * P[psi];
     
-    P[pressure] = gm1 * (U[tot_energy] - KE_density - mag_density);
-    //P[pressure] = gm1 * (U[tot_energy] - KE_density - mag_density - psi_energy_density);
+    //P[pressure] = gm1 * (U[tot_energy] - KE_density - mag_density);
+    P[pressure] = gm1 * (U[tot_energy] - KE_density - mag_density - psi_energy_density);
 
     if (apply_floors)
     {
@@ -233,7 +234,7 @@ inline void MHD::PrimitiveToConserved(const real_t* const __restrict__ P,
 
     const real_t psi_energy_density = 0.5 * P[psi] * P[psi];
     
-    U[tot_energy] = KE_density + P[pressure]/gm1 + mag_density; // + psi_energy_density;
+    U[tot_energy] = KE_density + P[pressure]/gm1 + mag_density + psi_energy_density;
 
     return;
 }
@@ -352,6 +353,13 @@ inline void MHD::Fluxes(const real_t* const __restrict__ P,
         v = vu[d]; // velocity in this direction
         B = Bu[d]; // B in this direction
 
+        if (divB_subsystem_only)
+        {
+            for (int i=0; i<8; i++)
+                F[i][d] = 0.0;
+        }
+        else
+        {
         F[density][d]    = v * P[density];
         F[tot_energy][d] = v * (E + Ptot) - Bdotv*B + ch * P[psi] * B;
 
@@ -365,6 +373,7 @@ inline void MHD::Fluxes(const real_t* const __restrict__ P,
         F[B0][d] = Bu[0]*v - B*vu[0]; 
         F[B1][d] = Bu[1]*v - B*vu[1]; 
         F[B2][d] = Bu[2]*v - B*vu[2]; 
+        }
 
         F[B0+d][d] = ch * P[psi] * ((DiagonalSpatialMetric*)metric)->ginv[d][mem]; // Overwrite the above
 

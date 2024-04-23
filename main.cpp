@@ -6,6 +6,10 @@
 #include "write_data.hpp"
 #include "write_screen.hpp"
 
+#include "element_block.hpp"
+#include "physics.hpp"
+#include "mhd.hpp"
+
 
 static void startMPI(int argc, char *argv[], Process &proc)
 {
@@ -59,6 +63,28 @@ int main(int argc, char *argv[])
     write_data(proc); // Data generally lives on device
 
     write::message("\nFinished setup, starting time advancement \n");
+
+    /*** Run divB cleaner a few times first ***/
+    int Nclean = 500;
+    int clean_output_freq = 100;
+    ((MHD*)proc.elements.physics_soln)->divB_subsystem_only = true;
+    for (int d: dirs)
+        ((MHD*)proc.elements.physics[d])->divB_subsystem_only = true;
+    write::message("Starting divB cleaning.....");
+    for (int i = 0; i < Nclean; i++)
+    {
+        proc.time_advance();
+
+        if (proc.step % clean_output_freq == 0)
+            write_data(proc);
+    }
+    ((MHD*)proc.elements.physics_soln)->divB_subsystem_only = false;
+    for (int d: dirs)
+        ((MHD*)proc.elements.physics[d])->divB_subsystem_only = false;
+
+    write::message("Starting standard MHD evolution.....");
+    /******************************************/
+
 
     while(proc.time < proc.end_time)
     {
