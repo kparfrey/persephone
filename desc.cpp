@@ -7,8 +7,7 @@
 #include "jacobi.hpp"
 #include "write_screen.hpp"
 
-#define SHRINK 0.95
-//0.8
+#define SHRINK 1.0
 
 /*
 inline static long int factorial(const int n)
@@ -234,9 +233,9 @@ void DescConfig::construct_equilibrium(const real_t r_uds[3],
     const real_t rho = SHRINK * r_uds[0];  // UDS radial coord, rho = sqrt(psi/psi_a) -- sqrt of flux
     const real_t R   = r_phys[0]; // physical cylindrical radial coordinate
 
-    const real_t p_floor = 0.005 * pressure[0];
+    //const real_t p_floor = 0.005 * pressure[0];
     //const real_t p_floor = 10.0; // Works for DSHAPE
-    //const real_t p_floor = 0.0;
+    const real_t p_floor = 0.0;
 
     real_t p = p_floor;
     for (int i = 0; i < N_pressure; ++i)
