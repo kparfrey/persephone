@@ -126,7 +126,7 @@ void Process::time_advance()
     {
         real_t lambda_max = 1.0 /(dt * tt_max_global); // Max allowable e'value on the grid
 
-        real_t safety = 0.8; // 0.95;
+        real_t safety = 0.9;
         if (cfl < 0.4)
             safety = 0.75; // Seem to run into trouble at very high ch for small cfl
 
@@ -347,13 +347,13 @@ void Process::find_divB(const real_t* const B, real_t* const divB)
             /* Just set neighbour data to existing data. This is better
              * than doing nothing but seems less stable than setting the normal
 	     * flux to zero on the boundary. */
-	    /*
+	    /***/
             for (int mem = 0; mem < f.Ntot * 3; ++mem)
                 f.neighbour_data[mem] = f.my_data[mem];
-	     */
+	    /***/
 
             /* HACK: set normal flux to zero on the boundary - move to kernels */
-            /***/
+            /***
             real_t nl[3], nu[3];
             real_t B[3],  Bm[3];
             real_t Bdotn;
@@ -373,9 +373,10 @@ void Process::find_divB(const real_t* const B, real_t* const divB)
                     Bm[d] = B[d] - Bdotn * nu[d]; // Zero normal flux
                 
                 for (int d: dirs)
-                    f.neighbour_data[j + d * f.Ntot] = f.my_data[j + d * f.Ntot] = Bm[d];
+                    f.neighbour_data[j + d * f.Ntot] = Bm[d];
+                    //f.neighbour_data[j + d * f.Ntot] = f.my_data[j + d * f.Ntot] = Bm[d];
             }
-            /***/
+            ***/
 
             /* DOUBLE HACK: set normal B to 1 for the Hartmann flow test .... */
             /*** 

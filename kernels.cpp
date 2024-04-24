@@ -975,6 +975,7 @@ namespace kernels
             face.BC->dirichlet(U, n, face.physics, i);
 
             for (int field = 0; field < face.Nfield; ++field)
+                //face.neighbour_data[i + field * face.Ntot] = U[field]; 
                 face.my_data[i + field * face.Ntot] = 
                              face.neighbour_data[i + field * face.Ntot] = U[field]; 
         }

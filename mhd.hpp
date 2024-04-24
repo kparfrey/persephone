@@ -88,7 +88,7 @@ class MHD : public Physics
         //diffusive_timestep_const = 0.2; // Default: 1/3
 
         /* Divergence-cleaning parameters */
-        psi_damping_const = 0.3; // c_r --- Dedner suggests 0.18; 0 < p_d_const < 1
+        psi_damping_const = 0.1; // c_r --- Dedner suggests 0.18; 0 < p_d_const < 1
 
         apply_floors = true;
     }
@@ -244,6 +244,9 @@ inline void MHD::PrimitiveToConserved(const real_t* const __restrict__ P,
  * since you'll want to use it also on flux points, at the boundary etc. */
 inline void MHD::Floors(real_t* const __restrict__ U, const int mem) const
 {
+    if (divB_subsystem_only)
+        return;
+
     real_t* P = new real_t [9];
 
     MHD::ConservedToPrimitive(U, P, mem);
@@ -357,6 +360,8 @@ inline void MHD::Fluxes(const real_t* const __restrict__ P,
         {
             for (int i=0; i<8; i++)
                 F[i][d] = 0.0;
+        
+	    F[tot_energy][d] = ch * P[psi] * B;
         }
         else
         {
