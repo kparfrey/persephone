@@ -346,17 +346,19 @@ void Process::find_divB(const real_t* const B, real_t* const divB)
 
             /* Just set neighbour data to existing data. This is better
              * than doing nothing but seems less stable than setting the normal
-	     * flux to zero on the boundary. */
-	    /***/
+             * flux to zero on the boundary. */
+            /***
             for (int mem = 0; mem < f.Ntot * 3; ++mem)
                 f.neighbour_data[mem] = f.my_data[mem];
-	    /***/
+             ***/
 
             /* HACK: set normal flux to zero on the boundary - move to kernels */
-            /***
+            /***/
             real_t nl[3], nu[3];
-            real_t B[3],  Bm[3];
+            real_t B[3];
             real_t Bdotn;
+            real_t* Bdotn_initial = ((WallBC_NoSlip_ZeroNormalB*)f.BC)->Bdotn_initial;
+
             for (int j = 0; j < f.Ntot; ++j) // for each location on the face...
             {
                 for (int d: dirs)
@@ -367,16 +369,16 @@ void Process::find_divB(const real_t* const B, real_t* const divB)
 
                 Bdotn = nl[0]*B[0] + nl[1]*B[1] + nl[2]*B[2];
 
+                if (!Bdotn_stored)
+                    Bdotn_initial[j] = Bdotn;
+
                 f.physics->metric->raise(nl, nu, j);
             
                 for (int d: dirs)
-                    Bm[d] = B[d] - Bdotn * nu[d]; // Zero normal flux
-                
-                for (int d: dirs)
-                    f.neighbour_data[j + d * f.Ntot] = Bm[d];
-                    //f.neighbour_data[j + d * f.Ntot] = f.my_data[j + d * f.Ntot] = Bm[d];
+                    f.neighbour_data[j + d * f.Ntot] = 
+                    f.my_data[j + d * f.Ntot]        = B[d] + (Bdotn_initial[j] - Bdotn) * nu[d];
             }
-            ***/
+            /***/
 
             /* DOUBLE HACK: set normal B to 1 for the Hartmann flow test .... */
             /*** 
@@ -389,6 +391,9 @@ void Process::find_divB(const real_t* const B, real_t* const divB)
              ***/
         }
     }
+
+    Bdotn_stored = true;
+
     
     /* Exchanges more data than necessary since only have 3 "fields" here */
     exchange_boundary_data();

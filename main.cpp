@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
 
     write::message("\nFinished setup, starting time advancement \n");
 
-    /*** Run divB cleaner a few times first ***/
+    /*** Run divB cleaner a few times first ***
     int Nclean = 1000;
     int clean_output_freq = 100;
     ((MHD*)proc.elements.physics_soln)->divB_subsystem_only = true;
@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
         ((MHD*)proc.elements.physics[d])->divB_subsystem_only = false;
 
     write::message("Starting standard MHD evolution.....");
-    /******************************************/
+    ******************************************/
 
 
     while(proc.time < proc.end_time)

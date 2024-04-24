@@ -72,6 +72,8 @@ class Process
     NumericalFlux* F_numerical[3]; // One for each set of flux points. Only diff in
                                    // which Physics object their physics pointer points to
 
+    bool Bdotn_stored = false;  // State variable ---- tidy up soon
+
     //NumericalFlux* F_numerical_divB_subsystem[3]; 
 
     /***

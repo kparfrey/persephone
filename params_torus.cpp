@@ -136,7 +136,7 @@ void ParamsTorus::setup_process(Process &proc)
 
         face.setup(proc, i);
 
-        face.BC = new WallBC_NoSlip_ZeroNormalB();
+        face.BC = new WallBC_NoSlip_ZeroNormalB(face.Ntot);
 
         /* Inter-process connectivity */
         int normal = face.normal_dir;

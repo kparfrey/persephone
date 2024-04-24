@@ -1,9 +1,9 @@
 ### Laptop ###
-# CXX = mpic++
-# CPPFLAGS = -I../HighFive/include
-# CXXFLAGS = -std=c++17 -Werror -DHIGHFIVE_PARALLEL_HDF5=ON -O3 #-g -Og # -O3 -pg 
-# LDFLAGS  = #-pg
-# LDLIBS   = -lmpi -lm -lhdf5
+CXX = mpic++
+CPPFLAGS = -I../HighFive/include
+CXXFLAGS = -std=c++17 -Werror -DHIGHFIVE_PARALLEL_HDF5=ON -O3 #-g -Og # -O3 -pg 
+LDFLAGS  = #-pg
+LDLIBS   = -lmpi -lm -lhdf5
 
 ### Workstation ###
 # CXX = mpic++
@@ -20,11 +20,11 @@
 # LDLIBS   = -lstdc++fs -lmpi++ -lmpi -lm -lhdf5 
 
 ### Stellar - Intel compiler & Intel MPI ###
-CXX = icpc
-CPPFLAGS = -I../HighFive/include 
-CXXFLAGS = -std=c++17 -Werror -DHIGHFIVE_PARALLEL_HDF5=ON -O3 -xCORE-AVX512
-LDFLAGS  =
-LDLIBS   = -lstdc++fs -lmpi -lm -lhdf5 
+# CXX = icpc
+# CPPFLAGS = -I../HighFive/include 
+# CXXFLAGS = -std=c++17 -Werror -DHIGHFIVE_PARALLEL_HDF5=ON -O3 -xCORE-AVX512
+# LDFLAGS  =
+# LDLIBS   = -lstdc++fs -lmpi -lm -lhdf5 
 
 SRC = main.cpp kernels.cpp process.cpp element_block.cpp params.cpp  \
 	  write_mesh.cpp geometry.cpp matrix.cpp write_screen.cpp  \
