@@ -93,9 +93,12 @@ class Group(object):
         jproc = j // Nelem_pp_j
         kproc = k // Nelem_pp_k
 
-        group_rank = (kproc*self.Nproc[1] + jproc)*self.Nproc[0] + iproc
+        # The 2-dir is the most rapidly moving (outer) index for arranging procs into a group_rank
+        # Note that group_rank is the proc's rank within its group
+        group_rank = (iproc*self.Nproc[1] + jproc)*self.Nproc[2] + kproc
         offset = group_rank * self.Nelem_tot / (self.Nproc[0]*self.Nproc[1]*self.Nproc[2])
         
+        # Now index to the desired element within its process
         ii = i % Nelem_pp_i
         jj = j % Nelem_pp_j
         kk = k % Nelem_pp_k
@@ -171,20 +174,11 @@ class Mesh(object):
     def draw_edges(self, nphi = 0, width = 0.1):
         for ig in range(self.Ngroup):
             edges = self.g[ig].edges
-
             for i in range(self.g[ig].Nelem[0]):
                 for j in range(self.g[ig].Nelem[1]):
                     elem = self.g[ig].elem_id_1d(i,j,nphi)
                     for edge_id in range(4):
                         plt.plot(edges[edge_id][elem,0,:], edges[edge_id][elem,1,:], 'k-', lw=width, zorder=1) 
-
-            '''
-            for i in range(self.g[ig].Nelem[0]):
-                for j in range(self.g[ig].Nelem[1]):
-                    elem = self.g[ig].elem_id_1d(i,j,nphi)
-                    for edge_id in range(4):
-                        plt.plot(edges[edge_id][elem,0,:], edges[edge_id][elem,1,:], 'k-', lw=width, zorder=1) 
-            '''
 
         ax = plt.gca()
         ax.set_aspect('equal')

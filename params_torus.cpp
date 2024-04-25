@@ -107,7 +107,7 @@ void ParamsTorus::setup_process(Process &proc)
     MPI_Comm_split(MPI_COMM_WORLD, proc.group, proc.group_rank, &proc.group_comm);
 
 
-    /* Groupwise indices of this process */
+    /* Groupwise indices of this process. dir-2 is most rapidly moving (outer) index. */
     proc.group_idx[2] = proc.group_rank % proc.Nproc_group[2];
     proc.group_idx[1] = (proc.group_rank / proc.Nproc_group[2]) % proc.Nproc_group[1];
     proc.group_idx[0] = proc.group_rank / (proc.Nproc_group[1] * proc.Nproc_group[2]);
