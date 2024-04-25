@@ -192,12 +192,14 @@ void write_mesh(Process &proc)
             dset.write(eb.Nelem_block * proc.Nproc_group_tot);
 
             std::vector<int> Nelem(3); // No. of elements in the group, in each direction
+            std::vector<int> Nproc(3); // No. of processes in the group, in each direction
             std::vector<int> Ns(3);    // No. of solution points in each elem, in each dir
             std::vector<int> Nf(3); 
 
             for (int i: dirs)
             {
                 Nelem[i] = eb.Nelem[i] * proc.Nproc_group[i];
+                Nproc[i] = proc.Nproc_group[i];
                 Ns[i]    = eb.Ns[i];
                 Nf[i]    = eb.Nf[i];
             }
@@ -205,11 +207,14 @@ void write_mesh(Process &proc)
             HighFive::DataSet ds0 = meshfile.createDataSet<int>(groupstring + "/Nelem", HighFive::DataSpace::From(Nelem));
             ds0.write(Nelem);
 
-            HighFive::DataSet ds1 = meshfile.createDataSet<int>(groupstring + "/Ns", HighFive::DataSpace::From(Ns));
-            ds1.write(Ns);
+            HighFive::DataSet ds1 = meshfile.createDataSet<int>(groupstring + "/Nproc", HighFive::DataSpace::From(Nproc));
+            ds1.write(Nproc);
 
-            HighFive::DataSet ds2 = meshfile.createDataSet<int>(groupstring + "/Nf", HighFive::DataSpace::From(Nf));
-            ds2.write(Nf);
+            HighFive::DataSet ds2 = meshfile.createDataSet<int>(groupstring + "/Ns", HighFive::DataSpace::From(Ns));
+            ds2.write(Ns);
+
+            HighFive::DataSet ds3 = meshfile.createDataSet<int>(groupstring + "/Nf", HighFive::DataSpace::From(Nf));
+            ds3.write(Nf);
         }
 
         MPI_Barrier(MPI_COMM_WORLD);

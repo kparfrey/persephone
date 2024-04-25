@@ -76,14 +76,34 @@ class Group(object):
 
         self.Nelem_tot = None
         self.Nelem = None
+        self.Nproc = None
         self.Ns = None
         self.Nf = None
 
         return
     
-
+    # Convert i,j,k indices extending over the whole group's elements into
+    # the 1D element index in which the corresponding edges were stored
     def elem_id_1d(self, i, j, k):
-        return (k*self.Nelem[1] + j)*self.Nelem[0] + i
+        Nelem_pp_i = self.Nelem[0]/self.Nproc[0]
+        Nelem_pp_j = self.Nelem[1]/self.Nproc[1]
+        Nelem_pp_k = self.Nelem[2]/self.Nproc[2]
+
+        iproc = i // Nelem_pp_i
+        jproc = j // Nelem_pp_j
+        kproc = k // Nelem_pp_k
+
+        group_rank = (kproc*self.Nproc[1] + jproc)*self.Nproc[0] + iproc
+        offset = group_rank * self.Nelem_tot / (self.Nproc[0]*self.Nproc[1]*self.Nproc[2])
+        
+        ii = i % Nelem_pp_i
+        jj = j % Nelem_pp_j
+        kk = k % Nelem_pp_k
+
+        return offset + ii + Nelem_pp_i*(jj + kk*Nelem_pp_j)
+
+        ### This works for 1 process per group ###
+        # return (k*self.Nelem[1] + j)*self.Nelem[0] + i
 
 
 
@@ -131,6 +151,7 @@ class Mesh(object):
 
             group.Nelem_tot = m[sg]['Nelem_tot'][()]
             group.Nelem = m[sg]['Nelem'][:] # No. elems in this group, in each dir
+            group.Nproc = m[sg]['Nproc'][:] # No. procs in this group, in each dir
             group.Ns    = m[sg]['Ns'][:]    # Soln points per elem, in each dir
             group.Nf    = m[sg]['Nf'][:]    # Flux    "      "          "
 
@@ -147,14 +168,23 @@ class Mesh(object):
 
 
     # Draw the "front" poloidal face of a slice of elements 
-    def draw_edges(self, nphi = 0, width = 0.2):
+    def draw_edges(self, nphi = 0, width = 0.1):
         for ig in range(self.Ngroup):
             edges = self.g[ig].edges
+
             for i in range(self.g[ig].Nelem[0]):
                 for j in range(self.g[ig].Nelem[1]):
                     elem = self.g[ig].elem_id_1d(i,j,nphi)
                     for edge_id in range(4):
                         plt.plot(edges[edge_id][elem,0,:], edges[edge_id][elem,1,:], 'k-', lw=width, zorder=1) 
+
+            '''
+            for i in range(self.g[ig].Nelem[0]):
+                for j in range(self.g[ig].Nelem[1]):
+                    elem = self.g[ig].elem_id_1d(i,j,nphi)
+                    for edge_id in range(4):
+                        plt.plot(edges[edge_id][elem,0,:], edges[edge_id][elem,1,:], 'k-', lw=width, zorder=1) 
+            '''
 
         ax = plt.gca()
         ax.set_aspect('equal')
