@@ -344,9 +344,9 @@ void Process::find_divB(const real_t* const B, real_t* const divB)
         {
             FaceCommunicator& f = faces[i];
 
-            /* Just set neighbour data to existing data. This is better
-             * than doing nothing but seems less stable than setting the normal
-             * flux to zero on the boundary. */
+            /* Just set neighbour data to existing data.
+             * This seems less stable than setting the normal
+             * flux on the boundary. */
             /***
             for (int mem = 0; mem < f.Ntot * 3; ++mem)
                 f.neighbour_data[mem] = f.my_data[mem];
@@ -357,7 +357,7 @@ void Process::find_divB(const real_t* const B, real_t* const divB)
             real_t nl[3], nu[3];
             real_t B[3];
             real_t Bdotn;
-            real_t* Bdotn_initial = ((WallBC_NoSlip_ZeroNormalB*)f.BC)->Bdotn_initial;
+            real_t* Bdotn_initial = ((WallBC_NoSlip_FixedNormalB*)f.BC)->Bdotn_initial;
 
             for (int j = 0; j < f.Ntot; ++j) // for each location on the face...
             {

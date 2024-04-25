@@ -57,29 +57,27 @@ def dmult(a, b):
 ########################################################################
 
 class Group(object):
-    group = None
-
-    r0 = None
-    r1 = None
-    r2 = None
-    r  = None
-
-    Jrdetg = None
-    quadweight = None
-
-    e0 = None
-    e1 = None
-    e2 = None
-    e3 = None
-    edges = None
-
-    Nelem_tot = None
-    Nelem = None
-    Ns = None
-    Nf = None
 
     def __init__(self, group_id):
         self.group = group_id
+        self.r0 = None
+        self.r1 = None
+        self.r2 = None
+        self.r  = None
+
+        self.Jrdetg = None
+        self.quadweight = None
+
+        self.e0 = None
+        self.e1 = None
+        self.e2 = None
+        self.e3 = None
+        self.edges = None
+
+        self.Nelem_tot = None
+        self.Nelem = None
+        self.Ns = None
+        self.Nf = None
 
         return
     
@@ -90,19 +88,6 @@ class Group(object):
 
 
 class Mesh(object):
-    Ngroup    = None
-    Nproc     = None
-    Nfield    = None
-    Nelem_tot = None
-    Nelem     = None
-    Ns        = None
-    Nf        = None
-
-    weights_found = False
-
-    fileref = None # Handle for h5py file object
-    
-    g = dict() # Dictionary of Groups
 
     def __init__(self):
         print("Loading mesh file")
@@ -112,7 +97,16 @@ class Mesh(object):
         self.Ngroup = m['Ngroup'][()]
         self.Nproc  = m['Nproc'][()]
         self.Nfield = m['Nfield'][()]
+
+        self.weights_found = False
         
+        ### Total numbers for the whole mesh
+        self.Nelem = 0
+        self.Ns    = 0
+        self.Nf    = 0
+
+        self.g = dict() # Dictionary of Groups
+
         for ig in range(self.Ngroup):
             sg = str(ig)
             group = Group(ig)
@@ -139,6 +133,10 @@ class Mesh(object):
             group.Nelem = m[sg]['Nelem'][:] # No. elems in this group, in each dir
             group.Ns    = m[sg]['Ns'][:]    # Soln points per elem, in each dir
             group.Nf    = m[sg]['Nf'][:]    # Flux    "      "          "
+
+            self.Nelem += group.Nelem_tot
+            self.Ns    += group.Ns[0] * group.Ns[1] * group.Ns[2]
+            self.Nf    += group.Nf[0] * group.Nf[1] * group.Nf[2]
 
             self.g[ig] = group
 
@@ -221,15 +219,6 @@ class Mesh(object):
 
 
 class Snapshot(object):
-    m       = None # Mesh object
-    dfile   = None # H5 file for data
-    filenum = None # Number of loaded data file
-    time    = None
-    step    = None
-    dt      = None
-
-    Ngroup  = None
-
     # Use these to convert B to e.g. Teslas
     # The code writes B / sqrt{mu_0}
     mu0     = 4 * np.pi * 1e-7
@@ -251,8 +240,10 @@ class Snapshot(object):
         print("Loading data from file number %d" % filenum)
         self.filenum = filenum
 
-        if self.dfile is not None:
+        try:
             self.dfile.close()
+        except:
+            pass
 
         filename = 'data/data%04d.h5' % filenum
         self.dfile = h5py.File(filename,'r')
@@ -347,8 +338,8 @@ class Snapshot(object):
         levels = np.array(levels) # Convert to array if not already an array
 
         if levels[0] == None:
-            fmax = dmax(variable)
-            fmin = dmin(variable)
+            fmax = dmax(f)
+            fmin = dmin(f)
             if balance:
                 fmax = np.amax([fmax, np.abs(fmin)])
                 fmin = - fmax

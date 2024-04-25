@@ -20,7 +20,7 @@ class BoundaryConditions
 
 
 
-class WallBC_NoSlip_ZeroNormalB : public BoundaryConditions
+class WallBC_NoSlip_FixedNormalB : public BoundaryConditions
 {
     private:
     enum conserved {Density, mom0, mom1, mom2, tot_energy, B0, B1, B2, psi};
@@ -29,7 +29,7 @@ class WallBC_NoSlip_ZeroNormalB : public BoundaryConditions
     public:
     real_t* Bdotn_initial; // Store n.B from the initial conditions
 
-    WallBC_NoSlip_ZeroNormalB(const int N)
+    WallBC_NoSlip_FixedNormalB(const int N)
     {
         Bdotn_initial = new real_t [N](); // Set to zero by default
     }
@@ -47,23 +47,11 @@ class WallBC_NoSlip_ZeroNormalB : public BoundaryConditions
         physics->ConservedToPrimitive(U, P, mem);
         
         //const real_t vdotn = nl[0]*P[v0] + nl[1]*P[v1] + nl[2]*P[v2];
-        //real_t vm[3];
         const real_t Bdotn = nl[0]*P[B0] + nl[1]*P[B1] + nl[2]*P[B2];
-        //real_t Bm[3];
-
-        /* Remove the normal velocity and magnetic field */
-        /*
-        for (int d: dirs)
-        {
-            //vm[d] = P[v0+d] - vdotn * nu[d]; // Impenetrable -- seems more stable than no-slip?
-            //vm[d] = 0.0; // Impermeability + no slip
-            Bm[d] = P[B0+d] - Bdotn * nu[d]; // Zero normal magnetic flux
-        }
-         */
                 
         for (int d: dirs)
         {
-            //P[v0+d] = vm[d]; // For impermeable only
+            //P[v0+d] -= - vdotn * nu[d]; // Impenetrable only
             P[v0+d]  = 0.0; // No slip
             P[B0+d] += (Bdotn_initial[mem] - Bdotn) * nu[d];
         }
