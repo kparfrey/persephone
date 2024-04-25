@@ -45,7 +45,7 @@ class MHD : public Physics
     //const real_t p_floor = 1e-3; // pressure floor, for recovering from inversion errors...
 
     const real_t floor_density  = 1e-3;
-    //const real_t floor_pressure = 1.0;
+    const real_t floor_pressure = 0.1;
     const real_t floor_beta     = 1e-6;
 
     bool divB_subsystem_only = false;
@@ -174,13 +174,14 @@ inline void MHD::ConservedToPrimitive(const real_t* const __restrict__ U,
 
     if (apply_floors)
     {
+	/***
         const real_t beta = P[pressure] / mag_density;
-
         if (beta < floor_beta)
             P[pressure] = floor_beta * mag_density;
+	 ***/
 
-        //if (P[pressure] < floor_pressure)
-        //    P[pressure] = floor_pressure;
+        if (P[pressure] < floor_pressure)
+            P[pressure] = floor_pressure;
     }
     else if (P[pressure] < 0.0)
     {
