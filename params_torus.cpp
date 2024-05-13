@@ -2,6 +2,7 @@
 
 #include <mpi.h>
 #include <cmath>
+#include <iomanip>
 #include "process.hpp"
 #include "element_block.hpp"
 #include "initial_state_torus.hpp"
@@ -44,32 +45,34 @@ void ParamsTorus::secondary_params()
 
     Nproc_domain = Ngroup_central * Nproc_group_central + Ngroup_outer * Nproc_group_outer;
     Nelem_domain = (Ngroup_central*Nelem[0]*Nelem[0] + Ngroup_outer*Nelem[0]*Nelem[1]) * Nelem[2];
-    Ns_domain    = (Ngroup_central*Ns[0]*Ns[0]       + Ngroup_outer*Ns[0]*Ns[1])       * Ns[2];
+    Ns_domain    = (Ngroup_central*Nelem[0]*Nelem[0]*Ns[0]*Ns[0]       
+                        + Ngroup_outer*Nelem[0]*Nelem[1]*Ns[0]*Ns[1]) * Nelem[2] * Ns[2];
 }
 
 
 void ParamsTorus::write_param_info()
 {
-    cout << endl;
-    cout << "***** Parameters ******************************" << endl;
-    cout << "***** Torus domain ****************************" << endl;
-    cout << "***** Need to update properly ... *************" << endl;
+    cout << "\n";
+    cout << "***** Parameters ***********************************\n";
+    cout << "***** Torus domain *********************************\n\n";
+
+    cout << "          cent outer phi   directions\n" ;
+
     cout << "Processes: ";
-    for (int i: dirs) cout << Nproc[i] << "  ";
-    cout << "          ---  Total: " << Nproc_domain << endl;
+    for (int i: dirs) cout << std::setw(3) << Nproc[i] << "  ";
+    cout << "             ---  Total in domain: " << Nproc_domain << endl;
 
     cout << "Elements:  ";
-    for (int i: dirs) cout << Nelem[i] << "  ";
-    cout << " per proc ---  Total: " << Nelem_domain << endl;
+    for (int i: dirs) cout << std::setw(3) << Nelem[i] << "  ";
+    cout << " per process ---  Total in domain: " << Nelem_domain << endl;
 
     cout << "Soln pnts: ";
-    for (int i: dirs) cout << Ns[i] << "  ";
-    cout << " per elem ---  Total: " << Ns_domain << endl;
+    for (int i: dirs) cout << std::setw(3) << Ns[i] << "  ";
+    cout << " per element ---  Total in domain: " << Ns_domain << endl;
 
-    cout << endl;
+    cout << "\n";
 
-    cout << "***********************************************" << endl;
-    cout << endl;
+    cout << "****************************************************\n\n";
 
     return;
 }

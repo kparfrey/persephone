@@ -4,6 +4,7 @@
 #include <mpi.h>
 #include <cmath>
 #include <filesystem>
+#include <iomanip>
 #include "params.hpp"
 #include "write_screen.hpp"
 #include "basic_time_integrator.hpp"
@@ -144,16 +145,16 @@ void Process::time_advance()
         using namespace std;
         cout << scientific;
         const int defaultprec = cout.precision();
-        cout.precision(5);
+        cout.precision(3);
 
         if (Physics::diffusive)
-            cout << "Starting time step " << step << " --- t = " << time
+            cout << "Starting step " << setw(3) << left << step << " --- t = " << time
                  << " --- dt = " << dt 
                  << " --- dt ratio: " << dt_ratio
-                 << " --- last output no.: " << data_output_counter-1 << endl;
+                 << " --- last output: " << data_output_counter-1 << "\n";
         else
-            cout << "Starting time step " << step << " --- t = " << time
-                 << " --- dt = " << dt << " --- last output no.: " << data_output_counter-1 << endl;
+            cout << "Starting step " << setw(3) << left << step << "     t = " << time
+                 << "     dt = " << dt << "     last output: " << data_output_counter-1 << "\n";
 
         cout << defaultfloat;
         cout.precision(defaultprec);
