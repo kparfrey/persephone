@@ -1,7 +1,6 @@
 #include <mpi.h>
 #include "common.hpp"
 #include "process.hpp"
-#include "active_params.hpp"
 #include "write_mesh.hpp"
 #include "write_data.hpp"
 #include "write_screen.hpp"
@@ -9,9 +8,12 @@
 #include "element_block.hpp"
 #include "physics.hpp"
 #include "mhd.hpp"
+#include "numerical_flux.hpp"
 
+#include "active_params.hpp"
 
-static void startMPI(int argc, char *argv[], Process &proc)
+template <class ProcType>
+static void startMPI(int argc, char *argv[], ProcType &proc)
 {
     int error = MPI_Init(&argc, &argv);
     
@@ -44,7 +46,7 @@ static void startMPI(int argc, char *argv[], Process &proc)
 
 int main(int argc, char *argv[])
 {
-    Process proc(active_parameters);
+    Process<NumFluxType> proc(active_parameters);
 
     startMPI(argc, &(*argv), proc);
 

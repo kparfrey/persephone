@@ -1014,10 +1014,10 @@ namespace kernels
         return;
     }
 
-
+    template <class NumFluxType>
     void external_numerical_flux(const FaceCommunicator           face,
                                        real_t* const __restrict__ F,
-                                 const NumericalFlux*             F_numerical,
+                                 const NumFluxType                F_numerical,
                                  const VectorField                S,
                                  const LengthBucket               lb)
     {
@@ -1106,7 +1106,7 @@ namespace kernels
                 }
 #endif
                 /* Unique flux */
-                (*F_numerical)(UL, UR, np, F_num_phys, dir, mem);
+                F_numerical(UL, UR, np, F_num_phys, dir, mem);
 
                 /* Transform from physical to reference-space fluxes.
                  * Needs mem loc in the full 3D array */
@@ -1134,9 +1134,10 @@ namespace kernels
     }
 
 
+    template <class NumFluxType>
     void internal_numerical_flux(const real_t* const __restrict__ Uf,
                                        real_t* const __restrict__ F,
-                                 const NumericalFlux*             F_numerical,
+                                 const NumFluxType                F_numerical,
                                  const VectorField                S,
                                  const VectorField                normal,
                                  const LengthBucket               lb,
@@ -1200,7 +1201,7 @@ namespace kernels
                     np[i] = normal(i,mem_n);
 
                 /* Unique flux */
-                (*F_numerical)(UL, UR, np, F_num_phys, dir, mem_L); // Arbitrarily choose mem_L
+                F_numerical(UL, UR, np, F_num_phys, dir, mem_L); // Arbitrarily choose mem_L
 
                 /* Calculate reference-space flux and save into the left element */
                 fluxes_phys_to_ref(F_num_phys, F, S, mem_L, lb.Nfield, Nf_tot);

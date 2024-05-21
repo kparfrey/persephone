@@ -1,6 +1,7 @@
 #include "common.hpp"
 #include "tensor_field.hpp"
 #include "face_communicator.hpp"
+#include "numerical_flux.hpp"
 
 #if 0
 class ConservedToPrimitive;
@@ -10,7 +11,6 @@ class WaveSpeedsFromPrimitive;
 #endif
 
 class Physics;
-class NumericalFlux;
 
 namespace kernels
 {
@@ -110,15 +110,17 @@ namespace kernels
     
     void neumann_boundary_conditions(const FaceCommunicator& face);
     
+    template <class NumFluxType>
     void external_numerical_flux(const FaceCommunicator           face,
                                        real_t* const __restrict__ F,
-                                 const NumericalFlux*             F_numerical,
+                                 const NumFluxType                F_numerical,
                                  const VectorField                S,
                                  const LengthBucket               lb);
 
+    template <class NumFluxType>
     void internal_numerical_flux(const real_t* const __restrict__ Uf,
                                        real_t* const __restrict__ F,
-                                 const NumericalFlux*             F_numerical,
+                                 const NumFluxType                F_numerical,
                                  const VectorField                S,
                                  const VectorField                normal,
                                  const LengthBucket               lb,

@@ -5,11 +5,11 @@
 #include "common.hpp"
 #include "face_communicator.hpp"
 #include "element_block.hpp"
+#include "numerical_flux.hpp"
 //#include "edge.hpp"
 
 class Params;
 class BasicTimeIntegrator;
-class NumericalFlux;
 
 #if 0
 class SystemData;
@@ -19,6 +19,7 @@ class FluxesFromPrimitive;
 class DiffusiveFluxes;
 #endif
 
+template <class NumFluxType>
 class Process
 {
     public:
@@ -68,9 +69,9 @@ class Process
 
     BasicTimeIntegrator* time_integrator;
 
-    EqnSystem      system;
-    NumericalFlux* F_numerical[3]; // One for each set of flux points. Only diff in
-                                   // which Physics object their physics pointer points to
+    EqnSystem   system;
+    NumFluxType F_numerical[3]; // One for each set of flux points. Only diff in
+                                // which Physics object their physics pointer points to
 
     bool Bdotn_stored = false;  // State variable ---- tidy up soon
 

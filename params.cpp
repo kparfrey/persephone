@@ -65,10 +65,10 @@ void Params::setup_process_generic(Process &proc)
     for (int d: dirs)
     {
         /* Move inside a switch once more flux choices are defined */
-        proc.F_numerical[d] = new HLL;
+        //proc.F_numerical[d] = new HLL; // This is now taken care of by the templates
 
-        proc.F_numerical[d]->Nfield  = proc.Nfield;
-        proc.F_numerical[d]->physics = proc.elements.physics[d]; // Convenience pointer
+        proc.F_numerical[d].Nfield  = proc.Nfield;
+        proc.F_numerical[d].physics = proc.elements.physics[d]; // Convenience pointer
 
         /* The above convenience pointer to proc.physics[d] is the only 
          * difference between the three copies of NumericalFlux */

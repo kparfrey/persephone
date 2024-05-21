@@ -1,4 +1,3 @@
-#include "common.hpp"
 #include "params_torus.hpp"
 
 /* Rather than choosing a problem-specific method, may want to pass in the 
@@ -16,6 +15,10 @@
  * guards.
  */
 
+/*** Types for constructing the Process object ***/
+using NumFluxType = HLL;
+
+/*** Constructing the params object ***/
 static EqnSystem equations = mhd;
 static BasicTimeMethod time_method = rk3_ssp;
 static TorusProblemType problem_type = desc_input;

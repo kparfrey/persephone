@@ -9,7 +9,9 @@
 
 #include "spatial_metric.hpp"
 
+template <class T>
 class Process;
+
 class BoundaryConditions;
 
 class FaceCommunicator

@@ -9,6 +9,11 @@
 /* In general, create the physical-coordinate numerical flux in all
  * three directions. The dir argument is only used when using straight
  * elements, in which cases only the flux in that direction is nonzero. */
+
+/* Note that the operator() definitions in the derived classes are hiding, 
+ * rather than overloading, any definitions that would be present in the base class. */
+
+template <class T>
 class NumericalFlux
 {
     public:
@@ -21,22 +26,22 @@ class NumericalFlux
 
     /* Unique flux for both sides of the interface */
     ACCEL_DECORATOR
-    inline virtual void operator()(const real_t* const __restrict__ UL, 
-                                   const real_t* const __restrict__ UR,
-                                   const real_t* const __restrict__ n,
-                                         real_t (*Fnum)[3],
-                                   const int dir,
-                                   const int mem) const {}
+    inline void operator()(const real_t* const __restrict__ UL, 
+                           const real_t* const __restrict__ UR,
+                           const real_t* const __restrict__ n,
+                                 real_t (*Fnum)[3],
+                           const int dir,
+                           const int mem) const {}
 
     /* Only creates a unique normal flux --- tangential flux is discontinuous */
     ACCEL_DECORATOR
-    inline virtual void operator()(const real_t* const __restrict__ UL, 
-                                   const real_t* const __restrict__ UR,
-                                   const real_t* const __restrict__ n,
-                                         real_t (*Fnum_L)[3],
-                                         real_t (*Fnum_R)[3],
-                                   const int dir,
-                                   const int mem) const {}
+    inline void operator()(const real_t* const __restrict__ UL, 
+                           const real_t* const __restrict__ UR,
+                           const real_t* const __restrict__ n,
+                                 real_t (*Fnum_L)[3],
+                                 real_t (*Fnum_R)[3],
+                           const int dir,
+                           const int mem) const {}
 };
 
 
@@ -44,7 +49,7 @@ class NumericalFlux
  * flux in all three physical components for both sides. May want to
  * reorganise so that each side uses its own tangential flux, since
  * only the normal flux needs to be the same at the interface. */
-class HLL : public NumericalFlux
+class HLL : public NumericalFlux<HLL>
 {
     public:
 
@@ -54,7 +59,7 @@ class HLL : public NumericalFlux
                            const real_t* const __restrict__ n,
                                  real_t (*Fnum)[3],
                            const int, // dir not used
-                           const int mem) const override
+                           const int mem) const
     {
         /* Temporary variables --- use a fixed size */
         constexpr int Nv = 10; // since Nfield isn't constexpr
@@ -124,7 +129,7 @@ class HLL : public NumericalFlux
                                  real_t (*Fnum_L)[3],
                                  real_t (*Fnum_R)[3],
                            const int, // dir not used
-                           const int mem) const override
+                           const int mem) const 
     {
         /* Temporary variables --- use a fixed size */
         constexpr int Nv = 10; // since Nfield isn't constexpr
@@ -252,7 +257,7 @@ class HLL_divB_subsystem : public NumericalFlux
  * when using curved elements. Only calculates the flux in the
  * dir direction. Not fully optimized, since still calculating
  * all three components of FL and FR. */
-class HLL_straight : public NumericalFlux
+class HLL_straight : public NumericalFlux<HLL_straight>
 {
     public:
     ACCEL_DECORATOR
@@ -261,7 +266,7 @@ class HLL_straight : public NumericalFlux
                            const real_t* const __restrict__ n, // not used
                                  real_t (*Fnum)[3],
                            const int dir,
-                           const int mem) const override
+                           const int mem) const
     {
         /* Temporary variables --- use a fixed size */
         constexpr int Nv = 10; // since Nfield isn't constexpr
