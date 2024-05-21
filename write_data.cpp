@@ -23,7 +23,8 @@ using std::string;
 
 
 /* Very basic data output for simple Cartesian mesh */
-void write_data(Process &proc)
+template <class ProcType>
+void write_data(ProcType& proc)
 {
     ElementBlock& eb = proc.elements;
     std::vector<size_t> local_dims(3);

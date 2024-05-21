@@ -3,7 +3,6 @@
 
 #include "common.hpp"
 
-class Process;
-
-void write_data(Process &proc);
+template <class ProcType>
+void write_data(ProcType& proc);
 #endif

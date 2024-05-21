@@ -10,7 +10,8 @@
 
 /* That part of Process setup which is the same for Cartesian,
  * Spherical, toroidal etc. configurations. */
-void Params::setup_process_generic(Process &proc)
+template <class ProcType>
+void Params::setup_process_generic(ProcType& proc)
 {
     proc.time     = 0.0;
     proc.end_time = end_time;

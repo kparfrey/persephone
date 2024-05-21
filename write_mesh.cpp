@@ -20,7 +20,8 @@
 using std::string;
 
 
-void write_mesh(Process &proc)
+template <class ProcType>
+void write_mesh(ProcType& proc)
 {
     ElementBlock& eb = proc.elements;
     std::vector<size_t> local_dims(3);

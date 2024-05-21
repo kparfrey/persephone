@@ -5,7 +5,8 @@
 #include "physics.hpp"
 #include "write_screen.hpp"
 
-void FaceCommunicator::setup(Process& proc, int face_id)
+template <class ProcType>
+void FaceCommunicator::setup(ProcType& proc, int face_id)
 {
     my_id         = face_id;
     my_rank       = proc.rank;

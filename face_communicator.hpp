@@ -6,11 +6,8 @@
 #include "tensor_field.hpp"
 #include "physics.hpp"
 
-
 #include "spatial_metric.hpp"
 
-template <class T>
-class Process;
 
 class BoundaryConditions;
 
@@ -67,7 +64,9 @@ class FaceCommunicator
 
 
     /* Member functions */
-    void setup(Process& proc, int face_id);
+    template <class ProcType>
+    void setup(ProcType& proc, int face_id);
+
     MPI_Request send_data();
     MPI_Request receive_data();
 };

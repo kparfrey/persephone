@@ -3,7 +3,6 @@
 
 #include "common.hpp"
 
-class Process; // Reference to Process type will be used below
 class ElementBlock;
 class Physics;
 
@@ -37,10 +36,16 @@ class Params
     /* Methods: all pure virtual ones must be defined in derived classes */
     virtual void write_param_info() = 0;
     virtual void secondary_params() = 0;
-    virtual void setup_process(Process &proc) = 0;
-    virtual void setup_elementblock(ElementBlock &elements, Process &proc) = 0;
+    
+    template <class ProcType>
+    virtual void setup_process(ProcType& proc) = 0;
+    
+    template <class ProcType>
+    virtual void setup_elementblock(ElementBlock &elements, ProcType& proc) = 0;
+    
     virtual void set_initial_state(ElementBlock &elements) = 0;
 
-    void setup_process_generic(Process& proc);
+    template <class ProcType>
+    void setup_process_generic(ProcType& proc);
 };
 #endif

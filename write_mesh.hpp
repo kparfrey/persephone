@@ -3,8 +3,7 @@
 
 #include "common.hpp"
 
-class Process;
-
-void write_mesh(Process &proc);
+template <class ProcType>
+void write_mesh(ProcType& proc);
 
 #endif
