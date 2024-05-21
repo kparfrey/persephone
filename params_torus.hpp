@@ -9,7 +9,7 @@
 #include <string>
 
 
-class ParamsTorus : public Params
+class ParamsTorus : public Params<ParamsTorus>
 {
     public:
 
@@ -46,11 +46,15 @@ class ParamsTorus : public Params
     
 
     /* General methods */
-    void write_param_info() override;
-    void secondary_params() override;
-    void setup_process(Process &proc) override;
-    void setup_elementblock(ElementBlock& elements, Process &proc) override;
-    void set_initial_state(ElementBlock& elements) override;
+    template <class ProcType>
+    void setup_process(ProcType& proc);
+    
+    template <class ProcType>
+    void setup_elementblock(ElementBlock &elements, ProcType& proc);
+    
+    void write_param_info();
+    void secondary_params();
+    void set_initial_state(ElementBlock &elements);
 
     /* Constructor */
     ParamsTorus(EqnSystem equations,
@@ -81,4 +85,8 @@ class ParamsTorus : public Params
         secondary_params();
     }
 };
+
+
+#include "params_torus.cpp"
+
 #endif

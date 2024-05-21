@@ -1,7 +1,16 @@
+#ifndef KERNELS_HPP
+#define KERNELS_HPP
+
 #include "common.hpp"
 #include "tensor_field.hpp"
 #include "face_communicator.hpp"
+
+#include "physics_includes.hpp"
 #include "numerical_flux.hpp"
+#include "boundary_conditions.hpp"
+
+#include <iostream>
+
 
 #if 0
 class ConservedToPrimitive;
@@ -182,3 +191,8 @@ namespace kernels
                           //const WaveSpeedsFromPrimitive* c_from_P,
                           const LengthBucket lb, const int dir);
 }
+
+
+#include "kernels.cpp"
+
+#endif

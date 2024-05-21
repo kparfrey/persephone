@@ -2,7 +2,7 @@
 
 
 /* Simple parameter holder for homogeneous Cartesian domain */
-class ParamsCartesian : public Params
+class ParamsCartesian : public Params<ParamsCartesian>
 {
     public:
 
@@ -18,11 +18,15 @@ class ParamsCartesian : public Params
     int Nelem_proc; // Is this necessary?
 
     /* General methods */
-    void write_param_info() override;
-    void secondary_params() override;
-    void setup_process(Process &proc) override;
-    void setup_elementblock(ElementBlock& elements, Process &proc) override;
-    void set_initial_state(ElementBlock& elements) override;
+    template <class ProcType>
+    void setup_process(ProcType& proc);
+    
+    template <class ProcType>
+    void setup_elementblock(ElementBlock& elements, ProcType& proc);
+
+    void set_initial_state(ElementBlock& elements);
+    void write_param_info();
+    void secondary_params();
 
     /* Constructor */
     ParamsCartesian(EqnSystem equations,

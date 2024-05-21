@@ -9,11 +9,12 @@
 #include "physics.hpp"
 #include "mhd.hpp"
 #include "numerical_flux.hpp"
+#include "basic_time_integrator.hpp"
 
 #include "active_params.hpp"
 
 template <class ProcType>
-static void startMPI(int argc, char *argv[], ProcType &proc)
+static void startMPI(int argc, char *argv[], ProcType& proc)
 {
     int error = MPI_Init(&argc, &argv);
     
@@ -46,7 +47,7 @@ static void startMPI(int argc, char *argv[], ProcType &proc)
 
 int main(int argc, char *argv[])
 {
-    Process<NumFluxType> proc(active_parameters);
+    Process<ParamsType,TimeStepType,NumFluxType> proc(active_parameters);
 
     startMPI(argc, &(*argv), proc);
 

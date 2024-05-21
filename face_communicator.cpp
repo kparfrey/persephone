@@ -1,7 +1,5 @@
-#include "face_communicator.hpp"
-
-#include "process.hpp"
-#include "kernels.hpp"
+//#include "process.hpp"
+//#include "kernels.hpp"
 #include "physics.hpp"
 #include "write_screen.hpp"
 
@@ -132,11 +130,11 @@ void FaceCommunicator::setup(ProcType& proc, int face_id)
 }
 
 
-void FaceCommunicator::allocate()
+inline void FaceCommunicator::allocate()
 {
-    my_data         = kernels::alloc(Ntot_all);
-    my_data_to_send = kernels::alloc(Ntot_all);
-    neighbour_data  = kernels::alloc(Ntot_all);
+    my_data         = new real_t [Ntot_all]; // kernels::alloc(Ntot_all);
+    my_data_to_send = new real_t [Ntot_all]; // kernels::alloc(Ntot_all);
+    neighbour_data  = new real_t [Ntot_all]; // kernels::alloc(Ntot_all);
 
 #if USING_ACCEL
     my_data_host        = new real_t [Ntot_all];
@@ -155,7 +153,7 @@ void FaceCommunicator::allocate()
 }
 
 
-MPI_Request FaceCommunicator::send_data()
+inline MPI_Request FaceCommunicator::send_data()
 {
     /* Will need to add up/down data movement when using accelerators */
 
@@ -171,7 +169,7 @@ MPI_Request FaceCommunicator::send_data()
 
 
 
-MPI_Request FaceCommunicator::receive_data()
+inline MPI_Request FaceCommunicator::receive_data()
 {
     /* Will need to add up/down data movement when using accelerators */
 

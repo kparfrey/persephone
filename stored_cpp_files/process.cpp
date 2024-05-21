@@ -1,3 +1,5 @@
+#include "process.hpp"
+
 #include <string>
 #include <mpi.h>
 #include <cmath>
@@ -8,13 +10,19 @@
 #include "basic_time_integrator.hpp"
 #include "boundary_conditions.hpp"
 #include "physics_includes.hpp"
-#include "numerical_flux.hpp"
 #include "kernels.hpp"
 
-/* Note: this file is #included by process.hpp, since Process is a template class.
- * No independent object file is created. */
-template <class A, class B, class C>
-void Process<A,B,C>::write_startup_info()
+//#include <stdio.h>
+
+Process::Process(Params &params)
+: params(params)
+{
+    // The constructor just sets the params reference to the active_parameters
+    // object in active_params.hpp, passed in from main.cpp.
+}
+
+
+void Process::write_startup_info()
 {
     if (rank == 0)
         params.write_param_info();
@@ -23,8 +31,7 @@ void Process<A,B,C>::write_startup_info()
 }
 
 
-template <class A, class B, class C>
-void Process<A,B,C>::setup()
+void Process::setup()
 {
     write::message("Setting up process --- generic setup");
     params.setup_process_generic(*this); // in params.cpp
@@ -52,8 +59,7 @@ void Process<A,B,C>::setup()
 
 /* Move all of the process's device-side data there, to be called at
  * the end of the setup phase. */
-template <class A, class B, class C>
-void Process<A,B,C>::move_to_device()
+void Process::move_to_device()
 {
     write::message("End of host-side initialization phase --- copying all required data to device");
     
@@ -65,8 +71,7 @@ void Process<A,B,C>::move_to_device()
 }
 
 
-template <class A, class B, class C>
-void Process<A,B,C>::time_advance()
+void Process::time_advance()
 {
     /********************************************/
     /* Calculate timestep --- temporary */
@@ -156,7 +161,7 @@ void Process<A,B,C>::time_advance()
     }
 
     /* Call the fundamental time step method we're using */
-    time_integrator(*this); 
+    (*time_integrator)(*this); //Since storing a pointer to a BasicTimeIntegrator
 
     time += dt;
     step += 1;
@@ -169,8 +174,7 @@ void Process<A,B,C>::time_advance()
 /* The fundamental function of the spectral difference method */
 /* U : vector of conserved solution fields (physical space) 
  * F : vector of fluxes (reference-element space) */
-template <class A, class B, class C>
-void Process<A,B,C>::find_divF(const real_t* const U, const real_t t, real_t* const divF)
+void Process::find_divF(const real_t* const U, const real_t t, real_t* const divF)
 {
     ElementBlock& eb = elements;
 
@@ -310,8 +314,7 @@ void Process<A,B,C>::find_divF(const real_t* const U, const real_t t, real_t* co
 /* Separate function for finding divB --- can repurpose to find derivative of
  * any vector field. Element interfaces are joined using simple averaging
  * rather than e.g. the HLL flux.                                               */
-template <class ParamsType, class TimeIntegratorType, class NumFluxType>
-void Process<ParamsType,TimeIntegratorType,NumFluxType>::find_divB(const real_t* const B, real_t* const divB)
+void Process::find_divB(const real_t* const B, real_t* const divB)
 {
     ElementBlock& eb = elements;
 
@@ -431,8 +434,7 @@ void Process<ParamsType,TimeIntegratorType,NumFluxType>::find_divB(const real_t*
 
 
 /* Finds the diffusive flux, adds in place to the advective flux in F */
-template <class A, class B, class C>
-void Process<A,B,C>::add_diffusive_flux(VectorField Uf, VectorField dP, VectorField F)
+void Process::add_diffusive_flux(VectorField Uf, VectorField dP, VectorField F)
 {
     VectorField Fd;     // Diffusive fluxes for all fields
     VectorField dP_ref; // Ref-space derivatives of P at the solution points
@@ -535,8 +537,7 @@ void Process<A,B,C>::add_diffusive_flux(VectorField Uf, VectorField dP, VectorFi
 /* Fill the stored_data array of external faces with the initial conditions 
  * extrapolated to the face. Needs to use soln_to_flux(), so everything 
  * should live on the device. */
-template <class A, class B, class C>
-void Process<A,B,C>::fill_external_boundary_data()
+void Process::fill_external_boundary_data()
 {
     write::message("Filling initial boundary data on external faces");
 
@@ -563,8 +564,7 @@ void Process<A,B,C>::fill_external_boundary_data()
 }
 
 
-template <class A, class B, class C>
-void Process<A,B,C>::exchange_boundary_data()
+void Process::exchange_boundary_data()
 {
     MPI_Request requests[12];
 
@@ -581,4 +581,3 @@ void Process<A,B,C>::exchange_boundary_data()
 
     return;
 }
-

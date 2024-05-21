@@ -1,11 +1,13 @@
 // Strictly speaking this file should import the absolute minimum
 // --- it probably shouldn't need anything except the definition of real_t ?
+
+/***
 #include "kernels.hpp"
 #include "physics_includes.hpp"
 #include "numerical_flux.hpp"
 #include "boundary_conditions.hpp"
-
 #include <iostream>
+ ***/
 
 namespace kernels
 {
@@ -1540,6 +1542,7 @@ namespace kernels
      * into the same arrays 
      * Should only be used to find diffusive fluxes.
      * Save T into p slot, and B^2 into psi slot */
+    inline
     void conserved_to_primitive_faces(      FaceCommunicator face,
                                       const Physics* const __restrict__ physics,
                                       const LengthBucket               lb)

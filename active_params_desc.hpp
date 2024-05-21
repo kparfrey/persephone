@@ -16,7 +16,9 @@
  */
 
 /*** Types for constructing the Process object ***/
-using NumFluxType = HLL;
+using ParamsType   = ParamsTorus;
+using TimeStepType = RK3_SSP;
+using NumFluxType  = HLL;
 
 /*** Constructing the params object ***/
 static EqnSystem equations = mhd;

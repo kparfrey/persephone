@@ -7,18 +7,20 @@
 //#include "physics_includes.hpp"
 
 
-/* Abstract base class for underlying fundamental time step functor */
+template <class TimeStepType>
 class BasicTimeIntegrator
 {
     public:
-    virtual void operator()(Process& proc) = 0;
+    template <class ProcType>
+    void operator()(ProcType& proc){}
 };
 
 
-class RK2_midpoint : public BasicTimeIntegrator
+class RK2_midpoint : public BasicTimeIntegrator<RK2_midpoint>
 {
     public:
-    virtual void operator()(Process& proc)
+    template <class ProcType>
+    void operator()(ProcType& proc)
     {
         ElementBlock& eb = proc.elements;
         const int Ntot = eb.Nfield * eb.Ns_block;
@@ -48,10 +50,11 @@ class RK2_midpoint : public BasicTimeIntegrator
 
 
 /* Optimal 3rd order SSP method, from Hesthaven & Warburton, p158 */
-class RK3_SSP : public BasicTimeIntegrator
+class RK3_SSP : public BasicTimeIntegrator<RK3_SSP>
 {
     public:
-    virtual void operator()(Process& proc)
+    template <class ProcType>
+    void operator()(ProcType& proc)
     {
         ElementBlock& eb = proc.elements;
         const int Ntot = eb.Nfield * eb.Ns_block;

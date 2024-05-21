@@ -6,4 +6,6 @@
 template <class ProcType>
 void write_mesh(ProcType& proc);
 
+#include "write_mesh.cpp"
+
 #endif

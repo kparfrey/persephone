@@ -9,6 +9,7 @@ class Physics;
 
 /* Base parameter class */
 
+template <class ParamsType>
 class Params
 {
     public:
@@ -33,19 +34,24 @@ class Params
             cfl(cfl), end_time(end_time), dt_write(dt_write){}
  
 
-    /* Methods: all pure virtual ones must be defined in derived classes */
-    virtual void write_param_info() = 0;
-    virtual void secondary_params() = 0;
-    
-    template <class ProcType>
-    virtual void setup_process(ProcType& proc) = 0;
-    
-    template <class ProcType>
-    virtual void setup_elementblock(ElementBlock &elements, ProcType& proc) = 0;
-    
-    virtual void set_initial_state(ElementBlock &elements) = 0;
-
+    /* Provided below */
     template <class ProcType>
     void setup_process_generic(ProcType& proc);
+
+
+    /* Defined in derived classes, which hide these functions */
+    template <class ProcType>
+    void setup_process(ProcType& proc){}
+    
+    template <class ProcType>
+    void setup_elementblock(ElementBlock &elements, ProcType& proc){}
+    
+    void write_param_info(){}
+    void secondary_params(){}
+    void set_initial_state(ElementBlock &elements){}
+
 };
+
+#include "params.cpp"
+
 #endif

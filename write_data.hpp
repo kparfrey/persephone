@@ -5,4 +5,7 @@
 
 template <class ProcType>
 void write_data(ProcType& proc);
+
+#include "write_data.cpp"
+
 #endif

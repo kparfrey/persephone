@@ -14,7 +14,7 @@ class BoundaryConditions;
 class FaceCommunicator
 {
     private:
-    void allocate();
+    inline void allocate();
 
     public:
 
@@ -67,8 +67,11 @@ class FaceCommunicator
     template <class ProcType>
     void setup(ProcType& proc, int face_id);
 
-    MPI_Request send_data();
-    MPI_Request receive_data();
+    inline MPI_Request send_data();
+    inline MPI_Request receive_data();
 };
+
+
+#include "face_communicator.cpp"
 
 #endif

@@ -1,5 +1,3 @@
-#include "write_mesh.hpp"
-
 #include <vector>
 #include <mpi.h>
 #include <filesystem>

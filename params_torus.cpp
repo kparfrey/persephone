@@ -1,5 +1,3 @@
-#include "params_torus.hpp"
-
 #include <mpi.h>
 #include <cmath>
 #include <iomanip>
@@ -12,11 +10,10 @@
 #include "spatial_metric.hpp"
 #include "physics_includes.hpp"
 #include "cerfon_freidberg.hpp"
+#include <string>
 
 using std::cout;
 using std::endl;
-
-#include <string>
 using std::string;
 using std::to_string;
     
@@ -77,8 +74,8 @@ void ParamsTorus::write_param_info()
     return;
 }
 
-
-void ParamsTorus::setup_process(Process &proc)
+template <class ProcType>
+void ParamsTorus::setup_process(ProcType& proc)
 {
     int Nproc_group_central = Nproc[0] * Nproc[0] * Nproc[2]; // Move to params_torus variables?
     int Nproc_group_outer   = Nproc[0] * Nproc[1] * Nproc[2];
@@ -373,7 +370,8 @@ void ParamsTorus::setup_process(Process &proc)
 }
 
 
-void ParamsTorus::setup_elementblock(ElementBlock &elements, Process &proc)
+template <class ProcType>
+void ParamsTorus::setup_elementblock(ElementBlock& elements, ProcType& proc)
 {
     if (proc.group < Ngroup_central)
     {

@@ -52,7 +52,8 @@ void ParamsCartesian::write_param_info()
 }
 
 
-void ParamsCartesian::setup_process(Process &proc)
+template <class ProcType>
+void ParamsCartesian::setup_process(ProcType& proc)
 {
     /* This process's set of indices in the global 3D array of processes   */
     int proc_idx[3];
@@ -154,8 +155,8 @@ void ParamsCartesian::setup_process(Process &proc)
     return;
 }
 
-
-void ParamsCartesian::setup_elementblock(ElementBlock &elements, Process &proc)
+template <class ProcType>
+void ParamsCartesian::setup_elementblock(ElementBlock& elements, ProcType& proc)
 {
     for (int i: dirs)
     {

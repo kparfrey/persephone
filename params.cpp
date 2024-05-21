@@ -1,5 +1,3 @@
-#include "params.hpp"
-
 #include <string>
 #include "process.hpp"
 #include "write_screen.hpp"
@@ -7,11 +5,14 @@
 #include "physics_includes.hpp"
 #include "numerical_flux.hpp"
 
+/* Note: this file is #included by params.hpp because Params is a template class. 
+ * No indepedent object file is compiled. */
 
 /* That part of Process setup which is the same for Cartesian,
  * Spherical, toroidal etc. configurations. */
+template <class ParamsType>
 template <class ProcType>
-void Params::setup_process_generic(ProcType& proc)
+void Params<ParamsType>::setup_process_generic(ProcType& proc)
 {
     proc.time     = 0.0;
     proc.end_time = end_time;
@@ -21,6 +22,7 @@ void Params::setup_process_generic(ProcType& proc)
     proc.data_output_counter = 0;
     proc.is_output_step = false;
 
+    /*
     switch (time_method)
     {
         case rk2_midpoint:
@@ -32,6 +34,7 @@ void Params::setup_process_generic(ProcType& proc)
         default:
             write::error("Time integration method not recognized.");
     }
+     */
 
     switch (equations)
     {

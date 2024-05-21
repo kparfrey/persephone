@@ -5,27 +5,16 @@
 #include "common.hpp"
 #include "face_communicator.hpp"
 #include "element_block.hpp"
-#include "numerical_flux.hpp"
-//#include "edge.hpp"
 
-class Params;
-class BasicTimeIntegrator;
 
-#if 0
-class SystemData;
-class ConservedToPrimitive;
-class WaveSpeedsFromPrimitive;
-class FluxesFromPrimitive;
-class DiffusiveFluxes;
-#endif
-
-template <class NumFluxType>
+template <class ParamsType, class TimeIntegratorType, class NumFluxType>
 class Process
 {
     public:
 
     // NB: use a reference so the virtual functions work correctly...
-    Params &params;
+    // Update: should probably change since am removing the virtual functions...
+    ParamsType& params;
       
     /* Local data */
     int rank;
@@ -67,7 +56,7 @@ class Process
     
     real_t tt_max_global;  // Global maximum of timestep transform, for finding c_h 
 
-    BasicTimeIntegrator* time_integrator;
+    TimeIntegratorType time_integrator;
 
     EqnSystem   system;
     NumFluxType F_numerical[3]; // One for each set of flux points. Only diff in
@@ -87,7 +76,9 @@ class Process
 
 
     /* Methods */
-    Process(Params &params);
+    Process(ParamsType& params)
+        : params(params){}
+
     void write_startup_info();
     void setup();
     void time_advance();
@@ -98,4 +89,8 @@ class Process
     void fill_external_boundary_data();
     void exchange_boundary_data();
 };
+
+
+#include "process.cpp"
+
 #endif

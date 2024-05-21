@@ -1,5 +1,3 @@
-#include "write_data.hpp"
-
 #include <vector>
 #include <mpi.h>
 #include <string>
