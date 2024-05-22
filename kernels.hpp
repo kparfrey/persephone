@@ -173,6 +173,7 @@ namespace kernels
                                            const LengthBucket                lb,
                                            const int                         dir);
 
+    inline
     void conserved_to_primitive_faces(      FaceCommunicator face,
                                       const Physics* const __restrict__ physics,
                                       const LengthBucket                lb);
