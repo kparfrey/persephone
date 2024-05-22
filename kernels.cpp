@@ -206,6 +206,7 @@ namespace kernels
 
 
     /* Zero-initialized by default */
+    inline
     real_t* alloc(int n)
     {
         real_t *ptr = new real_t [n]();
@@ -214,6 +215,7 @@ namespace kernels
 
 
     /* If for some reason a non-initialized array is preferred for speed */
+    inline
     real_t* alloc_raw(int n)
     {
         real_t *ptr = new real_t [n];
@@ -221,6 +223,7 @@ namespace kernels
     }
 
 
+    inline
     void free(real_t* a)
     {
         delete[] a;
@@ -231,6 +234,7 @@ namespace kernels
     /* for 0 <= i < N: result[i] = a1*v1[i] + a2*v2[i] */
     /* Removed __restrict__ from v1 and result, since one of the
      * calls has these being the same array. */
+    inline
     void add_2_vectors(real_t* v1,     real_t* __restrict__ v2, 
                        real_t  a1,     real_t               a2, 
                        real_t* result, const int N)
@@ -243,6 +247,7 @@ namespace kernels
 
 
     /* Can have the same pointer in v1 or v2 and result */
+    inline
     void add_3_vectors(const real_t* const v1, const real_t* const v2, 
                        const real_t* const __restrict__ v3,
                        const real_t a1, const real_t a2, const real_t a3, 
@@ -255,6 +260,7 @@ namespace kernels
     }
 
 
+    inline
     void add_vectors_inPlace(       real_t* const __restrict__ v,
                               const real_t* const __restrict__ v_add,
                               const int N)
@@ -266,6 +272,7 @@ namespace kernels
     }
 
 
+    inline
     void add_scaled_vectors_inPlace(      real_t* const __restrict__ v,
                                     const real_t* const __restrict__ v_add,
                                     const real_t                     scalar,
@@ -294,6 +301,7 @@ namespace kernels
 #endif
 
 
+    inline
     void multiply_by_scalar(const real_t* const __restrict__ v, 
                             const real_t                     scalar,
                                   real_t* const __restrict__ result,
@@ -306,6 +314,7 @@ namespace kernels
     }
 
 
+    inline
     void multiply_by_scalar_inPlace(      real_t* const __restrict__ v, 
                                     const real_t                     scalar,
                                     const int                        N)
@@ -317,6 +326,7 @@ namespace kernels
     }
 
 
+    inline
     void soln_to_flux(const real_t* const __restrict__ matrix, 
                       const real_t* const __restrict__ U, 
                             real_t* const __restrict__ Uf, 
@@ -394,6 +404,7 @@ namespace kernels
     }
 
 
+    inline
     void fluxDeriv_to_soln(const real_t* const __restrict__ matrix, 
                            const real_t* const __restrict__ F, 
                                  real_t* const __restrict__ dF, 
@@ -467,6 +478,7 @@ namespace kernels
 
 
     /* Think I can replace with a single for loop */
+    inline
     void bulk_fluxes(const real_t* const __restrict__ Uf,
                            real_t* const __restrict__ F ,
                      const VectorField                S ,
@@ -533,6 +545,7 @@ namespace kernels
     }
 
 
+    inline
     void flux_divergence(const VectorField                dF,
                          const real_t* const __restrict__ Jrdetg,
                                real_t* const __restrict__ divF,
@@ -571,6 +584,7 @@ namespace kernels
 
     
     /* Apply a Chebyshev filter to a single field, starting at U[0] */
+    inline
     void filter_field(      real_t* const __restrict__ U,
                       const VectorField filter_matrices,
                       const LengthBucket lb)
@@ -648,6 +662,7 @@ namespace kernels
     }
 
 
+    inline
     void add_geometric_sources(      real_t* const __restrict__  divF, 
                                const real_t* const __restrict__  U,
                                const VectorField                 dP,
@@ -811,6 +826,7 @@ namespace kernels
 #endif
 
 
+    inline
     void fill_face_data(const real_t* const __restrict__ Uf,
                               FaceCommunicator           face,
                         const LengthBucket               lb)
@@ -955,6 +971,7 @@ namespace kernels
 
 
 
+    inline
     void dirichlet_boundary_conditions(const FaceCommunicator& face)
     {
         /* Explicitly setting both interface sides to the same values here */
@@ -992,6 +1009,7 @@ namespace kernels
      * independently, can only easily apply zero total derivative BCs. Will need
      * to pass a flag saying which PDD the data refers to if we to apply BCs
      * on the normal derivative only */
+    inline
     void neumann_boundary_conditions(const FaceCommunicator& face)
     {
         real_t* dP = new real_t [face.Nfield];
@@ -1017,6 +1035,7 @@ namespace kernels
     }
 
     template <class NumFluxType>
+    inline
     void external_numerical_flux(const FaceCommunicator           face,
                                        real_t* const __restrict__ F,
                                  const NumFluxType                F_numerical,
@@ -1137,6 +1156,7 @@ namespace kernels
 
 
     template <class NumFluxType>
+    inline
     void internal_numerical_flux(const real_t* const __restrict__ Uf,
                                        real_t* const __restrict__ F,
                                  const NumFluxType                F_numerical,
@@ -1235,6 +1255,7 @@ namespace kernels
 
     /* Average the primitive variables or their derivatives on process-external interfaces.
      * Only required when have diffusive terms. */
+    inline
     void external_interface_average(const FaceCommunicator           face,
                                           real_t* const __restrict__ Pf,
                                     const LengthBucket               lb)
@@ -1303,6 +1324,7 @@ namespace kernels
 
     /* Average the primitive variables or their derivatives on process-internal interfaces.
      * Only required when have diffusive terms. */
+    inline
     void internal_interface_average(      real_t* const __restrict__ Pf,
                                     const LengthBucket               lb,
                                     const int                        dir)
@@ -1357,6 +1379,7 @@ namespace kernels
     }
 
     
+    inline
     void gradient_ref_to_phys(const VectorField dP_ref,
                                     VectorField dP_phys,
                               const VectorField dxdr[3],
@@ -1391,6 +1414,7 @@ namespace kernels
 
     /* Takes three physical vector components and combines them into a single
      * component of the reference-space vector along the chosen direction.    */
+    inline
     void phys_vector_to_ref_density(const real_t* const __restrict__ V_phys,
                                           real_t* const __restrict__ V_ref,
                                     const VectorField                S,
@@ -1413,6 +1437,7 @@ namespace kernels
     }
 
     
+    inline
     void diffusive_flux(const real_t* const __restrict__ Pf,
                         const VectorField                dPf,
                               real_t* const __restrict__ F,
@@ -1467,6 +1492,7 @@ namespace kernels
 
 
     /* Apply flooring procedure to the conserved variables on the solution points */
+    inline
     void floors(      real_t* const __restrict__  U,
                 const Physics* const __restrict__ physics,
                 const LengthBucket                lb)
@@ -1498,6 +1524,7 @@ namespace kernels
      * into the same arrays. 
      * Should only be used to find diffusive fluxes.
      * Save T into p slot, and B^2 into psi slot */
+    inline
     void conserved_to_primitive_fluxpoints(      real_t* const __restrict__  UPf,
                                            const Physics* const __restrict__ physics,
                                            const LengthBucket               lb,
@@ -1647,6 +1674,7 @@ namespace kernels
      * on the flux points. Use the FaceCommunicator object as a guide to navigating dPf.   
      * This function removes the tangential derivatives of the velocity on the wall, since 
      * v^i = 0 on this surface. Not sure that this actually helps... */
+    inline
     void wall_BC_derivatives(const FaceCommunicator face,
                                    VectorField      dPf,
                              const Physics* const __restrict__ physics,                                   
