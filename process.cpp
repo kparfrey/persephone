@@ -307,8 +307,8 @@ void Process<A,B,C>::find_divF(const real_t* const U, const real_t t, real_t* co
 /* Separate function for finding divB --- can repurpose to find derivative of
  * any vector field. Element interfaces are joined using simple averaging
  * rather than e.g. the HLL flux.                                               */
-template <class ParamsType, class TimeIntegratorType, class NumFluxType>
-void Process<ParamsType,TimeIntegratorType,NumFluxType>::find_divB(const real_t* const B, real_t* const divB)
+template <class X, class Y, class Z>
+void Process<X,Y,Z>::find_divB(const real_t* const B, real_t* const divB)
 {
     ElementBlock& eb = elements;
 
