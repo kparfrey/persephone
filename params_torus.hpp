@@ -2,7 +2,6 @@
 #define PARAMS_TORUS
 
 #include "params.hpp"
-#include "torus_mode_pack.hpp"
 #include "cerfon_freidberg.hpp"
 #include "desc.hpp"
 
@@ -61,7 +60,6 @@ class ParamsTorus : public Params<ParamsTorus>
 
     /* Constructor */
     ParamsTorus(EqnSystem equations,
-                BasicTimeMethod time_method,
                 int (& Nproc_)[3], 
                 int (& Nelem_)[3], 
                 int (& Ns_)[3], 
@@ -72,7 +70,7 @@ class ParamsTorus : public Params<ParamsTorus>
                 TorusGridMethod grid_method = internal_surface_expansion,
                 std::string input_file = "output.h5",
                 int desc_iteration = 1)
-    : Params(equations, time_method, cfl, end_time, dt_write),
+    : Params(equations, cfl, end_time, dt_write),
       problem_type(problem_type), grid_method(grid_method), input_file(input_file),
       desc_iteration(desc_iteration)
     {

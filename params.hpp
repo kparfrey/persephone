@@ -15,7 +15,6 @@ class Params
     public:
 
     EqnSystem equations;
-    BasicTimeMethod time_method;
 
     /* Total quantities referring to whole domain */
     int Ngroup; 
@@ -28,10 +27,8 @@ class Params
     real_t dt_write; // elapsed time between writing to disk
 
     /* Constructor */
-    Params(EqnSystem equations, BasicTimeMethod time_method, 
-           real_t cfl, real_t end_time, real_t dt_write)
-          : equations(equations), time_method(time_method),
-            cfl(cfl), end_time(end_time), dt_write(dt_write){}
+    Params(EqnSystem equations, real_t cfl, real_t end_time, real_t dt_write)
+          : equations(equations), cfl(cfl), end_time(end_time), dt_write(dt_write){}
  
 
     /* Provided by this class, in params.cpp */

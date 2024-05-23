@@ -35,7 +35,6 @@ class ParamsCartesian : public Params<ParamsCartesian>
 
     /* Constructor */
     ParamsCartesian(EqnSystem equations,
-                    BasicTimeMethod time_method,
                     int (& Nproc_)[3], 
                     int (& Nelem_)[3], 
                     int (& Ns_)[3], 
@@ -43,7 +42,7 @@ class ParamsCartesian : public Params<ParamsCartesian>
                     real_t end_time = 1.0,
                     real_t dt_write = 0.5,
                     bool periodic = true)
-    : Params(equations, time_method, cfl, end_time, dt_write), periodic(periodic)
+    : Params(equations, cfl, end_time, dt_write), periodic(periodic)
     {
         for (int i=0; i<3; i++)
         {

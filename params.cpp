@@ -22,20 +22,6 @@ void Params<ParamsType>::setup_process_generic(ProcType& proc)
     proc.data_output_counter = 0;
     proc.is_output_step = false;
 
-    /*
-    switch (time_method)
-    {
-        case rk2_midpoint:
-            proc.time_integrator = new RK2_midpoint; 
-            break;
-        case rk3_ssp:
-            proc.time_integrator = new RK3_SSP; 
-            break;
-        default:
-            write::error("Time integration method not recognized.");
-    }
-     */
-
     switch (equations)
     {
         case scalar_advection:
@@ -68,9 +54,6 @@ void Params<ParamsType>::setup_process_generic(ProcType& proc)
 
     for (int d: dirs)
     {
-        /* Move inside a switch once more flux choices are defined */
-        //proc.F_numerical[d] = new HLL; // This is now taken care of by the templates
-
         proc.F_numerical[d].Nfield  = proc.Nfield;
         proc.F_numerical[d].physics = proc.elements.physics[d]; // Convenience pointer
 

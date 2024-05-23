@@ -9,7 +9,6 @@
 #include "boundary_conditions.hpp"
 #include "spatial_metric.hpp"
 #include "physics_includes.hpp"
-#include "cerfon_freidberg.hpp"
 #include <string>
 
 using std::cout;

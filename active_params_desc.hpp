@@ -22,7 +22,6 @@ using NumFluxType  = HLL;
 
 /*** Constructing the params object ***/
 static EqnSystem equations = mhd;
-static BasicTimeMethod time_method = rk3_ssp;
 static TorusProblemType problem_type = desc_input;
 static TorusGridMethod grid_method = internal_surface_expansion; // blend_boundary_to_axis; 
 
@@ -34,7 +33,7 @@ static real_t cfl      = 0.8; // Seems stable to 1.0 for ideal MHD
 static real_t end_time = 0.005;
 static real_t dt_write = 2e-5;
 
-static ParamsTorus active_parameters(equations, time_method, 
+static ParamsTorus active_parameters(equations, 
                                      Nproc, Nelem, Ns, 
                                      cfl, end_time, dt_write,
                                      problem_type, grid_method,
