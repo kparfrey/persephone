@@ -1,11 +1,9 @@
 #include <string>
-#include <mpi.h>
 #include <cmath>
 #include <filesystem>
 #include <iomanip>
 #include "params.hpp"
 #include "write_screen.hpp"
-#include "basic_time_integrator.hpp"
 #include "boundary_conditions.hpp"
 #include "physics_includes.hpp"
 #include "kernels.hpp"

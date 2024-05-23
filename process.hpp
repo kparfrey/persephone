@@ -5,11 +5,12 @@
 #include "common.hpp"
 #include "face_communicator.hpp"
 #include "element_block.hpp"
+#include "basic_time_integrator.hpp"
 #include "numerical_flux.hpp"
 
 
 
-template <class ParamsType, class TimeIntegratorType, class NumFluxType>
+template <class ParamsType, class TimeStepType, class NumFluxType>
 class Process
 {
     public:
@@ -58,9 +59,10 @@ class Process
     
     real_t tt_max_global;  // Global maximum of timestep transform, for finding c_h 
 
-    TimeIntegratorType time_integrator;
+    EqnSystem system;
 
-    EqnSystem   system;
+    BasicTimeIntegrator<TimeStepType> time_integrator;
+
     NumericalFlux<NumFluxType> F_numerical[3]; // One for each set of flux points. Only diff in
                                                // which Physics object their physics pointer points to
 

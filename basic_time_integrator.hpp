@@ -12,7 +12,11 @@ class BasicTimeIntegrator
 {
     public:
     template <class ProcType>
-    void operator()(ProcType& proc){}
+    void operator()(ProcType& proc)
+    {
+        static_cast<TimeStepType*>(this)->takeStep(proc);
+        return;
+    }
 };
 
 
@@ -20,7 +24,7 @@ class RK2_midpoint : public BasicTimeIntegrator<RK2_midpoint>
 {
     public:
     template <class ProcType>
-    void operator()(ProcType& proc)
+    void takeStep(ProcType& proc)
     {
         ElementBlock& eb = proc.elements;
         const int Ntot = eb.Nfield * eb.Ns_block;
@@ -54,7 +58,7 @@ class RK3_SSP : public BasicTimeIntegrator<RK3_SSP>
 {
     public:
     template <class ProcType>
-    void operator()(ProcType& proc)
+    void takeStep(ProcType& proc)
     {
         ElementBlock& eb = proc.elements;
         const int Ntot = eb.Nfield * eb.Ns_block;
