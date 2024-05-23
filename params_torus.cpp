@@ -17,6 +17,7 @@ using std::endl;
 using std::string;
 using std::to_string;
     
+
 /* Called by the ParamsTorus constructor */
 void ParamsTorus::secondary_params()
 {
@@ -47,7 +48,7 @@ void ParamsTorus::secondary_params()
 }
 
 
-void ParamsTorus::write_param_info()
+void ParamsTorus::write_param_info_()
 {
     cout << "\n";
     cout << "***** Parameters ***********************************\n";
@@ -75,7 +76,7 @@ void ParamsTorus::write_param_info()
 }
 
 template <class ProcType>
-void ParamsTorus::setup_process(ProcType& proc)
+void ParamsTorus::setup_process_(ProcType& proc)
 {
     int Nproc_group_central = Nproc[0] * Nproc[0] * Nproc[2]; // Move to params_torus variables?
     int Nproc_group_outer   = Nproc[0] * Nproc[1] * Nproc[2];
@@ -371,7 +372,7 @@ void ParamsTorus::setup_process(ProcType& proc)
 
 
 template <class ProcType>
-void ParamsTorus::setup_elementblock(ElementBlock& elements, ProcType& proc)
+void ParamsTorus::setup_elementblock_(ElementBlock& elements, ProcType& proc)
 {
     if (proc.group < Ngroup_central)
     {
@@ -434,7 +435,7 @@ void ParamsTorus::setup_elementblock(ElementBlock& elements, ProcType& proc)
 }
 
 
-void ParamsTorus::set_initial_state(ElementBlock &elements)
+void ParamsTorus::set_initial_state_(ElementBlock &elements)
 {
     write::message("Setting initial state of torus configuration");
 

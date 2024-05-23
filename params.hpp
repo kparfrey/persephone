@@ -34,22 +34,37 @@ class Params
             cfl(cfl), end_time(end_time), dt_write(dt_write){}
  
 
-    /* Provided below */
+    /* Provided by this class, in params.cpp */
     template <class ProcType>
     void setup_process_generic(ProcType& proc);
 
 
-    /* Defined in derived classes, which hide these functions */
-    template <class ProcType>
-    void setup_process(ProcType& proc){}
-    
-    template <class ProcType>
-    void setup_elementblock(ElementBlock &elements, ProcType& proc){}
-    
-    void write_param_info(){}
-    void secondary_params(){}
-    void set_initial_state(ElementBlock &elements){}
+    /* Defined in derived classes */
+    void write_param_info()
+    {
+        static_cast<ParamsType*>(this)->write_param_info_();
+        return;
+    }
 
+    template <class ProcType>
+    void setup_process(ProcType& proc)
+    {
+        static_cast<ParamsType*>(this)->setup_process_(proc);
+        return;
+    }
+    
+    template <class ProcType>
+    void setup_elementblock(ElementBlock& elements, ProcType& proc)
+    {
+        static_cast<ParamsType*>(this)->setup_elementblock_(elements, proc);
+        return;
+    }
+    
+    void set_initial_state(ElementBlock& elements)
+    {
+        static_cast<ParamsType*>(this)->set_initial_state_(elements);
+        return;
+    }
 };
 
 #include "params.cpp"

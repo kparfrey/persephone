@@ -17,16 +17,21 @@ class ParamsCartesian : public Params<ParamsCartesian>
     int Nf_elem;
     int Nelem_proc; // Is this necessary?
 
-    /* General methods */
+
+    void secondary_params();
+    
+
+    /* Called from base class interface functions */
+    void write_param_info_();
+
     template <class ProcType>
-    void setup_process(ProcType& proc);
+    void setup_process_(ProcType& proc);
     
     template <class ProcType>
-    void setup_elementblock(ElementBlock& elements, ProcType& proc);
+    void setup_elementblock_(ElementBlock& elements, ProcType& proc);
 
-    void set_initial_state(ElementBlock& elements);
-    void write_param_info();
-    void secondary_params();
+    void set_initial_state_(ElementBlock& elements);
+
 
     /* Constructor */
     ParamsCartesian(EqnSystem equations,

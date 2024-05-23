@@ -27,7 +27,7 @@ void ParamsCartesian::secondary_params()
 }
 
 
-void ParamsCartesian::write_param_info()
+void ParamsCartesian::write_param_info_()
 {
     cout << endl;
     cout << "***** Parameters ******************************" << endl;
@@ -53,7 +53,7 @@ void ParamsCartesian::write_param_info()
 
 
 template <class ProcType>
-void ParamsCartesian::setup_process(ProcType& proc)
+void ParamsCartesian::setup_process_(ProcType& proc)
 {
     /* This process's set of indices in the global 3D array of processes   */
     int proc_idx[3];
@@ -156,7 +156,7 @@ void ParamsCartesian::setup_process(ProcType& proc)
 }
 
 template <class ProcType>
-void ParamsCartesian::setup_elementblock(ElementBlock& elements, ProcType& proc)
+void ParamsCartesian::setup_elementblock_(ElementBlock& elements, ProcType& proc)
 {
     for (int i: dirs)
     {
@@ -182,7 +182,7 @@ void ParamsCartesian::setup_elementblock(ElementBlock& elements, ProcType& proc)
 }
 
 
-void ParamsCartesian::set_initial_state(ElementBlock &elements)
+void ParamsCartesian::set_initial_state_(ElementBlock &elements)
 {
     set_initial_state_cartesian(elements);
 

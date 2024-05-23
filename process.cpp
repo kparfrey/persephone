@@ -2,7 +2,6 @@
 #include <cmath>
 #include <filesystem>
 #include <iomanip>
-#include "params.hpp"
 #include "write_screen.hpp"
 #include "boundary_conditions.hpp"
 #include "physics_includes.hpp"

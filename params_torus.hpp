@@ -44,17 +44,20 @@ class ParamsTorus : public Params<ParamsTorus>
     int Nproc_group_outer;   
     
     
-
-    /* General methods */
-    template <class ProcType>
-    void setup_process(ProcType& proc);
-    
-    template <class ProcType>
-    void setup_elementblock(ElementBlock &elements, ProcType& proc);
-    
-    void write_param_info();
     void secondary_params();
-    void set_initial_state(ElementBlock &elements);
+
+
+    /* Called from base class interface functions */
+    void write_param_info_();
+
+    template <class ProcType>
+    void setup_process_(ProcType& proc);
+    
+    template <class ProcType>
+    void setup_elementblock_(ElementBlock &elements, ProcType& proc);
+    
+    void set_initial_state_(ElementBlock &elements);
+
 
     /* Constructor */
     ParamsTorus(EqnSystem equations,

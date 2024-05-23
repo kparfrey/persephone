@@ -5,6 +5,7 @@
 #include "common.hpp"
 #include "face_communicator.hpp"
 #include "element_block.hpp"
+#include "params.hpp"
 #include "basic_time_integrator.hpp"
 #include "numerical_flux.hpp"
 
@@ -17,7 +18,7 @@ class Process
 
     // NB: use a reference so the virtual functions work correctly...
     // Update: should probably change since am removing the virtual functions...
-    ParamsType& params;
+    Params<ParamsType>& params;
       
     /* Local data */
     int rank;
