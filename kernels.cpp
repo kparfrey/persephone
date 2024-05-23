@@ -1038,7 +1038,7 @@ namespace kernels
     inline
     void external_numerical_flux(const FaceCommunicator           face,
                                        real_t* const __restrict__ F,
-                                 const NumFluxType                F_numerical,
+                                 const NumericalFlux<NumFluxType> F_numerical,
                                  const VectorField                S,
                                  const LengthBucket               lb)
     {
@@ -1159,7 +1159,7 @@ namespace kernels
     inline
     void internal_numerical_flux(const real_t* const __restrict__ Uf,
                                        real_t* const __restrict__ F,
-                                 const NumFluxType                F_numerical,
+                                 const NumericalFlux<NumFluxType> F_numerical,
                                  const VectorField                S,
                                  const VectorField                normal,
                                  const LengthBucket               lb,

@@ -31,7 +31,11 @@ class NumericalFlux
                            const real_t* const __restrict__ n,
                                  real_t (*Fnum)[3],
                            const int dir,
-                           const int mem) const {}
+                           const int mem) const 
+    {
+        static_cast<T const*>(this)->implementation(UL,UR,n,Fnum,dir,mem);
+        return;
+    }
 
     /* Only creates a unique normal flux --- tangential flux is discontinuous */
     ACCEL_DECORATOR
@@ -41,7 +45,11 @@ class NumericalFlux
                                  real_t (*Fnum_L)[3],
                                  real_t (*Fnum_R)[3],
                            const int dir,
-                           const int mem) const {}
+                           const int mem) const 
+    {
+        static_cast<T const*>(this)->implementation(UL,UR,n,Fnum_L,Fnum_R,dir,mem);
+        return;
+    }
 };
 
 
@@ -54,12 +62,12 @@ class HLL : public NumericalFlux<HLL>
     public:
 
     ACCEL_DECORATOR
-    inline void operator()(const real_t* const __restrict__ UL, 
-                           const real_t* const __restrict__ UR,
-                           const real_t* const __restrict__ n,
-                                 real_t (*Fnum)[3],
-                           const int, // dir not used
-                           const int mem) const
+    inline void implementation(const real_t* const __restrict__ UL, 
+                               const real_t* const __restrict__ UR,
+                               const real_t* const __restrict__ n,
+                                     real_t (*Fnum)[3],
+                               const int, // dir not used
+                               const int mem) const
     {
         /* Temporary variables --- use a fixed size */
         constexpr int Nv = 10; // since Nfield isn't constexpr
@@ -123,13 +131,13 @@ class HLL : public NumericalFlux<HLL>
     /* This only makes the normal flux consistent across the interface --- the tangential
      * fluxes are left unchanged. Not sure this is actually used? */
     ACCEL_DECORATOR
-    inline void operator()(const real_t* const __restrict__ UL, 
-                           const real_t* const __restrict__ UR,
-                           const real_t* const __restrict__ n,
-                                 real_t (*Fnum_L)[3],
-                                 real_t (*Fnum_R)[3],
-                           const int, // dir not used
-                           const int mem) const 
+    inline void implementation(const real_t* const __restrict__ UL, 
+                               const real_t* const __restrict__ UR,
+                               const real_t* const __restrict__ n,
+                                     real_t (*Fnum_L)[3],
+                                     real_t (*Fnum_R)[3],
+                               const int, // dir not used
+                               const int mem) const 
     {
         /* Temporary variables --- use a fixed size */
         constexpr int Nv = 10; // since Nfield isn't constexpr
@@ -261,12 +269,12 @@ class HLL_straight : public NumericalFlux<HLL_straight>
 {
     public:
     ACCEL_DECORATOR
-    inline void operator()(const real_t* const __restrict__ UL, 
-                           const real_t* const __restrict__ UR,
-                           const real_t* const __restrict__ n, // not used
-                                 real_t (*Fnum)[3],
-                           const int dir,
-                           const int mem) const
+    inline void implementation(const real_t* const __restrict__ UL, 
+                               const real_t* const __restrict__ UR,
+                               const real_t* const __restrict__ n, // not used
+                                     real_t (*Fnum)[3],
+                               const int dir,
+                               const int mem) const
     {
         /* Temporary variables --- use a fixed size */
         constexpr int Nv = 10; // since Nfield isn't constexpr

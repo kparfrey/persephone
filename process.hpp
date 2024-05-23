@@ -5,6 +5,8 @@
 #include "common.hpp"
 #include "face_communicator.hpp"
 #include "element_block.hpp"
+#include "numerical_flux.hpp"
+
 
 
 template <class ParamsType, class TimeIntegratorType, class NumFluxType>
@@ -59,8 +61,8 @@ class Process
     TimeIntegratorType time_integrator;
 
     EqnSystem   system;
-    NumFluxType F_numerical[3]; // One for each set of flux points. Only diff in
-                                // which Physics object their physics pointer points to
+    NumericalFlux<NumFluxType> F_numerical[3]; // One for each set of flux points. Only diff in
+                                               // which Physics object their physics pointer points to
 
     bool Bdotn_stored = false;  // State variable ---- tidy up soon
 

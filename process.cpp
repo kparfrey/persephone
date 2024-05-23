@@ -8,7 +8,6 @@
 #include "basic_time_integrator.hpp"
 #include "boundary_conditions.hpp"
 #include "physics_includes.hpp"
-#include "numerical_flux.hpp"
 #include "kernels.hpp"
 
 /* Note: this file is #included by process.hpp, since Process is a template class.
