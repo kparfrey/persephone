@@ -7,6 +7,7 @@
 using std::string;
 
 
+template <class T>
 class Physics
 {
     public:
@@ -48,31 +49,60 @@ class Physics
     /* Methods 
      * These all take an int mem, which is passed to SpatialMetric
      * and indicates the active memory location. */
-    virtual void ConservedToPrimitive(const real_t* const __restrict__ U, 
-                                            real_t* const __restrict__ P,
-                                      const int mem) const = 0;
+    void ConservedToPrimitive(const real_t* const __restrict__ U, 
+                                    real_t* const __restrict__ P,
+                              const int mem) const
+    {
+        static_cast<T const*>(this)->ConservedToPrimitive_(U, P, mem);
+        return;
+    }
 
-    virtual void PrimitiveToConserved(const real_t* const __restrict__ P, 
-                                            real_t* const __restrict__ U,
-                                      const int mem) const = 0;
 
-    virtual void WaveSpeeds(const real_t* const __restrict__ P, 
-                                  real_t* const __restrict__ c,
-                            const int dir,
-                            const int mem) const = 0;
+    void PrimitiveToConserved(const real_t* const __restrict__ P, 
+                                    real_t* const __restrict__ U,
+                              const int mem) const
+    {
+        static_cast<T const*>(this)->PrimitiveToConserved_(P, U, mem);
+        return;
+    }
 
-    virtual void Fluxes(const real_t* const __restrict__ P, 
-                              real_t (*__restrict__ F)[3],
-                        const int mem) const = 0;
+    void WaveSpeeds(const real_t* const __restrict__ P, 
+                          real_t* const __restrict__ c,
+                    const int dir,
+                    const int mem) const
+    {
+        static_cast<T const*>(this)->WaveSpeeds_(P, c, dir, mem);
+        return;
+    }
 
-    virtual void DiffusiveFluxes(const real_t* const __restrict__ U, 
-                                 const real_t (* const __restrict__ dU)[3],
-                                       real_t (*__restrict__ F)[3],
-                                 const int mem) const = 0;
+    void Fluxes(const real_t* const __restrict__ P, 
+                      real_t (*__restrict__ F)[3],
+                const int mem) const
+    {
+        static_cast<T const*>(this)-Fluxes_(P, F, mem);
+        return;
+    }
+
+    void DiffusiveFluxes(const real_t* const __restrict__ U, 
+                         const real_t (* const __restrict__ dU)[3],
+                               real_t (*__restrict__ F)[3],
+                         const int mem) const
+    {
+        static_cast<T const*>(this)-DiffusiveFluxes_(U, dU, F, mem);
+        return;
+    }
    
-    virtual void OrthonormaliseVectors(real_t* const P, const int mem) const = 0;
+    void OrthonormaliseVectors(real_t* const P, const int mem) const
+    {
+        static_cast<T const*>(this)-OrthonormaliseVectors_(P, mem);
+        return;
+    }
 
-    virtual void Floors(real_t* const __restrict__ U, const int mem) const = 0;
+    void Floors(real_t* const __restrict__ U, const int mem) const 
+    {
+        static_cast<T const*>(this)-Floors_(U, mem);
+        return;
+    }
 
     /* Only used by MHD, and potential future MHD extensions */ 
     //virtual void Fluxes_divB_subsystem(const real_t* const __restrict__ P, 
@@ -80,85 +110,4 @@ class Physics
     //                                   const int mem) const {}
 };
 
-
-/**************************************************************************/
-
-
-#if 0
-class SystemData
-{
-    public:
-    int Nfield;
-    string* variables;
-
-    bool diffusive;
-    real_t viscosity;   // kinematic viscosity ("nu")
-    real_t resistivity; // really magnetic diffusivity...
-
-    /* Only used by MHD */
-    real_t c_h; // Wave/transport speed for hyperbolic part of div cleaning
-    real_t psi_damping_const; // Mignone & Tzeferacos's alpha, 0 < const < 1
-    real_t psi_damping_rate;  // d psi/dt ... = - rate * psi
-                              // p_d_rate = CFL * p_d_const / dt
-    real_t psi_damping_exp;   // exp(-damping_rate * dt)
-
-
-    SystemData()
-    {
-        /* Default values unless overriden in derived classes */
-        diffusive = false;
-        viscosity = 0.0;
-        resistivity = 0.0;
-    }
-};
-
-
-/* Abstract base classes for functors for finding fluxes, primitive variables,
- * wave speeds etc. at a single point, for different equation systems. */
-
-class ConservedToPrimitive
-{
-    public:
-    ACCEL_DECORATOR
-    inline virtual void operator()(const real_t* const __restrict__ U, 
-                                         real_t* const __restrict__ P) const = 0;
-};
-
-
-/* Returns the signed fastest wave speeds in this direction, moving 
- * in the positive direction (c[0]) and negative direction (c[1]) */
-class WaveSpeedsFromPrimitive
-{
-    public:
-    ACCEL_DECORATOR
-    inline virtual void operator()(const real_t* const __restrict__ P, 
-                                         real_t* const __restrict__ c,
-                                   const int dir) const = 0;
-};
-
-
-/* To speed up the simple straight-element case with no directional mixing, 
- * could overload operator() with a version taking an extra int dir argument 
- * for use in XYZ_straight numerical fluxes */
-class FluxesFromPrimitive
-{
-    public:
-    real_t ch_sq; // MHD only: square of the div-cleaning wavespeed
-
-    ACCEL_DECORATOR
-    inline virtual void operator()(const real_t* const __restrict__ P, 
-                                         real_t (*__restrict__ F)[3]) const = 0;
-};
-
-
-class DiffusiveFluxes
-{
-    public:
-    ACCEL_DECORATOR
-    inline virtual void operator()(const real_t* const __restrict__ U, 
-                                   const real_t (* const __restrict__ dU)[3],
-                                         real_t (*__restrict__ F)[3],
-                                   const real_t* const __restrict__ args) const = 0;
-};
-#endif
 #endif

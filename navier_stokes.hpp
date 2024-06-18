@@ -19,7 +19,7 @@
  * 4 p  ---  pressure
  */
 
-class NavierStokes : public Physics
+class NavierStokes : public Physics<NavierStokes>
 {
     private:
     enum conserved {Density, mom0, mom1, mom2, tot_energy};
@@ -47,40 +47,40 @@ class NavierStokes : public Physics
     }
 
 
-    void ConservedToPrimitive(const real_t* const __restrict__ U, 
-                                    real_t* const __restrict__ P,
-                              const int mem) const override;
+    void ConservedToPrimitive_(const real_t* const __restrict__ U, 
+                                     real_t* const __restrict__ P,
+                               const int mem) const ;
 
-    void PrimitiveToConserved(const real_t* const __restrict__ P, 
-                                    real_t* const __restrict__ U,
-                              const int mem) const override;
+    void PrimitiveToConserved_(const real_t* const __restrict__ P, 
+                                     real_t* const __restrict__ U,
+                               const int mem) const ;
 
-    void WaveSpeeds(const real_t* const __restrict__ P, 
-                          real_t* const __restrict__ c,
-                    const int dir,
-                    const int mem) const override;
+    void WaveSpeeds_(const real_t* const __restrict__ P, 
+                           real_t* const __restrict__ c,
+                     const int dir,
+                     const int mem) const ;
 
-    void Fluxes(const real_t* const __restrict__ P, 
-                      real_t (*__restrict__ F)[3],
-                const int mem) const override;
+    void Fluxes_(const real_t* const __restrict__ P, 
+                       real_t (*__restrict__ F)[3],
+                 const int mem) const ;
 
-    void DiffusiveFluxes(const real_t* const __restrict__ U, 
-                         const real_t (* const __restrict__ dU)[3],
-                               real_t (*__restrict__ F)[3],
-                         const int mem) const override;
+    void DiffusiveFluxes_(const real_t* const __restrict__ U, 
+                          const real_t (* const __restrict__ dU)[3],
+                                real_t (*__restrict__ F)[3],
+                          const int mem) const ;
 
-    void OrthonormaliseVectors(real_t* const P, const int mem) const override;
+    void OrthonormaliseVectors_(real_t* const P, const int mem) const ;
     
-    void Floors(real_t* const __restrict__ U, const int mem) const override
+    void Floors_(real_t* const __restrict__ U, const int mem) const 
     {
         return;
     }
 };
 
 
-inline void NavierStokes::ConservedToPrimitive(const real_t* const __restrict__ U, 
-                                                     real_t* const __restrict__ P,
-                                               const int mem) const
+inline void NavierStokes::ConservedToPrimitive_(const real_t* const __restrict__ U, 
+                                                      real_t* const __restrict__ P,
+                                                const int mem) const
 {
     P[density] = U[density]; 
 
@@ -103,9 +103,9 @@ inline void NavierStokes::ConservedToPrimitive(const real_t* const __restrict__ 
 
 
 
-inline void NavierStokes::PrimitiveToConserved(const real_t* const __restrict__ P, 
-                                                     real_t* const __restrict__ U,
-                                               const int mem) const
+inline void NavierStokes::PrimitiveToConserved_(const real_t* const __restrict__ P, 
+                                                      real_t* const __restrict__ U,
+                                                const int mem) const
 {
     const real_t rho = P[density];
 
@@ -127,10 +127,10 @@ inline void NavierStokes::PrimitiveToConserved(const real_t* const __restrict__ 
 
 
 /* Returns the contravariant component of the max wave speed */
-inline void NavierStokes::WaveSpeeds(const real_t* const __restrict__ P, 
-                                           real_t* const __restrict__ c,
-                                     const int dir,
-                                     const int mem) const 
+inline void NavierStokes::WaveSpeeds_(const real_t* const __restrict__ P, 
+                                            real_t* const __restrict__ c,
+                                      const int dir,
+                                      const int mem) const 
 {
     const real_t sound_speed_sq = gamma * P[pressure] / P[density];
     
@@ -145,9 +145,9 @@ inline void NavierStokes::WaveSpeeds(const real_t* const __restrict__ P,
 }
 
 
-inline void NavierStokes::Fluxes(const real_t* const __restrict__ P, 
-                                       real_t (*__restrict__ F)[3],
-                                 const int mem) const
+inline void NavierStokes::Fluxes_(const real_t* const __restrict__ P, 
+                                        real_t (*__restrict__ F)[3],
+                                  const int mem) const
 {
     /* Pointer directly to contravariant velocity components */
     const real_t* const vu = &P[v0];
@@ -180,10 +180,10 @@ inline void NavierStokes::Fluxes(const real_t* const __restrict__ P,
 
 
 /* Still needs to be finished for general coords --- could build in from MHD object */
-inline void NavierStokes::DiffusiveFluxes(const real_t* const __restrict__    P, 
-                                          const real_t (* const __restrict__ dP)[3],
-                                                real_t (*__restrict__ F)[3],
-                                          const int mem) const
+inline void NavierStokes::DiffusiveFluxes_(const real_t* const __restrict__    P, 
+                                           const real_t (* const __restrict__ dP)[3],
+                                                 real_t (*__restrict__ F)[3],
+                                           const int mem) const
 {
     const real_t mu = P[density] * viscosity; // mu = dynamic viscosity
     //const real_t mu = viscosity; // For Couette test, which is defined for const. *dynamic* viscosity
@@ -234,7 +234,7 @@ inline void NavierStokes::DiffusiveFluxes(const real_t* const __restrict__    P,
 }
 
 
-inline void NavierStokes::OrthonormaliseVectors(real_t* const P, const int mem) const
+inline void NavierStokes::OrthonormaliseVectors_(real_t* const P, const int mem) const
 {
     metric->orthonormals(&P[v0], mem);
 
