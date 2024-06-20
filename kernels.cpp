@@ -1,13 +1,11 @@
 // Strictly speaking this file should import the absolute minimum
 // --- it probably shouldn't need anything except the definition of real_t ?
 
-/***
 #include "kernels.hpp"
 #include "physics_includes.hpp"
 #include "numerical_flux.hpp"
 #include "boundary_conditions.hpp"
 #include <iostream>
- ***/
 
 namespace kernels
 {
@@ -68,7 +66,7 @@ namespace kernels
     static void torus_BC(      real_t* const __restrict__ UL, 
                                real_t* const __restrict__ UR,
                          const real_t* const __restrict__ nl,
-                         const Physics* const __restrict__ physics,
+                         const Physics* physics,
                          const int mem, const int orientation)
     {
         enum conserved {Density, mom0, mom1, mom2, tot_energy, B0, B1, B2, psi};
@@ -82,10 +80,10 @@ namespace kernels
         real_t P[9];  // Primitives from incoming conserved variables
 
         real_t nu[3]; // contravariant components of normal vector
-        physics->metric->raise(nl, nu, mem);
+        physics.metric->raise(nl, nu, mem);
 
         /* UL and UR should be identical, so just choose L arbitrarily */
-        physics->ConservedToPrimitive(UL, P, mem);
+        physics.ConservedToPrimitive(UL, P, mem);
 
         /***
          * Remove the orientation parameter if keep this commented out.
@@ -101,7 +99,7 @@ namespace kernels
         }
          ***/
 
-        //if (physics->apply_floors)
+        //if (physics.apply_floors)
         //    UL[Density] = UR[Density] = P[density];
         
         //const real_t vdotn = nl[0]*P[v0] + nl[1]*P[v1] + nl[2]*P[v2];
@@ -120,7 +118,7 @@ namespace kernels
         /* The density, tot_energy, and psi conserved vars are unchanged.
          * Only need to overwrite the momentum and magnetic field */
         //real_t vl[3];
-        //physics->metric->lower(vm, vl, mem);
+        //physics.metric->lower(vm, vl, mem);
 
         //UL[Density] = UR[Density] = P[Density] = 1.0;
 
@@ -144,8 +142,8 @@ namespace kernels
 
         /****
         P[pressure] = 10.0 * P[density]; // Isothermal-ish wall at set temperature
-        const real_t mag_density = 0.5 * physics->metric->square(Bm, mem);
-        const real_t KE_density  = 0.0; // 0.5 * P[density] * physics->metric->square(vm, mem);
+        const real_t mag_density = 0.5 * physics.metric->square(Bm, mem);
+        const real_t KE_density  = 0.0; // 0.5 * P[density] * physics.metric->square(vm, mem);
         const real_t psi_density = 0.5 * P[psi] * P[psi];
         const real_t thermal_density = P[pressure]/((MHD*)physics)->gm1;
         UL[tot_energy] = UR[tot_energy] = KE_density + mag_density + thermal_density + psi_density;
@@ -155,21 +153,21 @@ namespace kernels
          * chopping off the normal velocity and magnetic field. Not clear if this is 
          * necessary and/or a good idea ... */
         /***
-        const real_t mag_density = 0.5 * physics->metric->square(Bm, mem);
-        const real_t KE_density  = 0.5 * P[density] * physics->metric->square(vm, mem);
+        const real_t mag_density = 0.5 * physics.metric->square(Bm, mem);
+        const real_t KE_density  = 0.5 * P[density] * physics.metric->square(vm, mem);
         UL[tot_energy] = UR[tot_energy] = KE_density + mag_density + P[pressure]/((MHD*)physics)->gm1
                                           + 0.5 * P[psi] * P[psi];
         ***/
 
         /* This seems to make things worse... */
-        //if (physics->apply_floors)
+        //if (physics.apply_floors)
         if (false)
         {
             /* Since pressure might have been increased inside cons-to-prim
              * Might want to use kinetic and magnetic energy from before the BC adjustments were applied?
              * Or is it better for the total energy to be consistent? */
-            const real_t mag_density = 0.5 * physics->metric->square(Bm, mem);
-            //const real_t KE_density  = 0.5 * P[density] * physics->metric->square(vm, mem);
+            const real_t mag_density = 0.5 * physics.metric->square(Bm, mem);
+            //const real_t KE_density  = 0.5 * P[density] * physics.metric->square(vm, mem);
             const real_t KE_density  = 0.0; // Zero for no-slip
             UL[tot_energy] = UR[tot_energy] = KE_density + mag_density + P[pressure]/((MHD*)physics)->gm1;
         }
@@ -192,7 +190,7 @@ namespace kernels
          * Not yet clear if this is better than just leaving psi alone at
          * its extrapolated value.
          * Update for DESC equilibria: seems better to not impose a BC on psi at all... */
-        //const real_t c_h = std::sqrt(physics->ch_sq);
+        //const real_t c_h = std::sqrt(physics.ch_sq);
         //UL[psi] = UR[psi] = P[psi] + c_h * Bdotn;
         /* Seems better to just apply as the external data? */
         //UR[psi] = P[psi] + c_h * Bdotn;
@@ -482,7 +480,7 @@ namespace kernels
     void bulk_fluxes(const real_t* const __restrict__ Uf,
                            real_t* const __restrict__ F ,
                      const VectorField                S ,
-                     const Physics* const __restrict__ physics,
+                     const Physics<PhysicsType> physics,
                      //const ConservedToPrimitive*  U_to_P,
                      //const FluxesFromPrimitive* F_from_P,
                      const LengthBucket lb, const int dir)
@@ -524,12 +522,12 @@ namespace kernels
                     Up[field] = Uf[mem + field * Nf_tot];
 
                 //(*U_to_P)(Up, Pp); // conserved -> primitive variables
-                physics->ConservedToPrimitive(Up, Pp, mem);
+                physics.ConservedToPrimitive(Up, Pp, mem);
 
                 /* Uf is the physical solution at flux points
                  * Calculate physical fluxes in all three dirs */
                 //(*F_from_P)(Pp, Fp);
-                physics->Fluxes(Pp, Fp, mem);
+                physics.Fluxes(Pp, Fp, mem);
 
                 /* Transform from physical to reference-space fluxes
                  * for all fields */
@@ -666,7 +664,7 @@ namespace kernels
     void add_geometric_sources(      real_t* const __restrict__  divF, 
                                const real_t* const __restrict__  U,
                                const VectorField                 dP,
-                               const Physics* const __restrict__ physics,
+                               const Physics<PhysicsType> physics,
                                const int Nfield, const int Ns)
     {
         /* Conserved vars, primitive vars, and physical fluxes
@@ -687,11 +685,11 @@ namespace kernels
             for (int field = 0; field < Nfield; ++field)
                 Up[field] = U[mem + field * Ns];
 
-            physics->ConservedToPrimitive(Up, Pp, mem);
+            physics.ConservedToPrimitive(Up, Pp, mem);
 
             /* U is the physical solution at solution points
              * Calculate physical inviscid fluxes in all three dirs */
-            physics->Fluxes(Pp, Fp, mem);
+            physics.Fluxes(Pp, Fp, mem);
             
             if (Physics::diffusive)
             {
@@ -700,7 +698,7 @@ namespace kernels
                         dPp[field][d] = dP(d, mem + field*Ns);
                 
                 /* Physical diffusive fluxes in all directions */
-                physics->DiffusiveFluxes(Pp, dPp, F_diff_p, mem);
+                physics.DiffusiveFluxes(Pp, dPp, F_diff_p, mem);
 
                 /* Add the diffusive flux to the inviscid flux to form the total flux */
                 for (int field = 0; field < Nfield; ++field)
@@ -710,9 +708,9 @@ namespace kernels
 
             /* HACK: directly implement just for cylindrical coords for now
              * Note Cartesian coords don't call this function at all */
-            R = physics->metric->rdetg[mem];
+            R = physics.metric->rdetg[mem];
 
-            switch (physics->system)
+            switch (physics.system)
             {
                 case navier_stokes:
                 // Only nonzero term is F^phi_{vphi} Gamm^phi_{r phi}
@@ -1120,7 +1118,7 @@ namespace kernels
 
                     /* Save UL=UR back into the face's main arrays,
                      * to set the BCs for the diffusive fluxes */
-                    if (F_numerical->physics->diffusive)
+                    if (F_numerical->physics.diffusive)
                         for (int field = 0; field < lb.Nfield; ++field)
                             face.my_data[mem_face + field * face.Ntot] = 
                             face.neighbour_data[mem_face + field * face.Ntot] = UL[field]; 
@@ -1441,9 +1439,7 @@ namespace kernels
     void diffusive_flux(const real_t* const __restrict__ Pf,
                         const VectorField                dPf,
                               real_t* const __restrict__ F,
-                        //const DiffusiveFluxes*           F_diff,
-                        const Physics* const __restrict__ physics,
-                        //const real_t* const __restrict__ args,
+                        const Physics<PhysicsType>       physics,
                         const VectorField                S,
                         const LengthBucket               lb,
                         const int                        dir)
@@ -1471,11 +1467,11 @@ namespace kernels
                     dPp[field][d] = dPf(d, i + field*N);
             }
 
-            //physics->ConservedToPrimitive(Up, Pp, i);
+            //physics.ConservedToPrimitive(Up, Pp, i);
 
             //(*F_diff)(Up, dUp, F_diff_p, args);
-            //physics->DiffusiveFluxes(Up, dUp, F_diff_p, args);
-            physics->DiffusiveFluxes(Pp, dPp, F_diff_p, i);
+            //physics.DiffusiveFluxes(Up, dUp, F_diff_p, args);
+            physics.DiffusiveFluxes(Pp, dPp, F_diff_p, i);
 
             /* Transform from physical to reference-space fluxes
              * for all fields */
@@ -1494,10 +1490,10 @@ namespace kernels
     /* Apply flooring procedure to the conserved variables on the solution points */
     inline
     void floors(      real_t* const __restrict__  U,
-                const Physics* const __restrict__ physics,
+                const Physics<PhysicsType>        physics,
                 const LengthBucket                lb)
     {
-        if (!physics->apply_floors)
+        if (!physics.apply_floors)
             return;
 
         const int N = lb.Ns_block;
@@ -1508,7 +1504,7 @@ namespace kernels
             for (int field = 0; field < lb.Nfield; ++field)
                 Up[field] = U[i + field * N];
 
-            physics->Floors(Up, i);
+            physics.Floors(Up, i);
 
             for (int field = 0; field < lb.Nfield; ++field)
                U[i + field * N] = Up[field];
@@ -1526,9 +1522,9 @@ namespace kernels
      * Save T into p slot, and B^2 into psi slot */
     inline
     void conserved_to_primitive_fluxpoints(      real_t* const __restrict__  UPf,
-                                           const Physics* const __restrict__ physics,
-                                           const LengthBucket               lb,
-                                           const int                        dir)
+                                           const Physics<PhysicsType>        physics,
+                                           const LengthBucket                lb,
+                                           const int                         dir)
     {
         int N = lb.Nf_dir_block[dir]; //Total # of this-dir flux points in the block
 
@@ -1543,14 +1539,14 @@ namespace kernels
             for (int field = 0; field < lb.Nfield; ++field)
                 Up[field] = UPf[i + field * N];
 
-            physics->ConservedToPrimitive(Up, Pp, i);
+            physics.ConservedToPrimitive(Up, Pp, i);
 
             /* HACK : eventually put into the Physics object */
-            if (physics->system == mhd)
+            if (physics.system == mhd)
             {
                 enum primitive {density, v0, v1, v2, pressure, B0, B1, B2, psi};
                 Pp[pressure] = Pp[pressure] / Pp[density];
-                Pp[psi] = physics->metric->square(&Pp[B0], i); 
+                Pp[psi] = physics.metric->square(&Pp[B0], i); 
             }
 
             for (int field = 0; field < lb.Nfield; ++field)
@@ -1570,9 +1566,9 @@ namespace kernels
      * Should only be used to find diffusive fluxes.
      * Save T into p slot, and B^2 into psi slot */
     inline
-    void conserved_to_primitive_faces(      FaceCommunicator face,
-                                      const Physics* const __restrict__ physics,
-                                      const LengthBucket               lb)
+    void conserved_to_primitive_faces(      FaceCommunicator      face,
+                                      const Physics<PhysicsType>  physics,
+                                      const LengthBucket          lb)
     {
         int id_elem_face, id_elem;
         int mem_offset_face, mem_offset;
@@ -1616,16 +1612,16 @@ namespace kernels
                     Up_nb[field] = face.neighbour_data[mem_face + field * face.Ntot];
                 }
 
-                physics->ConservedToPrimitive(Up_my, Pp_my, mem);
-                physics->ConservedToPrimitive(Up_nb, Pp_nb, mem);
+                physics.ConservedToPrimitive(Up_my, Pp_my, mem);
+                physics.ConservedToPrimitive(Up_nb, Pp_nb, mem);
 
-                if (physics->system == mhd)
+                if (physics.system == mhd)
                 {
                     enum primitive {density, v0, v1, v2, pressure, B0, B1, B2, psi};
                     Pp_my[pressure] = Pp_my[pressure] / Pp_my[density];
                     Pp_nb[pressure] = Pp_nb[pressure] / Pp_nb[density];
-                    Pp_my[psi] = physics->metric->square(&Pp_my[B0], mem); 
-                    Pp_nb[psi] = physics->metric->square(&Pp_nb[B0], mem); 
+                    Pp_my[psi] = physics.metric->square(&Pp_my[B0], mem); 
+                    Pp_nb[psi] = physics.metric->square(&Pp_nb[B0], mem); 
                 }
 
 
@@ -1675,10 +1671,10 @@ namespace kernels
      * This function removes the tangential derivatives of the velocity on the wall, since 
      * v^i = 0 on this surface. Not sure that this actually helps... */
     inline
-    void wall_BC_derivatives(const FaceCommunicator face,
-                                   VectorField      dPf,
-                             const Physics* const __restrict__ physics,                                   
-                             const LengthBucket     lb)
+    void wall_BC_derivatives(const FaceCommunicator     face,
+                                   VectorField          dPf,
+                             const Physics<PhysicsType> physics,                                   
+                             const LengthBucket         lb)
     {
         enum conserved {Density, mom0, mom1, mom2, tot_energy, B0, B1, B2, psi};
         enum primitive {density, v0  , v1  , v2,   pressure};
@@ -1722,7 +1718,7 @@ namespace kernels
                 for (int i: dirs)
                     nl[i] = face.normal(i,mem_face);
 
-                physics->metric->raise(nl, nu, mem);
+                physics.metric->raise(nl, nu, mem);
 
                 /* dv[i][j] = d_j v^i --- same as in MHD object */
                 for (int comp: dirs)
@@ -1752,7 +1748,7 @@ namespace kernels
     real_t local_timestep(const real_t* const __restrict__ Uf,
                                 real_t& vmax,
                           const VectorField timestep_transform,
-                          const Physics* const __restrict__ physics,
+                          const Physics<PhysicsType> physics,
                           //const ConservedToPrimitive*  U_to_P,
                           //const WaveSpeedsFromPrimitive* c_from_P,
                           const LengthBucket lb, const int dir)
@@ -1799,14 +1795,14 @@ namespace kernels
                     Up[field] = Uf[mem + field * Nf_tot];
 
                 //(*U_to_P)(Up, Pp); // conserved -> primitive variables
-                physics->ConservedToPrimitive(Up, Pp, mem);
+                physics.ConservedToPrimitive(Up, Pp, mem);
 
                 /* Uf is the physical solution at flux points
                  * Calculate wavespeeds in all three physical dirs */
                 for (int d: dirs) // iterate over phys-space directions
                 {
                     //(*c_from_P)(Pp, cp[d], d);
-                    physics->WaveSpeeds(Pp, cp[d], d, mem);
+                    physics.WaveSpeeds(Pp, cp[d], d, mem);
                     cm[d] = MAX(cp[d][0], std::abs(cp[d][1]));
                 }
                 
@@ -1820,7 +1816,7 @@ namespace kernels
 
                 /* Finds maximum |v| for calculating the max stable div-cleaning
                  * wavespeed ch. Should tidy up so is eqn-system agnostic again. */
-                vmag = std::sqrt(physics->metric->square(&Pp[1], mem));
+                vmag = std::sqrt(physics.metric->square(&Pp[1], mem));
                 if (vmag > vmax_loc) 
                     vmax_loc = vmag;
             }

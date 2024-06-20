@@ -6,7 +6,7 @@
  *** that is needed everywhere. Will be eventually split into several ***
  *** files for convenience.                                           ***/
 
-/*** Avoid includes here without a good reason....                    ***/
+
 
 
 #define FLOAT_POINT_PRECISION DOUBLE_PRECISION_MY
@@ -71,5 +71,9 @@ constexpr int iedges[12] = {0,1,2,3,4,5,6,7,8,9,10,11};
 #define MAX(A,B) ((A) > (B) ? (A) : (B))
 #define MIN(A,B) ((A) < (B) ? (A) : (B))
 #define SIGN(A)  ((A) >  0  ?  1  : -1 )
+
+
+#include "template_choices.hpp"
+
 
 #endif

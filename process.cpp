@@ -2,15 +2,20 @@
 #include <cmath>
 #include <filesystem>
 #include <iomanip>
+#include "common.hpp"
+#include "process.hpp"
 #include "write_screen.hpp"
 #include "boundary_conditions.hpp"
 #include "physics_includes.hpp"
 #include "kernels.hpp"
+#include "params.hpp"
 
-/* Note: this file is #included by process.hpp, since Process is a template class.
- * No independent object file is created. */
-template <class A, class B, class C>
-void Process<A,B,C>::write_startup_info()
+
+/* Shorthand, since use this frequently here */
+using PHYS = Physics<PhysicsType>;
+
+
+void Process::write_startup_info()
 {
     if (rank == 0)
         params.write_param_info();
@@ -19,8 +24,7 @@ void Process<A,B,C>::write_startup_info()
 }
 
 
-template <class A, class B, class C>
-void Process<A,B,C>::setup()
+void Process::setup()
 {
     write::message("Setting up process --- generic setup");
     params.setup_process_generic(*this); // in params.cpp
@@ -48,8 +52,7 @@ void Process<A,B,C>::setup()
 
 /* Move all of the process's device-side data there, to be called at
  * the end of the setup phase. */
-template <class A, class B, class C>
-void Process<A,B,C>::move_to_device()
+void Process::move_to_device()
 {
     write::message("End of host-side initialization phase --- copying all required data to device");
     
@@ -61,8 +64,7 @@ void Process<A,B,C>::move_to_device()
 }
 
 
-template <class A, class B, class C>
-void Process<A,B,C>::time_advance()
+void Process::time_advance()
 {
     /********************************************/
     /* Calculate timestep --- temporary */
@@ -75,7 +77,7 @@ void Process<A,B,C>::time_advance()
     real_t dtmin_advect;
     real_t dtmin_diff, dt_ratio;
 
-    Physics::ch = 0.0; // Find timestep without cleaning wave
+    PHYS::ch = 0.0; // Find timestep without cleaning wave
 
     /* Should be able to convert this to a single search over data on the solution points? */
     real_t vmax_dir[3]; 
@@ -95,16 +97,16 @@ void Process<A,B,C>::time_advance()
     MPI_Allreduce(MPI_IN_PLACE, &vmax, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
     dtmin_advect = cfl * dtmin;
 
-    if (Physics::diffusive)
+    if (PHYS::diffusive)
     {
         // For constant diffusive coefficients this can be moved to the setup phase 
         // --- same for all time steps
         // d_t_c = 1/3 stable for WaveRect at high viscosity, but 0.4 breaks sometimes...?
         // Seems to be excessively restrictive when have an inhomogeneous grid?
         // Very problem dependent: can use d_t_c = 0.9 for the MHD Alfven wave problem
-        real_t diffusion = MAX(MAX(Physics::viscosity, Physics::resistivity), Physics::conductivity);
+        real_t diffusion = MAX(MAX(PHYS::viscosity, PHYS::resistivity), PHYS::conductivity);
         diffusion = MAX(diffusion, 1e-15);
-        dtmin_diff   = (Physics::diffusive_timestep_const/diffusion) * (1./(tt_max_global*tt_max_global));
+        dtmin_diff   = (PHYS::diffusive_timestep_const/diffusion) * (1./(tt_max_global*tt_max_global));
 
         dt = MIN(dtmin_advect, dtmin_diff); 
         dt_ratio = dtmin_diff/dtmin_advect;
@@ -123,11 +125,11 @@ void Process<A,B,C>::time_advance()
             safety = 0.75; // Seem to run into trouble at very high ch for small cfl
 
         /* For using the non-Galilean-invariant method of Derigs+ 2018 */
-        Physics::ch = safety * std::sqrt(lambda_max * (lambda_max - vmax));
-        //std::cout << "ch = " << Physics::ch << std::endl;
+        PHYS::ch = safety * std::sqrt(lambda_max * (lambda_max - vmax));
+        //std::cout << "ch = " << PHYS::ch << std::endl;
 
-        Physics::psi_damping_rate = Physics::ch / Physics::psi_damping_const; //p_d_c = c_r from Dedner
-        //std::cout << Physics::psi_damping_rate << std::endl;
+        PHYS::psi_damping_rate = PHYS::ch / PHYS::psi_damping_const; //p_d_c = c_r from Dedner
+        //std::cout << PHYS::psi_damping_rate << std::endl;
     }
     /********************************************/
 
@@ -138,7 +140,7 @@ void Process<A,B,C>::time_advance()
         const int defaultprec = cout.precision();
         cout.precision(3);
 
-        if (Physics::diffusive)
+        if (PHYS::diffusive)
             cout << "Starting step " << setw(3) << left << step << " --- t = " << time
                  << " --- dt = " << dt 
                  << " --- dt ratio: " << dt_ratio
@@ -165,8 +167,7 @@ void Process<A,B,C>::time_advance()
 /* The fundamental function of the spectral difference method */
 /* U : vector of conserved solution fields (physical space) 
  * F : vector of fluxes (reference-element space) */
-template <class A, class B, class C>
-void Process<A,B,C>::find_divF(const real_t* const U, const real_t t, real_t* const divF)
+void Process::find_divF(const real_t* const U, const real_t t, real_t* const divF)
 {
     ElementBlock& eb = elements;
 
@@ -187,7 +188,7 @@ void Process<A,B,C>::find_divF(const real_t* const U, const real_t t, real_t* co
          F(i) = kernels::alloc_raw(Nfield * eb.Nf_dir_block[i]);
         dF(i) = kernels::alloc_raw(Nfield * eb.Ns_block);
         
-        if (Physics::diffusive)
+        if (PHYS::diffusive)
             dP(i) = kernels::alloc_raw(Nfield * eb.Ns_block);
     }
 
@@ -219,7 +220,7 @@ void Process<A,B,C>::find_divF(const real_t* const U, const real_t t, real_t* co
 
     /* For explicit diffusive terms, calculate the diffusive flux and add
      * to the advective fluxes before taking the flux deriv: F += F_diffusive */
-    if (Physics::diffusive)
+    if (PHYS::diffusive)
         add_diffusive_flux(Uf, dP, F);
 
     /* For testing that dP's are being calculated correctly -- put a known function *
@@ -241,7 +242,7 @@ void Process<A,B,C>::find_divF(const real_t* const U, const real_t t, real_t* co
         const int pstart = 8 * eb.Ns_block; // mem location at which the psi field begins
 
         /* Find divB from divF[psi] and save into elements.divB */
-        //kernels::multiply_by_scalar(&divF[pstart], 1.0/Physics::ch, eb.divB, eb.Ns_block);
+        //kernels::multiply_by_scalar(&divF[pstart], 1.0/PHYS::ch, eb.divB, eb.Ns_block);
         
         /* Find divB independently, by averaging B components at the element interfaces.
          * This seems to work better. */
@@ -281,7 +282,7 @@ void Process<A,B,C>::find_divF(const real_t* const U, const real_t t, real_t* co
                 divF[(5+d)*N +i] += divB * vu[d];
 
             // Psi equation sources
-            divF[pstart + i] += Physics::psi_damping_rate * U[pstart + i]; // + gradpsi_dot_v;
+            divF[pstart + i] += PHYS::psi_damping_rate * U[pstart + i]; // + gradpsi_dot_v;
         }
     }
 
@@ -295,7 +296,7 @@ void Process<A,B,C>::find_divF(const real_t* const U, const real_t t, real_t* co
         kernels::free( F(i));
         kernels::free(dF(i));
         
-        if (Physics::diffusive)
+        if (PHYS::diffusive)
             kernels::free(dP(i));
     }
 
@@ -306,8 +307,7 @@ void Process<A,B,C>::find_divF(const real_t* const U, const real_t t, real_t* co
 /* Separate function for finding divB --- can repurpose to find derivative of
  * any vector field. Element interfaces are joined using simple averaging
  * rather than e.g. the HLL flux.                                               */
-template <class X, class Y, class Z>
-void Process<X,Y,Z>::find_divB(const real_t* const B, real_t* const divB)
+void Process::find_divB(const real_t* const B, real_t* const divB)
 {
     ElementBlock& eb = elements;
 
@@ -427,8 +427,7 @@ void Process<X,Y,Z>::find_divB(const real_t* const B, real_t* const divB)
 
 
 /* Finds the diffusive flux, adds in place to the advective flux in F */
-template <class A, class B, class C>
-void Process<A,B,C>::add_diffusive_flux(VectorField Uf, VectorField dP, VectorField F)
+void Process::add_diffusive_flux(VectorField Uf, VectorField dP, VectorField F)
 {
     VectorField Fd;     // Diffusive fluxes for all fields
     VectorField dP_ref; // Ref-space derivatives of P at the solution points
@@ -531,8 +530,7 @@ void Process<A,B,C>::add_diffusive_flux(VectorField Uf, VectorField dP, VectorFi
 /* Fill the stored_data array of external faces with the initial conditions 
  * extrapolated to the face. Needs to use soln_to_flux(), so everything 
  * should live on the device. */
-template <class A, class B, class C>
-void Process<A,B,C>::fill_external_boundary_data()
+void Process::fill_external_boundary_data()
 {
     write::message("Filling initial boundary data on external faces");
 
@@ -559,8 +557,7 @@ void Process<A,B,C>::fill_external_boundary_data()
 }
 
 
-template <class A, class B, class C>
-void Process<A,B,C>::exchange_boundary_data()
+void Process::exchange_boundary_data()
 {
     MPI_Request requests[12];
 

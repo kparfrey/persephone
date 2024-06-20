@@ -3,6 +3,7 @@
 
 #include "common.hpp"
 #include "kernels.hpp"
+#include "physics_includes.hpp"
 
 class BoundaryConditions
 {
@@ -12,7 +13,7 @@ class BoundaryConditions
 
     virtual void dirichlet(      real_t* const __restrict__ U, 
                            const real_t* const __restrict__ nl,
-                           const Physics* const __restrict__ physics,
+                           const Physics<PhysicsType>       physics,
                            const int mem) const = 0;
     
     virtual void neumann(real_t* const __restrict__ dP) const = 0;
@@ -36,15 +37,15 @@ class WallBC_NoSlip_FixedNormalB : public BoundaryConditions
 
     void dirichlet(      real_t* const __restrict__ U, 
                    const real_t* const __restrict__ nl,
-                   const Physics* const __restrict__ physics,
+                   const Physics<PhysicsType>       physics,
                    const int mem) const override
     {
         real_t P[9];  // Primitives from incoming conserved variables
         real_t nu[3]; // contravariant components of normal vector
                       
-        physics->metric->raise(nl, nu, mem);
+        physics.metric->raise(nl, nu, mem);
 
-        physics->ConservedToPrimitive(U, P, mem);
+        physics.ConservedToPrimitive(U, P, mem);
         
         //const real_t vdotn = nl[0]*P[v0] + nl[1]*P[v1] + nl[2]*P[v2];
         const real_t Bdotn = nl[0]*P[B0] + nl[1]*P[B1] + nl[2]*P[B2];
@@ -61,7 +62,7 @@ class WallBC_NoSlip_FixedNormalB : public BoundaryConditions
         /* Want to set the primitives and then reconstruct the conserved variables in case
          * the pressure or density was reset by the flooring procedure in the earlier call
          * to MHD::ConservedToPrimitive() */
-        physics->PrimitiveToConserved(P, U, mem);
+        physics.PrimitiveToConserved(P, U, mem);
 
         return;
     }
@@ -95,18 +96,18 @@ class PeriodicPressureBC : public BoundaryConditions
     
     void dirichlet(      real_t* const __restrict__ U, 
                    const real_t* const __restrict__ ,
-                   const Physics* const __restrict__ physics,
+                   const Physics<PhysicsType>       physics,
                    const int mem) const override
     {
-        real_t* P = new real_t [physics->Nfield];
+        real_t* P = new real_t [physics.Nfield];
 
-        physics->ConservedToPrimitive(U, P, mem);
+        physics.ConservedToPrimitive(U, P, mem);
 
         /* Have only 1 grid point in x-dir, so the value extrapolated
          * to the faces is equal to the central solution value */
         P[pressure] += orientation * 0.5 * dPdx;
 
-        physics->PrimitiveToConserved(P, U, mem);
+        physics.PrimitiveToConserved(P, U, mem);
 
         delete[] P;
         return;
@@ -134,12 +135,12 @@ class CouettePlateBC : public BoundaryConditions
     
     void dirichlet(      real_t* const __restrict__ U, 
                    const real_t* const __restrict__ ,
-                   const Physics* const __restrict__ physics,
+                   const Physics<PhysicsType>       physics,
                    const int mem) const override
     {
-        real_t* P = new real_t [physics->Nfield];
+        real_t* P = new real_t [physics.Nfield];
 
-        physics->ConservedToPrimitive(U, P, mem);
+        physics.ConservedToPrimitive(U, P, mem);
 
         /* orientation =  1: v0 = v_top
          * orientation = -1: v0 = 0     */
@@ -147,7 +148,7 @@ class CouettePlateBC : public BoundaryConditions
         P[v1] = 0.0;
         P[v2] = 0.0;
 
-        physics->PrimitiveToConserved(P, U, mem);
+        physics.PrimitiveToConserved(P, U, mem);
 
         delete[] P;
         return;
@@ -177,12 +178,12 @@ class HartmannPlateBC : public BoundaryConditions
     
     void dirichlet(      real_t* const __restrict__ U, 
                    const real_t* const __restrict__ ,
-                   const Physics* const __restrict__ physics,
+                   const Physics<PhysicsType>       physics,
                    const int mem) const override
     {
-        real_t* P = new real_t [physics->Nfield];
+        real_t* P = new real_t [physics.Nfield];
 
-        physics->ConservedToPrimitive(U, P, mem);
+        physics.ConservedToPrimitive(U, P, mem);
 
         /* orientation =  1: v0 = v_top
          * orientation = -1: v0 = - v_top     */
@@ -194,7 +195,7 @@ class HartmannPlateBC : public BoundaryConditions
         P[B1] = 1.0;
         P[B2] = 0.0;
 
-        physics->PrimitiveToConserved(P, U, mem);
+        physics.PrimitiveToConserved(P, U, mem);
 
         delete[] P;
         return;

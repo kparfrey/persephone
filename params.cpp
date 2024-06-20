@@ -1,18 +1,17 @@
 #include <string>
+#include "common.hpp"
+#include "params.hpp"
+//#include "write_screen.hpp"
+//#include "basic_time_integrator.hpp"
+//#include "physics_includes.hpp"
+//#include "numerical_flux.hpp"
 #include "process.hpp"
-#include "write_screen.hpp"
-#include "basic_time_integrator.hpp"
-#include "physics_includes.hpp"
-#include "numerical_flux.hpp"
 
-/* Note: this file is #included by params.hpp because Params is a template class. 
- * No indepedent object file is compiled. */
 
 /* That part of Process setup which is the same for Cartesian,
  * Spherical, toroidal etc. configurations. */
 template <class ParamsType>
-template <class ProcType>
-void Params<ParamsType>::setup_process_generic(ProcType& proc)
+void Params<ParamsType>::setup_process_generic(Process& proc)
 {
     proc.time     = 0.0;
     proc.end_time = end_time;
@@ -22,6 +21,7 @@ void Params<ParamsType>::setup_process_generic(ProcType& proc)
     proc.data_output_counter = 0;
     proc.is_output_step = false;
 
+    /***
     switch (equations)
     {
         case scalar_advection:
@@ -48,8 +48,10 @@ void Params<ParamsType>::setup_process_generic(ProcType& proc)
         default:
             write::error("Equation system not recognised.");
     }
+     ***/
 
-    proc.system = equations;
+    //proc.system = equations;
+    proc.system = Physics<PhysicsType>::system; // Store in Process for convenience
     proc.Nfield = proc.elements.physics_soln->Nfield;
 
     for (int d: dirs)
@@ -67,3 +69,7 @@ void Params<ParamsType>::setup_process_generic(ProcType& proc)
 
     return;
 }
+
+/* Explicit template instantiation, so can have Params in its own compilation unit / object file. */
+template class Params<ParamsCartesian>;
+template class Params<ParamsTorus>;

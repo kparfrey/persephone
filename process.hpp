@@ -2,16 +2,16 @@
 #define PROCESS_HPP
 
 #include <mpi.h>
-#include "common.hpp"
 #include "face_communicator.hpp"
 #include "element_block.hpp"
-#include "params.hpp"
 #include "basic_time_integrator.hpp"
 #include "numerical_flux.hpp"
 
+template<class ParamsType>
+class Params;
 
 
-template <class ParamsType, class TimeStepType, class NumFluxType>
+
 class Process
 {
     public:
@@ -71,16 +71,8 @@ class Process
 
     //NumericalFlux* F_numerical_divB_subsystem[3]; 
 
-    /***
-    SystemData*              system_data;
-    ConservedToPrimitive*    U_to_P;
-    WaveSpeedsFromPrimitive* c_from_P;
-    FluxesFromPrimitive*     F_from_P;
-    DiffusiveFluxes*         F_diff;
-    ***/
 
-
-    /* Methods */
+    /* Member functions */
     Process(ParamsType& params)
         : params(params){}
 
@@ -96,6 +88,5 @@ class Process
 };
 
 
-#include "process.cpp"
 
 #endif

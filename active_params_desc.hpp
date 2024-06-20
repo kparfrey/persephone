@@ -15,10 +15,6 @@
  * guards.
  */
 
-/*** Types for constructing the Process object ***/
-using ParamsType   = ParamsTorus;
-using TimeStepType = RK3_SSP;
-using NumFluxType  = HLL;
 
 /*** Constructing the params object ***/
 static EqnSystem equations = mhd;
@@ -33,7 +29,7 @@ static real_t cfl      = 0.8; // Seems stable to 1.0 for ideal MHD
 static real_t end_time = 0.005;
 static real_t dt_write = 2e-5;
 
-static ParamsTorus active_parameters(equations, 
+static Params<ParamsTorus> active_parameters(equations, 
                                      Nproc, Nelem, Ns, 
                                      cfl, end_time, dt_write,
                                      problem_type, grid_method,

@@ -4,10 +4,10 @@
 #include "common.hpp"
 #include "geometry.hpp"
 #include "tensor_field.hpp"
+#include "physics_includes.hpp"
 
 class DomainMap;
 class Edge;
-class Physics;
 
 class ElementBlock
 {
@@ -69,8 +69,8 @@ class ElementBlock
     VectorField chebyshev_filter; // Filtering matrices; only need one element's worth
 
     Geometry geometry;     // Holds the computational geometry
-    Physics* physics[3];   // On flux points. These three and physics_soln only
-    Physics* physics_soln; // differ in their SpatialMetric objects
+    Physics<PhysicsType> physics[3];   // On flux points. These three and physics_soln only
+    Physics<PhysicsType> physics_soln; // differ in their SpatialMetric objects
 
     real_t timestep_transform_max; // Max value for this ElementBlock
                                    // Use to calculate c_h at each timestep

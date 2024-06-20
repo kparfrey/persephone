@@ -57,7 +57,6 @@ class Physics
         return;
     }
 
-
     void PrimitiveToConserved(const real_t* const __restrict__ P, 
                                     real_t* const __restrict__ U,
                               const int mem) const
@@ -79,7 +78,7 @@ class Physics
                       real_t (*__restrict__ F)[3],
                 const int mem) const
     {
-        static_cast<T const*>(this)-Fluxes_(P, F, mem);
+        static_cast<T const*>(this)->Fluxes_(P, F, mem);
         return;
     }
 
@@ -88,19 +87,19 @@ class Physics
                                real_t (*__restrict__ F)[3],
                          const int mem) const
     {
-        static_cast<T const*>(this)-DiffusiveFluxes_(U, dU, F, mem);
+        static_cast<T const*>(this)->DiffusiveFluxes_(U, dU, F, mem);
         return;
     }
    
     void OrthonormaliseVectors(real_t* const P, const int mem) const
     {
-        static_cast<T const*>(this)-OrthonormaliseVectors_(P, mem);
+        static_cast<T const*>(this)->OrthonormaliseVectors_(P, mem);
         return;
     }
 
     void Floors(real_t* const __restrict__ U, const int mem) const 
     {
-        static_cast<T const*>(this)-Floors_(U, mem);
+        static_cast<T const*>(this)->Floors_(U, mem);
         return;
     }
 

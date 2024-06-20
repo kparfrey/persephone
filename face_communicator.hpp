@@ -4,12 +4,13 @@
 #include <mpi.h>
 #include "common.hpp"
 #include "tensor_field.hpp"
-#include "physics.hpp"
+#include "physics_includes.hpp"
 
 #include "spatial_metric.hpp"
 
 
 class BoundaryConditions;
+class Process;
 
 class FaceCommunicator
 {
@@ -46,7 +47,7 @@ class FaceCommunicator
 
     VectorField normal;
 
-    Physics* physics;  // Physics methods, and metric arrays for this face only
+    Physics<PhysicsType> physics;  // Physics methods, and metric arrays for this face only
 
     real_t* my_data;         // This face's data, in its native ordering
     real_t* my_data_to_send; //  "     "      " , in ordering expected by the receiving proc
@@ -64,14 +65,11 @@ class FaceCommunicator
 
 
     /* Member functions */
-    template <class ProcType>
-    void setup(ProcType& proc, int face_id);
+    void setup(Process& proc, int face_id);
 
     inline MPI_Request send_data();
     inline MPI_Request receive_data();
 };
 
-
-#include "face_communicator.cpp"
 
 #endif

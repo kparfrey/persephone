@@ -1,15 +1,14 @@
-//#include "process.hpp"
-//#include "kernels.hpp"
+#include "process.hpp"
+#include "kernels.hpp"
 #include "physics.hpp"
 #include "write_screen.hpp"
 
-template <class ProcType>
-void FaceCommunicator::setup(ProcType& proc, int face_id)
+void FaceCommunicator::setup(Process& proc, int face_id)
 {
     my_id         = face_id;
     my_rank       = proc.rank;
     my_group_rank = proc.group_rank;
-    Nfield        = physics->Nfield;
+    Nfield        = physics.Nfield;
 
     /* neighbour_id corresponds to a simple Cartesian connectivity.
      * Need to modify later if not true for this face (e.g. the face
@@ -80,7 +79,7 @@ void FaceCommunicator::setup(ProcType& proc, int face_id)
    
     allocate();
 
-    physics->metric->allocate_on_host(Ntot);
+    physics.metric->allocate_on_host(Ntot);
 
     /* Fill normal array and metric arrays from ElementBlock */
     int id_elem_face, id_elem_normals, id_elem;
@@ -118,11 +117,11 @@ void FaceCommunicator::setup(ProcType& proc, int face_id)
             /* Assume diagonal spatial metric for now. DIAGONAL HACK */
             for (int i: dirs)
             {
-                physics->metric->g[i][mem_face]           = proc.elements.physics[normal_dir]->metric->g[i][mem];
-                physics->metric->ginv[i][mem_face]        = proc.elements.physics[normal_dir]->metric->ginv[i][mem];
-                physics->metric->rdetg_deriv[i][mem_face] = proc.elements.physics[normal_dir]->metric->rdetg_deriv[i][mem];
+                physics.metric->g[i][mem_face]           = proc.elements.physics[normal_dir].metric->g[i][mem];
+                physics.metric->ginv[i][mem_face]        = proc.elements.physics[normal_dir].metric->ginv[i][mem];
+                physics.metric->rdetg_deriv[i][mem_face] = proc.elements.physics[normal_dir].metric->rdetg_deriv[i][mem];
             }
-            physics->metric->rdetg[mem_face] = proc.elements.physics[normal_dir]->metric->rdetg[mem];
+            physics.metric->rdetg[mem_face] = proc.elements.physics[normal_dir].metric->rdetg[mem];
         }
     }
 

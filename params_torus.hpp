@@ -1,11 +1,12 @@
 #ifndef PARAMS_TORUS
 #define PARAMS_TORUS
 
-#include "params.hpp"
-#include "cerfon_freidberg.hpp"
-#include "desc.hpp"
-
 #include <string>
+#include "params.hpp"
+//#include "cerfon_freidberg.hpp"
+//#include "desc.hpp"
+
+class TorusConfig;
 
 
 class ParamsTorus : public Params<ParamsTorus>
@@ -87,7 +88,5 @@ class ParamsTorus : public Params<ParamsTorus>
     }
 };
 
-
-#include "params_torus.cpp"
 
 #endif

@@ -1,10 +1,9 @@
 #ifndef PARAMS_HPP
 #define PARAMS_HPP
 
-#include "common.hpp"
 
 class ElementBlock;
-class Physics;
+class Process;
 
 
 /* Base parameter class */
@@ -32,8 +31,7 @@ class Params
  
 
     /* Provided by this class, in params.cpp */
-    template <class ProcType>
-    void setup_process_generic(ProcType& proc);
+    void setup_process_generic(Process& proc);
 
 
     /* Defined in derived classes */
@@ -43,15 +41,13 @@ class Params
         return;
     }
 
-    template <class ProcType>
-    void setup_process(ProcType& proc)
+    void setup_process(Process& proc)
     {
         static_cast<ParamsType*>(this)->setup_process_(proc);
         return;
     }
     
-    template <class ProcType>
-    void setup_elementblock(ElementBlock& elements, ProcType& proc)
+    void setup_elementblock(ElementBlock& elements, Process& proc)
     {
         static_cast<ParamsType*>(this)->setup_elementblock_(elements, proc);
         return;
@@ -63,7 +59,5 @@ class Params
         return;
     }
 };
-
-#include "params.cpp"
 
 #endif

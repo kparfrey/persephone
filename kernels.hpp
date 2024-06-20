@@ -12,14 +12,6 @@
 #include <iostream>
 
 
-#if 0
-class ConservedToPrimitive;
-class FluxesFromPrimitive;
-class DiffusiveFluxes;
-class WaveSpeedsFromPrimitive;
-#endif
-
-class Physics;
 
 namespace kernels
 {
@@ -91,7 +83,7 @@ namespace kernels
     void bulk_fluxes(const real_t* const __restrict__ Uf,
                            real_t* const __restrict__ F ,
                      const VectorField                S ,
-                     const Physics* const __restrict__ physics,
+                     const Physics<PhysicsType>       physics,
                      //const ConservedToPrimitive*  U_to_P,
                      //const FluxesFromPrimitive* F_from_P,
                      const LengthBucket lb, const int dir);
@@ -111,7 +103,7 @@ namespace kernels
     void add_geometric_sources(      real_t* const __restrict__  divF, 
                                const real_t* const __restrict__  U,
                                const VectorField                 dP,
-                               const Physics* const __restrict__ physics,
+                               const Physics<PhysicsType>        physics,
                                const int Nfield, const int Ns);
 
 #if 0
@@ -137,7 +129,6 @@ namespace kernels
     inline
     void neumann_boundary_conditions(const FaceCommunicator& face);
     
-    template <class NumFluxType>
     inline
     void external_numerical_flux(const FaceCommunicator           face,
                                        real_t* const __restrict__ F,
@@ -145,7 +136,6 @@ namespace kernels
                                  const VectorField                S,
                                  const LengthBucket               lb);
 
-    template <class NumFluxType>
     inline
     void internal_numerical_flux(const real_t* const __restrict__ Uf,
                                        real_t* const __restrict__ F,
@@ -182,33 +172,31 @@ namespace kernels
     void diffusive_flux(const real_t* const __restrict__ Pf,
                         const VectorField                dPf,
                               real_t* const __restrict__ F,
-                        //const DiffusiveFluxes*           F_diff,
-                        const Physics* const __restrict__ physics,
-                        //const real_t* const __restrict__ args,
+                        const Physics<PhysicsType>       physics,
                         const VectorField                S,
                         const LengthBucket               lb,
                         const int                        dir);
 
     inline
     void floors(      real_t* const __restrict__  U,
-                const Physics* const __restrict__ physics,
+                const Physics<PhysicsType> physics,
                 const LengthBucket               lb);
 
     inline
     void conserved_to_primitive_fluxpoints(      real_t* const __restrict__  UPf,
-                                           const Physics* const __restrict__ physics,
+                                           const Physics<PhysicsType>        physics,
                                            const LengthBucket                lb,
                                            const int                         dir);
 
     inline
-    void conserved_to_primitive_faces(      FaceCommunicator face,
-                                      const Physics* const __restrict__ physics,
-                                      const LengthBucket                lb);
+    void conserved_to_primitive_faces(      FaceCommunicator     face,
+                                      const Physics<PhysicsType> physics,
+                                      const LengthBucket         lb);
 
     inline
     void wall_BC_derivatives(const FaceCommunicator face,
                                    VectorField      dPf,
-                             const Physics* const __restrict__ physics,                                   
+                             const Physics<PhysicsType> physics,                                   
                              const LengthBucket     lb);
 
     /* Not a final "kernel", obviously */
@@ -216,13 +204,11 @@ namespace kernels
     real_t local_timestep(const real_t* const __restrict__ Uf,
                                 real_t& vmax,
                           const VectorField timestep_transform,
-                          const Physics* const __restrict__ physics,
+                          const Physics<PhysicsType> physics,
                           //const ConservedToPrimitive*  U_to_P,
                           //const WaveSpeedsFromPrimitive* c_from_P,
                           const LengthBucket lb, const int dir);
 }
 
-
-#include "kernels.cpp"
 
 #endif

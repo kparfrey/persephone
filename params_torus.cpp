@@ -1,6 +1,9 @@
 #include <mpi.h>
 #include <cmath>
 #include <iomanip>
+#include <string>
+#include "common.hpp"
+#include "params_torus.hpp"
 #include "process.hpp"
 #include "element_block.hpp"
 #include "initial_state_torus.hpp"
@@ -8,8 +11,6 @@
 #include "domain_map_torus.hpp"
 #include "boundary_conditions.hpp"
 #include "spatial_metric.hpp"
-#include "physics_includes.hpp"
-#include <string>
 
 using std::cout;
 using std::endl;

@@ -13,8 +13,7 @@
 
 #include "active_params.hpp"
 
-template <class ProcType>
-static void startMPI(int argc, char *argv[], ProcType& proc)
+static void startMPI(int argc, char *argv[], Process& proc)
 {
     int error = MPI_Init(&argc, &argv);
     
@@ -47,7 +46,7 @@ static void startMPI(int argc, char *argv[], ProcType& proc)
 
 int main(int argc, char *argv[])
 {
-    Process<ParamsType,TimeStepType,NumFluxType> proc(active_parameters);
+    Process proc(active_parameters);
 
     startMPI(argc, &(*argv), proc);
 
