@@ -1,20 +1,20 @@
 // Strictly speaking this file should import the absolute minimum
 // --- it probably shouldn't need anything except the definition of real_t ?
 
-#include "kernels.hpp"
-#include "physics_includes.hpp"
-#include "numerical_flux.hpp"
-#include "boundary_conditions.hpp"
 #include <iostream>
+#include "common.hpp"
+#include "kernels.hpp"
+#include "boundary_conditions.hpp"
+
 
 namespace kernels
 {
     /* Solution points always use a fixed order (i along dir-0 etc) while 
      * flux-point data is stored relative to the transform direction. Use this
      * to create fixed-axis pointers to the correct transform-relative indices */
-    inline static void relative_to_fixed_indices(int&  n0, int&  n1, int&  n2,
-                                                 int*& i0, int*& i1, int*& i2,
-                                                 const int dir)
+    static void relative_to_fixed_indices(int&  n0, int&  n1, int&  n2,
+                                          int*& i0, int*& i1, int*& i2,
+                                          const int dir)
     {
         switch(dir)
         {
@@ -39,12 +39,12 @@ namespace kernels
     }
 
    
-    inline static void fluxes_phys_to_ref(const real_t      (*Fphys)[3],
-                                                real_t* __restrict__ F,
-                                          const VectorField          S,
-                                          const int memory_loc,
-                                          const int Nfield,
-                                          const int Nf_tot)
+    static void fluxes_phys_to_ref(const real_t      (*Fphys)[3],
+                                         real_t* __restrict__ F,
+                                   const VectorField          S,
+                                   const int memory_loc,
+                                   const int Nfield,
+                                   const int Nf_tot)
     {
         real_t lsum;
 
@@ -204,7 +204,6 @@ namespace kernels
 
 
     /* Zero-initialized by default */
-    inline
     real_t* alloc(int n)
     {
         real_t *ptr = new real_t [n]();
@@ -213,7 +212,6 @@ namespace kernels
 
 
     /* If for some reason a non-initialized array is preferred for speed */
-    inline
     real_t* alloc_raw(int n)
     {
         real_t *ptr = new real_t [n];
@@ -221,7 +219,6 @@ namespace kernels
     }
 
 
-    inline
     void free(real_t* a)
     {
         delete[] a;
@@ -232,7 +229,6 @@ namespace kernels
     /* for 0 <= i < N: result[i] = a1*v1[i] + a2*v2[i] */
     /* Removed __restrict__ from v1 and result, since one of the
      * calls has these being the same array. */
-    inline
     void add_2_vectors(real_t* v1,     real_t* __restrict__ v2, 
                        real_t  a1,     real_t               a2, 
                        real_t* result, const int N)
@@ -245,7 +241,6 @@ namespace kernels
 
 
     /* Can have the same pointer in v1 or v2 and result */
-    inline
     void add_3_vectors(const real_t* const v1, const real_t* const v2, 
                        const real_t* const __restrict__ v3,
                        const real_t a1, const real_t a2, const real_t a3, 
@@ -258,7 +253,6 @@ namespace kernels
     }
 
 
-    inline
     void add_vectors_inPlace(       real_t* const __restrict__ v,
                               const real_t* const __restrict__ v_add,
                               const int N)
@@ -270,7 +264,6 @@ namespace kernels
     }
 
 
-    inline
     void add_scaled_vectors_inPlace(      real_t* const __restrict__ v,
                                     const real_t* const __restrict__ v_add,
                                     const real_t                     scalar,
@@ -299,7 +292,6 @@ namespace kernels
 #endif
 
 
-    inline
     void multiply_by_scalar(const real_t* const __restrict__ v, 
                             const real_t                     scalar,
                                   real_t* const __restrict__ result,
@@ -312,7 +304,6 @@ namespace kernels
     }
 
 
-    inline
     void multiply_by_scalar_inPlace(      real_t* const __restrict__ v, 
                                     const real_t                     scalar,
                                     const int                        N)
@@ -324,7 +315,6 @@ namespace kernels
     }
 
 
-    inline
     void soln_to_flux(const real_t* const __restrict__ matrix, 
                       const real_t* const __restrict__ U, 
                             real_t* const __restrict__ Uf, 
@@ -402,7 +392,6 @@ namespace kernels
     }
 
 
-    inline
     void fluxDeriv_to_soln(const real_t* const __restrict__ matrix, 
                            const real_t* const __restrict__ F, 
                                  real_t* const __restrict__ dF, 
@@ -476,13 +465,10 @@ namespace kernels
 
 
     /* Think I can replace with a single for loop */
-    inline
     void bulk_fluxes(const real_t* const __restrict__ Uf,
                            real_t* const __restrict__ F ,
                      const VectorField                S ,
-                     const Physics<PhysicsType> physics,
-                     //const ConservedToPrimitive*  U_to_P,
-                     //const FluxesFromPrimitive* F_from_P,
+                     const PhysicsType                physics,
                      const LengthBucket lb, const int dir)
     {
         int id_elem;
@@ -543,7 +529,6 @@ namespace kernels
     }
 
 
-    inline
     void flux_divergence(const VectorField                dF,
                          const real_t* const __restrict__ Jrdetg,
                                real_t* const __restrict__ divF,
@@ -582,7 +567,6 @@ namespace kernels
 
     
     /* Apply a Chebyshev filter to a single field, starting at U[0] */
-    inline
     void filter_field(      real_t* const __restrict__ U,
                       const VectorField filter_matrices,
                       const LengthBucket lb)
@@ -660,11 +644,10 @@ namespace kernels
     }
 
 
-    inline
     void add_geometric_sources(      real_t* const __restrict__  divF, 
                                const real_t* const __restrict__  U,
                                const VectorField                 dP,
-                               const Physics<PhysicsType> physics,
+                               const PhysicsType                 physics,
                                const int Nfield, const int Ns)
     {
         /* Conserved vars, primitive vars, and physical fluxes
@@ -691,7 +674,7 @@ namespace kernels
              * Calculate physical inviscid fluxes in all three dirs */
             physics.Fluxes(Pp, Fp, mem);
             
-            if (Physics::diffusive)
+            if (PhysicsType::diffusive)
             {
                 for (int field = 0; field < Nfield; ++field)
                     for (int d: dirs)
@@ -824,7 +807,6 @@ namespace kernels
 #endif
 
 
-    inline
     void fill_face_data(const real_t* const __restrict__ Uf,
                               FaceCommunicator           face,
                         const LengthBucket               lb)
@@ -969,7 +951,6 @@ namespace kernels
 
 
 
-    inline
     void dirichlet_boundary_conditions(const FaceCommunicator& face)
     {
         /* Explicitly setting both interface sides to the same values here */
@@ -1007,7 +988,6 @@ namespace kernels
      * independently, can only easily apply zero total derivative BCs. Will need
      * to pass a flag saying which PDD the data refers to if we to apply BCs
      * on the normal derivative only */
-    inline
     void neumann_boundary_conditions(const FaceCommunicator& face)
     {
         real_t* dP = new real_t [face.Nfield];
@@ -1032,11 +1012,10 @@ namespace kernels
         return;
     }
 
-    template <class NumFluxType>
-    inline
+    
     void external_numerical_flux(const FaceCommunicator           face,
                                        real_t* const __restrict__ F,
-                                 const NumericalFlux<NumFluxType> F_numerical,
+                                 const NumFluxType                F_numerical,
                                  const VectorField                S,
                                  const LengthBucket               lb)
     {
@@ -1153,11 +1132,9 @@ namespace kernels
     }
 
 
-    template <class NumFluxType>
-    inline
     void internal_numerical_flux(const real_t* const __restrict__ Uf,
                                        real_t* const __restrict__ F,
-                                 const NumericalFlux<NumFluxType> F_numerical,
+                                 const NumFluxType                F_numerical,
                                  const VectorField                S,
                                  const VectorField                normal,
                                  const LengthBucket               lb,
@@ -1253,7 +1230,6 @@ namespace kernels
 
     /* Average the primitive variables or their derivatives on process-external interfaces.
      * Only required when have diffusive terms. */
-    inline
     void external_interface_average(const FaceCommunicator           face,
                                           real_t* const __restrict__ Pf,
                                     const LengthBucket               lb)
@@ -1322,7 +1298,6 @@ namespace kernels
 
     /* Average the primitive variables or their derivatives on process-internal interfaces.
      * Only required when have diffusive terms. */
-    inline
     void internal_interface_average(      real_t* const __restrict__ Pf,
                                     const LengthBucket               lb,
                                     const int                        dir)
@@ -1377,7 +1352,6 @@ namespace kernels
     }
 
     
-    inline
     void gradient_ref_to_phys(const VectorField dP_ref,
                                     VectorField dP_phys,
                               const VectorField dxdr[3],
@@ -1412,7 +1386,6 @@ namespace kernels
 
     /* Takes three physical vector components and combines them into a single
      * component of the reference-space vector along the chosen direction.    */
-    inline
     void phys_vector_to_ref_density(const real_t* const __restrict__ V_phys,
                                           real_t* const __restrict__ V_ref,
                                     const VectorField                S,
@@ -1435,11 +1408,10 @@ namespace kernels
     }
 
     
-    inline
     void diffusive_flux(const real_t* const __restrict__ Pf,
                         const VectorField                dPf,
                               real_t* const __restrict__ F,
-                        const Physics<PhysicsType>       physics,
+                        const PhysicsType                physics,
                         const VectorField                S,
                         const LengthBucket               lb,
                         const int                        dir)
@@ -1488,9 +1460,8 @@ namespace kernels
 
 
     /* Apply flooring procedure to the conserved variables on the solution points */
-    inline
     void floors(      real_t* const __restrict__  U,
-                const Physics<PhysicsType>        physics,
+                const PhysicsType                 physics,
                 const LengthBucket                lb)
     {
         if (!physics.apply_floors)
@@ -1520,9 +1491,8 @@ namespace kernels
      * into the same arrays. 
      * Should only be used to find diffusive fluxes.
      * Save T into p slot, and B^2 into psi slot */
-    inline
     void conserved_to_primitive_fluxpoints(      real_t* const __restrict__  UPf,
-                                           const Physics<PhysicsType>        physics,
+                                           const PhysicsType                 physics,
                                            const LengthBucket                lb,
                                            const int                         dir)
     {
@@ -1565,10 +1535,9 @@ namespace kernels
      * into the same arrays 
      * Should only be used to find diffusive fluxes.
      * Save T into p slot, and B^2 into psi slot */
-    inline
-    void conserved_to_primitive_faces(      FaceCommunicator      face,
-                                      const Physics<PhysicsType>  physics,
-                                      const LengthBucket          lb)
+    void conserved_to_primitive_faces(      FaceCommunicator face,
+                                      const PhysicsType      physics,
+                                      const LengthBucket     lb)
     {
         int id_elem_face, id_elem;
         int mem_offset_face, mem_offset;
@@ -1670,10 +1639,9 @@ namespace kernels
      * on the flux points. Use the FaceCommunicator object as a guide to navigating dPf.   
      * This function removes the tangential derivatives of the velocity on the wall, since 
      * v^i = 0 on this surface. Not sure that this actually helps... */
-    inline
     void wall_BC_derivatives(const FaceCommunicator     face,
                                    VectorField          dPf,
-                             const Physics<PhysicsType> physics,                                   
+                             const PhysicsType          physics,                                   
                              const LengthBucket         lb)
     {
         enum conserved {Density, mom0, mom1, mom2, tot_energy, B0, B1, B2, psi};
@@ -1746,11 +1714,9 @@ namespace kernels
     /* Temporary standalone method. Should reintegrate into other operations.    */
     /* Returns the timestep restriction along this reference direction.          */
     real_t local_timestep(const real_t* const __restrict__ Uf,
-                                real_t& vmax,
-                          const VectorField timestep_transform,
-                          const Physics<PhysicsType> physics,
-                          //const ConservedToPrimitive*  U_to_P,
-                          //const WaveSpeedsFromPrimitive* c_from_P,
+                                real_t&                    vmax,
+                          const VectorField                timestep_transform,
+                          const PhysicsType                physics,
                           const LengthBucket lb, const int dir)
     { 
         int id_elem;

@@ -1,7 +1,6 @@
-#include "params_cartesian.hpp"
-
 #include <cmath>
 #include <mpi.h>
+#include "common.hpp"
 #include "process.hpp"
 #include "element_block.hpp"
 #include "initial_state_cartesian.hpp"
@@ -9,7 +8,6 @@
 #include "domain_map.hpp"
 #include "geometry_labels.hpp"
 #include "spatial_metric.hpp"
-#include "physics.hpp"
 #include "boundary_conditions.hpp"
 
 using std::cout;
@@ -52,8 +50,7 @@ void ParamsCartesian::write_param_info_()
 }
 
 
-template <class ProcType>
-void ParamsCartesian::setup_process_(ProcType& proc)
+void ParamsCartesian::setup_process_(Process& proc)
 {
     /* This process's set of indices in the global 3D array of processes   */
     int proc_idx[3];
@@ -96,7 +93,7 @@ void ParamsCartesian::setup_process_(ProcType& proc)
 
         write::variable<int>("Setting up face:", i);
 
-        face.physics->metric = new DiagonalSpatialMetric(cartesian);
+        face.physics.metric = new DiagonalSpatialMetric(cartesian);
 
         face.setup(proc, i);
 
@@ -155,8 +152,8 @@ void ParamsCartesian::setup_process_(ProcType& proc)
     return;
 }
 
-template <class ProcType>
-void ParamsCartesian::setup_elementblock_(ElementBlock& elements, ProcType& proc)
+
+void ParamsCartesian::setup_elementblock_(ElementBlock& elements, Process& proc)
 {
     for (int i: dirs)
     {
@@ -171,8 +168,8 @@ void ParamsCartesian::setup_elementblock_(ElementBlock& elements, ProcType& proc
     //elements.map = new WaveRect2D; //new QuarterAnnulusMap; // specify manually for now...
 
     for (int d: dirs)
-        elements.physics[d]->metric = new DiagonalSpatialMetric(cartesian);
-    elements.physics_soln->metric   = new DiagonalSpatialMetric(cartesian);
+        elements.physics[d].metric = new DiagonalSpatialMetric(cartesian);
+    elements.physics_soln.metric   = new DiagonalSpatialMetric(cartesian);
 
     /* At this point all external information is present, and the internal
      * setup method can take over. */

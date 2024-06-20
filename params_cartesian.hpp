@@ -1,5 +1,5 @@
-#include "params.hpp"
-
+#ifndef PARAMS_CARTESIAN_HPP
+#define PARAMS_CARTESIAN_HPP
 
 /* Simple parameter holder for homogeneous Cartesian domain */
 class ParamsCartesian : public Params<ParamsCartesian>
@@ -24,25 +24,22 @@ class ParamsCartesian : public Params<ParamsCartesian>
     /* Called from base class interface functions */
     void write_param_info_();
 
-    template <class ProcType>
-    void setup_process_(ProcType& proc);
+    void setup_process_(Process& proc);
     
-    template <class ProcType>
-    void setup_elementblock_(ElementBlock& elements, ProcType& proc);
+    void setup_elementblock_(ElementBlock& elements, Process& proc);
 
     void set_initial_state_(ElementBlock& elements);
 
 
     /* Constructor */
-    ParamsCartesian(EqnSystem equations,
-                    int (& Nproc_)[3], 
+    ParamsCartesian(int (& Nproc_)[3], 
                     int (& Nelem_)[3], 
                     int (& Ns_)[3], 
                     real_t cfl = 0.8,
                     real_t end_time = 1.0,
                     real_t dt_write = 0.5,
                     bool periodic = true)
-    : Params(equations, cfl, end_time, dt_write), periodic(periodic)
+    : Params(cfl, end_time, dt_write), periodic(periodic)
     {
         for (int i=0; i<3; i++)
         {
@@ -54,3 +51,5 @@ class ParamsCartesian : public Params<ParamsCartesian>
         secondary_params();
     }
 };
+
+#endif

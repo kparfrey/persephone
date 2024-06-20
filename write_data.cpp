@@ -10,6 +10,8 @@
 #include <highfive/H5File.hpp>
 #include <highfive/H5Easy.hpp>
 
+#include "common.hpp"
+#include "write_data.hpp"
 #include "process.hpp"
 #include "element_block.hpp"
 #include "physics_includes.hpp"
@@ -21,8 +23,7 @@ using std::string;
 
 
 /* Very basic data output for simple Cartesian mesh */
-template <class ProcType>
-void write_data(ProcType& proc)
+void write_data(Process& proc)
 {
     ElementBlock& eb = proc.elements;
     std::vector<size_t> local_dims(3);
@@ -93,8 +94,8 @@ void write_data(ProcType& proc)
                 for (int field = 0; field < proc.Nfield; ++field)
                     Up[field] = eb.fields[n + field * eb.Ns_block];
 
-                eb.physics_soln->ConservedToPrimitive(Up, Pp, n);
-                eb.physics_soln->OrthonormaliseVectors(Pp, n);
+                eb.physics_soln.ConservedToPrimitive(Up, Pp, n);
+                eb.physics_soln.OrthonormaliseVectors(Pp, n);
 
                 for (int field = 0; field < proc.Nfield; ++field)
                     primitives[n + field * eb.Ns_block] = Pp[field];
@@ -102,7 +103,7 @@ void write_data(ProcType& proc)
                 /* Convert B units, e.g. to Teslas */
                 //if (proc.system == mhd)
                 //    for (int field = 5; field <= 8; ++field)
-                //        primitives[n + field * eb.Ns_block] *= ((MHD*)(proc.elements.physics_soln))->sqrt_mu0;
+                //        primitives[n + field * eb.Ns_block] *= ((MHD)(proc.elements.physics_soln)).sqrt_mu0;
             }
             delete[] Up;
             delete[] Pp;
@@ -112,7 +113,7 @@ void write_data(ProcType& proc)
 
             for (int i = 0; i < proc.Nfield; ++i)
             {
-                string name = groupstring + "/" + eb.physics_soln->variables[i];
+                string name = groupstring + "/" + eb.physics_soln.variables[i];
                 HighFive::DataSet dataset = datafile.createDataSet<real_t>(name, 
                                                      HighFive::DataSpace(global_dims));
 

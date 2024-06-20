@@ -18,7 +18,7 @@ class Process
 
     // NB: use a reference so the virtual functions work correctly...
     // Update: should probably change since am removing the virtual functions...
-    Params<ParamsType>& params;
+    ParamsType& params;
       
     /* Local data */
     int rank;
@@ -62,10 +62,10 @@ class Process
 
     EqnSystem system;
 
-    BasicTimeIntegrator<TimeStepType> time_integrator;
+    TimeStepType time_integrator;
 
-    NumericalFlux<NumFluxType> F_numerical[3]; // One for each set of flux points. Only diff in
-                                               // which Physics object their physics pointer points to
+    NumFluxType F_numerical[3]; // One for each set of flux points. Only diff in
+                                // which Physics object their physics pointer points to
 
     bool Bdotn_stored = false;  // State variable ---- tidy up soon
 

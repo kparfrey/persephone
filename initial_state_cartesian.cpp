@@ -1,8 +1,7 @@
-#include "initial_state_cartesian.hpp"
-
 #include <cmath>
+#include "common.hpp"
+#include "initial_state_cartesian.hpp"
 #include "element_block.hpp"
-#include "physics_includes.hpp"
 
 
 static real_t scalar_function(const real_t r[3])
@@ -69,13 +68,13 @@ static void couette_flow(const real_t r[3],
                                real_t* const __restrict__ fields,
                          const int loc0,
                          const int Ns_block,
-                         const NavierStokes* const __restrict__ physics)
+                         const PhysicsType& physics)
 {
     enum conserved {Density, mom0, mom1, mom2, energy};
     real_t density, v0, v1, v2, pressure; // primitive variables
 
-    const real_t gamma = physics->gamma;
-    const real_t gm1   = physics->gm1;
+    const real_t gamma = physics.gamma;
+    const real_t gm1   = physics.gm1;
     const real_t y     = r[1];
 
     /* Velocities */
@@ -120,12 +119,12 @@ static void alfven_wave(const real_t r[3],
                               real_t* const __restrict__ fields,
                         const int loc0,
                         const int Ns_block,
-                        const MHD* const __restrict__ physics)
+                        const PhysicsType& physics)
 {
     enum conserved {Density, mom0, mom1, mom2, energy, B0, B1, B2, psi};
     real_t density, v0, v1, v2, pressure, b0, b1, b2; // primitive variables
 
-    const real_t gm1   = physics->gm1;
+    const real_t gm1   = physics.gm1;
 
     real_t x, y, alpha, cosa, sina;
     real_t bpar, bperp, vpar, vperp;
@@ -177,12 +176,12 @@ static void field_loop_advection(const real_t r[3],
                                        real_t* const __restrict__ fields,
                                  const int loc0,
                                  const int Ns_block,
-                                 const MHD* const __restrict__ physics)
+                                 const PhysicsType& physics)
 {
     enum conserved {Density, mom0, mom1, mom2, energy, B0, B1, B2, psi};
     real_t density, v0, v1, v2, pressure, b0, b1, b2; // primitive variables
 
-    const real_t gm1   = physics->gm1;
+    const real_t gm1   = physics.gm1;
 
     real_t x, y, alpha, cosa, sina, vmag;
     real_t kinetic_energy, magnetic_energy;
@@ -255,12 +254,12 @@ static void MHD_vortex(const real_t r[3],
                              real_t* const __restrict__ fields,
                        const int loc0,
                        const int Ns_block,
-                       const MHD* const __restrict__ physics)
+                       const PhysicsType& physics)
 {
     enum conserved {Density, mom0, mom1, mom2, energy, B0, B1, B2, psi};
     real_t density, v0, v1, v2, pressure, b0, b1, b2; // primitive variables
 
-    const real_t gm1   = physics->gm1;
+    const real_t gm1   = physics.gm1;
 
     real_t x, y;
     real_t kinetic_energy, magnetic_energy;
@@ -307,12 +306,12 @@ static void hartmann_flow(const real_t r[3],
                                 real_t* const __restrict__ fields,
                           const int loc0,
                           const int Ns_block,
-                          const MHD* const __restrict__ physics)
+                          const PhysicsType& physics)
 {
     enum conserved {Density, mom0, mom1, mom2, energy, B0, B1, B2, psi};
     real_t density, v0, v1, v2, pressure, b0, b1, b2; // primitive variables
 
-    const real_t gm1 = physics->gm1;
+    const real_t gm1 = physics.gm1;
     const real_t y   = r[1];
 
     real_t kinetic_energy, magnetic_energy;
@@ -366,20 +365,20 @@ void set_initial_state_cartesian(ElementBlock& eb)
             for (int d: dirs)
                 r[d] = eb.rs(d,loc0);
 
-            switch(eb.physics_soln->system)
+            switch(eb.physics_soln.system)
             {
                 case scalar_advection:
                     eb.fields[loc0] = scalar_function(r);
                     break;
                 case navier_stokes:
-                    //shu_vortex(r, eb.fields, loc0, eb.Ns_block, (NavierStokes*)eb.physics_soln);
-                    couette_flow(r, eb.fields, loc0, eb.Ns_block, (NavierStokes*)eb.physics_soln);
+                    //shu_vortex(r, eb.fields, loc0, eb.Ns_block, eb.physics_soln);
+                    couette_flow(r, eb.fields, loc0, eb.Ns_block, eb.physics_soln);
                     break;
                 case mhd:
-                    //alfven_wave(r, eb.fields, loc0, eb.Ns_block, (MHD*)eb.physics_soln);
-                    //field_loop_advection(r, eb.fields, loc0, eb.Ns_block, (MHD*)eb.physics_soln);
-                    //MHD_vortex(r, eb.fields, loc0, eb.Ns_block, (MHD*)eb.physics_soln);
-                    hartmann_flow(r, eb.fields, loc0, eb.Ns_block, (MHD*)eb.physics_soln);
+                    //alfven_wave(r, eb.fields, loc0, eb.Ns_block, eb.physics_soln);
+                    //field_loop_advection(r, eb.fields, loc0, eb.Ns_block, eb.physics_soln);
+                    //MHD_vortex(r, eb.fields, loc0, eb.Ns_block, eb.physics_soln);
+                    hartmann_flow(r, eb.fields, loc0, eb.Ns_block, eb.physics_soln);
                     break;
             }
         }

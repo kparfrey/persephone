@@ -1,4 +1,5 @@
 #include <cmath>
+#include "common.hpp"
 #include "element_block.hpp"
 #include "kernels.hpp"
 #include "write_screen.hpp"
@@ -8,7 +9,6 @@
 #include "domain_map_torus.hpp"
 #include "edge.hpp"
 #include "geometry_labels.hpp"
-#include "physics.hpp"
 #include "legendre_roots.hpp"
 
 
@@ -93,9 +93,9 @@ void ElementBlock::allocate_on_host()
 
     fields = new real_t [Nfield * Ns_block];
 
-    physics_soln->metric->allocate_on_host(Ns_block);
+    physics_soln.metric->allocate_on_host(Ns_block);
 
-    if (physics_soln->system == mhd)
+    if (physics_soln.system == mhd)
     {
         divB = new real_t [Ns_block];
         //divB_init = new real_t [Ns_block];
@@ -107,7 +107,7 @@ void ElementBlock::allocate_on_host()
         soln2flux(i)      = new real_t [matrix_size]; // Nf x Ns matrices
         fluxDeriv2soln(i) = new real_t [matrix_size]; // Ns x Nf matrices
     
-        physics[i]->metric->allocate_on_host(Nf_dir_block[i]);
+        physics[i].metric->allocate_on_host(Nf_dir_block[i]);
     }
 
     edges = new Edge* [Nelem_block];
@@ -371,7 +371,7 @@ void ElementBlock::set_physical_coords_full()
                 rs(d,mem_loc) = rp[d];
 
             /* Fill in the spatial metric arrays */
-            physics_soln->metric->fill(rp, mem_loc);
+            physics_soln.metric->fill(rp, mem_loc);
         }
 
 
@@ -470,7 +470,7 @@ void ElementBlock::set_physical_coords_full()
                 /* Fill spatial metric --- need to interpolate to find r at flux
                  * point first, since this hasn't been stored.                   */
                 polynomial_transfinite_map_3D(xe, elem_edges, elem_corners, rp);
-                physics[d]->metric->fill(rp, mem_loc);
+                physics[d].metric->fill(rp, mem_loc);
             } // end loop over flux points
         } // end loop over elements
     } // end loop over direction of flux-point set

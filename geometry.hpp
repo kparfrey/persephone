@@ -1,7 +1,6 @@
 #ifndef GEOMETRY_HPP
 #define GEOMETRY_HPP
 
-#include "common.hpp"
 #include "tensor_field.hpp"
 
 class Edge;

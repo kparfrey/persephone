@@ -11,9 +11,6 @@
 #include "params.hpp"
 
 
-/* Shorthand, since use this frequently here */
-using PHYS = Physics<PhysicsType>;
-
 
 void Process::write_startup_info()
 {
@@ -77,7 +74,7 @@ void Process::time_advance()
     real_t dtmin_advect;
     real_t dtmin_diff, dt_ratio;
 
-    PHYS::ch = 0.0; // Find timestep without cleaning wave
+    PhysicsType::ch = 0.0; // Find timestep without cleaning wave
 
     /* Should be able to convert this to a single search over data on the solution points? */
     real_t vmax_dir[3]; 
@@ -97,16 +94,16 @@ void Process::time_advance()
     MPI_Allreduce(MPI_IN_PLACE, &vmax, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
     dtmin_advect = cfl * dtmin;
 
-    if (PHYS::diffusive)
+    if (PhysicsType::diffusive)
     {
         // For constant diffusive coefficients this can be moved to the setup phase 
         // --- same for all time steps
         // d_t_c = 1/3 stable for WaveRect at high viscosity, but 0.4 breaks sometimes...?
         // Seems to be excessively restrictive when have an inhomogeneous grid?
         // Very problem dependent: can use d_t_c = 0.9 for the MHD Alfven wave problem
-        real_t diffusion = MAX(MAX(PHYS::viscosity, PHYS::resistivity), PHYS::conductivity);
+        real_t diffusion = MAX(MAX(PhysicsType::viscosity, PhysicsType::resistivity), PhysicsType::conductivity);
         diffusion = MAX(diffusion, 1e-15);
-        dtmin_diff   = (PHYS::diffusive_timestep_const/diffusion) * (1./(tt_max_global*tt_max_global));
+        dtmin_diff   = (PhysicsType::diffusive_timestep_const/diffusion) * (1./(tt_max_global*tt_max_global));
 
         dt = MIN(dtmin_advect, dtmin_diff); 
         dt_ratio = dtmin_diff/dtmin_advect;
@@ -125,11 +122,11 @@ void Process::time_advance()
             safety = 0.75; // Seem to run into trouble at very high ch for small cfl
 
         /* For using the non-Galilean-invariant method of Derigs+ 2018 */
-        PHYS::ch = safety * std::sqrt(lambda_max * (lambda_max - vmax));
-        //std::cout << "ch = " << PHYS::ch << std::endl;
+        PhysicsType::ch = safety * std::sqrt(lambda_max * (lambda_max - vmax));
+        //std::cout << "ch = " << PhysicsType::ch << std::endl;
 
-        PHYS::psi_damping_rate = PHYS::ch / PHYS::psi_damping_const; //p_d_c = c_r from Dedner
-        //std::cout << PHYS::psi_damping_rate << std::endl;
+        PhysicsType::psi_damping_rate = PhysicsType::ch / PhysicsType::psi_damping_const; //p_d_c = c_r from Dedner
+        //std::cout << PhysicsType::psi_damping_rate << std::endl;
     }
     /********************************************/
 
@@ -140,7 +137,7 @@ void Process::time_advance()
         const int defaultprec = cout.precision();
         cout.precision(3);
 
-        if (PHYS::diffusive)
+        if (PhysicsType::diffusive)
             cout << "Starting step " << setw(3) << left << step << " --- t = " << time
                  << " --- dt = " << dt 
                  << " --- dt ratio: " << dt_ratio
@@ -188,7 +185,7 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
          F(i) = kernels::alloc_raw(Nfield * eb.Nf_dir_block[i]);
         dF(i) = kernels::alloc_raw(Nfield * eb.Ns_block);
         
-        if (PHYS::diffusive)
+        if (PhysicsType::diffusive)
             dP(i) = kernels::alloc_raw(Nfield * eb.Ns_block);
     }
 
@@ -220,7 +217,7 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
 
     /* For explicit diffusive terms, calculate the diffusive flux and add
      * to the advective fluxes before taking the flux deriv: F += F_diffusive */
-    if (PHYS::diffusive)
+    if (PhysicsType::diffusive)
         add_diffusive_flux(Uf, dP, F);
 
     /* For testing that dP's are being calculated correctly -- put a known function *
@@ -242,7 +239,7 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
         const int pstart = 8 * eb.Ns_block; // mem location at which the psi field begins
 
         /* Find divB from divF[psi] and save into elements.divB */
-        //kernels::multiply_by_scalar(&divF[pstart], 1.0/PHYS::ch, eb.divB, eb.Ns_block);
+        //kernels::multiply_by_scalar(&divF[pstart], 1.0/PhysicsType::ch, eb.divB, eb.Ns_block);
         
         /* Find divB independently, by averaging B components at the element interfaces.
          * This seems to work better. */
@@ -261,9 +258,9 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
             for (int d: dirs)
                 Bu[d] = U[(5+d)*N + i];
 
-            eb.physics_soln->metric->raise(vl, vu, i);
-            eb.physics_soln->metric->lower(Bu, Bl, i);
-            vdotB = eb.physics_soln->metric->dot(vu, Bu, i);
+            eb.physics_soln.metric->raise(vl, vu, i);
+            eb.physics_soln.metric->lower(Bu, Bl, i);
+            vdotB = eb.physics_soln.metric->dot(vu, Bu, i);
 
             /* Using Eulerian method of Derigs+ 2018, Sec 3.9 
                Lagrangian method seems unstable for discontinuous field loop test?
@@ -282,12 +279,12 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
                 divF[(5+d)*N +i] += divB * vu[d];
 
             // Psi equation sources
-            divF[pstart + i] += PHYS::psi_damping_rate * U[pstart + i]; // + gradpsi_dot_v;
+            divF[pstart + i] += PhysicsType::psi_damping_rate * U[pstart + i]; // + gradpsi_dot_v;
         }
     }
 
     /* Add geometric source terms if not using Cartesian physical coordinates */
-    if (eb.physics_soln->metric->physical_coords != cartesian)
+    if (eb.physics_soln.metric->physical_coords != cartesian)
         kernels::add_geometric_sources(divF, U, dP, eb.physics_soln, Nfield, eb.Ns_block);
 
     for (int i: dirs)
@@ -296,7 +293,7 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
         kernels::free( F(i));
         kernels::free(dF(i));
         
-        if (PHYS::diffusive)
+        if (PhysicsType::diffusive)
             kernels::free(dP(i));
     }
 
@@ -366,7 +363,7 @@ void Process::find_divB(const real_t* const B, real_t* const divB)
                 if (!Bdotn_stored)
                     Bdotn_initial[j] = Bdotn;
 
-                f.physics->metric->raise(nl, nu, j);
+                f.physics.metric->raise(nl, nu, j);
             
                 for (int d: dirs)
                     f.neighbour_data[j + d * f.Ntot] = 
@@ -504,7 +501,6 @@ void Process::add_diffusive_flux(VectorField Uf, VectorField dP, VectorField F)
             kernels::internal_interface_average(dPf[dflux](dderiv), eb.lengths, dflux);
 
 
-    //const real_t coeffs[2] = {physics->viscosity, physics->resistivity};
     for (int i: dirs) // flux-point direction
         kernels::diffusive_flux(Pf(i), dPf[i], Fd(i), eb.physics[i], eb.geometry.S[i], eb.lengths, i);
         //kernels::diffusive_flux(Uf(i), dPf[i], Fd(i), eb.physics[i], eb.geometry.S[i], eb.lengths, i);

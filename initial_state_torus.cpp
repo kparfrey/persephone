@@ -1,8 +1,9 @@
 #include "initial_state_torus.hpp"
 
 #include <cmath>
+#include "common.hpp"
+#include "initial_state_torus.hpp"
 #include "element_block.hpp"
-#include "physics_includes.hpp"
 #include "cerfon_freidberg.hpp"
 
 
@@ -10,7 +11,7 @@ static void implosion(const real_t r[3],
                             real_t* const __restrict__ fields,
                       const int loc0,
                       const int Ns_block,
-                      const NavierStokes* const __restrict__ physics)
+                      const PhysicsType& physics)
 {
     enum conserved {Density, mom0, mom1, mom2, energy};
     real_t density, v0, v1, v2, pressure; // primitive variables
@@ -32,14 +33,14 @@ static void implosion(const real_t r[3],
         reff = radial / rramp;
 
     density  = density_floor + 0.5*(1.0 - std::cos(reff * pi));
-    pressure = std::pow(density, physics->gamma); // Since entropy = 1
+    pressure = std::pow(density, physics.gamma); // Since entropy = 1
 
     /* Convert to conserved variables */
     fields[loc0 + Density*Ns_block] = density;
     fields[loc0 +    mom0*Ns_block] = density * v0;
     fields[loc0 +    mom1*Ns_block] = density * v1;
     fields[loc0 +    mom2*Ns_block] = density * v2;
-    fields[loc0 +  energy*Ns_block] = density * specific_KE + pressure / physics->gm1;
+    fields[loc0 +  energy*Ns_block] = density * specific_KE + pressure / physics.gm1;
 
     return;
 }
@@ -65,7 +66,7 @@ void set_euler_torus(ElementBlock& eb)
             for (int d: dirs)
                 r[d] = eb.rs(d,loc0);
 
-            implosion(r, eb.fields, loc0, eb.Ns_block, (NavierStokes*)eb.physics_soln);
+            implosion(r, eb.fields, loc0, eb.Ns_block, eb.physics_soln);
         }
     }
 
@@ -103,7 +104,7 @@ void set_torus_initial_state(ElementBlock& eb, TorusConfig& config)
     real_t r_phys[3];
     real_t U[9]; // Conserved variables at a point
 
-    config.gamma = ((MHD*)eb.physics_soln)->gamma;
+    config.gamma = eb.physics_soln.gamma;
 
     /* loc0 is memory location for the 0th field */
     for (int loc0 = 0; loc0 < eb.Ns_block; ++loc0)

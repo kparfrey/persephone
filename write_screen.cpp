@@ -1,3 +1,4 @@
+#include "common.hpp"
 #include "write_screen.hpp"
 
 /* This way of using static variables in functions is a bit ugly, since it

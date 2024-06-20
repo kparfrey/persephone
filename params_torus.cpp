@@ -75,8 +75,8 @@ void ParamsTorus::write_param_info_()
     return;
 }
 
-template <class ProcType>
-void ParamsTorus::setup_process_(ProcType& proc)
+
+void ParamsTorus::setup_process_(Process& proc)
 {
     int Nproc_group_central = Nproc[0] * Nproc[0] * Nproc[2]; // Move to params_torus variables?
     int Nproc_group_outer   = Nproc[0] * Nproc[1] * Nproc[2];
@@ -133,7 +133,7 @@ void ParamsTorus::setup_process_(ProcType& proc)
     {
         FaceCommunicator& face = proc.faces[i];
 
-        face.physics->metric = new DiagonalSpatialMetric(cylindrical);
+        face.physics.metric = new DiagonalSpatialMetric(cylindrical);
 
         face.setup(proc, i);
 
@@ -371,8 +371,7 @@ void ParamsTorus::setup_process_(ProcType& proc)
 }
 
 
-template <class ProcType>
-void ParamsTorus::setup_elementblock_(ElementBlock& elements, ProcType& proc)
+void ParamsTorus::setup_elementblock_(ElementBlock& elements, Process& proc)
 {
     if (proc.group < Ngroup_central)
     {
@@ -417,15 +416,13 @@ void ParamsTorus::setup_elementblock_(ElementBlock& elements, ProcType& proc)
     }
 
     if (proc.system == mhd)
-        torus_config->sqrt_mu0 = ((MHD*)elements.physics_soln)->sqrt_mu0;
+        torus_config->sqrt_mu0 = elements.physics_soln.sqrt_mu0;
     
     elements.map = new BasicSquareTorusMap(proc.group, torus_config);
 
-
-
-    elements.physics_soln->metric = new DiagonalSpatialMetric(cylindrical);
+    elements.physics_soln.metric = new DiagonalSpatialMetric(cylindrical);
     for (int d: dirs)
-        elements.physics[d]->metric = new DiagonalSpatialMetric(cylindrical);
+        elements.physics[d].metric = new DiagonalSpatialMetric(cylindrical);
 
     /* At this point all external information is present, and the internal
      * setup method can take over. */

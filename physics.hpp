@@ -11,13 +11,13 @@ template <class T>
 class Physics
 {
     public:
-    /* Defined directly in derived-class constructors */
-    EqnSystem system;
-    int Nfield;
-    string* variables;
-
-    /* The metric now lives here */
+    
     SpatialMetric* metric;
+
+    /* Defined directly in derived-class constructors */
+    inline static EqnSystem system;
+    inline static int Nfield;
+    inline static string* variables;
 
     inline static bool diffusive;
     inline static real_t viscosity;    // kinematic viscosity ("nu")

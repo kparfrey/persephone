@@ -17,9 +17,8 @@
 
 
 /*** Constructing the params object ***/
-static EqnSystem equations = mhd;
 static TorusProblemType problem_type = desc_input;
-static TorusGridMethod grid_method = internal_surface_expansion; // blend_boundary_to_axis; 
+static TorusGridMethod  grid_method  = internal_surface_expansion; // blend_boundary_to_axis; 
 
 static int Nproc[3] = {1,1,1};
 static int Nelem[3] = {8,8,1};
@@ -27,10 +26,9 @@ static int Ns[3]    = {5,5,5};
 
 static real_t cfl      = 0.8; // Seems stable to 1.0 for ideal MHD
 static real_t end_time = 0.005;
-static real_t dt_write = 2e-5;
+static real_t dt_write = 2e-4;
 
-static Params<ParamsTorus> active_parameters(equations, 
-                                     Nproc, Nelem, Ns, 
+static ParamsTorus active_parameters(Nproc, Nelem, Ns, 
                                      cfl, end_time, dt_write,
                                      problem_type, grid_method,
                                      //"easy_eqlm_cheb1_output.h5", 2);

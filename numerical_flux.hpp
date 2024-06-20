@@ -1,10 +1,8 @@
 #ifndef NUMERICAL_FLUX_HPP
 #define NUMERICAL_FLUX_HPP
 
-#include "common.hpp"
-#include "physics_includes.hpp"
-
 #include "write_screen.hpp"
+
 
 /* In general, create the physical-coordinate numerical flux in all
  * three directions. The dir argument is only used when using straight
@@ -17,12 +15,10 @@ template <class T>
 class NumericalFlux
 {
     public:
-    Physics<PhysicsType> physics;
-    //ConservedToPrimitive*    U_to_P;
-    //WaveSpeedsFromPrimitive* c_from_P;
-    //FluxesFromPrimitive*     F_from_P;
 
-    int Nfield;
+    PhysicsType* physics; // A pointer, since just make identical to proc.elements.physics[dir]
+
+    inline static int Nfield;
 
     /* Unique flux for both sides of the interface */
     ACCEL_DECORATOR
@@ -82,15 +78,15 @@ class HLL : public NumericalFlux<HLL>
 
         //(*U_to_P)(UL, PL);
         //(*U_to_P)(UR, PR);
-        physics.ConservedToPrimitive(UL, PL, mem);
-        physics.ConservedToPrimitive(UR, PR, mem);
+        physics->ConservedToPrimitive(UL, PL, mem);
+        physics->ConservedToPrimitive(UR, PR, mem);
 
         for (int d: dirs)
         {
             //(*c_from_P)(PL, cL[i], i);
             //(*c_from_P)(PR, cR[i], i);
-            physics.WaveSpeeds(PL, cL[d], d, mem);
-            physics.WaveSpeeds(PR, cR[d], d, mem);
+            physics->WaveSpeeds(PL, cL[d], d, mem);
+            physics->WaveSpeeds(PR, cR[d], d, mem);
         }
 
         /* Signed max wavespeeds in each direction.
@@ -107,8 +103,8 @@ class HLL : public NumericalFlux<HLL>
         }
 
 
-        physics.Fluxes(PL, FL, mem);
-        physics.Fluxes(PR, FR, mem);
+        physics->Fluxes(PL, FL, mem);
+        physics->Fluxes(PR, FR, mem);
 
         for (int field = 0; field < Nfield; ++field)
             for (int i: dirs)
@@ -149,17 +145,17 @@ class HLL : public NumericalFlux<HLL>
         
         real_t Fstar;
 
-        physics.ConservedToPrimitive(UL, PL, mem);
-        physics.ConservedToPrimitive(UR, PR, mem);
+        physics->ConservedToPrimitive(UL, PL, mem);
+        physics->ConservedToPrimitive(UR, PR, mem);
 
         for (int d: dirs)
         {
-            physics.WaveSpeeds(PL, cL[d], d, mem);
-            physics.WaveSpeeds(PR, cR[d], d, mem);
+            physics->WaveSpeeds(PL, cL[d], d, mem);
+            physics->WaveSpeeds(PR, cR[d], d, mem);
         }
 
-        physics.Fluxes(PL, FL, mem);
-        physics.Fluxes(PR, FR, mem);
+        physics->Fluxes(PL, FL, mem);
+        physics->Fluxes(PR, FR, mem);
 
         /* Signed max wavespeeds in each direction.
          * cpos is max speed parallel to the coord axis (L to R); ie Toro's S_R.
@@ -290,12 +286,12 @@ class HLL_straight : public NumericalFlux<HLL_straight>
         (*F_from_P)(PL, FL);
         (*F_from_P)(PR, FR);
 #endif
-        physics.ConservedToPrimitive(UL, PL, mem);
-        physics.ConservedToPrimitive(UR, PR, mem);
-        physics.WaveSpeeds(PL, cL, dir, mem);
-        physics.WaveSpeeds(PR, cR, dir, mem);
-        physics.Fluxes(PL, FL, mem);
-        physics.Fluxes(PR, FR, mem);
+        physics->ConservedToPrimitive(UL, PL, mem);
+        physics->ConservedToPrimitive(UR, PR, mem);
+        physics->WaveSpeeds(PL, cL, dir, mem);
+        physics->WaveSpeeds(PR, cR, dir, mem);
+        physics->Fluxes(PL, FL, mem);
+        physics->Fluxes(PR, FR, mem);
 
         /* Signed max wavespeeds in each direction.
          * cpos is max speed parallel to the coord axis (L to R); ie Toro's S_R.

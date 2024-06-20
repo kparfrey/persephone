@@ -6,6 +6,7 @@
 class RK3_SSP : public BasicTimeIntegrator<RK3_SSP>
 {
     public:
+
     void takeStep(Process& proc) const;
 };
 

@@ -26,15 +26,17 @@ LDLIBS   = -lmpi -lm -lhdf5
 # LDFLAGS  =
 # LDLIBS   = -lstdc++fs -lmpi -lm -lhdf5 
 
-SRC = main.cpp process.cpp element_block.cpp kernels.cpp \
-	  geometry.cpp matrix.cpp write_screen.cpp face_communicator.cpp  \
-	  write_file_utils.cpp lagrange_polynomials.cpp \
-	  edge.cpp transfinite_map.cpp \
+SRC = main.cpp \
+	  kernels.cpp \
+	  process.cpp element_block.cpp face_communicator.cpp \
+	  write_data.cpp write_file_utils.cpp write_screen.cpp \
+      lagrange_polynomials.cpp legendre_roots.cpp matrix.cpp \
+	  geometry.cpp edge.cpp transfinite_map.cpp \
 	  params.cpp \
 	  params_cartesian.cpp initial_state_cartesian.cpp \
-	  params_torus.cpp initial_state_torus.cpp cerfon_freidberg.cpp \
-	  rk2_midpoint.cpp rk3_ssp.cpp \
-	  desc.cpp legendre_roots.cpp 
+	  params_torus.cpp initial_state_torus.cpp cerfon_freidberg.cpp desc.cpp \
+	  rk2_midpoint.cpp rk3_ssp.cpp 
+	   
 
 OBJ := $(SRC:%.cpp=%.o)
 DEP := $(SRC:%.cpp=%.d)

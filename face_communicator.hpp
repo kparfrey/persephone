@@ -15,7 +15,7 @@ class Process;
 class FaceCommunicator
 {
     private:
-    inline void allocate();
+    void allocate();
 
     public:
 
@@ -47,7 +47,7 @@ class FaceCommunicator
 
     VectorField normal;
 
-    Physics<PhysicsType> physics;  // Physics methods, and metric arrays for this face only
+    PhysicsType physics;     // Physics methods, and metric arrays for this face only
 
     real_t* my_data;         // This face's data, in its native ordering
     real_t* my_data_to_send; //  "     "      " , in ordering expected by the receiving proc
@@ -67,8 +67,8 @@ class FaceCommunicator
     /* Member functions */
     void setup(Process& proc, int face_id);
 
-    inline MPI_Request send_data();
-    inline MPI_Request receive_data();
+    MPI_Request send_data();
+    MPI_Request receive_data();
 };
 
 

@@ -5,7 +5,7 @@
 #include "element_block.hpp"
 
 
-inline void RK3_ssp::takeStep(Process& proc) const
+void RK3_SSP::takeStep(Process& proc) const
 {
     ElementBlock& eb = proc.elements;
     const int Ntot = eb.Nfield * eb.Ns_block;

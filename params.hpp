@@ -13,8 +13,6 @@ class Params
 {
     public:
 
-    EqnSystem equations;
-
     /* Total quantities referring to whole domain */
     int Ngroup; 
     int Nproc_domain;
@@ -26,8 +24,8 @@ class Params
     real_t dt_write; // elapsed time between writing to disk
 
     /* Constructor */
-    Params(EqnSystem equations, real_t cfl, real_t end_time, real_t dt_write)
-          : equations(equations), cfl(cfl), end_time(end_time), dt_write(dt_write){}
+    Params(real_t cfl, real_t end_time, real_t dt_write)
+          : cfl(cfl), end_time(end_time), dt_write(dt_write){}
  
 
     /* Provided by this class, in params.cpp */

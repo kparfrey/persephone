@@ -21,43 +21,14 @@ void Params<ParamsType>::setup_process_generic(Process& proc)
     proc.data_output_counter = 0;
     proc.is_output_step = false;
 
-    /***
-    switch (equations)
-    {
-        case scalar_advection:
-            for (int d: dirs)
-                proc.elements.physics[d] = new ScalarAdvection;
-            proc.elements.physics_soln   = new ScalarAdvection;
-            for (int f: ifaces)
-                proc.faces[f].physics    = new ScalarAdvection;
-            break;
-        case navier_stokes:
-            for (int d: dirs)
-                proc.elements.physics[d] = new NavierStokes;
-            proc.elements.physics_soln   = new NavierStokes;
-            for (int f: ifaces)
-                proc.faces[f].physics    = new NavierStokes;
-            break;
-        case mhd:
-            for (int d: dirs)
-                proc.elements.physics[d] = new MHD;
-            proc.elements.physics_soln   = new MHD;
-            for (int f: ifaces)
-                proc.faces[f].physics    = new MHD;
-            break;
-        default:
-            write::error("Equation system not recognised.");
-    }
-     ***/
-
-    //proc.system = equations;
-    proc.system = Physics<PhysicsType>::system; // Store in Process for convenience
-    proc.Nfield = proc.elements.physics_soln->Nfield;
+    proc.system = PhysicsType::system; // Store in Process for convenience
+    proc.Nfield = proc.elements.physics_soln.Nfield;
 
     for (int d: dirs)
     {
+        proc.F_numerical[d].physics = &(proc.elements.physics[d]); // Convenience pointer
+        
         proc.F_numerical[d].Nfield  = proc.Nfield;
-        proc.F_numerical[d].physics = proc.elements.physics[d]; // Convenience pointer
 
         /* The above convenience pointer to proc.physics[d] is the only 
          * difference between the three copies of NumericalFlux */

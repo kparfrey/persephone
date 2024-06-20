@@ -129,7 +129,7 @@ void FaceCommunicator::setup(Process& proc, int face_id)
 }
 
 
-inline void FaceCommunicator::allocate()
+void FaceCommunicator::allocate()
 {
     my_data         = new real_t [Ntot_all]; // kernels::alloc(Ntot_all);
     my_data_to_send = new real_t [Ntot_all]; // kernels::alloc(Ntot_all);
@@ -152,7 +152,7 @@ inline void FaceCommunicator::allocate()
 }
 
 
-inline MPI_Request FaceCommunicator::send_data()
+MPI_Request FaceCommunicator::send_data()
 {
     /* Will need to add up/down data movement when using accelerators */
 
@@ -168,7 +168,7 @@ inline MPI_Request FaceCommunicator::send_data()
 
 
 
-inline MPI_Request FaceCommunicator::receive_data()
+MPI_Request FaceCommunicator::receive_data()
 {
     /* Will need to add up/down data movement when using accelerators */
 

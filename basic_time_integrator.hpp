@@ -8,9 +8,10 @@ template <class TimeStepType>
 class BasicTimeIntegrator
 {
     public:
-    void operator()(Process& proc)
+
+    void operator()(Process& proc) const
     {
-        static_cast<TimeStepType*>(this)->takeStep(proc);
+        static_cast<const TimeStepType*>(this)->takeStep(proc);
         return;
     }
 };

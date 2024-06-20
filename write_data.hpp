@@ -1,11 +1,9 @@
 #ifndef WRITE_DATA_HPP
 #define WRITE_DATA_HPP
 
-#include "common.hpp"
+class Process;
 
-template <class ProcType>
-void write_data(ProcType& proc);
+void write_data(Process& proc);
 
-#include "write_data.cpp"
 
 #endif

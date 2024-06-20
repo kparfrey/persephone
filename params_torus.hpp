@@ -50,18 +50,15 @@ class ParamsTorus : public Params<ParamsTorus>
     /* Called from base class interface functions */
     void write_param_info_();
 
-    template <class ProcType>
-    void setup_process_(ProcType& proc);
+    void setup_process_(Process& proc);
     
-    template <class ProcType>
-    void setup_elementblock_(ElementBlock &elements, ProcType& proc);
+    void setup_elementblock_(ElementBlock &elements, Process& proc);
     
     void set_initial_state_(ElementBlock &elements);
 
 
     /* Constructor */
-    ParamsTorus(EqnSystem equations,
-                int (& Nproc_)[3], 
+    ParamsTorus(int (& Nproc_)[3], 
                 int (& Nelem_)[3], 
                 int (& Ns_)[3], 
                 real_t cfl = 0.8,
@@ -71,7 +68,7 @@ class ParamsTorus : public Params<ParamsTorus>
                 TorusGridMethod grid_method = internal_surface_expansion,
                 std::string input_file = "output.h5",
                 int desc_iteration = 1)
-    : Params(equations, cfl, end_time, dt_write),
+    : Params(cfl, end_time, dt_write),
       problem_type(problem_type), grid_method(grid_method), input_file(input_file),
       desc_iteration(desc_iteration)
     {
