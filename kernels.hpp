@@ -4,13 +4,6 @@
 #include "tensor_field.hpp"
 #include "face_communicator.hpp"
 
-#include "physics_includes.hpp"
-#include "numerical_flux.hpp"
-#include "boundary_conditions.hpp"
-
-//#include <iostream>
-
-
 
 namespace kernels
 {
@@ -81,8 +74,6 @@ namespace kernels
                            real_t* const __restrict__ F ,
                      const VectorField                S ,
                      const PhysicsType                physics,
-                     //const ConservedToPrimitive*  U_to_P,
-                     //const FluxesFromPrimitive* F_from_P,
                      const LengthBucket lb, const int dir);
 
     

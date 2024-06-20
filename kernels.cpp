@@ -4,7 +4,6 @@
 #include <iostream>
 #include "common.hpp"
 #include "kernels.hpp"
-#include "boundary_conditions.hpp"
 
 
 namespace kernels
@@ -970,7 +969,7 @@ namespace kernels
             for (int d: dirs)
                 n[d] = face.normal(d,i);
             
-            face.BC->dirichlet(U, n, face.physics, i);
+            face.BC.dirichlet(U, n, face.physics, i);
 
             for (int field = 0; field < face.Nfield; ++field)
                 //face.neighbour_data[i + field * face.Ntot] = U[field]; 
@@ -1000,7 +999,7 @@ namespace kernels
             for (int field = 0; field < face.Nfield; ++field)
                 dP[field] = face.my_data[i + field * face.Ntot];
 
-            face.BC->neumann(dP);
+            face.BC.neumann(dP);
 
             for (int field = 0; field < face.Nfield; ++field)
                 face.my_data[i + field * face.Ntot] = 

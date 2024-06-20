@@ -1,44 +1,59 @@
 #ifndef BOUNDARY_CONDITIONS_HPP 
 #define BOUNDARY_CONDITIONS_HPP
 
-#include "common.hpp"
-#include "kernels.hpp"
-#include "physics_includes.hpp"
 
+template <class T>
 class BoundaryConditions
 {
     public:
     
-    BoundaryConditions(){}
+    bool stores_data; // Whether or not this object needs memory allocated
+    int  orientation; // Not used in all BC types
 
-    virtual void dirichlet(      real_t* const __restrict__ U, 
-                           const real_t* const __restrict__ nl,
-                           const Physics<PhysicsType>       physics,
-                           const int mem) const = 0;
+    BoundaryConditions(){stores_data = false;}
+
+    void dirichlet(      real_t* const __restrict__ U, 
+                   const real_t* const __restrict__ nl,
+                   const PhysicsType                physics,
+                   const int mem) const
+    {
+        static_cast<T const*>(this)->dirichlet_(U, nl, physics, mem);
+        return;
+    }
     
-    virtual void neumann(real_t* const __restrict__ dP) const = 0;
+
+    void neumann(real_t* const __restrict__ dP) const
+    {
+        static_cast<T const*>(this)->neumann_(dP);
+        return;
+    }
 };
 
 
 
-class WallBC_NoSlip_FixedNormalB : public BoundaryConditions
+class WallBC_NoSlip_FixedNormalB : public BoundaryConditions<WallBC_NoSlip_FixedNormalB>
 {
     private:
     enum conserved {Density, mom0, mom1, mom2, tot_energy, B0, B1, B2, psi};
     enum primitive {density, v0  , v1  , v2,   pressure};
 
     public:
+
     real_t* Bdotn_initial; // Store n.B from the initial conditions
 
-    WallBC_NoSlip_FixedNormalB(const int N)
+    WallBC_NoSlip_FixedNormalB() {stores_data = true;}
+
+
+    void allocate(const int N)
     {
         Bdotn_initial = new real_t [N](); // Set to zero by default
     }
 
-    void dirichlet(      real_t* const __restrict__ U, 
-                   const real_t* const __restrict__ nl,
-                   const Physics<PhysicsType>       physics,
-                   const int mem) const override
+
+    void dirichlet_(      real_t* const __restrict__ U, 
+                    const real_t* const __restrict__ nl,
+                    const PhysicsType                physics,
+                    const int mem) const
     {
         real_t P[9];  // Primitives from incoming conserved variables
         real_t nu[3]; // contravariant components of normal vector
@@ -69,7 +84,7 @@ class WallBC_NoSlip_FixedNormalB : public BoundaryConditions
 
     
     /*** For an adiabatic wall ***/
-    void neumann(real_t* const __restrict__ dP) const override
+    void neumann_(real_t* const __restrict__ dP) const
     {
         /* Using the fact that the pressure slot holds temperature (and the Psi slot holds B^2)
          * from kernels::conserved_to_primitive_fluxpoints() */
@@ -81,23 +96,23 @@ class WallBC_NoSlip_FixedNormalB : public BoundaryConditions
 };
 
 
-class PeriodicPressureBC : public BoundaryConditions
+class PeriodicPressureBC : public BoundaryConditions<PeriodicPressureBC>
 {
     private:
     enum conserved {Density, mom0, mom1, mom2, tot_energy};
     enum primitive {density, v0  , v1  , v2,   pressure  };
 
     public:
-    const int orientation;
     real_t dPdx = 5e-2;
 
-    PeriodicPressureBC(const int orientation): orientation(orientation) {}
+    PeriodicPressureBC(){stores_data = false;}
+    //PeriodicPressureBC(const int orientation): orientation(orientation) {}
 
     
-    void dirichlet(      real_t* const __restrict__ U, 
-                   const real_t* const __restrict__ ,
-                   const Physics<PhysicsType>       physics,
-                   const int mem) const override
+    void dirichlet_(      real_t* const __restrict__ U, 
+                    const real_t* const __restrict__ ,
+                    const PhysicsType                physics,
+                    const int mem) const
     {
         real_t* P = new real_t [physics.Nfield];
 
@@ -114,29 +129,29 @@ class PeriodicPressureBC : public BoundaryConditions
     }
 
 
-    void neumann(real_t* const __restrict__ ) const override
+    void neumann_(real_t* const __restrict__ ) const
     {
         return;
     }
 };
 
 
-class CouettePlateBC : public BoundaryConditions
+class CouettePlateBC : public BoundaryConditions<CouettePlateBC>
 {
     private:
     enum conserved {Density, mom0, mom1, mom2, tot_energy};
     enum primitive {density, v0  , v1  , v2,   pressure  };
 
     public:
-    const int orientation;
     real_t v_top = 1.0;
 
-    CouettePlateBC(const int orientation): orientation(orientation) {}
+    CouettePlateBC(){stores_data = false;}
+    //CouettePlateBC(const int orientation): orientation(orientation) {}
     
-    void dirichlet(      real_t* const __restrict__ U, 
-                   const real_t* const __restrict__ ,
-                   const Physics<PhysicsType>       physics,
-                   const int mem) const override
+    void dirichlet_(      real_t* const __restrict__ U, 
+                    const real_t* const __restrict__ ,
+                    const PhysicsType                physics,
+                    const int mem) const
     {
         real_t* P = new real_t [physics.Nfield];
 
@@ -155,7 +170,7 @@ class CouettePlateBC : public BoundaryConditions
     }
 
 
-    void neumann(real_t* const __restrict__ ) const override
+    void neumann_(real_t* const __restrict__ ) const
     {
         return;
     }
@@ -164,22 +179,22 @@ class CouettePlateBC : public BoundaryConditions
 
 /* To match analytic solution need to make incompressible: set fluxes of
  * density and y-momentum (mom1) to zero. */
-class HartmannPlateBC : public BoundaryConditions
+class HartmannPlateBC : public BoundaryConditions<HartmannPlateBC>
 {
     private:
     enum conserved {Density, mom0, mom1, mom2, tot_energy, B0, B1, B2, psi};
     enum primitive {density, v0  , v1  , v2,   pressure  };
 
     public:
-    const int orientation;
     real_t v_top    = 1.0;
 
-    HartmannPlateBC(const int orientation): orientation(orientation) {}
+    HartmannPlateBC(){stores_data = false;}
+    //HartmannPlateBC(const int orientation): orientation(orientation) {}
     
-    void dirichlet(      real_t* const __restrict__ U, 
-                   const real_t* const __restrict__ ,
-                   const Physics<PhysicsType>       physics,
-                   const int mem) const override
+    void dirichlet_(      real_t* const __restrict__ U, 
+                    const real_t* const __restrict__ ,
+                    const PhysicsType                physics,
+                    const int mem) const
     {
         real_t* P = new real_t [physics.Nfield];
 
@@ -202,7 +217,7 @@ class HartmannPlateBC : public BoundaryConditions
     }
 
 
-    void neumann(real_t* const __restrict__ ) const override
+    void neumann_(real_t* const __restrict__ ) const
     {
         return;
     }

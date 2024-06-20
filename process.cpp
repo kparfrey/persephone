@@ -5,7 +5,6 @@
 #include "common.hpp"
 #include "process.hpp"
 #include "write_screen.hpp"
-#include "boundary_conditions.hpp"
 #include "physics_includes.hpp"
 #include "kernels.hpp"
 #include "params.hpp"
@@ -348,7 +347,8 @@ void Process::find_divB(const real_t* const B, real_t* const divB)
             real_t nl[3], nu[3];
             real_t B[3];
             real_t Bdotn;
-            real_t* Bdotn_initial = ((WallBC_NoSlip_FixedNormalB*)f.BC)->Bdotn_initial;
+            real_t* Bdotn_initial = f.BC.Bdotn_initial;
+            //real_t* Bdotn_initial = ((WallBC_NoSlip_FixedNormalB*)f.BC)->Bdotn_initial;
 
             for (int j = 0; j < f.Ntot; ++j) // for each location on the face...
             {

@@ -148,6 +148,9 @@ void FaceCommunicator::allocate()
     for (int i: dirs)
         normal(i) = new real_t [Ntot];
 
+    if (BC.stores_data)
+        BC.allocate(Ntot);
+
     return;
 }
 

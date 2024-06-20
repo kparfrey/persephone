@@ -8,8 +8,9 @@
 
 #include "spatial_metric.hpp"
 
-
+template <class T>
 class BoundaryConditions;
+
 class Process;
 
 class FaceCommunicator
@@ -32,7 +33,7 @@ class FaceCommunicator
 
     bool domain_external_face; // True if this face needs a boundary condition rather
                                // than communication from another process
-    BoundaryConditions* BC;    // Object for applying the boundary conditions
+    BCType BC;                 // Object for applying the boundary conditions
 
     int n0;  // Normal-direction flux-point index of this face
     int ne0; // Normal-direction element index of this face

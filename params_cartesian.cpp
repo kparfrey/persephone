@@ -8,7 +8,6 @@
 #include "domain_map.hpp"
 #include "geometry_labels.hpp"
 #include "spatial_metric.hpp"
-#include "boundary_conditions.hpp"
 
 using std::cout;
 using std::endl;
@@ -125,8 +124,14 @@ void ParamsCartesian::setup_process_(Process& proc)
         /*** Only for Couette flow test ***
         proc.faces[2].domain_external_face = true;
         proc.faces[3].domain_external_face = true;
-        proc.faces[2].BC = new PeriodicPressureBC(-1);
-        proc.faces[3].BC = new PeriodicPressureBC(1);
+         
+        // Previous system 
+        //proc.faces[2].BC = new PeriodicPressureBC(-1);
+        //proc.faces[3].BC = new PeriodicPressureBC(1);
+         
+        // New system
+        proc.faces[2].BC.orientation = -1;
+        proc.faces[3].BC.orientation =  1;
          ***/
 
         /* y/1 direction */
@@ -134,16 +139,26 @@ void ParamsCartesian::setup_process_(Process& proc)
         if (proc.faces[5].neighbour_idx[1] == 0)
         {
             proc.faces[5].domain_external_face = true;
-            proc.faces[5].BC = new HartmannPlateBC(1);
-            //proc.faces[5].BC = new CouettePlateBC(1);
+
+            // Previous system
+            //proc.faces[5].BC = new HartmannPlateBC(1);
+            ////proc.faces[5].BC = new CouettePlateBC(1);
+
+            // New system
+            proc.faces[5].BC.orientation = 1;
         }
         
         /* If this process's face-4 is the bottom face of the domain */
         if (proc.faces[4].neighbour_idx[1] == proc.Nproc_group[1] - 1)
         {
             proc.faces[4].domain_external_face = true;
-            proc.faces[4].BC = new HartmannPlateBC(-1);
-            //proc.faces[4].BC = new CouettePlateBC(-1);
+
+            // Previous system
+            //proc.faces[4].BC = new HartmannPlateBC(-1);
+            /////proc.faces[4].BC = new CouettePlateBC(-1);
+            
+            // New system
+            proc.faces[4].BC.orientation = -1;
         }
     }
 

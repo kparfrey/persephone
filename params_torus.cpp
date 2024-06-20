@@ -9,7 +9,6 @@
 #include "initial_state_torus.hpp"
 #include "write_screen.hpp"
 #include "domain_map_torus.hpp"
-#include "boundary_conditions.hpp"
 #include "spatial_metric.hpp"
 
 using std::cout;
@@ -137,7 +136,7 @@ void ParamsTorus::setup_process_(Process& proc)
 
         face.setup(proc, i);
 
-        face.BC = new WallBC_NoSlip_FixedNormalB(face.Ntot);
+        //face.BC = new WallBC_NoSlip_FixedNormalB(face.Ntot);
 
         /* Inter-process connectivity */
         int normal = face.normal_dir;

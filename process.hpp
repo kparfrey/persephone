@@ -16,8 +16,6 @@ class Process
 {
     public:
 
-    // NB: use a reference so the virtual functions work correctly...
-    // Update: should probably change since am removing the virtual functions...
     ParamsType& params;
       
     /* Local data */

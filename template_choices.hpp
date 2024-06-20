@@ -7,7 +7,6 @@
  *** This reduces the need to make every class containing a templated class object a template
  *** itself in order to pass the template type down the hierarchy. ***/
 
-#if 1
 
 #include "physics_includes.hpp"
 using PhysicsType  = MHD;
@@ -21,13 +20,8 @@ using ParamsType   = ParamsTorus;
 
 #include "time_integrator_includes.hpp"
 using TimeStepType = RK3_SSP;
-#endif
 
-#if 0
-#define ParamsType ParamsTorus
-#define TimeStepType RK3_SSP
-#define NumFluxType HLL
-#define PhysicsType MHD
-#endif
+#include "boundary_conditions.hpp"
+using BCType       = WallBC_NoSlip_FixedNormalB;
 
 #endif
