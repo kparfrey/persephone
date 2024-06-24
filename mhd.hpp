@@ -153,7 +153,7 @@ inline void MHD::ConservedToPrimitive_(const real_t* const __restrict__ U,
     vl[2] = 0.0;
 
     /* Store the contravariant components into P */
-    metric->raise(vl, &P[v0], mem);
+    metric.raise(vl, &P[v0], mem);
     
     /* Magnetic fields are contravariant components */
     P[B0] = U[B0];
@@ -165,7 +165,7 @@ inline void MHD::ConservedToPrimitive_(const real_t* const __restrict__ U,
     const real_t KE_density = 0.5 * P[density] * 
                               (vl[0]*P[v0] + vl[1]*P[v1] + vl[2]*P[v2]);
 
-    const real_t mag_density = 0.5 * metric->square(&P[B0], mem);
+    const real_t mag_density = 0.5 * metric.square(&P[B0], mem);
 
     const real_t psi_energy_density = 0.5 * P[psi] * P[psi];
     
@@ -192,7 +192,7 @@ inline void MHD::ConservedToPrimitive_(const real_t* const __restrict__ U,
     /**
     if (KE_density + mag_density > U[tot_energy])
     {
-        std::cout << "Inversion error:  R = " << metric->rdetg[mem] << "  Mag = " << mag_density << "  Energy = " << U[tot_energy] << "  KE = " << KE_density << "   p = " << U[tot_energy] - KE_density - mag_density << std::endl;
+        std::cout << "Inversion error:  R = " << metric.rdetg[mem] << "  Mag = " << mag_density << "  Energy = " << U[tot_energy] << "  KE = " << KE_density << "   p = " << U[tot_energy] - KE_density - mag_density << std::endl;
         //P[pressure] = p_floor;
         exit(45);
     }
@@ -213,7 +213,7 @@ inline void MHD::PrimitiveToConserved_(const real_t* const __restrict__ P,
     U[density] = rho;
 
     real_t vl[3];
-    metric->lower(&P[v0], vl, mem);
+    metric.lower(&P[v0], vl, mem);
 
     U[mom0] = rho * vl[0];
     U[mom1] = rho * vl[1];
@@ -228,7 +228,7 @@ inline void MHD::PrimitiveToConserved_(const real_t* const __restrict__ P,
 
     const real_t KE_density = 0.5 * rho * (vl[0]*P[v0] + vl[1]*P[v1] + vl[2]*P[v2]);
 
-    const real_t mag_density = 0.5 * metric->square(&P[B0], mem);
+    const real_t mag_density = 0.5 * metric.square(&P[B0], mem);
 
     const real_t psi_energy_density = 0.5 * P[psi] * P[psi];
     
@@ -250,7 +250,7 @@ inline void MHD::WaveSpeeds_(const real_t* const __restrict__ P,
 
     /* va_sq = (alfven speed)^2 */
     const real_t* const Bu = &P[B0];
-    const real_t Bsq   = metric->square(Bu, mem);
+    const real_t Bsq   = metric.square(Bu, mem);
     const real_t va_sq =  Bsq / P[density]; 
     
     /* This version from e.g. Stone+ 2008, Appendix A, Eqn A10 */
@@ -267,7 +267,7 @@ inline void MHD::WaveSpeeds_(const real_t* const __restrict__ P,
         real_t ku[3] = {0.0,0.0,0.0}; // Contravariant components of wavevector
         real_t kl[3];
         ku[dir] = 1.0; // Note the normalisation here is taken care of at the end
-        metric->lower(ku, kl, mem);
+        metric.lower(ku, kl, mem);
         const real_t kdotB = kl[0]*Bu[0] + kl[1]*Bu[1] + kl[2]*Bu[2];
         const real_t ksq   = kl[0]*ku[0] + kl[1]*ku[1] + kl[2]*ku[2];
         const real_t cost  = kdotB / std::sqrt(ksq * Bsq);
@@ -278,10 +278,10 @@ inline void MHD::WaveSpeeds_(const real_t* const __restrict__ P,
         const real_t usq = 0.5 * (cs_sq + va_sq)*(1 + std::sqrt(1 - 4*cost*cost/(b*b)));
 
         /* This is the contra component. Assume diagonal metric for now... Tag:DIAGONAL */
-        fast_speed = std::sqrt(usq / ((DiagonalSpatialMetric*)metric)->g[dir][mem]);
+        fast_speed = std::sqrt(usq / metric.g[dir][mem]);
     }
     else
-        fast_speed = std::sqrt(cs_sq);
+        fast_speed = std::sqrt(cs_sq / metric.g[dir][mem]);
 
 
     //c[0] = MAX(0.0, P[v0+dir] + fast_speed); 
@@ -312,8 +312,8 @@ inline void MHD::Fluxes_(const real_t* const __restrict__ P,
     /* Covariant components */
     real_t vl[3];
     real_t Bl[3];
-    metric->lower(vu, vl, mem);
-    metric->lower(Bu, Bl, mem);
+    metric.lower(vu, vl, mem);
+    metric.lower(Bu, Bl, mem);
 
     const real_t KE_density = 0.5 * P[density] * (vl[0]*vu[0] + vl[1]*vu[1] + vl[2]*vu[2]); 
     const real_t Bsq   = Bl[0]*Bu[0] + Bl[1]*Bu[1] + Bl[2]*Bu[2];
@@ -353,7 +353,7 @@ inline void MHD::Fluxes_(const real_t* const __restrict__ P,
         F[B2][d] = Bu[2]*v - B*vu[2]; 
         }
 
-        F[B0+d][d] = ch * P[psi] * ((DiagonalSpatialMetric*)metric)->ginv[d][mem]; // Overwrite the above
+        F[B0+d][d] = ch * P[psi] * metric.ginv[d][mem]; // Overwrite the above; tag: DIAGONAL
 
         F[psi][d]  = ch * B; 
     }
@@ -425,7 +425,7 @@ inline void MHD::DiffusiveFluxes_(const real_t* const __restrict__   P,
         }
             
     for (int d: dirs)
-        rdetg_deriv[d] = metric->rdetg_deriv[d][mem];
+        rdetg_deriv[d] = metric.rdetg_deriv[d][mem];
 
     /* div(v) = d_i v^i + v^j d_j(rdetg) / rdetg */
     divv = dv[0][0] + dv[1][1] + dv[2][2] + 
@@ -444,26 +444,26 @@ inline void MHD::DiffusiveFluxes_(const real_t* const __restrict__   P,
     /* Raise index on the derivative operator to form duB[j][i] = d^i B^j */
     for (int d: dirs)
     {
-        metric->raise(dB[d], duB[d], mem); // since dB[d] = d_i B^d
-        metric->raise(dv[d], duv[d], mem); // since dv[d] = d_i v^d
+        metric.raise(dB[d], duB[d], mem); // since dB[d] = d_i B^d
+        metric.raise(dv[d], duv[d], mem); // since dv[d] = d_i v^d
     }
 
     for (int i: dirs)
         for (int j: dirs)
             tauUP[i][j] = mu * (duv[i][j] + duv[j][i]);
 
-    /* For now, assume metric is diagonal --- need to generalize // DIAGONAL */
+    /* For now, assume metric is diagonal --- need to generalize; tag: DIAGONAL */
     for (int i: dirs)
-        tauUP[i][i] += lambda * divv * ((DiagonalSpatialMetric*)metric)->ginv[i][mem];
+        tauUP[i][i] += lambda * divv * metric.ginv[i][mem];
 
     for (int d: dirs)
-        metric->lower(tauUP[d], tau[d], mem); // tau = tau^i_j
+        metric.lower(tauUP[d], tau[d], mem); // tau = tau^i_j
     
 
-    metric->raise(dP[psi], duBsq, mem); // since saving B^2 into the psi slot
-    metric->raise(dP[pressure], duT, mem); // since saving T into the pressure slot
+    metric.raise(dP[psi], duBsq, mem); // since saving B^2 into the psi slot
+    metric.raise(dP[pressure], duT, mem); // since saving T into the pressure slot
     
-    metric->lower(B, Bl, mem); 
+    metric.lower(B, Bl, mem); 
 
     for (int d: dirs) // flux direction
     {
@@ -524,8 +524,8 @@ inline void MHD::DiffusiveFluxes_(const real_t* const __restrict__   P,
 
 inline void MHD::OrthonormaliseVectors_(real_t* const P, const int mem) const
 {
-    metric->orthonormals(&P[v0], mem);
-    metric->orthonormals(&P[B0], mem);
+    metric.orthonormals(&P[v0], mem);
+    metric.orthonormals(&P[B0], mem);
 
     return;
 }
@@ -545,8 +545,8 @@ inline void MHD::Floors_(real_t* const __restrict__ U, const int mem) const
     U[Density] = P[density];
 
     /* Having to recalculate vsq and Bsq here -- can probably do better */
-    const real_t KE_density  = 0.5 * P[density] * metric->square(&P[v0], mem);
-    const real_t mag_density = 0.5 * metric->square(&P[B0], mem);
+    const real_t KE_density  = 0.5 * P[density] * metric.square(&P[v0], mem);
+    const real_t mag_density = 0.5 * metric.square(&P[B0], mem);
     const real_t psi_energy_density = 0.5 * P[psi] * P[psi];
 
     U[tot_energy] = mag_density + KE_density + P[pressure]/gm1 + psi_energy_density;

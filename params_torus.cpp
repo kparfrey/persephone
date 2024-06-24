@@ -132,7 +132,8 @@ void ParamsTorus::setup_process_(Process& proc)
     {
         FaceCommunicator& face = proc.faces[i];
 
-        face.physics.metric = new DiagonalSpatialMetric(cylindrical);
+        //face.physics.metric = new DiagonalSpatialMetric(cylindrical);
+        face.physics.metric.physical_coords = new PhysicalCoords(cylindrical);
 
         face.setup(proc, i);
 
@@ -419,9 +420,10 @@ void ParamsTorus::setup_elementblock_(ElementBlock& elements, Process& proc)
     
     elements.map = new BasicSquareTorusMap(proc.group, torus_config);
 
-    elements.physics_soln.metric = new DiagonalSpatialMetric(cylindrical);
+    //elements.physics_soln.metric = new DiagonalSpatialMetric(cylindrical);
+    elements.physics_soln.metric.physical_coords = new PhysicalCoords(cylindrical);
     for (int d: dirs)
-        elements.physics[d].metric = new DiagonalSpatialMetric(cylindrical);
+        elements.physics[d].metric.physical_coords = new PhysicalCoords(cylindrical);
 
     /* At this point all external information is present, and the internal
      * setup method can take over. */

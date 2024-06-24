@@ -128,7 +128,7 @@ void Geometry::setup_full(ElementBlock& eb)
             J.find_determinant();
             detJ = std::abs(J.det);
 
-            Jrdetg(mem_loc) = detJ * eb.physics_soln.metric->rdetg[mem_loc];
+            Jrdetg(mem_loc) = detJ * eb.physics_soln.metric.rdetg[mem_loc];
 
             /* Used to find grad(U) for diffusive terms */
             J.find_inverse();
@@ -227,7 +227,7 @@ void Geometry::setup_full(ElementBlock& eb)
 
                 /* Assume J.inv[ref][phys]... */
                 for (int dphys: dirs)
-                    S[d](dphys,mem_loc) = detJ * eb.physics[d].metric->rdetg[mem_loc] 
+                    S[d](dphys,mem_loc) = detJ * eb.physics[d].metric.rdetg[mem_loc] 
                                                * J.inv[d][dphys];
 
 
@@ -266,7 +266,7 @@ void Geometry::setup_full(ElementBlock& eb)
             real_t s[3];
             real_t smag;
             int id_elem_normals = (ne2*eb.Nelem[d1] + ne1)*(eb.Nelem[d]+1) + ne0;
-            SpatialMetric* metric = eb.physics[d].metric;
+            //SpatialMetric* metric = eb.physics[d].metric;
 
             for (int n2 = 0; n2 < eb.Ns[d2]; ++n2)
             for (int n1 = 0; n1 < eb.Ns[d1]; ++n1)
@@ -278,10 +278,7 @@ void Geometry::setup_full(ElementBlock& eb)
                 for (int dphys: dirs)
                     s[dphys] = S[d](dphys,mem_loc);
                
-                /* Was assuming physical coord system is Cartesian... */
-                smag = std::sqrt(metric->square_cov(s, mem_loc)); // s is phys-space dual vector
-                //smag = std::sqrt(metric->square(s, mem_loc));
-                //smag = std::sqrt(s[0]*s[0] + s[1]*s[1] + s[2]*s[2]);
+                smag = std::sqrt(eb.physics[d].metric.square_cov(s, mem_loc)); // s is phys-space dual vector
 
                 for (int dphys: dirs)
                     normal[d](dphys,mem_loc_normals) = s[dphys]/smag;
@@ -295,9 +292,7 @@ void Geometry::setup_full(ElementBlock& eb)
                     for (int dphys: dirs)
                         s[dphys] = S[d](dphys,mem_loc);
                     
-                    smag = std::sqrt(metric->square_cov(s, mem_loc));
-                    //smag = std::sqrt(metric->square(s, mem_loc));
-                    //smag = std::sqrt(s[0]*s[0] + s[1]*s[1] + s[2]*s[2]);
+                    smag = std::sqrt(eb.physics[d].metric.square_cov(s, mem_loc));
 
                     for (int dphys: dirs)
                         normal[d](dphys,mem_loc_normals) = s[dphys]/smag;

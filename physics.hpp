@@ -1,9 +1,9 @@
 #ifndef PHYSICS_HPP
 #define PHYSICS_HPP
 
+#include <string>
 #include "common.hpp"
 #include "spatial_metric.hpp"
-#include <string>
 using std::string;
 
 
@@ -12,7 +12,8 @@ class Physics
 {
     public:
     
-    SpatialMetric* metric;
+    /* Replace with MetricType once the full metric has been implemented */
+    DiagonalSpatialMetric metric;
 
     /* Defined directly in derived-class constructors */
     inline static EqnSystem system;

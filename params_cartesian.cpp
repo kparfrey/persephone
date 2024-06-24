@@ -92,7 +92,8 @@ void ParamsCartesian::setup_process_(Process& proc)
 
         write::variable<int>("Setting up face:", i);
 
-        face.physics.metric = new DiagonalSpatialMetric(cartesian);
+        //face.physics.metric = new DiagonalSpatialMetric(cartesian);
+        face.physics.metric.physical_coords = new PhysicalCoords(cartesian);
 
         face.setup(proc, i);
 
@@ -183,8 +184,9 @@ void ParamsCartesian::setup_elementblock_(ElementBlock& elements, Process& proc)
     //elements.map = new WaveRect2D; //new QuarterAnnulusMap; // specify manually for now...
 
     for (int d: dirs)
-        elements.physics[d].metric = new DiagonalSpatialMetric(cartesian);
-    elements.physics_soln.metric   = new DiagonalSpatialMetric(cartesian);
+        elements.physics[d].metric.physical_coords = new PhysicalCoords(cartesian);
+        //elements.physics[d].metric = new DiagonalSpatialMetric(cartesian);
+    elements.physics_soln.metric.physical_coords   = new PhysicalCoords(cartesian);
 
     /* At this point all external information is present, and the internal
      * setup method can take over. */

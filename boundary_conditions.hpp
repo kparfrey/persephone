@@ -58,7 +58,7 @@ class WallBC_NoSlip_FixedNormalB : public BoundaryConditions<WallBC_NoSlip_Fixed
         real_t P[9];  // Primitives from incoming conserved variables
         real_t nu[3]; // contravariant components of normal vector
                       
-        physics.metric->raise(nl, nu, mem);
+        physics.metric.raise(nl, nu, mem);
 
         physics.ConservedToPrimitive(U, P, mem);
         

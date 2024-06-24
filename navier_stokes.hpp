@@ -91,7 +91,7 @@ inline void NavierStokes::ConservedToPrimitive_(const real_t* const __restrict__
     vl[2] = U[mom2] / U[density];
 
     /* Store the contravariant components into P */
-    metric->raise(vl, &P[v0], mem);
+    metric.raise(vl, &P[v0], mem);
     
     const real_t KE_density = 0.5 * P[density] * 
                               (vl[0]*P[v0] + vl[1]*P[v1] + vl[2]*P[v2]);
@@ -112,7 +112,7 @@ inline void NavierStokes::PrimitiveToConserved_(const real_t* const __restrict__
     U[density] = rho;
 
     real_t vl[3];
-    metric->lower(&P[v0], vl, mem);
+    metric.lower(&P[v0], vl, mem);
 
     U[mom0] = rho * vl[0];
     U[mom1] = rho * vl[1];
@@ -136,7 +136,7 @@ inline void NavierStokes::WaveSpeeds_(const real_t* const __restrict__ P,
     
     /* Assume diagonal metric for now... Tag:DIAGONAL */
     /* This is the contravariant comp of the sound speed */
-    const real_t sound_speed = std::sqrt(sound_speed_sq / ((DiagonalSpatialMetric*)metric)->g[dir][mem]);
+    const real_t sound_speed = std::sqrt(sound_speed_sq / metric.g[dir][mem]);
 
     c[0] = MAX(0.0, P[v0+dir] + sound_speed);
     c[1] = MIN(0.0, P[v0+dir] - sound_speed);
@@ -154,7 +154,7 @@ inline void NavierStokes::Fluxes_(const real_t* const __restrict__ P,
 
     /* Covariant component of velocity */
     real_t vl[3];
-    metric->lower(vu, vl, mem);
+    metric.lower(vu, vl, mem);
 
     const real_t KE_density = 0.5 * P[density] * (vl[0]*vu[0] + vl[1]*vu[1] + vl[2]*vu[2]); 
     const real_t E          = KE_density + P[pressure] / gm1;
@@ -204,7 +204,7 @@ inline void NavierStokes::DiffusiveFluxes_(const real_t* const __restrict__    P
             dv[comp][deriv] = dP[v0+comp][deriv]; // dv[i][j] = d_j v^i
             
     for (int d: dirs)
-        rdetg_deriv[d] = metric->rdetg_deriv[d][mem];
+        rdetg_deriv[d] = metric.rdetg_deriv[d][mem];
 
     /* div(v) = d_i v^i + v^j d_j(rdetg) / rdetg */
     divv = dv[0][0] + dv[1][1] + dv[2][2] + 
@@ -236,7 +236,7 @@ inline void NavierStokes::DiffusiveFluxes_(const real_t* const __restrict__    P
 
 inline void NavierStokes::OrthonormaliseVectors_(real_t* const P, const int mem) const
 {
-    metric->orthonormals(&P[v0], mem);
+    metric.orthonormals(&P[v0], mem);
 
     return;
 }

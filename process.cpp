@@ -257,9 +257,9 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
             for (int d: dirs)
                 Bu[d] = U[(5+d)*N + i];
 
-            eb.physics_soln.metric->raise(vl, vu, i);
-            eb.physics_soln.metric->lower(Bu, Bl, i);
-            vdotB = eb.physics_soln.metric->dot(vu, Bu, i);
+            eb.physics_soln.metric.raise(vl, vu, i);
+            eb.physics_soln.metric.lower(Bu, Bl, i);
+            vdotB = eb.physics_soln.metric.dot(vu, Bu, i);
 
             /* Using Eulerian method of Derigs+ 2018, Sec 3.9 
                Lagrangian method seems unstable for discontinuous field loop test?
@@ -283,7 +283,7 @@ void Process::find_divF(const real_t* const U, const real_t t, real_t* const div
     }
 
     /* Add geometric source terms if not using Cartesian physical coordinates */
-    if (eb.physics_soln.metric->physical_coords != cartesian)
+    if (*eb.physics_soln.metric.physical_coords != cartesian)
         kernels::add_geometric_sources(divF, U, dP, eb.physics_soln, Nfield, eb.Ns_block);
 
     for (int i: dirs)
@@ -363,7 +363,7 @@ void Process::find_divB(const real_t* const B, real_t* const divB)
                 if (!Bdotn_stored)
                     Bdotn_initial[j] = Bdotn;
 
-                f.physics.metric->raise(nl, nu, j);
+                f.physics.metric.raise(nl, nu, j);
             
                 for (int d: dirs)
                     f.neighbour_data[j + d * f.Ntot] = 

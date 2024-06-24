@@ -79,7 +79,7 @@ namespace kernels
         real_t P[9];  // Primitives from incoming conserved variables
 
         real_t nu[3]; // contravariant components of normal vector
-        physics.metric->raise(nl, nu, mem);
+        physics.metric.raise(nl, nu, mem);
 
         /* UL and UR should be identical, so just choose L arbitrarily */
         physics.ConservedToPrimitive(UL, P, mem);
@@ -117,7 +117,7 @@ namespace kernels
         /* The density, tot_energy, and psi conserved vars are unchanged.
          * Only need to overwrite the momentum and magnetic field */
         //real_t vl[3];
-        //physics.metric->lower(vm, vl, mem);
+        //physics.metric.lower(vm, vl, mem);
 
         //UL[Density] = UR[Density] = P[Density] = 1.0;
 
@@ -141,8 +141,8 @@ namespace kernels
 
         /****
         P[pressure] = 10.0 * P[density]; // Isothermal-ish wall at set temperature
-        const real_t mag_density = 0.5 * physics.metric->square(Bm, mem);
-        const real_t KE_density  = 0.0; // 0.5 * P[density] * physics.metric->square(vm, mem);
+        const real_t mag_density = 0.5 * physics.metric.square(Bm, mem);
+        const real_t KE_density  = 0.0; // 0.5 * P[density] * physics.metric.square(vm, mem);
         const real_t psi_density = 0.5 * P[psi] * P[psi];
         const real_t thermal_density = P[pressure]/((MHD*)physics)->gm1;
         UL[tot_energy] = UR[tot_energy] = KE_density + mag_density + thermal_density + psi_density;
@@ -152,8 +152,8 @@ namespace kernels
          * chopping off the normal velocity and magnetic field. Not clear if this is 
          * necessary and/or a good idea ... */
         /***
-        const real_t mag_density = 0.5 * physics.metric->square(Bm, mem);
-        const real_t KE_density  = 0.5 * P[density] * physics.metric->square(vm, mem);
+        const real_t mag_density = 0.5 * physics.metric.square(Bm, mem);
+        const real_t KE_density  = 0.5 * P[density] * physics.metric.square(vm, mem);
         UL[tot_energy] = UR[tot_energy] = KE_density + mag_density + P[pressure]/((MHD*)physics)->gm1
                                           + 0.5 * P[psi] * P[psi];
         ***/
@@ -165,8 +165,8 @@ namespace kernels
             /* Since pressure might have been increased inside cons-to-prim
              * Might want to use kinetic and magnetic energy from before the BC adjustments were applied?
              * Or is it better for the total energy to be consistent? */
-            const real_t mag_density = 0.5 * physics.metric->square(Bm, mem);
-            //const real_t KE_density  = 0.5 * P[density] * physics.metric->square(vm, mem);
+            const real_t mag_density = 0.5 * physics.metric.square(Bm, mem);
+            //const real_t KE_density  = 0.5 * P[density] * physics.metric.square(vm, mem);
             const real_t KE_density  = 0.0; // Zero for no-slip
             UL[tot_energy] = UR[tot_energy] = KE_density + mag_density + P[pressure]/((MHD*)physics)->gm1;
         }
@@ -690,7 +690,7 @@ namespace kernels
 
             /* HACK: directly implement just for cylindrical coords for now
              * Note Cartesian coords don't call this function at all */
-            R = physics.metric->rdetg[mem];
+            R = physics.metric.rdetg[mem];
 
             switch (physics.system)
             {
@@ -1515,7 +1515,7 @@ namespace kernels
             {
                 enum primitive {density, v0, v1, v2, pressure, B0, B1, B2, psi};
                 Pp[pressure] = Pp[pressure] / Pp[density];
-                Pp[psi] = physics.metric->square(&Pp[B0], i); 
+                Pp[psi] = physics.metric.square(&Pp[B0], i); 
             }
 
             for (int field = 0; field < lb.Nfield; ++field)
@@ -1588,8 +1588,8 @@ namespace kernels
                     enum primitive {density, v0, v1, v2, pressure, B0, B1, B2, psi};
                     Pp_my[pressure] = Pp_my[pressure] / Pp_my[density];
                     Pp_nb[pressure] = Pp_nb[pressure] / Pp_nb[density];
-                    Pp_my[psi] = physics.metric->square(&Pp_my[B0], mem); 
-                    Pp_nb[psi] = physics.metric->square(&Pp_nb[B0], mem); 
+                    Pp_my[psi] = physics.metric.square(&Pp_my[B0], mem); 
+                    Pp_nb[psi] = physics.metric.square(&Pp_nb[B0], mem); 
                 }
 
 
@@ -1685,7 +1685,7 @@ namespace kernels
                 for (int i: dirs)
                     nl[i] = face.normal(i,mem_face);
 
-                physics.metric->raise(nl, nu, mem);
+                physics.metric.raise(nl, nu, mem);
 
                 /* dv[i][j] = d_j v^i --- same as in MHD object */
                 for (int comp: dirs)
@@ -1781,7 +1781,7 @@ namespace kernels
 
                 /* Finds maximum |v| for calculating the max stable div-cleaning
                  * wavespeed ch. Should tidy up so is eqn-system agnostic again. */
-                vmag = std::sqrt(physics.metric->square(&Pp[1], mem));
+                vmag = std::sqrt(physics.metric.square(&Pp[1], mem));
                 if (vmag > vmax_loc) 
                     vmax_loc = vmag;
             }
