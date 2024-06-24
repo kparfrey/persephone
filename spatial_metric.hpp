@@ -23,8 +23,6 @@ class SpatialMetric
      * or full. */
     //int mem;
     
-    //SpatialMetric(PhysicalCoords physical_coords) 
-    //    : physical_coords(physical_coords) {}
 
     void allocate_on_host(const int N)
     {
@@ -85,9 +83,9 @@ class SpatialMetric
 
     /* Convert from an orthonormal basis to contravariant
      * components in a coordinate basis. */
-    //virtual void ON_to_upper(const real_t* const __restrict__ Von,
-    //                               real_t* const __restrict__ Vu,
-    //                         const int i);
+    //void ON_to_upper(const real_t* const __restrict__ Von,
+    //                       real_t* const __restrict__ Vu,
+    //                 const int i);
 };
 
 
@@ -101,9 +99,6 @@ class DiagonalSpatialMetric : public SpatialMetric<DiagonalSpatialMetric>
     real_t* ginv[3]; // ginv[i] == g^{ii}
 
 
-    //DiagonalSpatialMetric(PhysicalCoords physical_coords) 
-    //    : SpatialMetric(physical_coords) {}
-    
     void allocate_on_host_(const int N)
     {
         for (int d: dirs)

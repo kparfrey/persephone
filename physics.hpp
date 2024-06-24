@@ -105,9 +105,9 @@ class Physics
     }
 
     /* Only used by MHD, and potential future MHD extensions */ 
-    //virtual void Fluxes_divB_subsystem(const real_t* const __restrict__ P, 
-    //                                         real_t (*__restrict__ F)[3],
-    //                                   const int mem) const {}
+    //void Fluxes_divB_subsystem(const real_t* const __restrict__ P, 
+    //                                 real_t (*__restrict__ F)[3],
+    //                           const int mem) const {}
 };
 
 #endif
