@@ -1,4 +1,3 @@
-#include "common.hpp"
 #include "params_torus.hpp"
 #include "torus_mode_pack.hpp"
 
@@ -17,8 +16,6 @@
  * guards.
  */
 
-static EqnSystem equations = navier_stokes;
-static BasicTimeMethod time_method = rk2_midpoint;
 
 static int Nproc[3] = {1,1,1};
 static int Nelem[3] = {5,5,1};
@@ -41,7 +38,6 @@ static real_t Zmk[2][1] = {{0.0}, {1.0}};
 
 static TorusModePack boundary_modes(Rmk, Zmk);
 
-static ParamsTorus active_parameters(equations, time_method, 
-                                     Nproc, Nelem, Ns, 
+static ParamsTorus active_parameters(Nproc, Nelem, Ns, 
                                      cfl, end_time, dt_write,
                                      boundary_modes);

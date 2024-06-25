@@ -4,12 +4,7 @@
 #include "write_mesh.hpp"
 #include "write_data.hpp"
 #include "write_screen.hpp"
-
 #include "element_block.hpp"
-#include "physics.hpp"
-#include "mhd.hpp"
-#include "numerical_flux.hpp"
-#include "basic_time_integrator.hpp"
 
 #include "active_params.hpp"
 

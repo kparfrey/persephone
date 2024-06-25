@@ -1,4 +1,3 @@
-#include "common.hpp"
 #include "params_torus.hpp"
 
 /* Rather than choosing a problem-specific method, may want to pass in the 
@@ -16,8 +15,6 @@
  * guards.
  */
 
-static EqnSystem equations = mhd;
-static BasicTimeMethod time_method = rk3_ssp;
 static TorusProblemType problem_type = cerfon_freidberg;
 
 static int Nproc[3] = {1,1,1};
@@ -28,7 +25,4 @@ static real_t cfl      = 0.8; // Seems stable to 1.0 for ideal MHD
 static real_t end_time = 300.0;
 static real_t dt_write = 2.0;
 
-static ParamsTorus active_parameters(equations, time_method, 
-                                     Nproc, Nelem, Ns, 
-                                     cfl, end_time, dt_write,
-                                     problem_type);
+static ParamsTorus active_parameters(Nproc, Nelem, Ns, cfl, end_time, dt_write, problem_type);

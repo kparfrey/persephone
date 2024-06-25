@@ -9,19 +9,22 @@
 
 
 #include "physics_includes.hpp"
-using PhysicsType  = MHD;
+using PhysicsType  = MHD; // Choices: ScalarAdvection - NavierStokes - MHD
 
 #include "numerical_flux.hpp"
 using NumFluxType  = HLL;
 
 #include "params_torus.hpp"
 #include "params_cartesian.hpp"
-using ParamsType   = ParamsTorus;
+using ParamsType   = ParamsTorus; // Choices: ParamsCartesian - ParamsTorus
 
 #include "time_integrator_includes.hpp"
-using TimeStepType = RK3_SSP;
+using TimeStepType = RK3_SSP; // Choices: RK2_midpoint - RK3_SSP
 
 #include "boundary_conditions.hpp"
-using BCType       = WallBC_NoSlip_FixedNormalB;
+using BCType       = WallBC_NoSlip_FixedNormalB; // WallBC_NoSlip_FixedNormalBC
+                                                 // PeriodicPressureBC
+                                                 // CouettePlateBC
+                                                 // HartmannPlateBC
 
 #endif
