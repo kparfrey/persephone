@@ -28,6 +28,10 @@ LDLIBS   = -lmpi -lm -lhdf5
 
 USE_CUDA = 0
 
+CUDA_ARCH  = sm_70
+CUDA_FLAGS = -dc
+
+
 SRC := main.cpp \
 	   process.cpp element_block.cpp face_communicator.cpp \
 	   write_data.cpp write_file_utils.cpp write_screen.cpp \
@@ -41,8 +45,6 @@ SRC := main.cpp \
 
 ifeq ($(USE_CUDA),0)
 SRC += kernels.cpp
-else
-SRC_CUDA := kernels.cu
 endif
 
 
@@ -52,27 +54,49 @@ OBJ := $(SRC:%.cpp=$(BUILD_DIR)/%.o)
 DEP := $(SRC:%.cpp=$(BUILD_DIR)/%.d)
 
 
+ifeq ($(USE_CUDA),1)
+SRC_CUDA := kernels.cu
+OBJ_CUDA := $(SRC_CUDA:%.cu=$(BUILD_DIR)/%.cu.o)
 
+CUDA_LINKED_OBJ := $(BUILD_DIR)/cuda_linked.cu.o
+
+$(OBJ)    += $(CUDA_LINKED_OBJ)
+$(LDLIBS) += -lcudart
+endif
+
+
+##################################################
 all: $(BUILD_DIR) persephone
 
 $(BUILD_DIR):
 	@mkdir -p $@
 
 
-### Linking
+
+### Linking ######################################
 persephone: $(OBJ)
 	$(CXX) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
 
--include $(DEP)
+$(CUDA_LINKED_OBJ): $(OBJ_CUDA)
+	nvcc -arch=$(CUDA_ARCH) -dlink $^ -o $@
 
-### Compiling
+
+
+### Compiling ####################################
+-include $(DEP)
 DEPFLAGS = -MT $@ -MMD -MP -MF $(BUILD_DIR)/$*.d
 
 $(BUILD_DIR)/%.o : %.cpp
 	$(CXX) $(DEPFLAGS) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
 
 
+$(BUILD_DIR)/%.cu.o : %.cu
+	nvcc -arch=$(CUDA_ARCH) $(CUDA_FLAGS) $< -o $@
+
+
+
+### Cleaning up ##################################
 clean:
 	rm -f persephone
 	rm -r $(BUILD_DIR)
